@@ -1103,6 +1103,7 @@
     - Protogen
     - Humanoid # Wolfgate: Tag replaces rather than merges
   - type: NightVision
+    action: ActionToggleNightVision # WOLFGATE - night vision starts disabled, so it needs a way to turn it on
 
 - type: entity
   parent: BaseSpeciesDummy

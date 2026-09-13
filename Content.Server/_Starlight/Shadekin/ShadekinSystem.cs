@@ -1,5 +1,6 @@
 using Content.Shared.Humanoid;
 using Content.Shared.Overlays; // WOLFGATE - Wolfgate already has NightVisionComponent here
+using Content.Shared.NightVision; // WOLFGATE
 using Content.Shared.Alert;
 using System.Linq;
 using Robust.Server.GameObjects;
@@ -48,6 +49,7 @@ public sealed partial class ShadekinSystem : EntitySystem
     [Dependency] private readonly SharedEnsnareableSystem _ensnareable = default!;
     [Dependency] private readonly SharedAudioSystem _audio = default!;
     [Dependency] private readonly EyeSystem _eye = default!;
+    [Dependency] private readonly SharedNightVisionSystem _nightVision = default!; // WOLFGATE
 
     private TimeSpan _nextUpdate = TimeSpan.Zero;
     private TimeSpan _updateCooldown = TimeSpan.FromSeconds(1f);
@@ -243,10 +245,10 @@ public sealed partial class ShadekinSystem : EntitySystem
 
     private void ToggleNightVision(EntityUid uid, ShadekinState shadekinState)
     {
-        if (shadekinState == ShadekinState.Dark)
-            EnsureComp<NightVisionComponent>(uid);
-        else if (HasComp<NightVisionComponent>(uid))
-            RemComp<NightVisionComponent>(uid);
+        // WOLFGATE - Wolfgate's night vision starts disabled, so adding the component never showed anything.
+        // Keep the component, and the look set in YAML, and switch it with the light level instead.
+        var nightVision = EnsureComp<NightVisionComponent>(uid);
+        _nightVision.SetEnabled((uid, nightVision), shadekinState == ShadekinState.Dark);
     }
 
     /// <summary>
