@@ -17,11 +17,17 @@ public sealed class GhostPossessRequestEvent : EntityEventArgs
     /// </summary>
     public bool Replace;
 
-    public GhostPossessRequestEvent(NetEntity ghost, NetEntity body, bool replace)
+    /// <summary>
+    /// The occupant mind the admin was shown; a replace only goes ahead while that is still who is in the body.
+    /// </summary>
+    public NetEntity Occupant;
+
+    public GhostPossessRequestEvent(NetEntity ghost, NetEntity body, bool replace, NetEntity occupant)
     {
         Ghost = ghost;
         Body = body;
         Replace = replace;
+        Occupant = occupant;
     }
 }
 
@@ -33,14 +39,20 @@ public sealed class GhostPossessOccupiedEvent : EntityEventArgs
 {
     public NetEntity Ghost;
     public NetEntity Body;
+
+    /// <summary>
+    /// Mind of the occupant described below, echoed back by the Replace button.
+    /// </summary>
+    public NetEntity Occupant;
     public string BodyName = string.Empty;
     public string GhostPlayer = string.Empty;
     public string OccupantCharacter = string.Empty;
     public string OccupantPlayer = string.Empty;
 
-    public GhostPossessOccupiedEvent(NetEntity ghost, NetEntity body)
+    public GhostPossessOccupiedEvent(NetEntity ghost, NetEntity body, NetEntity occupant)
     {
         Ghost = ghost;
         Body = body;
+        Occupant = occupant;
     }
 }

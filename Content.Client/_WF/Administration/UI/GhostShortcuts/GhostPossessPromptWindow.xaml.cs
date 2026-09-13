@@ -18,11 +18,12 @@ public sealed partial class GhostPossessPromptWindow : DefaultWindow
     {
         RobustXamlLoader.Load(this);
 
+        // Names are player-controlled text, so they must not be parsed as markup.
         MessageLabel.SetMessage(FormattedMessage.FromMarkupOrThrow(Loc.GetString("wf-ghost-possess-prompt-message",
-            ("body", ev.BodyName),
-            ("ghost", ev.GhostPlayer),
-            ("character", ev.OccupantCharacter),
-            ("player", ev.OccupantPlayer))));
+            ("body", FormattedMessage.EscapeText(ev.BodyName)),
+            ("ghost", FormattedMessage.EscapeText(ev.GhostPlayer)),
+            ("character", FormattedMessage.EscapeText(ev.OccupantCharacter)),
+            ("player", FormattedMessage.EscapeText(ev.OccupantPlayer)))));
         WarningLabel.Text = Loc.GetString("wf-ghost-possess-prompt-warning", ("character", ev.OccupantCharacter));
 
         ReplaceButton.OnPressed += _ =>

@@ -57,13 +57,14 @@ public sealed partial class GhostPossessSystem : SharedGhostPossessSystem
             || !TryGetEntity(ev.Body, out var body))
             return;
 
-        TryPossess(args.SenderSession, ghost.Value, body.Value, ev.Replace);
+        TryPossess(args.SenderSession, ghost.Value, body.Value, ev.Replace, ev.Occupant);
     }
 
     /// <summary>
     /// Moves the ghost's player into the body. Without <paramref name="replace"/>, an occupied body only sends the admin a prompt.
+    /// A replace only evicts the occupant the admin was shown (<paramref name="expectedOccupant"/>); anyone else gets a fresh prompt.
     /// </summary>
-    public bool TryPossess(ICommonSession admin, EntityUid ghost, EntityUid body, bool replace)
+    public bool TryPossess(ICommonSession admin, EntityUid ghost, EntityUid body, bool replace, NetEntity expectedOccupant = default)
     {
         if (!HasComp<GhostComponent>(ghost) || !IsBodyTarget(body))
             return false;
@@ -91,9 +92,9 @@ public sealed partial class GhostPossessSystem : SharedGhostPossessSystem
         string? evicted = null;
         if (TryGetOccupant(body, out var occupantId, out var occupant, out var visiting))
         {
-            if (!replace)
+            if (!replace || GetNetEntity(occupantId) != expectedOccupant)
             {
-                RaiseNetworkEvent(new GhostPossessOccupiedEvent(GetNetEntity(ghost), GetNetEntity(body))
+                RaiseNetworkEvent(new GhostPossessOccupiedEvent(GetNetEntity(ghost), GetNetEntity(body), GetNetEntity(occupantId))
                 {
                     BodyName = Name(body),
                     GhostPlayer = player.Name,

@@ -81,7 +81,7 @@ public sealed partial class SpawnOutfitMenu : DefaultWindow
             : _target.ToString();
 
         Title = Loc.GetString("wf-spawn-outfit-ghost-title");
-        GhostInfo.SetMessage(FormattedMessage.FromMarkupOrThrow(Loc.GetString("wf-spawn-outfit-ghost-info", ("name", name))));
+        GhostInfo.SetMessage(FormattedMessage.FromMarkupOrThrow(Loc.GetString("wf-spawn-outfit-ghost-info", ("name", FormattedMessage.EscapeText(name)))));
         GhostInfo.Visible = true;
         BodySelect.Visible = false;
         ControlCheck.Visible = false;

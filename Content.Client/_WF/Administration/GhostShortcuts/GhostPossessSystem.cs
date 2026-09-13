@@ -42,7 +42,7 @@ public sealed partial class GhostPossessSystem : SharedGhostPossessSystem
     private void OnOccupied(GhostPossessOccupiedEvent ev)
     {
         var prompt = new GhostPossessPromptWindow(ev);
-        prompt.Replace += () => RaiseNetworkEvent(new GhostPossessRequestEvent(ev.Ghost, ev.Body, true));
+        prompt.Replace += () => RaiseNetworkEvent(new GhostPossessRequestEvent(ev.Ghost, ev.Body, true, ev.Occupant));
         prompt.OpenCentered();
     }
 }
