@@ -53,6 +53,11 @@ namespace Content.Shared._Onyx.Body.Systems
                     continue;
                 }
 
+                // WOLFGATE: P3-D23, DestroyOrgan detaches and wounds; RecursiveDeleteEntity reaches here while a
+                // mob terminates, which is the DebugAssertException WP9 fixed in WolfmedBodyPartLifecycleSystem.
+                if (TerminatingOrDeleted(uid))
+                    continue;
+
                 DestroyOrgan((uid, organ, slotted));
             }
         }
@@ -82,8 +87,10 @@ namespace Content.Shared._Onyx.Body.Systems
             // containing part itself, so Onyx's per-slot walk is unnecessary.
             if (HasComp<BodyPartComponent>(parent) && _body.RemoveOrgan(organ.Owner, organ.Comp2))
             {
+                // WOLFGATE: P3-D23, never wound a part that is already terminating (see the Update guard).
                 if (organ.Comp1.DestructionWound is { } wound &&
                     organ.Comp1.DestructionWoundSeverity > FixedPoint2.Zero &&
+                    !TerminatingOrDeleted(parent) &&
                     HasComp<WoundableComponent>(parent))
                     _wounds.CreateOrMergeWound(parent, wound, organ.Comp1.DestructionWoundSeverity);
             }

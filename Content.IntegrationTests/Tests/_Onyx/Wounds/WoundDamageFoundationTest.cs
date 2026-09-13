@@ -82,6 +82,68 @@ public sealed class WoundDamageFoundationTest : GameTest
       coefficients:
         Blunt: 0.5
 
+# WOLFGATE (WP11-3, P3-D5): Onyx's four locational-armour fixtures. `coverage: [Chest]` becomes `[Torso]` (D9 —
+# Wolfgate's BodyPartType has no Chest member and the Release lint rejects it), and Onyx's `WoundFoundationArmorAll`
+# is renamed `WoundFoundationArmorAllHead` because it is worn in the *head* slot while protecting everything.
+- type: entity
+  id: WoundFoundationArmorHead
+  components:
+  - type: Clothing
+    slots: [outerClothing]
+  - type: Armor
+    coverage: [Head]
+    modifiers:
+      coefficients:
+        Blunt: 0.5
+
+- type: entity
+  id: WoundFoundationArmorAllHead
+  components:
+  - type: Clothing
+    slots: [head]
+  - type: Armor
+    modifiers:
+      coefficients:
+        Blunt: 0.5
+
+- type: entity
+  id: WoundFoundationArmorLeftArm
+  components:
+  - type: Clothing
+    slots: [outerClothing]
+  - type: Armor
+    coverage: [Arm]
+    coverageSymmetry: [Left]
+    modifiers:
+      coefficients:
+        Blunt: 0.5
+
+- type: entity
+  id: WoundFoundationArmorLocational
+  components:
+  - type: Clothing
+    slots: [outerClothing]
+  - type: Armor
+    coverage: [Torso]
+    modifiers:
+      coefficients:
+        Blunt: 0.8
+    partModifiers:
+    - parts: [Head]
+      modifiers:
+        coefficients:
+          Blunt: 0.25
+    - parts: [Arm]
+      symmetry: [Left]
+      modifiers:
+        coefficients:
+          Blunt: 0.5
+    - parts: [Arm]
+      symmetry: [Right]
+      modifiers:
+        coefficients:
+          Blunt: 0.75
+
 - type: entity
   id: WoundFoundationVanillaBody
   parent: InventoryBase
@@ -245,10 +307,16 @@ public sealed class WoundDamageFoundationTest : GameTest
             // is a vital part, so Shitmed's PartRemoveDamage (SharedBodySystem.Parts.cs:405) adds 100
             // Bloodloss on removal — systemic damage that the projection then includes. Onyx's bare test
             // part had no vitality, hence its flat 6.
+            // WOLFGATE (WP11-1, PLAN3 P3-D1): WolfmedBodyPartLifecycleSystem.ChargeVitalPartLoss now also
+            // charges the lost vital part's own damage as systemic Bloodloss, so CheckVitalDamage cannot
+            // drop when a head comes off. The head carried Blunt 10 + Caustic 3 = 13, and
+            // BodyPartRemovedEvent (Parts.cs:357) fires before PartRemoveDamage (:362), so the systemic
+            // Bloodloss is 13 + 100 = 113 and the projected body total is 6 + 113 = 119.
+            // Was 100 / 106 before P3-D1.
             Assert.That(entityManager.GetComponent<SystemicDamageComponent>(body).Damage
                 .DamageDict.GetValueOrDefault(new ProtoId<DamageTypePrototype>("Bloodloss")),
-                Is.EqualTo(FixedPoint2.New(100)));
-            Assert.That(damage.GetAllDamage(body).GetTotal(), Is.EqualTo(FixedPoint2.New(106)));
+                Is.EqualTo(FixedPoint2.New(113)));
+            Assert.That(damage.GetAllDamage(body).GetTotal(), Is.EqualTo(FixedPoint2.New(119)));
             Assert.That(routing.TryApplyPartDamage(body, head, Spec("Blunt", 1)), Is.False);
         });
     }
@@ -421,10 +489,10 @@ public sealed class WoundDamageFoundationTest : GameTest
     [Test]
     public async Task AppliesArmorExactlyOnceTest()
     {
-        // WOLFGATE: Onyx's ArmorComponent has `coverage`, `coverageSymmetry` and `partModifiers`; Wolfgate's has
-        // none of the three, so the armour's global modifiers protect every part (WolfmedPartArmorSystem, HOOK 10).
-        // The contract that survives — and the one the bridge can actually break — is that armour applies exactly
-        // once per routed hit, never twice. Onyx's coverage/symmetry/locational tests are phase-3 material.
+        // WOLFGATE: the contract here is that armour applies exactly once per routed hit, never twice.
+        // WoundFoundationArmor declares no `coverage`, so WP11-3's locational gate (P3-D5, Option B) is a verified
+        // no-op for it and both parts still take 5 — this test is the regression guard that says so. The
+        // coverage/symmetry/partModifiers behaviour itself is covered by the four locational tests below.
         var server = Pair.Server;
         await server.WaitIdleAsync();
         var entityManager = server.ResolveDependency<IEntityManager>();
@@ -468,6 +536,226 @@ public sealed class WoundDamageFoundationTest : GameTest
             Assert.That(inventory.TryEquip(body, armor, "outerClothing"), Is.True);
             Assert.That(damage.TryChangeDamage(body, Spec("Blunt", 10)), Is.Not.Null);
             Assert.That(entityManager.GetComponent<DamageableComponent>(body).TotalDamage, Is.EqualTo(FixedPoint2.New(5)));
+        });
+    }
+
+    /// <summary>T-P3ARM-1: an armour with `coverage: [Head]` armours the head and leaves the torso alone.</summary>
+    [Test]
+    public async Task AppliesLocationalArmorExactlyOnceTest()
+    {
+        var server = Pair.Server;
+        await server.WaitIdleAsync();
+        var entityManager = server.ResolveDependency<IEntityManager>();
+        var map = await Pair.CreateTestMap();
+
+        await server.WaitAssertion(() =>
+        {
+            var body = entityManager.SpawnEntity("WoundFoundationBody", map.GridCoords);
+            var armor = entityManager.SpawnEntity("WoundFoundationArmorHead", map.GridCoords);
+            var graph = entityManager.System<SharedBodySystem>();
+            var inventory = entityManager.System<InventorySystem>();
+            var routing = entityManager.System<WoundDamageRoutingSystem>();
+            var damage = entityManager.System<WolfmedDamageableSystem>(); // WOLFGATE: D12 facade, as at :440.
+            var parts = graph.GetBodyChildren(body).ToList();
+            var head = parts.Single(part => part.Component.PartType == BodyPartType.Head).Id;
+            var torso = parts.Single(part => part.Component.PartType == BodyPartType.Torso).Id; // WOLFGATE: D9.
+
+            Assert.That(inventory.TryEquip(body, armor, "outerClothing"), Is.True);
+            Assert.That(routing.TryApplyPartDamage(body, head, Spec("Blunt", 10)));
+            Assert.That(routing.TryApplyPartDamage(body, torso, Spec("Blunt", 10)));
+
+            // WOLFGATE (P3-D5): derivation — head is in `coverage`, so the global Blunt 0.5 applies: 10 -> 5.
+            // The torso is not, so Covers() returns false before any modifier maths: 10 -> 10. This assertion is
+            // RED against Onyx's own shipped code, whose <Onyx-ArmorGlobalProtection-edited> block never consults
+            // `coverage` at all and would give the torso 5; Option B is what makes coverage load-bearing.
+            Assert.Multiple(() =>
+            {
+                Assert.That(damage.GetAllDamage(head).GetTotal(), Is.EqualTo(FixedPoint2.New(5)));
+                Assert.That(damage.GetAllDamage(torso).GetTotal(), Is.EqualTo(FixedPoint2.New(10)));
+            });
+        });
+    }
+
+    /// <summary>T-P3ARM-2: unset coverage protects every part regardless of worn slot; a symmetry set excludes the other side.</summary>
+    [Test]
+    public async Task EmptyCoverageAndSymmetryTest()
+    {
+        var server = Pair.Server;
+        await server.WaitIdleAsync();
+        var entityManager = server.ResolveDependency<IEntityManager>();
+        var map = await Pair.CreateTestMap();
+
+        await server.WaitAssertion(() =>
+        {
+            var body = entityManager.SpawnEntity("WoundFoundationBody", map.GridCoords);
+            var allArmor = entityManager.SpawnEntity("WoundFoundationArmorAllHead", map.GridCoords);
+            var graph = entityManager.System<SharedBodySystem>();
+            var inventory = entityManager.System<InventorySystem>();
+            var routing = entityManager.System<WoundDamageRoutingSystem>();
+            var damage = entityManager.System<WolfmedDamageableSystem>(); // WOLFGATE: D12 facade.
+            var parts = graph.GetBodyChildren(body).ToList();
+            var torso = parts.Single(part => part.Component.PartType == BodyPartType.Torso).Id; // WOLFGATE: D9.
+            var leftArm = parts.Single(part => part.Component.PartType == BodyPartType.Arm &&
+                                               part.Component.Symmetry == BodyPartSymmetry.Left).Id;
+            var rightArm = parts.Single(part => part.Component.PartType == BodyPartType.Arm &&
+                                                part.Component.Symmetry == BodyPartSymmetry.Right).Id;
+
+            // WOLFGATE (P3-D5): null/empty coverage means "protects everything", and the worn slot is
+            // deliberately irrelevant — a head-slot armour still protects the torso. Getting the empty case
+            // backwards would invert every one of the game's 272 unannotated `- type: Armor` entries, and no
+            // slot-derived default (Option C) may creep in: 10 -> 5 on the torso.
+            Assert.That(inventory.TryEquip(body, allArmor, "head"), Is.True);
+            Assert.That(routing.TryApplyPartDamage(body, torso, Spec("Blunt", 10)));
+            Assert.That(damage.GetAllDamage(torso).GetTotal(), Is.EqualTo(FixedPoint2.New(5)));
+            Assert.That(inventory.TryUnequip(body, "head"), Is.True);
+
+            var symmetryArmor = entityManager.SpawnEntity("WoundFoundationArmorLeftArm", map.GridCoords);
+            Assert.That(inventory.TryEquip(body, symmetryArmor, "outerClothing"), Is.True);
+            Assert.That(routing.TryApplyPartDamage(body, leftArm, Spec("Blunt", 10)));
+            Assert.That(routing.TryApplyPartDamage(body, rightArm, Spec("Blunt", 10)));
+
+            // WOLFGATE (P3-D5): `coverage: [Arm]` + `coverageSymmetry: [Left]` — the left arm matches both sets
+            // (10 -> 5), the right arm fails the symmetry set (10 -> 10). Symmetry is checked independently of
+            // Parts, so a bare `symmetry: [Left]` would mean "any left part". RED against Onyx's shipped code.
+            Assert.Multiple(() =>
+            {
+                Assert.That(damage.GetAllDamage(leftArm).GetTotal(), Is.EqualTo(FixedPoint2.New(5)));
+                Assert.That(damage.GetAllDamage(rightArm).GetTotal(), Is.EqualTo(FixedPoint2.New(10)));
+            });
+        });
+    }
+
+    /// <summary>T-P3ARM-3: the first matching partModifiers entry wins and skips the coverage gate; unmatched parts fall back.</summary>
+    [Test]
+    public async Task LocationalModifierOverridesAndFallbackTest()
+    {
+        var server = Pair.Server;
+        await server.WaitIdleAsync();
+        var entityManager = server.ResolveDependency<IEntityManager>();
+        var map = await Pair.CreateTestMap();
+
+        await server.WaitAssertion(() =>
+        {
+            var body = entityManager.SpawnEntity("WoundFoundationBody", map.GridCoords);
+            var armor = entityManager.SpawnEntity("WoundFoundationArmorLocational", map.GridCoords);
+            var graph = entityManager.System<SharedBodySystem>();
+            var inventory = entityManager.System<InventorySystem>();
+            var routing = entityManager.System<WoundDamageRoutingSystem>();
+            var damage = entityManager.System<WolfmedDamageableSystem>(); // WOLFGATE: D12 facade.
+            var parts = graph.GetBodyChildren(body).ToList();
+            var head = parts.Single(part => part.Component.PartType == BodyPartType.Head).Id;
+            var torso = parts.Single(part => part.Component.PartType == BodyPartType.Torso).Id; // WOLFGATE: D9.
+            var leftArm = parts.Single(part => part.Component.PartType == BodyPartType.Arm &&
+                                               part.Component.Symmetry == BodyPartSymmetry.Left).Id;
+            var rightArm = parts.Single(part => part.Component.PartType == BodyPartType.Arm &&
+                                                part.Component.Symmetry == BodyPartSymmetry.Right).Id;
+
+            Assert.That(inventory.TryEquip(body, armor, "outerClothing"), Is.True);
+            Assert.That(routing.TryApplyPartDamage(body, head, Spec("Blunt", 20)));
+            Assert.That(routing.TryApplyPartDamage(body, torso, Spec("Blunt", 20)));
+            Assert.That(routing.TryApplyPartDamage(body, leftArm, Spec("Blunt", 20)));
+            Assert.That(routing.TryApplyPartDamage(body, rightArm, Spec("Blunt", 20)));
+
+            // WOLFGATE (P3-D5): derivation from WoundFoundationArmorLocational — head matches the first
+            // partModifiers entry (0.25) and takes 5 *despite* `coverage: [Torso]`, which is precisely why the
+            // coverage gate must sit AFTER the loop; the torso matches no entry and falls back through the gate
+            // to the global 0.8 -> 16; left arm 0.5 -> 10; right arm 0.75 -> 15. Green under both options.
+            Assert.Multiple(() =>
+            {
+                Assert.That(damage.GetAllDamage(head).GetTotal(), Is.EqualTo(FixedPoint2.New(5)));
+                Assert.That(damage.GetAllDamage(torso).GetTotal(), Is.EqualTo(FixedPoint2.New(16)));
+                Assert.That(damage.GetAllDamage(leftArm).GetTotal(), Is.EqualTo(FixedPoint2.New(10)));
+                Assert.That(damage.GetAllDamage(rightArm).GetTotal(), Is.EqualTo(FixedPoint2.New(15)));
+            });
+        });
+    }
+
+    /// <summary>T-P3ARM-AP: armour penetration reaches the partModifiers branch, not just the global fallback.</summary>
+    [Test]
+    public async Task PartModifiersRouteThroughArmorPenetrationTest()
+    {
+        var server = Pair.Server;
+        await server.WaitIdleAsync();
+        var entityManager = server.ResolveDependency<IEntityManager>();
+        var map = await Pair.CreateTestMap();
+
+        await server.WaitAssertion(() =>
+        {
+            var graph = entityManager.System<SharedBodySystem>();
+            var inventory = entityManager.System<InventorySystem>();
+            var damage = entityManager.System<DamageableSystem>();
+            var facade = entityManager.System<WolfmedDamageableSystem>(); // WOLFGATE: D12 facade.
+
+            EntityUid Head(EntityUid body) => graph.GetBodyChildren(body)
+                .Single(part => part.Component.PartType == BodyPartType.Head).Id;
+
+            // AP only reaches the part pass through TryChangeDamage (WoundDamageRoutingSystem.cs:79 stores it and
+            // :747 puts it on PartDamageModifyEvent), so this test cannot use TryApplyPartDamage.
+            var penetrated = entityManager.SpawnEntity("WoundFoundationBody", map.GridCoords);
+            var armorA = entityManager.SpawnEntity("WoundFoundationArmorLocational", map.GridCoords);
+            Assert.That(inventory.TryEquip(penetrated, armorA, "outerClothing"), Is.True);
+            Assert.That(damage.TryChangeDamage(penetrated, Spec("Blunt", 20),
+                targetPart: TargetBodyPart.Head, armorPenetration: 1f), Is.Not.Null);
+
+            var unpenetrated = entityManager.SpawnEntity("WoundFoundationBody", map.GridCoords);
+            var armorB = entityManager.SpawnEntity("WoundFoundationArmorLocational", map.GridCoords);
+            Assert.That(inventory.TryEquip(unpenetrated, armorB, "outerClothing"), Is.True);
+            Assert.That(damage.TryChangeDamage(unpenetrated, Spec("Blunt", 20),
+                targetPart: TargetBodyPart.Head, armorPenetration: 0f), Is.Not.Null);
+
+            // WOLFGATE (D23): derivation — the head is armoured by the partModifiers Blunt 0.25 entry, and that
+            // set must be wrapped in DamageSpecifier.PenetrateArmor exactly as the global fallback is.
+            // PenetrateArmor returns a new EMPTY set at penetration >= 1 (DamageSpecifier.cs:306-330) and an
+            // empty set leaves every type untouched (:157), so AP 1 gives the full 20 and AP 0 gives 5.
+            // Without the wrap both numbers would read 5 and every AP weapon would silently lose its AP against
+            // any armour that declares a part profile. Nothing in Onyx covers this.
+            Assert.Multiple(() =>
+            {
+                Assert.That(facade.GetAllDamage(Head(penetrated)).GetTotal(), Is.EqualTo(FixedPoint2.New(20)));
+                Assert.That(facade.GetAllDamage(Head(unpenetrated)).GetTotal(), Is.EqualTo(FixedPoint2.New(5)));
+            });
+        });
+    }
+
+    /// <summary>T-P3ARM-UNCOVERED-AP: an uncovered part ignores the armour entirely, so AP cannot change its damage.</summary>
+    [Test]
+    public async Task UncoveredPartIgnoresArmorPenetrationTest()
+    {
+        var server = Pair.Server;
+        await server.WaitIdleAsync();
+        var entityManager = server.ResolveDependency<IEntityManager>();
+        var map = await Pair.CreateTestMap();
+
+        await server.WaitAssertion(() =>
+        {
+            var graph = entityManager.System<SharedBodySystem>();
+            var inventory = entityManager.System<InventorySystem>();
+            var damage = entityManager.System<DamageableSystem>();
+            var facade = entityManager.System<WolfmedDamageableSystem>(); // WOLFGATE: D12 facade.
+
+            EntityUid Torso(EntityUid body) => graph.GetBodyChildren(body)
+                .Single(part => part.Component.PartType == BodyPartType.Torso).Id; // WOLFGATE: D9.
+
+            var penetrated = entityManager.SpawnEntity("WoundFoundationBody", map.GridCoords);
+            var armorA = entityManager.SpawnEntity("WoundFoundationArmorHead", map.GridCoords);
+            Assert.That(inventory.TryEquip(penetrated, armorA, "outerClothing"), Is.True);
+            Assert.That(damage.TryChangeDamage(penetrated, Spec("Blunt", 10),
+                targetPart: TargetBodyPart.Torso, armorPenetration: 1f), Is.Not.Null);
+
+            var unpenetrated = entityManager.SpawnEntity("WoundFoundationBody", map.GridCoords);
+            var armorB = entityManager.SpawnEntity("WoundFoundationArmorHead", map.GridCoords);
+            Assert.That(inventory.TryEquip(unpenetrated, armorB, "outerClothing"), Is.True);
+            Assert.That(damage.TryChangeDamage(unpenetrated, Spec("Blunt", 10),
+                targetPart: TargetBodyPart.Torso, armorPenetration: 0f), Is.Not.Null);
+
+            // WOLFGATE (P3-D5): the coverage gate returns before any modifier maths, so an uncovered part takes
+            // the full hit at every penetration value. 10 in both cases — an AP-dependent number here would mean
+            // the gate had been moved below the modifier application.
+            Assert.Multiple(() =>
+            {
+                Assert.That(facade.GetAllDamage(Torso(penetrated)).GetTotal(), Is.EqualTo(FixedPoint2.New(10)));
+                Assert.That(facade.GetAllDamage(Torso(unpenetrated)).GetTotal(), Is.EqualTo(FixedPoint2.New(10)));
+            });
         });
     }
 

@@ -147,10 +147,83 @@ public sealed class WoundBleedingTest : GameTest
     // WOLFGATE: Onyx's TourniquetStopsOnlySelectedPartTest is not ported — the `Tourniquet` prototype and
     // TourniquetSystem are phase 4 (PLAN §6.1, WP11).
 
-    // WOLFGATE: Onyx's TraumaticAmputationCreatesSevereStumpBleedingTest is not ported - it asserts
-    // WoundableComponent.Severable, which only AmputationSystem ever sets (ONYX AmputationSystem.cs:46,86).
-    // D26 defers amputation to phase 3, so nothing in phase 1 can make a part severable. Port it with
-    // AmputationSystem in WP11.
+    /// <summary>
+    /// PLAN3 §6.2 T-AMP-THRESHOLD. Restored in WP11-5 now that WP11-1 has vendored AmputationSystem (D26
+    /// lifted); the phase-1 skip note this replaces was correct only while nothing could set Severable.
+    /// </summary>
+    [Test]
+    public async Task TraumaticAmputationCreatesSevereStumpBleedingTest()
+    {
+        var server = Pair.Server;
+        await server.WaitIdleAsync();
+        var entityManager = server.ResolveDependency<IEntityManager>();
+        var map = await Pair.CreateTestMap();
+
+        await server.WaitAssertion(() =>
+        {
+            var body = entityManager.SpawnEntity("WoundBleedingBody", map.GridCoords);
+            var graph = entityManager.System<SharedBodySystem>();
+            var wounds = entityManager.System<WoundSystem>();
+            var routing = entityManager.System<WoundDamageRoutingSystem>();
+            var parts = graph.GetBodyChildren(body).ToList();
+            var head = parts.Single(part => part.Component.PartType == BodyPartType.Head).Id;
+            // WOLFGATE: D9, Onyx targets BodyPartType.Chest here.
+            var torso = parts.Single(part => part.Component.PartType == BodyPartType.Torso).Id;
+            var bloodstream = entityManager.GetComponent<BloodstreamComponent>(body);
+
+            // WOLFGATE: HeadHuman inherits WolfmedBaseHead, so its Slash amputation threshold is 200
+            // (_WF/Wolfmed/Body/parts.yml). progress = 200/200 = 1.0 -> Severable, and the threshold hit
+            // itself never detaches (AmputationSystem.HandlePartDamageApplied's first branch returns).
+            Assert.That(routing.TryApplyPartDamage(body, head, Spec("Slash", 200)));
+            Assert.Multiple(() =>
+            {
+                Assert.That(graph.BodyHasChild(body, head), Is.True,
+                    "reaching the threshold only arms the limb; it must not come off on that hit.");
+                Assert.That(entityManager.GetComponent<WoundableComponent>(head).Severable, Is.True);
+            });
+
+            // WOLFGATE: post-hit 215 -> progress 1.075 >= SeverableResetRatio 0.8; damageBeforeHit is
+            // 215 - 15 = 200 so ReachedThreshold is true; IsFinishingHit reads Slash 15 against
+            // WoundHostComponent.DefaultDismembermentFinishingDamage["Slash"] = 15 (parts.yml's per-part
+            // dict lists only Piercing/Heat, so Slash still falls back to Onyx's host default) -> detach.
+            Assert.That(routing.TryApplyPartDamage(body, head, Spec("Slash", 15)));
+
+            var torsoWounds = wounds.GetWounds((torso, entityManager.GetComponent<WoundableComponent>(torso)))
+                .ToList();
+            var dismemberment = torsoWounds
+                .Where(wound => wound.Comp.Prototype == new ProtoId<WoundPrototype>("DismembermentWound"))
+                .ToList();
+            var consequence = torsoWounds
+                .Where(wound => wound.Comp.Prototype == new ProtoId<WoundPrototype>("AmputationConsequenceWound"))
+                .ToList();
+
+            Assert.Multiple(() =>
+            {
+                Assert.That(graph.BodyHasChild(body, head), Is.False);
+                // WOLFGATE: the severed head is a live entity that left the body's container tree, not a
+                // deleted one - Shitmed's DropPart re-parents it to the grid/map.
+                Assert.That(entityManager.Deleted(head), Is.False);
+                Assert.That(entityManager.GetComponent<TransformComponent>(head).ParentUid,
+                    Is.Not.EqualTo(body));
+
+                // WOLFGATE: WoundHostComponent.DismembermentSeverities[Head] = 200.
+                Assert.That(dismemberment, Has.Count.EqualTo(1));
+                Assert.That(dismemberment[0].Comp.Severity, Is.EqualTo(FixedPoint2.New(200)));
+                // WOLFGATE: WolfmedBodyPartComponent.AmputationConsequenceSeverity defaults to 35 and
+                // no prototype overrides it on BaseTorso; the severity is read off the PARENT stump.
+                Assert.That(consequence, Has.Count.EqualTo(1));
+                Assert.That(consequence[0].Comp.Severity, Is.EqualTo(FixedPoint2.New(35)));
+
+                // WOLFGATE (P3-D14): Onyx asserts Is.GreaterThanOrEqualTo(40f). That literal is stale for
+                // Wolfgate: DismembermentWound's raw rate is 0.2 * 200 * awakeMultiplier 1.5 = 60, but
+                // BloodstreamSystem clamps BleedAmount to BloodstreamComponent.MaxBleedAmount, which is
+                // 10 here (WoundBleedingBody inherits MobBloodstream and never raises it). The contract
+                // "a traumatic amputation bleeds as hard as this body can bleed" is what is asserted.
+                Assert.That(bloodstream.BleedAmount,
+                    Is.EqualTo(bloodstream.MaxBleedAmount).Within(0.001f));
+            });
+        });
+    }
 
     [Test]
     public async Task AutomaticClottingDeadlineTest()

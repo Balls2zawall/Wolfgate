@@ -77,18 +77,18 @@ Status values: `verbatim` (byte-identical), `modified` (vendored `_Onyx` file wi
 | `Content.Shared/_Onyx/Wounds/WoundDamageRoutingSystem.cs` | same | modified | WP4 (+WP5, WP8) | D12 facade swap, D10 resolver swap, D8 part-field reads, D9 `Chest` to `Torso` x3, hands rewrite, bed-marker swap, `args.Cancelled` guard, Shitmed `targetPart` handoff, `before: [typeof(SharedArmorPlateSystem)]` on both `BeforeDamageChangedEvent` subs. D23 AP/Tool/OriginFlag side table and D27 applied-delta accumulator added in WP5 |
 | `Content.Shared/_Onyx/Wounds/WoundDamageProjectionSystem.cs` | same | modified | WP4 (WP5 scope) | D12 facade swap, D15 circulation dependency dropped, D11 re-point to `DamageChangedEvent`, D17 `ClearBodyWounds` call, D19 `InjurableComponent` block deleted, `after: [typeof(SharedBodySystem)]`, Shitmed parent walk, D9 visual layers |
 | `Content.Shared/_Onyx/Mobs/Systems/MobThresholdSystem.cs` | same | modified | WP4 (WP5 scope) | absent from the sparse checkout — read via `git show`. **Adds** `_damageable` (M6); `using Content.Shared.Body.Components;`; vital parts `{Head, Torso}` (D9) |
-| `Content.Shared/_Onyx/Wounds/AmputationSystem.cs` | — | skipped | WP11 | D26 — amputation is phase 3/4 |
+| `Content.Shared/_Onyx/Wounds/AmputationSystem.cs` | same | new (vendored), adapted | **WP11-1** | **WP11-6 reconciliation:** D26 lifted. 18 `// WOLFGATE` sites (D8 `_wfPart.Get(...)` redirects x11, D9 `Chest`->`Torso` x3, D12 facade swap, `GetParentPartOrNull` x2, the `_wfBody.TryDetachPart` shim, 2 P3-D15 signature changes). Stays in `Content.Shared` (P3-D11 — no server-only dependency, gated by four `_net.IsServer` guards instead). Registers `<WoundableComponent, PartDamageOverflowedEvent>`, the only new subscription in WP11-1. No `DamageDict` key-type edit needed (P3-D16 confirmed) |
 | `Content.Shared/_Onyx/Wounds/FractureEffectsSystem.cs` | same | modified | **WP10-1** | 1 edit (P2-D2): `TryGetUsedHandSymmetry` body replaced against Wolfgate's `Hand`-object hands API (`GetActiveHand` returns `Hand?`, `IsHolding`'s 4-arg overload outs `Hand?`, `Hand` is a class so no `.Value`, `HandLocation` has no `Functional*`). No using swap (P2-D3), class name stays `FractureEffectSystem` while the file stays `FractureEffectsSystem.cs` (Onyx's own mismatch). `RefreshTransferredPart` kept verbatim as dead-but-deliberate (P2-D18) |
 | `Content.Shared/_Onyx/Wounds/FractureAlertSystem.cs` | same | modified | **WP10-1** | 3 edits, all D8: `using Content.Shared._WF.Wolfmed.Body;`, `[Dependency] WolfmedBodyPartSystem _wfPart`, and `bodyPart.FractureProfile` → `_wfPart.Get(part).FractureProfile`. `bodyPart` left as an unused deconstruction variable (matches `WoundFractureSystem.cs:148`). No `Initialize`, no subscriptions |
 | `Content.Shared/_Onyx/Wounds/WoundBleedingSystem.cs` | `Content.Server/_Onyx/Wounds/WoundBleedingSystem.cs` | adapted | WP6 | D13 — relocated to `Content.Server`, namespace unchanged. `using Content.Shared.Body.Components;` to `Content.Server.Body.Components` (`BloodstreamComponent`); `using Content.Server.Body.Systems;` **added** beside the shared one (`SharedBodySystem` still comes from `Content.Shared.Body.Systems`). Body otherwise byte-identical |
 | `Content.Shared/_Onyx/Wounds/WoundInternalBleedingSystem.cs` | `Content.Server/_Onyx/Wounds/WoundInternalBleedingSystem.cs` | adapted | WP6 | D13 + M1 — same two `using` swaps, plus the mandatory `:67` fix `TryModifyBloodLevel((body, bloodstream), -amount)` to `TryModifyBloodLevel(body, -amount, bloodstream)` (two chained user-defined conversions, `CS1503`) |
-| `Content.Shared/_Onyx/Wounds/OrganDamageSystem.cs` | `Content.Server/_Onyx/Wounds/OrganDamageSystem.cs` | adapted | WP6 | D13 + D26 + D8 — `using Content.Shared.Body;` to `Content.Shared.Body.Organ` + `Content.Shared._WF.Wolfmed.Body`; **both** `:24` (`[Dependency] AmputationSystem`) and `:36` (`_amputation.HandlePartDamageApplied`) disabled with a `TODO: phase 3`; the organ list and `PickOrgan` retargeted from `OrganComponent` to `WolfmedOrganComponent` |
+| `Content.Shared/_Onyx/Wounds/OrganDamageSystem.cs` | `Content.Server/_Onyx/Wounds/OrganDamageSystem.cs` | adapted | WP6 / **WP11-1** | D13 + D26 + D8 — `using Content.Shared.Body;` to `Content.Shared.Body.Organ` + `Content.Shared._WF.Wolfmed.Body`; the organ list and `PickOrgan` retargeted from `OrganComponent` to `WolfmedOrganComponent`. **WP11-6 correction:** the WP6 disabled sites were actually `:25-26` and `:38-39`, not `:24`/`:36` as originally recorded. **D26 lifted in WP11-1:** both restored to `[Dependency] private AmputationSystem _amputation` and `_amputation.HandlePartDamageApplied(part, ref args)`; fan-out order `_wounds` -> `_fractures` -> `_amputation` -> `_bleeding` is load-bearing. **Owned exclusively by WP11-1** (P3-D24) |
 | `Content.Shared/_Onyx/Wounds/WoundHealingSystem.cs` | `Content.Server/_Onyx/Wounds/WoundHealingSystem.cs` | adapted | WP6 | D13 + D14 + D31 — `using Content.Shared.Medical.Healing;` to `Content.Server.Medical.Components`; D12 facade swap; D31 conversion at `:110` (`DamageContainers?.Select(x => new ProtoId<DamageContainerPrototype>(x)).ToList()`). `ResolveHealingPart`/`IsCompatiblePart` signatures untouched |
 | `Content.Shared/_Onyx/Chemistry/Circulation/CirculatoryStreamSystem.cs` | `Content.Server/_Onyx/Chemistry/Circulation/CirculatoryStreamSystem.cs` | adapted | WP6 | D15 — trimmed to `GetPartStream`, `TryGetPartSolution`, `TryGetStreamSolution`, `SetBleedRates`, primary-stream branches only. All five subscriptions, `Update`, `SynchronizeStreams`, `GetAttachedStreams`, `ConfigureMetabolizer`, `InitializeStream`, `HasStageConflict`, `RemoveStream`, `DeleteSolution` and both metabolism handlers dropped. Namespace unchanged |
 | `Content.Shared/_Onyx/Body/OrganDamageComponent.cs` | same | verbatim | WP6 | registers as `OrganDamage`; no Wolfgate collision |
 | `Content.Shared/_Onyx/Body/Systems/OrganHealthSystem.cs` | `Content.Server/_Onyx/Body/Systems/OrganHealthSystem.cs` | adapted | WP6 | D13 + D8 — health reads move to `WolfmedOrganComponent`; `TryGetOrganInSlot`/`TryRemoveOrgan` replaced by Wolfgate's `SharedBodySystem.RemoveOrgan`; `BrainComponent` resolves from `Content.Server.Body.Components`. `OrganFunctionChangedEvent` relocated into this file (see Deviations) |
-| `Content.Shared/_Onyx/Body/FunctionalOrganComponent.cs` | — | skipped | WP11 | D8 — Nubody glue. Only its `OrganFunctionChangedEvent` was needed and now lives in `OrganHealthSystem.cs` |
-| — | `Content.Shared/_WF/Wolfmed/Body/WolfmedOrganComponent.cs` | new | WP6 | D8 — `Health`, `MaxHealth`, `DestructionWound`, `DestructionWoundSeverity`; Wolfgate's Shitmed `OrganComponent` has none. Networked; registers as `WolfmedOrgan`. No prototype carries it until WP11 |
+| `Content.Shared/_Onyx/Body/FunctionalOrganComponent.cs` | — | **skipped permanently** | WP11 | **WP11-6 reconciliation:** P3-D8 — maps 1:1 onto Shitmed's `OrganComponent.OnAdd` + `_Shitmed/BodyEffects/OrganEffectSystem.cs:53-59`. Onyx's only prototype users are exotic implants Wolfgate does not have. Only its `OrganFunctionChangedEvent` was needed and now lives in `OrganHealthSystem.cs` |
+| — | `Content.Shared/_WF/Wolfmed/Body/WolfmedOrganComponent.cs` | new | WP6 | D8 — `Health`, `MaxHealth`, `DestructionWound`, `DestructionWoundSeverity`; Wolfgate's Shitmed `OrganComponent` has none. Networked; registers as `WolfmedOrgan`. **WP11-6 reconciliation:** **WP11-2 lands the prototypes** — `_WF/Wolfmed/Body/organs.yml` + 7 `parent:` edits in `Body/Organs/human.yml`. These fields have lived here since WP6 (P3-D9); no new upstream `OrganComponent` hook was needed |
 | `Content.Shared/_Onyx/Wounds/WoundSystem.cs` | same | modified | WP6 | additional WP6 edit: `HandlePartDamageApplied` `internal` to `public` — D13 puts its only caller (`OrganDamageSystem`) in `Content.Server`, a different assembly |
 | `Content.Shared/_Onyx/Wounds/WoundFractureSystem.cs` | same | modified | WP6 | additional WP6 edit: same `internal` to `public` change on `HandlePartDamageApplied` |
 | — | `Content.Server/Body/Systems/BloodstreamSystem.cs` | new (hook) | WP6 | **GUARD E** (`HasComp<WoundHostComponent>` early-return in `OnDamageChanged`) + **GUARD E3** (`TryModifyBleedAmount` split into the public wound-host-gated entry, `internal TryModifyWoundBleedProjection`, and a private `bool woundProjection` implementation). One gate also silently no-ops the passive-decay call in `Update()` — deliberate, not duplicated. **GUARD E2 is WP10** |
@@ -119,7 +119,7 @@ Status values: `verbatim` (byte-identical), `modified` (vendored `_Onyx` file wi
 | — | `Content.Shared/_WF/Wolfmed/Body/WolfmedWoundHostExclusionSystem.cs` | new | WP7 | D21/D32 — strips `WoundHostComponent` from entities descended from `BaseMobProtogen` (the only synthetic among the 18 `BaseMobSpeciesOrganic` descendants) at `ComponentInit`, shared so client and server agree. Deviation from the plan's literal "remove in its own prototype" — see Deviations. Subscribes `<WoundHostComponent, ComponentInit>`, free per grep |
 | `Content.Shared/Armor/SharedArmorSystem.cs` | same | new (hook) | WP8 | **HOOK 10**, call-site only after the tidy pass: `OnDamageModify` now reads `if (TryApplyWoundHostArmor(uid, component, args)) return;`. The systemic-damage branch and the `ApplyWoundSystemicArmor` helper ported from Onyx moved to `Content.Shared/_WF/Wolfmed/Armor/SharedArmorSystem.Wolfmed.cs`. The localized half was already out of this upstream file, in `_WF/Wolfmed/Armor/WolfmedPartArmorSystem.cs`, since fix round 1 |
 | — | `Content.Shared/_WF/Wolfmed/Armor/SharedArmorSystem.Wolfmed.cs` | new | WP8 (split out in the HOOK 8/10 tidy pass) | HOOK 10's systemic-damage half, `partial class SharedArmorSystem` holding `TryApplyWoundHostArmor` and the ported `ApplyWoundSystemicArmor` helper. Logic is byte-identical to the original hook, just relocated |
-| — | `Content.Shared/_WF/Wolfmed/Armor/WolfmedPartArmorSystem.cs` | new | WP8 | HOOK 10's other half, kept out of upstream. Sole subscriber of `<ArmorComponent, InventoryRelayedEvent<PartDamageModifyEvent>>`; applies `ApplyModifierSet(damage, PenetrateArmor(Modifiers, ap))` to the routed part's damage. Without it armour would stop applying to every localized damage type (see Deviations) |
+| `Content.Shared/Armor/SharedArmorSystem.cs:108-129` (handler body, phase 1) | `Content.Shared/_WF/Wolfmed/Armor/WolfmedPartArmorSystem.cs` | modified | WP8 / **WP11-3** | HOOK 10's other half, kept out of upstream. Sole subscriber of `<ArmorComponent, InventoryRelayedEvent<PartDamageModifyEvent>>`; phase 1 applied `ApplyModifierSet(damage, PenetrateArmor(Modifiers, ap))` unconditionally. **WP11-6 reconciliation: WP11-3 rewrote the handler** to Onyx's first-match-wins `PartModifiers` loop plus a `Coverage`/`CoverageSymmetry` gate on the fallback only (P3-D5, Option B). Both branches still wrap `PenetrateArmor` (D23) — without it every AP weapon would silently stop working against any armour that declares a part profile. No new subscription: adding Onyx's own registration at `SharedArmorSystem.cs:30` would be a duplicate directed subscription and a server-start crash. Onyx's `MaskComponent.IsToggled` gate deliberately not ported |
 | `Content.Shared/Mobs/Systems/MobThresholdSystem.cs` | same | new (hook) | WP8 | **HOOK 11**, two sites: `CheckThresholds` and `UpdateAlerts`' severity lerp now read `CheckVitalDamage(target, damageable)` instead of `damageable.TotalDamage`. `CheckVitalDamage` (the `_Onyx/Mobs/Systems` partial, WP5) falls back to total damage for non-wound-hosts, so no branch is needed |
 | `Content.Server/Medical/DefibrillatorSystem.cs` | same | new (hook) | WP8 | **HOOK 12.** Same `CheckVitalDamage` substitution in the revive check, so revival agrees with HOOK 11's death decision |
 | `Content.Shared/Execution/SharedExecutionSystem.cs` | same | new (hook) | WP8 | **HOOK 13.** One `[Dependency] WoundDamageRoutingSystem _woundRouting` + one `TryApplyLethalDamage(victim, meleeWeaponComp.Damage, attacker)` after `AttemptLightAttack`. Self-guards on `_net.IsServer` and `HasComp<WoundHostComponent>` |
@@ -129,7 +129,7 @@ Status values: `verbatim` (byte-identical), `modified` (vendored `_Onyx` file wi
 | — | `Resources/Locale/en-US/_Onyx/commands/damage-command.ftl` | skipped | WP8 | Created in WP8 round 1, **deleted in fix round 1** with the command that used it. The path does not exist in the pinned Onyx sparse checkout, so its "verbatim" claim was never diffable — see Deviations |
 | `Resources/Locale/en-US/damage/damage-command.ftl` | same | skipped | WP8 | Usage-string edit reverted in fix round 1 with `HurtCommand.cs`; byte-identical to HEAD again |
 | `Content.IntegrationTests/Tests/_Onyx/Wounds/WoundDamageFoundationTest.cs` | same | adapted | WP9 | 9 of Onyx's 12 tests. Shitmed `body` prototype instead of Nubody `InitialBody`; Chest -> Torso (D9); `WolfmedDamageableSystem`/`WolfmedBodySystem`/`WoundTargetResolver` in place of Onyx's; Onyx's `TargetingComponent.DefaultOdds()`/`TryConvert` assertions dropped (D10); the two armour tests that need `coverage`/`partModifiers` dropped and folded into one applies-exactly-once test; `SuppressPain` entity effect replaced by the identical `PainSystem.SuppressPain` path (D16, phase 4) |
-| `Content.IntegrationTests/Tests/_Onyx/Wounds/WoundBleedingTest.cs` | same | adapted | WP9 | 4 of Onyx's 6. Server-side `WoundBleedingSystem`/`BloodstreamComponent` (D13); tourniquet test skipped (WP11); traumatic-amputation test skipped (needs `AmputationSystem` to set `Severable`, D26); two auto-clotting severities raised above `SlashWound.minimumSeverity: 9` |
+| `Content.IntegrationTests/Tests/_Onyx/Wounds/WoundBleedingTest.cs` | same | adapted | WP9 / **WP11-5** | **5 of Onyx's 6** (WP11-6 reconciliation). Server-side `WoundBleedingSystem`/`BloodstreamComponent` (D13); tourniquet test still skipped (phase 4); two auto-clotting severities raised above `SlashWound.minimumSeverity: 9`. **`TraumaticAmputationCreatesSevereStumpBleedingTest` restored in WP11-5** (T-AMP-THRESHOLD) once D26 lifted `AmputationSystem`; the phase-1 skip note was deleted. **P3-D14:** Onyx's `BleedAmount Is.GreaterThanOrEqualTo(40f)` corrected to `Is.EqualTo(bloodstream.MaxBleedAmount)` (10f) — a Head `DismembermentWound` at severity 200 gives a raw 60, which `BloodstreamSystem` clamps to `MaxBleedAmount`. Also asserts `DismembermentWound` severity **200** and `AmputationConsequenceWound` severity **35** (the stock `WolfmedBodyPartComponent` default), and that the severed head is a live re-parented entity, not deleted |
 | `Content.IntegrationTests/Tests/_Onyx/Wounds/WoundScarTest.cs` | same | adapted | WP9 | 1 test. Shitmed body graph; `WolfmedBodySystem.TryDetachPart` + `SharedBodySystem.AttachPart`; `CCVars.SurgeryScarChance` pinned to 1 for the duration (Onyx's copy is 35 % flaky) |
 | `Content.IntegrationTests/Tests/_Onyx/Wounds/WoundFractureTest.cs` | same | adapted | WP9 / **WP10-1** | 2 of Onyx's 3. `FractureEffectSystem` test still deferred (WP10-6b owns every assertion); grade boundaries corrected to `OrganicFractureProfile`'s own 20/35/50/60. **WP10-1 landed the `[TestPrototypes]` block only (T-FIXTURE / P2-D21):** `WoundFractureBodyGraph` gains a `left hand` slot (`LeftHandHuman`) and `WoundFractureBody` a `- type: Hands`, plus a second `WoundFractureHandsBodyGraph`/`WoundFractureHandsBody` (both arms, both hands) for T-FRACT-HANDS. Exactly one hand on `WoundFractureBody` so the `used: null` active-hand path is unambiguous. **WP10-6b wrote every assertion:** Onyx's `EffectsRefreshOnTreatmentHealingAndDetachTest` ported (T-FRACT-EFFECTS) plus three tests Onyx does not have - `FractureManipulationUsesHeldHandSymmetryTest` (T-FRACT-HANDS, the only coverage of the P2-D2 `TryGetUsedHandSymmetry` rewrite), `FractureAlertTracksGradeAndTreatmentTest` (T-FRACT-ALERT) and `FractureAlertRespectsMinimumGradeTest` (T-FRACT-ALERT-NEG). Two further `[TestPrototypes]` edits WP10-6b had to make: `- type: Alerts` on `WoundFractureBody` (`AlertsSystem.ShowAlert` returns silently without `AlertsComponent`) and a new `WoundFractureHeldItem` (`IsHolding` only resolves a hand for a real item). Every literal re-derived against the shipped data (P2-D16) and every fracture created at severity >= 60 (P2-D23) |
 | `Content.IntegrationTests/Tests/_Onyx/Wounds/WoundHealingTest.cs` | same | adapted | WP9 | 4 of Onyx's 5. Server-side `WoundHealingSystem` + `Content.Server` `HealingComponent` (D13/D14); `Repairable`/`TransplantCompatibility` dropped; `WoundTargetResolver` for the exact-target test; repair-event test skipped (`_Onyx.Repairable` not in scope) |
@@ -176,6 +176,29 @@ Onyx-equivalent — §8.1 item 1(a)).
 (`_Mono/Entities/Mobs/Species/protogen.yml:74`), a synthetic. `WoundHostComponent` is stripped at
 `ComponentInit` by `WolfmedWoundHostExclusionSystem` before any wound system observes it.
 **Phase 2 note (P2-D22):** that system removes `WoundHostComponent` and nothing else, so protogen *does* carry the `PainShockTarget` and `EmoteOnDamage` components WP10-5 added beside it. `PainShockTarget` is inert there (`PainComponent` is only ever ensured on wound hosts) and the pain sounds are gated in C# by `HandlePainDamageEmote`'s `HasComp<WoundHostComponent>` guard, not by the YAML block.
+
+| — | `Content.IntegrationTests/Tests/_WF/Wolfmed/WolfmedReattachTest.cs` | new | **WP11-0** | T-REATTACH; closes PLAN §8.3 trap 2 (a part re-attached via `SharedBodySystem.AttachPart` regains live wound tracking, not just its old wound data) |
+| — | `Content.IntegrationTests/Tests/_WF/Wolfmed/WolfmedVisualsTest.cs` | new | **WP11-0** | T-VISUALS; first-ever coverage of `PartDamageVisualsComponent`, live with zero consumers since WP5 |
+| — | `Content.Server/_WF/Wolfmed/WolfmedBodyPartLifecycleSystem.cs` | modified | **WP11-1** | P3-D1 (replaces the withdrawn HOOK 19): `ChargeVitalPartLoss` added to the existing host-gated `OnPartRemoved`, after `_bleeding.OnPartChanged`. A lost vital part with no remaining sibling of its type charges its own total as systemic `Bloodloss`, so `CheckVitalDamage` cannot fall when a head comes off. Three new `[Dependency]` lines (`WolfmedDamageableSystem`, `IPrototypeManager`, plus the existing `_body`). No new subscription, no upstream file, no prototype edit |
+| — | `Resources/Prototypes/_WF/Wolfmed/Body/parts.yml` | modified | **WP11-1** | **DECISIONS.md §8.6-1 (user balance decision): guns and lasers can sever.** Per part: a `Heat` row in `amputationThresholds` equal to that part's `Piercing` row (Head 200, Arm 250, Hand 200, Leg 250, Foot 220) and `dismembermentFinishingDamage: {Piercing: 12, Heat: 15}`. Slash/Piercing/Blunt thresholds untouched; the Slash (15) and Blunt (50) finishing minimums are deliberately left out of the per-part dict so they keep falling back to `WoundHostComponent.DefaultDismembermentFinishingDamage`. **Overrides PLAN3 P3-D4/P3-D13 and §3's "not touched" entry for this file** |
+| — | `Content.IntegrationTests/Tests/_Onyx/Wounds/WoundDamageFoundationTest.cs` | modified | **WP11-1** | Two stale literals in `RoutesAndProjectsDamageTest` corrected for P3-D1 (systemic `Bloodloss` 100 -> **113**, projected body total 106 -> **119**), with the derivation in a `// WOLFGATE` comment. **Deviation from PLAN3 §4 serialisation rule 2** (the file is nominally WP11-3's) - unavoidable: P3-D1 is what changed the numbers |
+| `Resources/Prototypes/Body/base_organs.yml` (values) | `Resources/Prototypes/_WF/Wolfmed/Body/organs.yml` | new | **WP11-2** | **PROTO A half 1.** Seven abstracts (`WolfmedOrgan{Brain,Eyes,Heart,Lungs,Liver,Stomach,Kidneys}`), each `- type: WolfmedOrgan` + `- type: OrganDamage`, values byte-checked against `ONYX Resources/Prototypes/Body/base_organs.yml:481-491,537-547,665-676,718-730,755-767,808-819,846-858`. `health`/`maxHealth` omitted on purpose - `WolfmedOrganComponent` already defaults to 15/15, which is Onyx's own `OrganComponent` C# default, and no Onyx prototype overrides it. Separate abstract ids rather than re-declarations (RT's `ComponentRegistrySerializer` throws `Duplicate ID`), same shape as WP7's `parts.yml`. Brain carries no `destructionWound`: `OrganHealthSystem` kills the mob instead of destroying it (P3-D22) |
+| — | `Resources/Prototypes/Body/Organs/human.yml` | modified (hook) | **WP11-2** | **PROTO A half 2.** Seven one-line `parent:` edits at `:53,103,150,189,215,249,270`, each `# WOLFGATE (WP11-2, D8)`. `OrganHumanTongue` (`:119`), `OrganHumanAppendix` (`:128`) and `OrganHumanEars` (`:139`) deliberately untouched - no body graph in the repo slots them. This is what makes `OrganDamageSystem`/`OrganHealthSystem` non-inert for the first time since WP6 |
+| — | `Content.Server/_WF/Wolfmed/Body/WolfmedOrganConsequenceSystem.cs` | new | **WP11-2** | P3-D8. Sole subscriber of `<WolfmedOrganComponent, OrganFunctionChangedEvent>` (audited free: the event is declared at `OrganHealthSystem.cs:21` and raised at `:71`, nowhere else). **Raises** `OrganEnableChangedEvent` rather than subscribing it - that pair is owned by `SharedBodySystem.Organs.cs:23` and a second registration is a server-start crash; precedent `_Shitmed/Cybernetics/CyberneticsSystem.cs:27-28,45-46`. Guards `TerminatingOrDeleted` + `HasComp<OrganComponent>` |
+| — | `Content.Server/_Onyx/Body/Systems/OrganHealthSystem.cs` | modified | **WP11-2** | P3-D23, two `// WOLFGATE` guards: `TerminatingOrDeleted(uid)` before `DestroyOrgan` in the `Update` loop, and `!TerminatingOrDeleted(parent)` in `DestroyOrgan`'s `CreateOrMergeWound` condition. `DestroyOrgan` calls `RemoveOrgan` and wounds the containing part, and `RecursiveDeleteEntity` reaches it while a mob terminates - byte-for-byte the `DebugAssertException` WP9 fixed in `WolfmedBodyPartLifecycleSystem`, which cost 13 unrelated pooled-pair failures. Unreachable before PROTO A |
+| `Content.Shared/Armor/ArmorComponent.Locational.cs` | `Content.Shared/_WF/Wolfmed/Armor/ArmorComponent.Wolfmed.cs` | new | **WP11-3** | P3-D5 (Option B). `public sealed partial class ArmorComponent` re-opened from `namespace Content.Shared.Armor`, so `Content.Shared/Armor/ArmorComponent.cs` keeps **zero** edits (it is `sealed partial`, `[RegisterComponent, NetworkedComponent, AutoGenerateComponentState]`, no `[Access]`). Adds `Coverage`, `CoverageSymmetry` and `PartModifiers` plus the new `[DataDefinition] ArmorPartModifier` type (name grepped clear). **No `[AutoNetworkedField]`** — `ArmorPartModifier` is a `[DataDefinition]`, not `NetSerializable`, and the fields are prototype-static so the client already has them at spawn. `Coverage`/`CoverageSymmetry` are **nullable** where Onyx's are `= []` (deviation below). Onyx's `traumaDeductions` (P3-D20) and `ShowArmorOnExamine` are not ported |
+| — | `Resources/Prototypes/_Mono/Entities/Clothing/Head/Helmets/bulletproof_helmets.yml` | modified (hook) | **WP11-3** | **PROTO B**, 1 line. The file's only `- type: Armor` block (`ClothingHeadBPHelmetLight`) gains `coverage: [Head] # WOLFGATE (WP11-3, P3-D6)` |
+| — | `Resources/Prototypes/_Mono/Entities/Clothing/OuterClothing/Armor/bulletproof_vests.yml` | modified (hook) | **WP11-3** | **PROTO B**, 5 lines. Each `- type: Armor` block (Light, Medium, Heavy, Polyvalent, Stabproof) gains `coverage: [Torso, Arm, Leg] # WOLFGATE (WP11-3, P3-D6)`. `Chest`/`Groin` are never emitted (D9 — no such `BodyPartType` member; the Release lint would fail). **The only content annotated in phase 3**; every other `- type: Armor` in the game (272 across 75 files, including `ClothingHeadHelmetSwat`) keeps unset coverage and therefore today's whole-body behaviour |
+| `…/WoundDamageFoundationTest.cs` (4 fixtures + 3 tests) | `Content.IntegrationTests/Tests/_Onyx/Wounds/WoundDamageFoundationTest.cs` | modified | **WP11-3** | Four new `[TestPrototypes]` ids (`WoundFoundationArmorHead`, `WoundFoundationArmorAllHead`, `WoundFoundationArmorLeftArm`, `WoundFoundationArmorLocational`) and five tests: `AppliesLocationalArmorExactlyOnceTest`, `EmptyCoverageAndSymmetryTest`, `LocationalModifierOverridesAndFallbackTest` (ported, D9-mapped) plus the Wolfgate-only `PartModifiersRouteThroughArmorPenetrationTest` and `UncoveredPartIgnoresArmorPenetrationTest`. Phase 1's `AppliesArmorExactlyOnceTest` is **kept and still asserts head 5 / torso 5** — its fixture declares no `coverage`, so Option B is a verified no-op for it; only its now-false comment was rewritten. Onyx's `WoundFoundationArmorAll` is renamed `…AllHead` on purpose (it is worn in the head slot) |
+| `Content.Client/Damage/DamageVisualsSystem.cs` (4 tagged regions) | `Content.Client/_WF/Wolfmed/Damage/DamageVisualsSystem.Wolfmed.cs` | new | **WP11-4** | **HOOK 20** body. Option A: `OnPartDamageVisualsState`, `UpdatePartDamageVisuals` (re-typed to WG's non-tuple `UpdateTargetLayer(SpriteComponent, …)` calling convention, D18/§2.3), `GetLayerDamage` (P3-D25 hand→arm / foot→leg fold). Option B (shipped, see deviations): `OnBodyPartState`, `UpdateDetachedPartDamage`, `UpdateDetachedDamageLayer`, `SetDetachedDamageLayerVisible`, `GetDetachedDamageThreshold`, `TryGetDetachedDamagePrefix` (Onyx's `Groin` arm dropped, D9) |
+| — | `Content.Client/Damage/DamageVisualsSystem.cs` | modified (hook) | **WP11-4** | **HOOK 20**, 3 insertions (1 using + 2 subscriptions in `Initialize()`, 5 lines in `HandleDamage`): (a) `using Content.Shared._Onyx.Wounds;` + `SubscribeLocalEvent<PartDamageVisualsComponent, AfterAutoHandleStateEvent>(OnPartDamageVisualsState);` (Option A, PLAN3-authorised); (b) the early-return block in `HandleDamage` after `UpdateDisabledLayers` and before `CheckOverlayOrdering`; (c) `using Content.Shared.Body.Part;` + `SubscribeLocalEvent<BodyPartComponent, AfterAutoHandleStateEvent>(OnBodyPartState);` — **one extra subscription beyond PLAN3's literal HOOK 20 table**, needed to make the pre-authorised Option B fire at all (see deviations) |
+| — | `Content.Shared/Body/Part/BodyPartComponent.cs` | modified (hook) | **WP11-4** | **HOOK 21**, one word: `[AutoGenerateComponentState]` → `[AutoGenerateComponentState(raiseAfterAutoHandleState: true)]`. Confirmed zero prior `<BodyPartComponent, AfterAutoHandleStateEvent>` subscribers repo-wide before this WP, so the flag only adds behaviour |
+| `Resources/Textures/_Onyx/Wounds/brute_damage.rsi` (77 states, 78 files incl. meta.json) | same | new | **WP11-4** | Byte-copied from ONYX via `git show`. `meta.json` license `CC-BY-SA-3.0`, copyright `Drawn by Ubaser.` — **identical artist and licence already shipped and accepted** in WG's own `Resources/Textures/Mobs/Effects/brute_damage.rsi` (verified). All 77 states have a matching `.png`; no orphan states |
+| `Resources/Textures/_Onyx/Wounds/burn_damage.rsi` (77 states, 78 files incl. meta.json) | same | new | **WP11-4** | Same licence/attribution as above, verified identically. All 77 states have a matching `.png` |
+| — | `Resources/Prototypes/Entities/Mobs/Species/base.yml` | modified (hook) | **WP11-4** | **PROTO C**, 2 lines. The `- type: DamageVisuals` block's `damageOverlayGroups.Brute.sprite`/`.Burn.sprite` retargeted from `Mobs/Effects/{brute,burn}_damage.rsi` to `_Onyx/Wounds/{brute,burn}_damage.rsi`. No `Groin` layer added (D9), no Hand/Foot `targetLayers` added (Onyx does not either; the live overlay stays 6 layers in both trees) |
+| `Content.IntegrationTests/Tests/_Onyx/Wounds/AmputationConsequenceTest.cs` (3 of Onyx's 5) | same path | new | **WP11-5** | T-AMP-CONSEQUENCE-1/-2/-3. Fixture rebuilt Shitmed-shaped (PLAN3 §6.1 trap 9): a `- type: body` graph in place of Onyx's `InitialBody`, `TransplantCompatibility`/`bodyPartProfile` dropped, `partType: Chest` → parts inheriting `TorsoHuman`/`HeadHuman` (D9), and Onyx's part-level `amputationThresholds` moved to `- type: WolfmedBodyPart` (D8). The fixture torso carries `amputationConsequenceSeverity: 50` — **load-bearing** (PLAN3 §8.7 hazard 7 / CRITIQUE3 M3-2): 35 is both the component default and `WolfmedBodyPartSystem.Get`'s fallback, so only a non-default value can prove edit #9 reads the severity off the **parent stump**. Onyx's `HasAmputationConsequence` / `TryAttachPart … Is.False` assertions dropped (B-2/P3-D2); `SurgicalHealRemovesConsequenceAndUnblocks` (needs `SurgeryStepEvent`, D7) and `HealingDamageKeepsConsequenceBlocked` (payload is the dropped gate) are recorded as skips in the file's `<remarks>` |
+| — | `Content.IntegrationTests/Tests/_WF/Wolfmed/WolfmedAmputationTest.cs` | new | **WP11-5** | 5 tests. **T-AMP-VITAL** (both halves: the wound host's readout moves `+115` = the finishing hit + Shitmed's flat `VitalDamage` 100, with systemic `Bloodloss` at **315**; a `MobMonkey` non-host still charges **exactly 100**, the D2 guard the withdrawn HOOK 19 would have failed). **T-AMP-GUN** — replaces PLAN3's T-AMP-NOGUN per DECISIONS.md §8.6-1: a hand over its Piercing threshold is severed by one 14-Piercing round (hit 16), over its Heat threshold by one 16-Heat shot (hit 14), a below-threshold foot by neither, and the untouched melee case still needs 6 machete-grade Slash 32 hits on an arm. **T-AMP-OVERFLOW** (a: `AmputationOverflow` stays 0 on a shipped part through 16 × Blunt 25, `Severable` flips exactly at the threshold, one Blunt 50 detaches; b: a bespoke `maxDamage: 50` part accumulates **30**). **T-AMP-EXPLOSION** (`TryRouteDistributedDamage(..., isExplosion: true)`, single-part mask, saturated chance). **T-AMP-CONSEQUENCE-SEPARATE** (two `AmputationConsequenceWound` at **50** + two `DismembermentWound` at **120**; `mergeMode: SeparateInstances`, P3-D10 — replaces `tests.md`'s merge test). New `[TestPrototypes]`: `WolfmedAmputationBodyGraph/Body/Torso`, `WolfmedAmputationOverflowGraph/Body/Part` |
+| — | `Content.IntegrationTests/Tests/_WF/Wolfmed/WolfmedOrganTest.cs` | new | **WP11-5** | 8 tests. **T-ORG-DATA** (all seven `OrganHuman*` resolve with `WolfmedOrgan` 15/15 and WP11-2's measured `OrganDamage` numbers — catches a mistyped PROTO A `parent:`). **T-ORG-CAP** (`15 × 0.3 = 4.5` per application: 15 → 10.5 → 6.0, unchanged by a ×10 bigger hit). **T-ORG-DESTROY** (lungs → `InternalBleedingWound` severity **35** on the torso, organ deleted). **T-ORG-HEART** (`DelayedDeathComponent` — the only proof P3-D8's Shitmed-consequence argument holds). **T-ORG-BRAIN** (mob `Dead`, organ **not** deleted — pins P3-D22). **T-ORG-EYES** (`TemporaryBlindnessComponent`, landing at the *disable*, before destruction). **T-ORG-FUNC** (the only coverage of `WolfmedOrganConsequenceSystem`: an `onAdd` grant is revoked in the one-tick window, and the deliberate second disable is harmless). **T-ORG-INERT** (D2/D3/D32: same graph, same torso profile, same organ, minus `WoundHostComponent` → routing refuses it and the organ loses nothing). New `[TestPrototypes]`: `WolfmedOrganTestProfile`, `WolfmedOrganTestGraph/Body/Torso/Organ`, `WolfmedOrganControlBody`, `WolfmedOrganFuncGraph/Body/Organ` |
 
 ## Deviations
 
@@ -394,7 +417,9 @@ Deliberate departures from Onyx behaviour, with the reason. A re-sync should not
   is ported and the four stopgap keys were deleted from `wounds.ftl`.
 - **`Resources/Textures/_Onyx/Wounds/{brute,burn}_damage.rsi` are not ported**, per PLAN's explicit
   "textures deliberately not ported" note — `wounds.yml` has zero texture references, and the sprites are
-  cosmetic re-skins of ones Wolfgate already ships.
+  cosmetic re-skins of ones Wolfgate already ships. **Superseded in WP11-4:** both RSIs (156 files total,
+  CC-BY-SA-3.0 / Ubaser — the same licence and artist already shipped and accepted in
+  `Mobs/Effects/*_damage.rsi`) were ported for severed-limb wound rendering (DECISIONS.md §8.6-5, Option B).
 
 ### WP8
 
@@ -791,11 +816,10 @@ to the WP section above that carries the full derivation.
 4. **GUARD F + HOOK 14 — authorised.** Landed WP10-2.
 5. **HOOK 15 + HOOK 16 — authorised.** Landed WP10-4.
 6. **HOOK 17 + HOOK 18 — authorised (additive fields, no `_WF`-twin fallback taken).** Landed WP10-5.
-7. **`PartDamageVisualsComponent` — deferred to phase 3, noted here.** It is `EnsureComp`'d and networked by
-   `WoundDamageProjectionSystem` (WP4/WP5) but has zero consumers in this tree: Onyx's only reader
-   (`Content.Client/Damage/DamageVisualsSystem.cs` + `_Onyx/Wounds/{brute,burn}_damage.rsi`) is unported.
-   It is paying networking cost for nothing until phase 3 lands per-limb damage sprites. No phase-2 package
-   touched it; it is not on the phase-2 file list above for that reason.
+7. **`PartDamageVisualsComponent` — resolved in WP11-4 (was deferred to phase 3, noted here at phase-2 time).**
+   It is `EnsureComp`'d and networked by `WoundDamageProjectionSystem` (WP4/WP5); WP11-4 gave it its first
+   consumer, `Content.Client/_WF/Wolfmed/Damage/DamageVisualsSystem.Wolfmed.cs` (HOOK 20), so per-limb damage
+   now renders on the body sprite instead of paying networking cost for nothing.
 8. **Part status readout scope — wound hosts only (P2-D20), as recommended.** GUARD F calls
    `AddPartStatusMarkup` from the `else` of the `HasComp<WoundHostComponent>` wrap, not unconditionally as
    Onyx does, so borgs, NPC/EE silicons, animals and the D32-excluded Protogen keep today's threshold text
@@ -805,6 +829,367 @@ to the WP section above that carries the full derivation.
    full heal off its severity — 15 → 5 for 10 points of Blunt healing — not Onyx's 13.5, because
    `HealingMultiplier` defaults to 1 and `BluntWound` overrides nothing, in both trees). Restated here per
    DECISIONS.md's explicit "keep on record" instruction; still not a phase-2 or phase-3 gate.
+
+### WP11-0 (phase 3 — zero-dependency test debt: T-REATTACH + T-VISUALS)
+
+- **No production code changed.** Both gaps closed clean on the first run — no bug found, no `// WOLFGATE`
+  edit needed anywhere. This package is test-file-only: two new files plus this manifest.
+- **T-REATTACH** (`WolfmedReattachTest.ReattachedPartRejoinsWoundTrackingTest`): a bespoke one-arm
+  `WolfmedReattachBody` (Shitmed graph + `MobBloodstream`) has its arm detached via
+  `WolfmedBodySystem.TryDetachPart` and re-attached via `SharedBodySystem.AttachPart(torso, "left arm", arm)`.
+  Confirmed post-reattach: `WoundableComponent`/`DamageableComponent` are still present (they are never
+  removed by detach — `TryDetachPart` only re-parents the container, per `Compat/WolfmedBodySystem.cs`), the
+  part's `WolfmedBodyPartComponent.AmputationThresholds` still read the prototype's own `{Slash 130,
+  Piercing 250, Blunt 250}` (WolfmedBaseLeftArm, PLAN3 P3-D13 — prototype data, never mutated at runtime), and
+  a fresh `Slash 15` hit via `WoundDamageRoutingSystem.TryApplyPartDamage` both creates a new `SlashWound` on
+  the arm and raises `BloodstreamComponent.BleedAmount` above zero. The mechanism that makes this work was
+  already shipped and correct: `WolfmedBodyPartLifecycleSystem.OnPartAdded` (WP9) calls both
+  `WoundDamageProjectionSystem.OnPartInserted` (re-`EnsureComp`s `Woundable`/`Damageable`/`Pain`/
+  `BodyPartFunctionality` on the whole reattached subtree) and `WoundBleedingSystem.OnPartInserted`
+  (rejoins the part's bleed rate into the body's `BloodstreamComponent` total) — this test is what proves that
+  wiring actually closes PLAN §8.3 trap 2, which `WoundScarTest`/`WoundBleedingTest`'s existing detach/reattach
+  coverage does not (they prove old wound *data* survives the round trip; they never re-damage the part
+  afterward).
+- **T-VISUALS** (`WolfmedVisualsTest.PartDamageProjectsToVisualsComponentTest`): a real `MobHuman` takes
+  targeted `Blunt` damage on the left arm and the left hand via `WoundDamageRoutingSystem.TryApplyPartDamage`.
+  Confirmed `Comp<PartDamageVisualsComponent>(body).Damage[HumanoidVisualLayers.LArm]` and `[.LHand]` each hold
+  exactly the dealt amount, `.RArm`/`.RHand` are absent-or-zero, and the same reads succeed on `Pair.Client`'s
+  networked mirror entity (`PartDamageVisualsComponent` is `[NetworkedComponent, AutoNetworkedField]` — no
+  extra hook needed for the state to arrive; that is unrelated to P3-4's `BodyPartComponent`
+  `raiseAfterAutoHandleState` flag, which only gates *detached*-part state, HOOK 21). The `LHand` assertion is
+  the server-side anchor for P3-D25: `WoundDamageProjectionSystem.TryGetVisualLayer` already writes
+  `HumanoidVisualLayers.LHand`/`RHand`/`LFoot`/`RFoot` for hand/foot parts, and the stock 6-layer
+  `targetLayers` list (`Species/base.yml`) cannot render any of the four — folding them onto the arm/leg
+  reader is WP11-4's job, not this package's; this test only pins that the data WP11-4 will fold is already
+  correct. No sprite/screenshot assertion, per project convention (logic tests only).
+- **Test count:** the combined `_Onyx.Wounds|Wolfmed` filter went from 39 to **41** tests, all green, alongside
+  a clean `DockTest` (no `db.ef` warning noise this run).
+
+### WP11-1 (phase 3 - amputation)
+
+- **Amputation is live.** `AmputationSystem.cs` vendored to `Content.Shared/_Onyx/Wounds/` with PLAN3
+  section 4/WP11-1's edit table applied exactly (18 sites). `OrganDamageSystem`'s D26 comment-outs are gone, so
+  `PartDamageAppliedEvent` now fans out to amputation between fractures and bleeding.
+- **How the threshold actually works** (measured, not assumed - this is what WP11-5's T-AMP-GUN must encode):
+  `progress` is the **sum, over only the damage types present in that part's own `amputationThresholds`, of
+  accumulatedPartDamage[type] / threshold[type]**, where accumulatedPartDamage is
+  `WolfmedDamageableSystem.GetAllDamage(part)` - the part's own `DamageableComponent`, **not** its wounds and
+  **not** one combined total. Because it is a sum of per-type ratios, mixed damage types stack toward one
+  severing. A damage type absent from that dict contributes nothing to `progress` **and** can never be a
+  finishing hit (`IsFinishingHit` skips any type the dict does not contain). Sequence: the hit that first
+  pushes `progress >= 1` only sets `Severable`; the *next* hit detaches, provided the pre-hit `progress >= 1`
+  and that hit carries at least `dismembermentFinishingDamage[type]` (falling back to the host default) of a
+  threshold type. Healing back below `SeverableResetRatio` (0.8) clears `Severable`.
+- **Heat needs no wound-type mapping.** `Heat` is in `WoundHostComponent.LocalizedDamageTypes`, is in
+  `OrganicBodyPartProfile.acceptedDamageTypes`, and the `OrganicPart` damage container supports the whole Burn
+  group, so laser damage already lands on the part's `DamageableComponent` as `Heat`
+  (`WoundDamageRoutingSystem.cs:772`). `BurnWound` is a parallel record that `GetThresholdProgress` never
+  reads. Adding the `Heat` threshold row was therefore sufficient on its own.
+- **Measured balance outcome of DECISIONS section 8.6-1** (throwaway integration check, run and then deleted):
+  a left hand (Piercing and Heat thresholds both 200) is severed by the **16th** consecutive 14-Piercing round
+  (15 hits reach 210 and set `Severable`, the 16th is the finishing hit) and by the **14th** consecutive
+  16-Heat laser shot (13 hits reach 208, the 14th finishes). Five bullets into a foot (70 of a 220 threshold)
+  leave it attached and not `Severable`. Melee is unchanged: the Slash finishing minimum is still 15.
+- **P3-D1 is neutral-by-construction but visible in one existing test.**
+  `WoundDamageFoundationTest.RoutesAndProjectsDamageTest` detaches a head carrying Blunt 10 + Caustic 3, so the
+  systemic `Bloodloss` charge is now 13 + Shitmed's `VitalDamage` 100 = **113** and the projected body total is
+  **119**. Both literals corrected in place with the derivation. **D2 verified empirically:** de-heading a
+  `MobMonkey` (non-wound-host; `HeadMonkey` inherits `BaseHead` which inherits `WolfmedBaseHead`, so it carries
+  `WolfmedBodyPart` data but no `WoundHostComponent`) still costs **exactly 100** Bloodloss.
+- **P3-D1a stands:** the charge is not refunded on surgical re-attachment. A re-headed corpse reads more
+  damaged than it is, never less. Phase 4 owns the refund.
+- **No double-apply with Shitmed's detach cascade.** GUARD B
+  (`_Shitmed/Body/Systems/SharedBodySystem.Targeting.cs:234`) keeps `severed` false for wound hosts, so
+  Shitmed's own `DropPart` at `:246` never fires and Onyx's `TryDetachPart` is the only detach path. The
+  `DismembermentWound` and `AmputationConsequenceWound` are created once each, on the **parent**, after
+  `TryDetachPart` returns; nothing in the Shitmed cascade creates wounds. Bleeding cannot double-count because
+  every entry point (`WoundBleedingSystem.OnPartChanged:288`, `OnWoundCreated:41`) recomputes
+  `BloodstreamComponent.BleedAmount` from the live wound set rather than adding to it.
+- **`AmputationConsequenceWound` still ships inert** (P3-D2): `SharedBodySystem.Parts.cs:606 CanAttachPart` is
+  not hooked, so a severed limb can still be surgically re-attached. The wound is a marker for examine and
+  phase-4 surgery.
+- **Explosion amputation stays inert** (P3-D3): `TryExplosionAmputate` is ported and reachable only through
+  `WoundDamageRoutingSystem.TryRouteDistributedDamage(..., isExplosion: true)`; no `ExplosionSystem` hook.
+- **Test count:** the `_Onyx.Wounds|_Onyx.Body|Wolfmed` filter is **43 tests, 43 green** (the 41 WP11-0's
+  `_Onyx.Wounds|Wolfmed` filter covered, plus 2 from `_Onyx.Body`).
+
+### WP11-2 (phase 3 - organ damage)
+
+- **Organ damage is live for the first time.** Before this package `grep -rn "type: OrganDamage|type: WolfmedOrgan"
+  Resources/Prototypes` returned zero hits, so `OrganDamageSystem.OnPartDamageApplied` returned at
+  `organs.Count == 0` for every hit in the game and `OrganHealthSystem.Update`'s query was empty. PROTO A
+  (`_WF/Wolfmed/Body/organs.yml` + seven `parent:` edits in `Body/Organs/human.yml`) switches both on for the
+  seven `OrganHuman*` ids, which is human, gingerbread, dwarf, vox, yowie and the human-lineage organs of eight
+  more species (P3-D7 / DECISIONS.md §8.6-7).
+- **Prototype data verified by resolution, not by reading the file back** (throwaway integration check, run and
+  then deleted). All seven ids spawn with `WolfmedOrgan` at `15/15` and `OrganDamage` at exactly Onyx's numbers:
+  Brain `hitChance 0.8 / weight 0.75 / Blunt .115 Slash .25 Piercing .42 Heat .15 Cold .05 Shock .3125`, no
+  destruction wound; Eyes `0.7 / 0.2275 / .115 .3 .4375 .15 .05 .25`, no destruction wound; Lungs
+  `1.0 / 1.38 / .1 .25 .42 .165 .05 .25`, `InternalBleedingWound` 35; Heart `0.8 / 0.64 / .1 .25 .455 .15 .05
+  .3375`, wound 45; Stomach `0.85 / 0.56 / .1 .275 .4025 .15 .05 .25`, wound 25; Liver
+  `1.0 / 1.1 / .1 .3 .4375 .15 .05 .25`, wound 40; Kidneys `0.9 / 0.51 / .1 .25 .4025 .15 .05 .25`, wound 30.
+  The multi-parent `parent: [BaseHumanOrgan, WolfmedOrgan*]` form resolves correctly - no component is lost or
+  overwritten, because the Wolfmed abstracts declare only components the upstream organs do not.
+- **Consequences are Shitmed's, not Onyx's** (P3-D8). Onyx destroys an organ at 0 HP and then reaches its
+  consequences through Nubody; in Wolfgate every consequence except brain-death already flows from organ
+  *removal*, which `OrganHealthSystem.DestroyOrgan` performs via `SharedBodySystem.RemoveOrgan`: heart ->
+  `HeartSystem` -> `DelayedDeathComponent` (60 s, defib refused), brain -> `DebrainedComponent`, eyes ->
+  `TemporaryBlindnessComponent`, lungs -> no `LungComponent` -> suffocation. Nothing from
+  `OrganConsequenceComponents.cs`, `FunctionalOrganComponent`, `MissingHeartComponent`, `BodyStasis.cs`,
+  `TaggedOrgan*` or `Content.Server/_Onyx/Body/OrganEffectSystem.cs` was ported; the DECISIONS.md P3-2 question
+  ("are `MissingHeartComponent` + `BodyStasis.cs` needed?") is answered **no**. Porting
+  `OrganConsequenceComponents.cs` wholesale would register `BreathingImmunity` twice and crash the server at
+  start - WG already has `_Shitmed/Body/Components/BreathingImmunityComponent.cs`.
+- **The one piece of new glue is the 0-HP-but-not-yet-destroyed window.** `OrganHealthSystem.SetHealth` raises
+  `OrganFunctionChangedEvent` on a `Health > 0` <-> `Health <= 0` transition, and `Update` destroys the organ on
+  the *next* tick. `WolfmedOrganConsequenceSystem` turns that event into Shitmed's
+  `OrganEnableChangedEvent(functional)`, which `SharedBodySystem.OnOrganEnableChanged` converts into
+  `OrganComponentsModifyEvent` - revoking the organ's `onAdd:` grants (`_Shitmed/BodyEffects/OrganEffectSystem`)
+  and driving the eyes enable/disable path. **The disable therefore fires twice** (once here, once from
+  `RemoveOrgan` a tick later) and that is deliberate: `OnOrganEnableChanged` does not early-return on an
+  unchanged value, and removing an already-removed component is a no-op. Do not "fix" it with a guard that also
+  suppresses the first pass. The known EMP race (`CyberneticsSystem.OnEmpDisabledRemoved` re-enabling a doomed
+  organ inside that one tick) is accepted; no `before:`/`after:` was added.
+- **`OrganHealthSystem` gained two `TerminatingOrDeleted` guards** (P3-D23) because PROTO A makes `DestroyOrgan`
+  reachable for the first time, including from `RecursiveDeleteEntity` while a mob terminates. That is the exact
+  failure WP9 fixed in `WolfmedBodyPartLifecycleSystem`, and it cost that package 13 unrelated pooled-pair
+  failures. Do not weaken them.
+- **Organ damage ships irreversible** (DECISIONS.md §8.6-4). Nothing in Wolfgate raises organ health: Onyx's only
+  healer is its own surgery, which D7 skips, and Shitmed can replace an organ but never repair one.
+  `OrganHealthSystem.ChangeHealth(+x)` exists and is public, so a phase-4 chem or surgery step is ~15 lines.
+- **Balance, as shipped (D4, Onyx defaults).** The per-application cap dominates: `MaxHealth x MaxDamageFraction
+  = 15 x 0.3 = 4.5` organ HP per hit, so **exactly 4 applications destroy any organ regardless of hit size**, and
+  raw damage above ~10-11 Piercing is irrelevant to organs. Per-hit probability (part-type roll x weighted draw
+  x `hitChance`): lungs 2.41 %, liver 2.05 %, heart 1.05 %, stomach 0.98 %, kidneys 0.95 % per torso hit; brain
+  4.0 %, eyes 3.5 % per head hit. **Expected hits to destroy: ~166 (lungs) to ~421 (kidneys) torso hits, ~100
+  head hits for the brain.** So organ destruction is a shift-long ratchet, not a gunfight event - but when it
+  lands it is a cliff (brain = instant death, heart = crit-then-dead in 60 s plus 0.9 blood units/s).
+- **`OrganHealthSystem.Update`'s per-tick query is non-empty for the first time. Measured:** it enumerated
+  **0** entities before PROTO A and **7 per spawned `MobHuman`** after (brain, eyes, lungs, heart, stomach,
+  liver, kidneys). The body of the loop for a healthy organ is one `FixedPoint2` comparison
+  (`organ.Health > Zero` -> `continue`), so a 50-human round costs ~350 comparisons per tick. It also
+  enumerates organs on non-wound-hosts (rat lungs, `_NF` goblin organs, every `_Shitmed`/`_Mono` cybernetic
+  organ parented to `OrganHuman*`), which is cost without behaviour - their health never drops, because
+  `OrganDamageSystem` only runs off `PartDamageAppliedEvent`, which only wound hosts raise. **D2 holds.**
+- **Cybernetic organs inherit the organic policy** through `OrganHumanEyes`/`OrganHumanHeart`/`OrganHumanLiver`/
+  `OrganHumanLungs` (`_Shitmed/Body/Organs/cybernetic.yml`, `generic.yml`, `_Mono/Body/Organs/cybernetics.yml`).
+  Left deliberately - Onyx routes organ damage through its own cybernetic profile too, and phase 5 owns the
+  whole cybernetic/IPC profile.
+- **Did not touch** `Content.Server/_Onyx/Wounds/OrganDamageSystem.cs` (P3-D24: owned exclusively by WP11-1),
+  `Resources/Prototypes/_Onyx/Wounds/wounds.yml` (`organDamage.chances` already ships), or any of the ~20
+  non-`OrganHuman*` organ roots (animal, arachnid, diona, slime, hydrakin, feroxi, chitinid) - those are silent
+  no-ops, never crashes, until phase 4's data-driven option.
+- **Checkpoint:** `Content.Server`, `Content.Client` and `Content.IntegrationTests` all 0 errors; a 120 s
+  headless server run reached `Ready` with **zero** `[ERRO]`/`[FATL]`/`Exception` lines (this is where an unknown
+  component or a mistyped field would surface); `DockTest` 3/3; the
+  `_Onyx.Wounds|_Onyx.Body|Wolfmed` filter **43/43 green**, unchanged from WP11-1.
+
+### WP11-3 (phase 3 - per-part (locational) armour)
+
+- **Option B shipped, not Onyx's shipped code** (P3-D5). Onyx declares `Coverage`/`CoverageSymmetry`
+  (`ONYX Content.Shared/Armor/ArmorComponent.Locational.cs:13,19`) and reads them from **no C# anywhere**: its
+  `SharedArmorSystem.cs:124-128` disables the gate inside an `<Onyx-ArmorGlobalProtection-edited>` marker, so
+  two of its own three locational-armour tests are red against its own pin. Wolfgate implements what Onyx's doc
+  comments and tests describe: the ordered `partModifiers` loop wins first, and the component's global
+  `Modifiers` reach a part only when `Coverage`/`CoverageSymmetry` admit it. **Deliberate divergence from the
+  vendored Onyx behaviour**, recorded here rather than as a bug.
+- **`Coverage`/`CoverageSymmetry` are nullable (`HashSet<T>?`), Onyx's are non-nullable `= []`.** `null` **and**
+  empty both mean "protects everything" — `Covers()` only narrows when the set is `{ Count: > 0 }`. Getting that
+  backwards would invert all 272 unannotated `- type: Armor` entries in the game at once. Nullable was chosen so
+  that "unset" is representable without allocating a set on every armour in the game.
+- **`Symmetry` is matched independently of `Parts`.** `symmetry: [Left]` with no `parts:` means "any left part",
+  and a torso (`BodyPartSymmetry.None`) is excluded by such a set. Same as Onyx.
+- **The coverage gate sits AFTER the `PartModifiers` loop**, matching Onyx's own `<Onyx-ArmorGlobalProtection>`
+  comment, which scopes coverage to "an individual body part … not listed in `@Coverage`/`@CoverageSymmetry`" —
+  i.e. to the fallback only. Moving it above the loop makes a `partModifiers` entry unreachable on any part
+  outside `coverage` and turns `LocationalModifierOverridesAndFallbackTest` red on `head = 5`.
+  `UncoveredPartIgnoresArmorPenetrationTest` is the second guard on the same line of code.
+- **Both branches wrap `DamageSpecifier.PenetrateArmor`** (D23). Onyx's `partModifiers` branch does not, because
+  Onyx has no `DamageSpecifier.ArmorPenetration` at all (D5). Without the wrap, any armour declaring a part
+  profile would silently zero out every AP weapon's AP; `PartModifiersRouteThroughArmorPenetrationTest` is the
+  gate and it is Wolfgate-only — nothing in Onyx covers it.
+- **Onyx's `MaskComponent.IsToggled` early-return is NOT ported** (`ONYX SharedArmorSystem.cs:111-112`). It is
+  base-game drift: Wolfgate has no mask check in any of its four armour handlers, and adding it only here would
+  make a toggled-down mask armour the torso and not the head. Deliberate.
+- **Zero upstream edits for the datafields.** `Content.Shared/Armor/ArmorComponent.cs` and
+  `Content.Shared/Armor/SharedArmorSystem.cs` are untouched (PLAN3 §3 "explicitly NOT touched"); the fields live
+  on a `_WF` partial in the upstream namespace, the same pattern as the already-shipped
+  `SharedArmorSystem.Wolfmed.cs` (HOOK 10).
+- **Non-wound-hosts and systemic damage are structurally untouched (D2).** The only trigger is
+  `PartDamageModifyEvent`, which only `WoundDamageRoutingSystem` raises (`:741-749`) and only for a
+  `WoundHostComponent`. Mice, vehicles, blastdoors and mothroaches that carry `- type: Armor` never see it, and
+  `SharedArmorSystem.Wolfmed.cs` keeps applying the **global** modifiers to a host's systemic types regardless of
+  coverage — coverage is a localized concept in Onyx too. `NonWoundHostUsesVanillaArmorTest` stayed green
+  unchanged.
+- **PROTO B is the phase's one balance-visible change, and it is asymmetric** (P3-D6/P3-D26, DECISIONS.md
+  §8.6-2). Five `_Mono` vests get `coverage: [Torso, Arm, Leg]`, one `_Mono` light ballistic helmet gets
+  `coverage: [Head]`; **every other helmet in the game — `ClothingHeadHelmetSwat` included — keeps unset coverage
+  and goes on protecting the torso.** Measured consequences for one 14-Piercing round: aimed **torso** protection
+  does not change at all (heavy vest + SWAT stays `0.25 x 0.80` = 2.8 damage); aimed **head** damage for a vest
+  wearer goes **2.8 -> 11.2** (x4), because the vest stops covering the head while the unannotated helmet keeps
+  covering the torso. Against a random *unaimed* bullet a heavy vest's average Piercing mitigation falls from
+  75.0 % to 52.9 %. **Aimed hand and foot shots now bypass an annotated vest entirely** — bounded, because limb
+  damage does not count toward `CheckVitalDamage`, but it is a real route to bleeding, fractures, pain shock and
+  amputation through a vest. Gloves and boots with `- type: Armor` are the content answer and are out of scope.
+  **Head is the thing to playtest.**
+- **Amputation interaction, now that WP11-1 is live.** A vest at <= 0.46 Slash pushes a 32-Slash machete below
+  the Slash-15 finishing minimum: the heavy vest (`Slash 0.30`) makes 32 land as 9.6, so **a machete can no
+  longer finish a torso, arm or leg of a heavy-vest wearer** — but the head, hands and feet are now uncovered
+  and take the full 32.
+- **Option C (slot-derived coverage default) and its CCVar are NOT added** (P3-D5): it would silently re-balance
+  all 272 armour entries and break two currently-green tests. `EmptyCoverageAndSymmetryTest`'s part A — a
+  head-slot armour still protecting the torso — is the standing guard against one creeping in.
+- **The full 272-entry content pass is out of scope** (P3-D6). 271 of 272 `- type: Armor` blocks inherit their
+  `Clothing.slots` from a parent, so there is no data-driven shortcut; a later balance pass owns it.
+- **Test literals re-derived by hand, not taken from Onyx** (P2-D16). Every expected value has its derivation in
+  a `// WOLFGATE` comment at the assertion, and the two assertions that are **red against Onyx's own pinned
+  code** (`AppliesLocationalArmorExactlyOnceTest`'s torso 10 and `EmptyCoverageAndSymmetryTest`'s right arm 10)
+  say so in the comment, so nobody "fixes" the implementation to match Onyx.
+- **Checkpoint:** `Content.Server`, `Content.Client` and `Content.IntegrationTests` all **0 errors**; Release
+  `Content.YAMLLinter` **"No errors found"** (a stray `coverage: [Chest]` would have failed it); a 120 s headless
+  server run reached `Ready` with **zero** `[ERRO]`/`[FATL]`/`Exception` lines; `DockTest` 3/3; the
+  `_Onyx.Wounds|Wolfmed` filter **46/46 green** and the full `_Onyx.Wounds|_Onyx.Body|Wolfmed` filter
+  **48/48 green** (43 before this package, +5 new).
+
+### WP11-4 (phase 3 — limb damage sprites)
+
+- **Both options shipped.** The base package (Option A) built clean, the client rendered no console errors and
+  the headless server reached `Ready` with zero `[ERRO]`/`[FATL]`/`Exception` lines, so Option B (severed-limb
+  wound rendering, DECISIONS.md §8.6-5) was implemented in the same package per its pre-authorisation
+  ("in WP11-4 if the package is otherwise green").
+- **Option A — per-limb accuracy.** `HandleDamage` now checks for `PartDamageVisualsComponent` before falling
+  into the aggregate overlay path; when present, `UpdatePartDamageVisuals` reads each targeted layer's own
+  damage (`GetLayerDamage`) instead of the mob's `DamagePerGroup` total (D30). WG's calling convention needed a
+  re-type from Onyx's `Entity<SpriteComponent, DamageVisualsComponent>` tuple to WG's existing
+  `UpdateTargetLayer(SpriteComponent, DamageVisualsComponent, object, string, FixedPoint2)` shape (`:621`) — no
+  new overload was added upstream. The per-group `LastThresholdPerGroup` cache is deliberately not consulted
+  (kept from Onyx): it is keyed by damage group only, not by (layer, group), so consulting it would let one
+  limb's last-seen threshold suppress a different limb's redraw.
+- **P3-D25 fold, implemented exactly as specified.** `GetLayerDamage` returns `LArm`'s own damage plus `LHand`'s
+  (same for `RArm`/`RHand`, `LLeg`/`LFoot`, `RLeg`/`RFoot`) via `DamageSpecifier.operator+`. Without this, hand
+  and foot wounds would be invisible on the attached body — WG's stock `targetLayers` list
+  (`Species/base.yml:63-69`) has no `LHand`/`RHand`/`LFoot`/`RFoot` entries and no hand/foot art exists in
+  `Resources/Textures/Mobs/Effects/{brute,burn}_damage.rsi` (36 states, six layers only) — where today (pre-
+  phase-3, D30) a hand injury lights every limb layer because the overlay reads the mob's aggregate.
+- **Option B — severed-limb wound rendering.** `OnBodyPartState` and the new
+  `<BodyPartComponent, AfterAutoHandleStateEvent>` subscription fire `UpdateDetachedPartDamage` whenever a
+  part's networked state changes (attach, detach, or a fresh hit while detached). It walks every
+  `PartDamageVisualsComponent.Damage` entry (unfolded — the P3-D25 fold is an attached-body-only concern, exactly
+  as PLAN3 specifies) and lazily adds a `WolfmedDetached{layer}{group}` sprite layer per (layer, group),
+  visible only while the part is actually off the body (`BodyPartComponent.Body == null`) and its damage is
+  ≥ 10. Re-attachment hides every such layer again (the "reattached" branch at the end of
+  `UpdateDetachedPartDamage`). `TryGetDetachedDamagePrefix` maps `HumanoidVisualLayers` to the RSI state prefix
+  and **drops Onyx's `Groin` arm** (D9 — WG's enum has no `Groin` member; porting that line verbatim is `CS0117`,
+  exactly the compile trap PLAN3 §2.3/§8.7 risk 14 predicted).
+- **Deviation — HOOK 20 needed a third insertion beyond PLAN3's literal table.** §3's HOOK 20 row authorises
+  only the Option-A subscription (a) and the `HandleDamage` early return (b); it does not mention a third line
+  for Option B's `<BodyPartComponent, AfterAutoHandleStateEvent>` subscription. That subscription cannot live
+  anywhere else: `EntitySystem.Initialize()` is a single virtual override and the upstream file already owns
+  it, so a `_WF` partial cannot add a second `Initialize()`. Since Option B is itself pre-authorised
+  (DECISIONS.md §8.6-5, PLAN3 §8.6-5/P3-D18) and is dead without this exact subscription (P3-D19's whole point —
+  "porting Onyx's `OnBodyPartState` subscription without it compiles cleanly and NEVER FIRES"), the one-line
+  extension is treated as inside the spirit of HOOK 20 rather than a new unauthorised hook. Recorded here in
+  case a stricter reading is wanted later — the fix, if this is overruled, is to drop the subscription line, the
+  `using Content.Shared.Body.Part;` it needs, and Option B's five methods, leaving Option A intact.
+- **Detached-part layer key is renamed, not preserved.** Onyx's `OnyxDetached{layer}{group}` layer-map key
+  becomes `WolfmedDetached{layer}{group}` — purely cosmetic (the key is never read by YAML or any other system),
+  chosen to match this port's naming convention rather than Onyx's.
+- **RSI licensing verified, not assumed.** Both `_Onyx/Wounds/{brute,burn}_damage.rsi/meta.json` declare
+  `"license": "CC-BY-SA-3.0", "copyright": "Drawn by Ubaser."`, byte-identical to WG's own already-shipped
+  `Resources/Textures/Mobs/Effects/{brute,burn}_damage.rsi/meta.json`. A small script cross-checked every state
+  name in both new `meta.json` files against a `.png` of the same name (77/77 and 77/77, no orphans either
+  direction) and against the full `{prefix}_{group}_{threshold}` matrix the code and `base.yml` can request
+  (11 prefixes × 7 thresholds incl. Onyx's `40`, which the live overlay's own `[10,20,30,50,70,100]` list never
+  requests) — zero missing, zero unrequested-but-present states left unaccounted for.
+- **P3-D17's premise confirmed true before this WP started.** `grep -rn "PartDamageVisualsComponent"
+  Content.Client` returned zero hits and `Resources/Textures/_Onyx/Wounds/` did not exist; WP7's manifest note
+  claiming the RSIs were "already copied" was stale, corrected here rather than re-asserted.
+- **No production regression for non-wound-hosts (D2).** The Option-A early return in `HandleDamage` triggers
+  only when `TryComp<PartDamageVisualsComponent>` succeeds, which `WoundDamageProjectionSystem` only
+  `EnsureComp`s on wound hosts and their parts; every other entity with a `DamageVisuals` block (turrets,
+  vehicles, non-wound-host mobs) falls through to the unchanged aggregate path exactly as today. Option B's
+  `<BodyPartComponent, AfterAutoHandleStateEvent>` subscription fires for every body part in the game (the
+  component itself is not wound-host-gated), but `UpdateDetachedPartDamage` no-ops immediately when
+  `TryComp<PartDamageVisualsComponent>` fails, which is always true for a non-wound-host's parts.
+- **Checkpoint:** `Content.Server` and `Content.Client` both **0 errors** (`Content.IntegrationTests` not
+  rebuilt this package — no test file touched); Release `Content.YAMLLinter` run (result below); a 120 s
+  headless server run reached `Ready` with **zero** `[ERRO]`/`[FATL]`/`Exception` lines and **no**
+  `Duplicate Subscriptions` throw; WP11-0's `WolfmedVisualsTest.PartDamageProjectsToVisualsComponentTest`
+  (T-VISUALS) re-run and still green, confirming the server-side projection this package consumes is unchanged.
+  No sprite-pixel/screenshot assertion was attempted (project convention — logic tests only); visual
+  confirmation was build-clean-client + zero-console-error + zero-server-error, per the task's own fallback
+  when a headless client harness is not specified for this WP.
+
+### WP11-5 (phase 3 — amputation and organ tests)
+
+- **17 tests, exactly PLAN3 §6.2's phase-3 test debt, with DECISIONS.md's two overrides applied.** 1 restored
+  (`WoundBleedingTest`), 3 ported (`AmputationConsequenceTest`), 5 new amputation and 8 new organ tests. Every
+  expected value carries its derivation in a comment at the assertion (P2-D16), and every one of them was
+  re-derived from shipped prototype data in this tree rather than copied from Onyx.
+- **T-AMP-NOGUN is dead; T-AMP-GUN replaces it** (DECISIONS.md §8.6-1, already implemented by WP11-1 in
+  `_WF/Wolfmed/Body/parts.yml`). PLAN3 §6.2's `BulletsNeverAmputateTest` would now fail by construction: the
+  per-part `dismembermentFinishingDamage` lowers the Piercing minimum to 12 and adds a Heat row, so a
+  14-Piercing round and a 16-Heat laser both finish an over-threshold limb. Hit counts asserted: hand Piercing
+  16, hand Heat 14, arm Slash (machete 32) 6 — matching WP11-1's independent live measurement and PLAN3 §8.2's
+  melee table, which the §8.6-1 change deliberately leaves untouched.
+- **`AmputationConsequenceWound` severity is asserted at 50, never 35, in both consequence tests.** Both
+  fixtures' torsos carry `- type: WolfmedBodyPart  amputationConsequenceSeverity: 50` for the reason CRITIQUE3
+  M3-2 gives: with the stock 35 everywhere, a wrong redirect of edit #9 to the **severed part** reads 35 too
+  (`WolfmedBodyPartComponent.cs:25` defaults to 35 and `WolfmedBodyPartSystem.Get`'s zeroed singleton is also
+  35), so the bug would ship green. **Do not drop those two fixture lines.**
+- **DEVIATION — T-AMP-OVERFLOW (a) moved from an arm to the HEAD, and T-AMP-EXPLOSION from Slash 260 to
+  Piercing 500.** PLAN3 (and CRITIQUE3 M3-4) assume a limb can be driven arbitrarily far past its amputation
+  threshold. It cannot: Shitmed's own `Destructible` **gibs** a part from `DamageChangedEvent`, i.e. inside
+  `TryChangeDamage`, *before* `PartDamageAppliedEvent` ever reaches `AmputationSystem`.
+  `Resources/Prototypes/Body/Parts/base.yml` — `MajorLimb` (arms, legs) `:280-297` Blunt **190** / Slash **210**
+  / Heat 250; `MinorLimb` (hands, feet) `:312-338` Blunt **150** / Slash **180** / Heat 230; `BaseHead`
+  `:105-122` Blunt **500** / Slash **600** / Heat **700**. **Piercing has no `Destructible` trigger on any body
+  part in the game.** Consequences, each verified by running the tests:
+  - PLAN3's "20 × Blunt 25 into an arm, then Blunt 50" is unreachable — the arm's Blunt amputation threshold is
+    250 but it gibs at 190. The setup keeps CRITIQUE3's chunk sizes and moves to the head (Blunt threshold 350,
+    gib 500): 16 × 25 = 400, then one 50 at 450. **Blunt amputation is only reachable on the head at all;** on
+    every arm, leg, hand and foot the part is destroyed first. Recorded as a live-behaviour finding for the
+    balance pass, not a bug this package fixes.
+  - PLAN3's `Spec("Slash", 260)` into an arm exceeds `MajorLimb`'s Slash gib at 210, so the limb would be
+    *destroyed* and the test would have passed for the wrong reason. Swapped to `Spec("Piercing", 500)` against
+    the arm's Piercing threshold of 250, which keeps the intended `clamp(progress × 0.5) = 1.0` saturation and
+    has no `Destructible` trigger. The test now also asserts the detached arm is **not deleted** and that a
+    `DismembermentWound` at severity 120 landed on the stump, which is what distinguishes an amputation from a
+    gib; T-AMP-GUN carries the same not-gibbed assertion on all three of its severed parts.
+- **Upstream bug found, NOT fixed (out of scope, flagged):** `Content.Shared/Gibbing/Systems/GibbingSystem.cs:141`
+  throws `InvalidOperationException: Collection was modified` — `TryGibEntityWithRef`'s `GibContentsOption.Drop`
+  branch enumerates `container.ContainedEntities` while `DropEntity` removes from it. Reached from
+  `GibPartBehavior` → `SharedBodySystem.GibPart` whenever a body part **that contains something** (an arm holds
+  its hand) crosses a `Destructible` gib threshold. This is pre-existing upstream code that phase 3 does not
+  touch and PLAN3 §3 does not authorise editing; Wolfmed makes it *more* reachable only because routing
+  concentrates damage on one part. A one-line `.ToArray()` on both `foreach`es would fix it. Handed to the
+  user / a later package rather than patched here.
+- **No production code was changed by this package.** The whole WP is four test files; no `_Onyx`, `_WF`,
+  upstream C#, prototype, locale or texture file was touched, so no `// WOLFGATE` hook, no new subscription
+  (PLAN3 §5.1 confirms WP11-5 registers none) and no YAML lint surface. `WoundDamageFoundationTest.cs` was
+  **not** touched (WP11-3 owns it); `WoundBleedingTest.cs` is this package's file per serialisation rule 2.
+- **Checkpoint:** `Content.Server`, `Content.Client` and `Content.IntegrationTests` all **0 errors**
+  (`-c DebugOpt`); `DockTest` 3/3 run first (project memory); the full phase-1/2/3 wound gate
+  `_Onyx.Wounds|_Onyx.Body|Wolfmed` **65/65 passed** (48 before this package + the 17 new); smoke filter
+  `EntityTest|PrototypeSaveTest|DockTest` **Test Run Successful, 9 passed / 2 pre-existing skips**. No headless
+  server run or Release YAML lint: this package adds no `Resources/` file — its prototypes are `[TestPrototypes]`
+  strings compiled into the test assembly, which the server and the linter never load.
+
+## Phase 3 — user decisions (DECISIONS.md §8.6)
+
+Index of the eight user answers to `PLAN3.md §8.6`, each to the WP that implements it. See `DECISIONS.md`
+for the full question text.
+
+| # | Decision | Implementing WP | Numbers / notes |
+|---|---|---|---|
+| **§8.6-1** | **Guns and lasers can sever** (deviation from Onyx defaults, expressed only in `_WF/Wolfmed/Body/parts.yml`). | **WP11-1** (data), **WP11-5** (T-AMP-GUN) | Piercing finishing minimum lowered **40 → 12**; a per-part `Heat` amputation-threshold row added equal to that part's Piercing threshold (Head 200, Arm 250, Hand 200, Leg 250, Foot 220) with a Heat finishing minimum of **15**. Amputation thresholds themselves stay at Onyx values. Measured: a hand (Piercing/Heat threshold 200) is severed by the **16th** consecutive 14-Piercing round and by the **14th** consecutive 16-Heat laser shot; 5 bullets into a foot (70/220) leave it attached; melee is unchanged (Slash finishing minimum still 15, a machete needs 6 × Slash 32 on an arm). Recorded as a Wolfgate balance deviation for the later balance pass |
+| **§8.6-2** | **Annotate the 5 `_Mono` vests + the 1 `_Mono` ballistic helmet** with `coverage:` (PROTO B, as planned). | **WP11-3** | 6 lines total. Aimed-torso protection unchanged. Aimed-**head** damage for a vest wearer goes **2.8 → 11.2** (×4) against a 14-Piercing round, because the vest stops protecting the head while the unannotated helmet (every other helmet, `ClothingHeadHelmetSwat` included) keeps protecting the torso. Aimed hand/foot shots now bypass an annotated vest entirely (non-lethal consequences only). A heavy vest's average unaimed Piercing mitigation falls 75.0 % → 52.9 %. A vest at ≤0.46 Slash now lets a 32-Slash machete finish a covered part it could not before |
+| **§8.6-3** | **P3-D1 redesign taken**: a lost vital part charges its own damage as systemic Bloodloss, host-gated in `WolfmedBodyPartLifecycleSystem.OnPartRemoved`. No HOOK 19 (`BaseHead.vitalDamage: 300`, withdrawn as a D2 breach). | **WP11-1** | Zero upstream edits, zero balance deviation. De-heading a wound host now reads *pre-decapitation total + 100* instead of −100. A non-wound-host (`MobMonkey`) still charges exactly 100 Bloodloss (T-AMP-VITAL) |
+| **§8.6-4** | **Organ damage ships irreversible**, Onyx caps as-is. | **WP11-2** | Per-hit cap `MaxHealth × 0.3 = 4.5` organ HP — exactly 4 applications destroy any organ regardless of hit size. Expected hits to destroy: ~166 (lungs) to ~421 (kidneys) torso hits, ~100 head hits for the brain. `OrganHealthSystem.ChangeHealth(+x)` exists and is public, so a phase-4 chem/surgery regen path is ~15 lines |
+| **§8.6-5** | **Option B (severed-limb wound rendering) shipped in WP11-4**, package was otherwise green. | **WP11-4** | 156 texture files (`_Onyx/Wounds/{brute,burn}_damage.rsi`, CC-BY-SA-3.0 / Ubaser), HOOK 21 (1-word flag on `BodyPartComponent`), the `OnBodyPartState` consumer in `DamageVisualsSystem.Wolfmed.cs` |
+| **§8.6-6** | **Explosion amputation stays out.** | — (deferred) | `TryExplosionAmputate` is ported and reachable only through `WoundDamageRoutingSystem.TryRouteDistributedDamage(..., isExplosion: true)`; no `ExplosionSystem` hook. Phase 4/5 owns it, together with a plate regression test |
+| **§8.6-7** | **Organ damage covers human-lineage organs only** (7 `OrganHuman*` edits). | **WP11-2** | Human, gingerbread, dwarf, vox, yowie and the human-lineage organs of 8 more species. ~20 other organ roots (animal, arachnid, diona, slime, hydrakin, feroxi, chitinid) stay silent no-ops until phase 4's data-driven option |
+| **§8.6-8** | **Hand and foot wounds fold onto the arm/leg** (P3-D25) rather than shipping invisible. | **WP11-4** | `GetLayerDamage` sums `LArm`+`LHand` (etc.) via `DamageSpecifier.operator+`; 4 lines, preserves today's look, needs no new art |
 
 ## Hazards
 
@@ -842,12 +1227,13 @@ to the WP section above that carries the full derivation.
   TreatmentCapabilities: [Biological]`** (HOOK 7). No existing prototype sets them, so every current
   medical item will treat wounds on wound hosts once WP7 lands `WoundHost`. Ointment/brutepack tuning is a
   WP11/D4 balance item, not a bug.
-- **`WolfmedBodyPartComponent.MaxDamage` defaults to zero, and zero disables amputation overflow
-  entirely.** Every limb abstract needs a row in WP7's `parts.yml` (13 abstracts across
-  `Resources/Prototypes/Body/Parts/base.yml` and `Resources/Prototypes/_Shitmed/Body/Parts/base.yml`), or
-  some limbs can never be severed once phase 3 lands `AmputationSystem`. Confirmed done for all 10
-  limb-typed abstracts (`BaseTorso`, `BaseHead`, `Base{Left,Right}{Arm,Hand,Leg,Foot}`) as of WP7;
-  `BasePartInorganic`/`BaseTorsoInorganic`/`BasePart` intentionally carry no row (see WP7 Deviations).
+- **`WolfmedBodyPartComponent.MaxDamage` defaults to zero — CORRECTED in WP11-6.** `MaxDamage` gates only
+  `AmputationSystem`'s overflow branch, which is dead for every organic limb in Onyx too; it is
+  `amputationThresholds` that gates severing, and WP7 populated that field on all ten limb-typed abstracts
+  (`BaseTorso`, `BaseHead`, `Base{Left,Right}{Arm,Hand,Leg,Foot}`). **No YAML gap ever existed** for
+  amputation, and none of the analysis that assumed one was needed (P3-D12) — this note previously implied
+  otherwise. `BasePartInorganic`/`BaseTorsoInorganic`/`BasePart` intentionally carry no row either way (see
+  WP7 Deviations).
 - **`WoundHost` is now live on 17 organic species (WP7).** Every prior WP's guards, hooks and compat
   systems become reachable for the first time. If any post-WP7 bug report reads like "limbs regenerate
   through wounds" or "double armour"/"no armour", re-check GUARDs A/B/C/E/E3 and HOOK 10 before assuming a

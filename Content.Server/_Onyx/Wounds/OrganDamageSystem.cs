@@ -22,8 +22,7 @@ public sealed partial class OrganDamageSystem : EntitySystem
     [Dependency] private WoundFractureSystem _fractures = default!;
     [Dependency] private WoundSystem _wounds = default!;
     [Dependency] private WoundBleedingSystem _bleeding = default!;
-    // WOLFGATE: D26, AmputationSystem is phase 3 and is not ported; the field would be CS0246.
-    // TODO: phase 3 - [Dependency] private AmputationSystem _amputation = default!;
+    [Dependency] private AmputationSystem _amputation = default!; // WOLFGATE: D26 lifted in phase 3 (WP11-1); AmputationSystem is now vendored.
     [Dependency] private OrganHealthSystem _organHealth = default!;
 
     public override void Initialize()
@@ -35,8 +34,7 @@ public sealed partial class OrganDamageSystem : EntitySystem
     {
         _wounds.HandlePartDamageApplied(part, ref args);
         _fractures.HandlePartDamageApplied(part, ref args);
-        // WOLFGATE: D26, amputation is phase 3.
-        // TODO: phase 3 - _amputation.HandlePartDamageApplied(part, ref args);
+        _amputation.HandlePartDamageApplied(part, ref args); // WOLFGATE: D26 lifted in phase 3 (WP11-1); order wounds -> fractures -> amputation -> bleeding is load-bearing.
         _bleeding.HandlePartDamageApplied(part, ref args);
 
         if (!_net.IsServer || !TryComp(part, out BodyPartComponent? bodyPart) || bodyPart.Body == null ||

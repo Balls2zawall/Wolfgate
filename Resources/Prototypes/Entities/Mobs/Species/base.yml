@@ -69,10 +69,10 @@
     - "enum.HumanoidVisualLayers.RLeg"
     damageOverlayGroups:
       Brute:
-        sprite: Mobs/Effects/brute_damage.rsi
+        sprite: _Onyx/Wounds/brute_damage.rsi # WOLFGATE (WP11-4, P3-4 Option B): severed parts render Onyx's wound art too; same 6 states + attribution as the stock rsi.
         color: "#FF0000"
       Burn:
-        sprite: Mobs/Effects/burn_damage.rsi
+        sprite: _Onyx/Wounds/burn_damage.rsi # WOLFGATE (WP11-4, P3-4 Option B)
   - type: GenericVisualizer
     visuals:
       enum.CreamPiedVisuals.Creamed:
