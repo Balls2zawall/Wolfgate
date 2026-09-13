@@ -250,6 +250,23 @@
   # WOLFGATE - Wolfmed phase 1 (D21/D32). Non-organic descendants (protogen) have WoundHost stripped by
   # Content.Shared/_WF/Wolfmed/Body/WolfmedWoundHostExclusionSystem.cs; see the manifest for the full list.
   - type: WoundHost # D20: localizedDamageTypes left at Onyx's default, Caustic included
+  # WOLFGATE - Wolfmed phase 2 (P2-D7). ONYX Resources/Prototypes/Body/species_base.yml:54 (<Onyx-PainShock>);
+  # placed here rather than on BaseMobSpecies so only organic profiles carry it. Inert on D32-excluded
+  # protogen: PainComponent is only ever ensured on wound hosts.
+  - type: PainShockTarget
+  # WOLFGATE - Wolfmed phase 2 (P2-D9). ONYX Resources/Prototypes/Body/species_base.yml:124-133
+  # (<Onyx-PainSounds>). Key corrected from Onyx's `emotes:` to `emotesThreshold:` - Onyx's own YAML never
+  # bound (the field is EmotesThreshold; RT drops unknown mapping keys). `emotes:` is left empty so
+  # EmoteOnDamageSystem.OnDamage still returns at its Emotes.Count == 0 check - no double emote.
+  # Gated to wound hosts in C# by P2-D22, not by this block.
+  - type: EmoteOnDamage
+    emotesThreshold:
+      50: [ Scream ]
+      80: [ Scream, Crying ]
+    emoteChance: 0.6
+    withChat: true
+    hiddenFromChatWindow: true
+    emoteCooldown: 8
   - type: Destructible # D22: part damage now projects onto the mob, so 400 is reachable from routine limb damage
     thresholds:
     - trigger:

@@ -5,10 +5,13 @@ using Content.Shared._Onyx.Wounds;
 using Content.Shared._Shitmed.Targeting;
 using Content.Shared._WF.Wolfmed.Compat;
 using Content.Shared.Bed.Sleep;
+using Content.Shared.Body.Part;
 using Content.Shared.Body.Systems;
 using Content.Shared.Damage;
+using Content.Shared.Damage.Components;
 using Content.Shared.Damage.Prototypes;
 using Content.Shared.FixedPoint;
+using Content.Shared.Inventory;
 using Content.Shared.Weapons.Hitscan.Events;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Prototypes;
@@ -21,6 +24,9 @@ namespace Content.IntegrationTests.Tests._WF.Wolfmed;
 /// </summary>
 /// <remarks>
 /// PLAN §6.2. Covers T-SETUP, T-RESULT, T-PIERCE, T-CAUSTIC, T12, the non-wound-host control and no-double-apply.
+/// PLAN2 §6.2/WP10-6a adds T-AP (armour penetration survives routing), T-PASSIVE-A (D29: a real wound host's
+/// own neutralised PassiveDamage heals nothing) and T-PASSIVE-B (a canary showing the routing layer itself
+/// has no wound-host-specific block against un-targeted healing, measured, not assumed — see its own remarks).
 /// </remarks>
 [TestFixture]
 [TestOf(typeof(WoundDamageRoutingSystem))]
@@ -87,6 +93,54 @@ public sealed class WolfmedDamageBridgeTest : GameTest
     damage:
       types:
         Blunt: 10
+
+# WOLFGATE: T-AP (PLAN2 §6.2) - mirrors WoundFractureTest.cs's WoundFractureArmor. No `coverage`, so it
+# protects every part; the arm reduction below is what the test measures.
+- type: entity
+  id: WolfmedBridgeArmor
+  components:
+  - type: Clothing
+    slots: [outerClothing]
+  - type: Armor
+    modifiers:
+      coefficients:
+        Blunt: 0.5
+
+# WOLFGATE: T-PASSIVE-B (PLAN2 §6.2) - a bespoke real PassiveDamage pair (Onyx's own species entry ships
+# `damage: {}` per D29, so it cannot exercise the routing path). WolfmedPassiveControl is identical minus
+# WoundHost.
+- type: entity
+  id: WolfmedPassiveWoundHost
+  parent: InventoryBase
+  components:
+  - type: Body
+    prototype: WolfmedBridgeBodyGraph
+  - type: Damageable
+    damageContainer: Biological
+  - type: MobState
+  - type: PassiveDamage
+    allowedStates: [Alive]
+    damageCap: 0
+    damage:
+      types:
+        Blunt: -5
+  - type: WoundHost
+
+- type: entity
+  id: WolfmedPassiveControl
+  parent: InventoryBase
+  components:
+  - type: Body
+    prototype: WolfmedBridgeBodyGraph
+  - type: Damageable
+    damageContainer: Biological
+  - type: MobState
+  - type: PassiveDamage
+    allowedStates: [Alive]
+    damageCap: 0
+    damage:
+      types:
+        Blunt: -5
 ";
 
     /// <summary>T-SETUP: every part of a real humanoid is woundable after map-init, and the D30 seeding survives.</summary>
@@ -298,6 +352,157 @@ public sealed class WolfmedDamageBridgeTest : GameTest
             {
                 Assert.That(partTotal + systemic, Is.EqualTo(FixedPoint2.New(10)));
                 Assert.That(entities.GetComponent<DamageableComponent>(body).TotalDamage, Is.EqualTo(FixedPoint2.New(10)));
+            });
+        });
+    }
+
+    /// <summary>T-AP: armour penetration must survive the wound-host routing detour, not just DamageableSystem's own resistance block.</summary>
+    [Test]
+    public async Task ArmorPenetrationReachesWoundHostsTest()
+    {
+        var server = Pair.Server;
+        await server.WaitIdleAsync();
+        var entities = server.ResolveDependency<IEntityManager>();
+        var map = await Pair.CreateTestMap();
+
+        await server.WaitAssertion(() =>
+        {
+            var graph = entities.System<SharedBodySystem>();
+            var damage = entities.System<DamageableSystem>();
+            var inventory = entities.System<InventorySystem>();
+
+            FixedPoint2 LeftArmDamage(EntityUid body) =>
+                entities.GetComponent<DamageableComponent>(graph.GetBodyChildren(body)
+                    .Single(part => part.Component.PartType == BodyPartType.Arm &&
+                                    part.Component.Symmetry == BodyPartSymmetry.Left).Id).TotalDamage;
+
+            var armoredNoPenetration = entities.SpawnEntity("WolfmedBridgeBody", map.GridCoords);
+            var armorA = entities.SpawnEntity("WolfmedBridgeArmor", map.GridCoords);
+            Assert.That(inventory.TryEquip(armoredNoPenetration, armorA, "outerClothing"), Is.True);
+            Assert.That(damage.TryChangeDamage(armoredNoPenetration, Spec("Blunt", 10),
+                targetPart: TargetBodyPart.LeftArm, armorPenetration: 0f), Is.Not.Null);
+
+            var armoredFullPenetration = entities.SpawnEntity("WolfmedBridgeBody", map.GridCoords);
+            var armorB = entities.SpawnEntity("WolfmedBridgeArmor", map.GridCoords);
+            Assert.That(inventory.TryEquip(armoredFullPenetration, armorB, "outerClothing"), Is.True);
+            Assert.That(damage.TryChangeDamage(armoredFullPenetration, Spec("Blunt", 10),
+                targetPart: TargetBodyPart.LeftArm, armorPenetration: 1f), Is.Not.Null);
+
+            var unarmored = entities.SpawnEntity("WolfmedBridgeBody", map.GridCoords);
+            Assert.That(damage.TryChangeDamage(unarmored, Spec("Blunt", 10),
+                targetPart: TargetBodyPart.LeftArm, armorPenetration: 0f), Is.Not.Null);
+
+            // Derivation (PLAN2 §6.2/T-AP): DamageSpecifier.PenetrateArmor returns the coefficient set unchanged
+            // at penetration 0 and a new EMPTY set at penetration >= 1 (DamageSpecifier.cs:306-330); applying an
+            // empty modifier set leaves every type untouched (:157), so full penetration is a true no-op, not a
+            // zero-out. WolfmedBridgeArmor's Blunt coefficient is 0.5.
+            Assert.Multiple(() =>
+            {
+                Assert.That(LeftArmDamage(armoredNoPenetration), Is.EqualTo(FixedPoint2.New(5)));
+                Assert.That(LeftArmDamage(armoredFullPenetration), Is.EqualTo(FixedPoint2.New(10)));
+                Assert.That(LeftArmDamage(unarmored), Is.EqualTo(FixedPoint2.New(10)));
+                Assert.That(LeftArmDamage(armoredFullPenetration), Is.GreaterThan(LeftArmDamage(armoredNoPenetration)));
+            });
+        });
+    }
+
+    /// <summary>T-PASSIVE-A (D29): a real wound host's body-level PassiveDamage is neutralised (damage: {}); the arm keeps its damage.</summary>
+    [Test]
+    public async Task RealWoundHostPassiveDamageIsNeutralisedTest()
+    {
+        var server = Pair.Server;
+        await server.WaitIdleAsync();
+        var entities = server.ResolveDependency<IEntityManager>();
+        var map = await Pair.CreateTestMap();
+        var leftArm = EntityUid.Invalid;
+
+        await server.WaitAssertion(() =>
+        {
+            var body = entities.SpawnEntity("MobHuman", map.GridCoords);
+            Assert.That(entities.HasComponent<WoundHostComponent>(body), Is.True,
+                "MobHuman is not a wound host; the D21/D32 species wiring is missing.");
+
+            var passive = entities.GetComponent<PassiveDamageComponent>(body);
+            Assert.That(passive.Damage.Empty, Is.True,
+                "D29: PassiveDamage must ship neutralised (damage: {}) on wound hosts; Onyx's per-part profile recovery is the only passive heal.");
+
+            var graph = entities.System<SharedBodySystem>();
+            leftArm = graph.GetBodyChildren(body)
+                .Single(part => part.Component.PartType == BodyPartType.Arm &&
+                                part.Component.Symmetry == BodyPartSymmetry.Left).Id;
+
+            var routing = entities.System<WoundDamageRoutingSystem>();
+            Assert.That(routing.TryApplyPartDamage(body, leftArm, Spec("Blunt", 10)), Is.True);
+        });
+
+        await server.WaitRunTicks(1800); // 60 seconds at the pool's 30 tick/s rate.
+
+        // WOLFGATE (measured, P2-D16): a real MobHuman on a bare test map keeps running every other body system
+        // across those 60 simulated seconds too (Barotrauma, Temperature/ThermalRegulator, etc.), and any of
+        // their localized damage types can land on this same arm via the same "no requested part" routing path
+        // T-PASSIVE-B documents. Measured once: the arm crept from 10 to 13.11, not down - environmental
+        // accrual, not healing. An exact `EqualTo(10)` is therefore not the right gate on a real full mob; a
+        // lower bound is, and is still a strict test of D29 (any decrease would mean the neutralised
+        // PassiveDamage healed it).
+        await server.WaitAssertion(() =>
+        {
+            Assert.That(entities.GetComponent<DamageableComponent>(leftArm).TotalDamage, Is.GreaterThanOrEqualTo(FixedPoint2.New(10)),
+                "the arm healed: a real mob's neutralised PassiveDamage must not recover damage at the body level.");
+        });
+    }
+
+    /// <summary>
+    /// T-PASSIVE-B (D29 canary): if PassiveDamage carried real healing on a wound host, does the routing layer
+    /// apply it? Measured: yes — WoundDamageRoutingSystem's un-targeted healing path has no wound-host-specific
+    /// block, so both the control and the wound host fully heal. D29's `damage: {}` on every shipped species is
+    /// what actually stops this today (a YAML choice, not a code-level barrier); this is not a safety proof, it
+    /// documents what the mechanism does if that YAML guard is ever lifted.
+    /// </summary>
+    [Test]
+    public async Task PassiveDamageMechanismStillRoutesIfReenabledTest()
+    {
+        var server = Pair.Server;
+        await server.WaitIdleAsync();
+        var entities = server.ResolveDependency<IEntityManager>();
+        var map = await Pair.CreateTestMap();
+        var host = EntityUid.Invalid;
+        var control = EntityUid.Invalid;
+
+        await server.WaitAssertion(() =>
+        {
+            host = entities.SpawnEntity("WolfmedPassiveWoundHost", map.GridCoords);
+            control = entities.SpawnEntity("WolfmedPassiveControl", map.GridCoords);
+
+            var graph = entities.System<SharedBodySystem>();
+            var routing = entities.System<WoundDamageRoutingSystem>();
+            var damage = entities.System<DamageableSystem>();
+
+            var hostArm = graph.GetBodyChildren(host)
+                .Single(part => part.Component.PartType == BodyPartType.Arm &&
+                                part.Component.Symmetry == BodyPartSymmetry.Left).Id;
+
+            Assert.That(routing.TryApplyPartDamage(host, hostArm, Spec("Blunt", 10)), Is.True);
+            Assert.That(damage.TryChangeDamage(control, Spec("Blunt", 10)), Is.Not.Null);
+        });
+
+        await server.WaitRunTicks(300); // 10 seconds: comfortably past the 2 ticks (10 Blunt / 5 per tick) either side needs to bottom out at zero.
+
+        // WOLFGATE (measured, P2-D16): the plan predicted the wound host would NOT heal here. It does. Onyx's
+        // routing has no code-level barrier against an un-targeted heal call (DamageableSystem.TryChangeDamage
+        // with no targetPart) reaching a damaged part: WoundDamageRoutingSystem.OnBeforeDamageChanged intercepts
+        // it regardless of sign, RouteThroughBodyModifiers re-raises it through the routed pass, OnDamageDealt
+        // sees the negative delta as localized healing and ApplyLocalizedHealing spreads it across whichever
+        // parts currently carry positive damage of that type - exactly the same path a real heal item would use.
+        // D29's `damage: {}` on every shipped species is a YAML-level guard, not a code-level one; this canary
+        // is what proves that, rather than merely asserting a near-tautology (see the test's own remarks).
+        await server.WaitAssertion(() =>
+        {
+            Assert.Multiple(() =>
+            {
+                Assert.That(entities.GetComponent<DamageableComponent>(control).TotalDamage, Is.EqualTo(FixedPoint2.Zero),
+                    "the non-wound-host control did not heal; PassiveDamageSystem itself is broken, unrelated to Wolfmed.");
+                Assert.That(entities.GetComponent<DamageableComponent>(host).TotalDamage, Is.EqualTo(FixedPoint2.Zero),
+                    "the wound host's arm did not heal: WoundDamageRoutingSystem's un-targeted healing path (ApplyLocalizedHealing) did not reach it.");
             });
         });
     }

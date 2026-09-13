@@ -42,11 +42,3 @@ wound-stage-electrical-minor = mild
 wound-stage-electrical-moderate = moderate
 wound-stage-electrical-severe = severe
 wound-stage-electrical-critical = critical
-
-# WOLFGATE (WP7): BoneFractureWound's examineDescription keys live in Onyx's _Onyx/medical/health-examinable.ftl,
-# which belongs to the unported HealthExaminable system (deferred to WP10). Copied here verbatim so the
-# YAML linter resolves them; delete this block if health-examinable.ftl is ported later.
-wound-examine-fracture-hairline = slight swelling
-wound-examine-fracture-simple = severe swelling
-wound-examine-fracture-displaced = unnatural deformation
-wound-examine-fracture-comminuted = shattered bone

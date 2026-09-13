@@ -1,7 +1,10 @@
 # Wolfmed port manifest
 
 **Onyx commit:** `2f5bab9946539cbe083010c9ae6fbc59b47ae377` (Space-Onyx/space-onyx-14 master)
-**Last re-sync:** 2026-09-13 by WP9
+**Last re-sync:** 2026-09-13 by WP9. **Phase 2 reconciled 2026-09-13 by WP10-7** (rows/deviations for
+WP10-1 through WP10-6b were appended directly by each package per the orchestrator's sequential-execution
+override of PLAN2 §4's `manifest-rows-WP10-N.md` indirection; WP10-7's own work was verification plus the
+`:34`/`:35` status correction and the §8.2 summary below).
 
 Status values: `verbatim` (byte-identical), `modified` (vendored `_Onyx` file with `// WOLFGATE` edits),
 `adapted` (vendored but relocated and/or restructured), `new` (Wolfgate-authored `_WF` code or an upstream
@@ -31,8 +34,8 @@ Status values: `verbatim` (byte-identical), `modified` (vendored `_Onyx` file wi
 | `Resources/Locale/en-US/entity-categories.ftl:7` | `Resources/Locale/en-US/_Onyx/entity-categories.ftl` | adapted | WP1 | one key |
 | `Resources/Prototypes/Entities/StatusEffects/misc.yml` | same | adapted | WP1 | only `StatusEffectBase`, `MobStatusEffectBase`, `MobStatusEffectDebuff` |
 | `Resources/Prototypes/Entities/StatusEffects/{body,clumsy,damage,speech,traits,weather}.yml` | — | skipped | never | non-wound status effects; each needs components we do not port |
-| `Resources/Prototypes/Entities/StatusEffects/movement.yml` | — | deferred | WP10 | `StatusEffectSlowdown` needs `MovementModStatusEffectComponent` |
-| `Resources/Prototypes/_Onyx/StatusEffects/wounds.yml` | — | deferred | WP10 | phase 2 |
+| `Resources/Prototypes/Entities/StatusEffects/movement.yml` | — | skipped | never | **WP10-7 reconciliation (P2-D1):** was "deferred / WP10" — reclassified `not needed`. `FractureEffectSystem` applies both movement and manipulation penalties directly (`OnRefreshSpeed`/`OnGetMultiplier`), with no status-effect entity created or queried; `MovementModStatusEffectComponent` would also drag in the undocumented `FrictionStatusEffectComponent` |
+| `Resources/Prototypes/_Onyx/StatusEffects/wounds.yml` | — | skipped | never | **WP10-7 reconciliation (P2-D1):** was "deferred / WP10" — reclassified `not needed`. `StatusEffectBurnSlowdown`/`StatusEffectWoundImpairment` are orphaned repo-wide at the pin; zero wounds populate `WoundStatusEffectBehavior.StatusEffect` (`grep -ni "statuseffect" Resources/Prototypes/_Onyx/Wounds/wounds.yml` → 0 hits) |
 | `Resources/Prototypes/_Onyx/StatusEffects/surgery.yml` | — | skipped | never | needs `RaspyAccent`; D7 excludes Onyx surgery |
 | `Resources/Prototypes/_Onyx/StatusEffects/{abductor_glands,breathing_immunity,cosmiccult,dementia,tile_movement,vampire}.yml` | — | skipped | never | unrelated features |
 | `Content.{Shared,Server}/_Onyx/StatusEffects/Immunities/**` | — | skipped | never | unrelated features |
@@ -74,7 +77,9 @@ Status values: `verbatim` (byte-identical), `modified` (vendored `_Onyx` file wi
 | `Content.Shared/_Onyx/Wounds/WoundDamageRoutingSystem.cs` | same | modified | WP4 (+WP5, WP8) | D12 facade swap, D10 resolver swap, D8 part-field reads, D9 `Chest` to `Torso` x3, hands rewrite, bed-marker swap, `args.Cancelled` guard, Shitmed `targetPart` handoff, `before: [typeof(SharedArmorPlateSystem)]` on both `BeforeDamageChangedEvent` subs. D23 AP/Tool/OriginFlag side table and D27 applied-delta accumulator added in WP5 |
 | `Content.Shared/_Onyx/Wounds/WoundDamageProjectionSystem.cs` | same | modified | WP4 (WP5 scope) | D12 facade swap, D15 circulation dependency dropped, D11 re-point to `DamageChangedEvent`, D17 `ClearBodyWounds` call, D19 `InjurableComponent` block deleted, `after: [typeof(SharedBodySystem)]`, Shitmed parent walk, D9 visual layers |
 | `Content.Shared/_Onyx/Mobs/Systems/MobThresholdSystem.cs` | same | modified | WP4 (WP5 scope) | absent from the sparse checkout — read via `git show`. **Adds** `_damageable` (M6); `using Content.Shared.Body.Components;`; vital parts `{Head, Torso}` (D9) |
-| `Content.Shared/_Onyx/Wounds/{AmputationSystem,FractureEffectsSystem,FractureAlertSystem}.cs` | — | skipped | WP10/WP11 | D26 — fractures ship in phase 1, amputation does not |
+| `Content.Shared/_Onyx/Wounds/AmputationSystem.cs` | — | skipped | WP11 | D26 — amputation is phase 3/4 |
+| `Content.Shared/_Onyx/Wounds/FractureEffectsSystem.cs` | same | modified | **WP10-1** | 1 edit (P2-D2): `TryGetUsedHandSymmetry` body replaced against Wolfgate's `Hand`-object hands API (`GetActiveHand` returns `Hand?`, `IsHolding`'s 4-arg overload outs `Hand?`, `Hand` is a class so no `.Value`, `HandLocation` has no `Functional*`). No using swap (P2-D3), class name stays `FractureEffectSystem` while the file stays `FractureEffectsSystem.cs` (Onyx's own mismatch). `RefreshTransferredPart` kept verbatim as dead-but-deliberate (P2-D18) |
+| `Content.Shared/_Onyx/Wounds/FractureAlertSystem.cs` | same | modified | **WP10-1** | 3 edits, all D8: `using Content.Shared._WF.Wolfmed.Body;`, `[Dependency] WolfmedBodyPartSystem _wfPart`, and `bodyPart.FractureProfile` → `_wfPart.Get(part).FractureProfile`. `bodyPart` left as an unused deconstruction variable (matches `WoundFractureSystem.cs:148`). No `Initialize`, no subscriptions |
 | `Content.Shared/_Onyx/Wounds/WoundBleedingSystem.cs` | `Content.Server/_Onyx/Wounds/WoundBleedingSystem.cs` | adapted | WP6 | D13 — relocated to `Content.Server`, namespace unchanged. `using Content.Shared.Body.Components;` to `Content.Server.Body.Components` (`BloodstreamComponent`); `using Content.Server.Body.Systems;` **added** beside the shared one (`SharedBodySystem` still comes from `Content.Shared.Body.Systems`). Body otherwise byte-identical |
 | `Content.Shared/_Onyx/Wounds/WoundInternalBleedingSystem.cs` | `Content.Server/_Onyx/Wounds/WoundInternalBleedingSystem.cs` | adapted | WP6 | D13 + M1 — same two `using` swaps, plus the mandatory `:67` fix `TryModifyBloodLevel((body, bloodstream), -amount)` to `TryModifyBloodLevel(body, -amount, bloodstream)` (two chained user-defined conversions, `CS1503`) |
 | `Content.Shared/_Onyx/Wounds/OrganDamageSystem.cs` | `Content.Server/_Onyx/Wounds/OrganDamageSystem.cs` | adapted | WP6 | D13 + D26 + D8 — `using Content.Shared.Body;` to `Content.Shared.Body.Organ` + `Content.Shared._WF.Wolfmed.Body`; **both** `:24` (`[Dependency] AmputationSystem`) and `:36` (`_amputation.HandlePartDamageApplied`) disabled with a `TODO: phase 3`; the organ list and `PickOrgan` retargeted from `OrganComponent` to `WolfmedOrganComponent` |
@@ -102,7 +107,7 @@ Status values: `verbatim` (byte-identical), `modified` (vendored `_Onyx` file wi
 | `Content.Shared/_Onyx/Wounds/WoundDamageRoutingSystem.cs` | same | modified | WP5 | WP5 half: D23 `_routedModifiers` side table written in `OnBeforeDamageChanged` and read at the routed `ChangeDamage` call; D27 `_appliedDelta` accumulator with three write points (`RouteAppliedDamage`, `ApplyPartChange`, `ApplySystemicDamage`) folded in by `AccumulateApplied`, written to `args.Applied` |
 | — | `Content.Server/_WF/Wolfmed/WolfmedBodyPartLifecycleSystem.cs` | new | WP5 | D28 / PLAN 2.11 — subscribes `<WoundHostComponent, BodyPartAddedEvent/BodyPartRemovedEvent>` (never `<BodyComponent, …>`, which Shitmed owns), calls `WoundDamageProjectionSystem.OnPartInserted`/`OnPartRemoved` (PLAN 8.3 trap 2 — they had no caller) and fans `OrganGotInsertedEvent`/`OrganGotRemovedEvent` over the attached subtree |
 | `Resources/Prototypes/_Onyx/Wounds/wounds.yml` | same | modified | WP7 | organic subset only (`OrganicBodyPartProfile`, `OrganicFractureProfile`, 12 wounds); Ipc/Slime/Plant/Cybernetic profiles and their 11 wounds dropped (D3). D9: `organDamage.chances` `Chest: 0.04`+`Groin: 0.04` fold to one `Torso: 0.04` (not summed). **D20 reversed: `Caustic` stays** in `acceptedDamageTypes` and `BurnWound.damageTypes` |
-| `Resources/Locale/en-US/_Onyx/prototypes/wounds/wounds.ftl` | same | modified | WP7 | 43 keys copied verbatim, **plus 4 added**: `wound-examine-fracture-{hairline,simple,displaced,comminuted}`, sourced from Onyx's `_Onyx/medical/health-examinable.ftl` (deferred to WP10) because `BoneFractureWound`'s `examineDescription` fields reference them and the YAML linter fails without them — see Deviations |
+| `Resources/Locale/en-US/_Onyx/prototypes/wounds/wounds.ftl` | same | modified | WP7 / **WP10-2** | 43 keys copied verbatim, **plus 4 added**: `wound-examine-fracture-{hairline,simple,displaced,comminuted}`, sourced from Onyx's `_Onyx/medical/health-examinable.ftl` (deferred to WP10) because `BoneFractureWound`'s `examineDescription` fields reference them and the YAML linter fails without them — see Deviations. **WP10-2 DELETED those 4 keys** (`:45-52`, the whole `# WOLFGATE (WP7)` stopgap block) when `_Onyx/medical/health-examinable.ftl` landed — Fluent throws on a duplicate id, so the two files cannot both declare them (P2-D12). Verified by a clean headless server start |
 | `Resources/Locale/en-US/_Onyx/medical/fractures.ftl` | same | verbatim | WP7 | `alerts-broken-bones-{name,desc}` |
 | `Resources/Prototypes/_Onyx/Alerts/alerts.yml` | same | modified | WP7 | `BrokenBones` only; header preserved verbatim; `ModsuitPower`/`Centered`/`HierophantBeat`/`DragonPower`/`SneakAttack`/`LossOfSurprise` dropped (unrelated features, would need un-ported textures/tags) |
 | `Resources/Textures/_Onyx/Interface/Alerts/fracture.rsi/{meta.json,brokenbones.png}` | same | verbatim | WP7 | CC-BY-SA-3.0, "Taken from tgstation, redrawn by darkrell" — re-checked, compatible |
@@ -126,13 +131,40 @@ Status values: `verbatim` (byte-identical), `modified` (vendored `_Onyx` file wi
 | `Content.IntegrationTests/Tests/_Onyx/Wounds/WoundDamageFoundationTest.cs` | same | adapted | WP9 | 9 of Onyx's 12 tests. Shitmed `body` prototype instead of Nubody `InitialBody`; Chest -> Torso (D9); `WolfmedDamageableSystem`/`WolfmedBodySystem`/`WoundTargetResolver` in place of Onyx's; Onyx's `TargetingComponent.DefaultOdds()`/`TryConvert` assertions dropped (D10); the two armour tests that need `coverage`/`partModifiers` dropped and folded into one applies-exactly-once test; `SuppressPain` entity effect replaced by the identical `PainSystem.SuppressPain` path (D16, phase 4) |
 | `Content.IntegrationTests/Tests/_Onyx/Wounds/WoundBleedingTest.cs` | same | adapted | WP9 | 4 of Onyx's 6. Server-side `WoundBleedingSystem`/`BloodstreamComponent` (D13); tourniquet test skipped (WP11); traumatic-amputation test skipped (needs `AmputationSystem` to set `Severable`, D26); two auto-clotting severities raised above `SlashWound.minimumSeverity: 9` |
 | `Content.IntegrationTests/Tests/_Onyx/Wounds/WoundScarTest.cs` | same | adapted | WP9 | 1 test. Shitmed body graph; `WolfmedBodySystem.TryDetachPart` + `SharedBodySystem.AttachPart`; `CCVars.SurgeryScarChance` pinned to 1 for the duration (Onyx's copy is 35 % flaky) |
-| `Content.IntegrationTests/Tests/_Onyx/Wounds/WoundFractureTest.cs` | same | adapted | WP9 | 2 of Onyx's 3. `FractureEffectSystem` test deferred to phase 2 (WP10); grade boundaries corrected to `OrganicFractureProfile`'s own 20/35/50/60 |
+| `Content.IntegrationTests/Tests/_Onyx/Wounds/WoundFractureTest.cs` | same | adapted | WP9 / **WP10-1** | 2 of Onyx's 3. `FractureEffectSystem` test still deferred (WP10-6b owns every assertion); grade boundaries corrected to `OrganicFractureProfile`'s own 20/35/50/60. **WP10-1 landed the `[TestPrototypes]` block only (T-FIXTURE / P2-D21):** `WoundFractureBodyGraph` gains a `left hand` slot (`LeftHandHuman`) and `WoundFractureBody` a `- type: Hands`, plus a second `WoundFractureHandsBodyGraph`/`WoundFractureHandsBody` (both arms, both hands) for T-FRACT-HANDS. Exactly one hand on `WoundFractureBody` so the `used: null` active-hand path is unambiguous. **WP10-6b wrote every assertion:** Onyx's `EffectsRefreshOnTreatmentHealingAndDetachTest` ported (T-FRACT-EFFECTS) plus three tests Onyx does not have - `FractureManipulationUsesHeldHandSymmetryTest` (T-FRACT-HANDS, the only coverage of the P2-D2 `TryGetUsedHandSymmetry` rewrite), `FractureAlertTracksGradeAndTreatmentTest` (T-FRACT-ALERT) and `FractureAlertRespectsMinimumGradeTest` (T-FRACT-ALERT-NEG). Two further `[TestPrototypes]` edits WP10-6b had to make: `- type: Alerts` on `WoundFractureBody` (`AlertsSystem.ShowAlert` returns silently without `AlertsComponent`) and a new `WoundFractureHeldItem` (`IsHolding` only resolves a hand for a real item). Every literal re-derived against the shipped data (P2-D16) and every fracture created at severity >= 60 (P2-D23) |
 | `Content.IntegrationTests/Tests/_Onyx/Wounds/WoundHealingTest.cs` | same | adapted | WP9 | 4 of Onyx's 5. Server-side `WoundHealingSystem` + `Content.Server` `HealingComponent` (D13/D14); `Repairable`/`TransplantCompatibility` dropped; `WoundTargetResolver` for the exact-target test; repair-event test skipped (`_Onyx.Repairable` not in scope) |
 | `Content.IntegrationTests/Tests/_Onyx/Body/BodyConsequencesTest.cs` | same | adapted | WP9 | 2 of Onyx's 3, both rewritten. No Wolfgate system couples inventory slots to body parts and `BodyPartType.Groin`/`StandUpAttemptEvent` do not exist, so the surviving contract is cascade-on-detach and down-at-zero-legs on a real `MobHuman` wound host |
-| - | `Content.IntegrationTests/Tests/_WF/Wolfmed/WolfmedDamageBridgeTest.cs` | new | WP9 | PLAN 6.2: T-SETUP, T-RESULT, T-PIERCE, T-CAUSTIC, T12, non-wound-host control, no-double-application. `WolfmedBridgeBody` / `WolfmedControlBody` `[TestPrototypes]` pair |
+| - | `Content.IntegrationTests/Tests/_WF/Wolfmed/WolfmedDamageBridgeTest.cs` | same | adapted | WP9 / **WP10-6a** | PLAN 6.2: T-SETUP, T-RESULT, T-PIERCE, T-CAUSTIC, T12, non-wound-host control, no-double-application. `WolfmedBridgeBody` / `WolfmedControlBody` `[TestPrototypes]` pair. **WP10-6a (PLAN2 §6.2) added T-AP and T-PASSIVE-A/B**, plus three new `[TestPrototypes]`: `WolfmedBridgeArmor` (mirrors `WoundFractureArmor`), `WolfmedPassiveWoundHost` / `WolfmedPassiveControl` (real `PassiveDamage` on the `WolfmedBridgeBodyGraph` shape, one with `WoundHost` one without) |
+| - | `Content.IntegrationTests/Tests/_WF/Wolfmed/WolfmedPainTest.cs` | same | new | **WP10-6b** | PLAN2 §6.2: T-PAIN-OVERLAY (`PainOverlayLevelTracksPainTest`), T-PAIN-SHOCK (`PainShockStunsAtThresholdTest`), T-HIGH-PAIN (`HighPainThresholdReducesWoundPainGainTest`), T-PAIN-NUMB (`PainNumbnessSuppressesWoundPainTest`). Four new `[TestPrototypes]` on one `WolfmedPainBodyGraph` (torso + head + left arm): `WolfmedPainControlBody`, `WolfmedHighPainThresholdBody`, `WolfmedPainShockBody` and `WolfmedPainNumbBody`; the last two carry P2-D24's explicit `StatusEffects allowed: [Stun, KnockedDown, Jitter]` **and** `- type: MobState`. Every number measured on this tree (P2-4), derivations at each assertion |
 | - | `Content.Server/_WF/Wolfmed/WolfmedBodyPartLifecycleSystem.cs` | new | WP9 | **Two WP9 fixes.** (1) `TerminatingOrDeleted` guards on both handlers - `RecursiveDeleteEntity` detaches every part while a mob terminates and `RefreshDetachedDamage`'s `EnsureComp<PartDamageVisualsComponent>` threw a `DebugAssertException` on every mob deletion. Onyx has the same guard in `BodyInventorySlotSystem.cs:32,45`. (2) `WoundBleedingSystem.OnPartInserted`/`OnPartChanged` are now driven from here (Onyx drives them from the unported `BodyInventorySlotSystem.cs:39,49`); without them a detached limb kept bleeding into the body |
 | - | `Content.Shared/_WF/Wolfmed/Body/WolfmedWoundHostExclusionSystem.cs` | new | WP7 / **WP9** | WP9 fix: `RemCompDeferred` -> `RemComp`; the deferred form left the component in `_deleteSet` at life stage `Initialized` and `StartComponents` asserted, so every `MobProtogen` spawn threw |
 | - | `Content.Server/_WF/Wolfmed/Compat/WolfmedBedHealMarkerSystem.cs` | new | WP2 / **WP9** | WP9 fix: `<HealOnBuckleComponent, ComponentStartup>` -> `<HealOnBuckleComponent, MapInitEvent>`; the marker was being gained on spawn, which fails `PrototypeSaveTest.UninitializedSaveTest` |
+| - | `Content.Shared/_WF/Wolfmed/DoAfter/WolfmedFractureDoAfterSystem.cs` | new | **WP10-1** | P2-D4 do-after bridge. Subscribes `<WoundHostComponent, GetDoAfterDelayMultiplierEvent>` (pair free: the event is otherwise held by `DoAfterDelayMultiplierComponent` and `BodyComponent`) with a `ref` handler matching `DoAfterDelayMultiplierSystem.cs:27`, and multiplies in `FractureEffectSystem.GetDurationMultiplier(uid)`. `SharedDoAfterSystem.cs` and `DoAfterDelayMultiplierSystem.cs` untouched. No `before:`/`after:` edge — the multipliers compose |
+| `Resources/Prototypes/_Onyx/Wounds/wounds.yml` | same | modified | WP7 / **WP10-1** | **WP10-1 (DECISIONS §8.2-1):** the four `OrganicFractureProfile` `manipulationModifier` values 0.92/0.84/0.75/0.75 become **1.1/1.25/1.5/2.0** behind a `# WOLFGATE` balance comment. Onyx's values are all below 1 while the formula is `multiplier *= 1 + (modifier - 1) * partScale * treatmentScale`, so below 1 meant *faster* — a shattered arm made every do-after 25 % quicker. 1.1/1.25/1.5/2.0 are the C# defaults in `WoundPrototype.cs`. `movementModifier` untouched |
+| `Content.Shared/_Onyx/HealthExaminable/HealthExaminableSystem.PartStatus.cs` | same | modified | **WP10-2** | **5** `// WOLFGATE` edits (PLAN2 predicted 4): (1) `using Content.Shared.Damage.Components;` -> `using Content.Shared.Damage;` (`DamageableComponent`'s namespace here, CS0246 otherwise); (2) **add** `using Content.Shared._WF.Wolfmed.Compat;`; (3) **add** `[Dependency] private WolfmedDamageableSystem _damageable` (D12 — Onyx declares it on the base partial, which GUARD F deliberately leaves facade-free); (4) D9 `PartOrder` fold, `Chest`/`Groin` -> `Torso`; (5) **not in PLAN2** — `DamageSpecifier.DamageDict` is `Dictionary<string, FixedPoint2>` in Wolfgate, not `ProtoId<DamageTypePrototype>`-keyed, so `entry.Key.Id` / `type.Id` lose the `.Id`. Declares no `Initialize`, registers no subscription |
+| `Content.Shared/_Onyx/HealthExaminable/HealthExaminableSystem.Pain.cs` | same | verbatim | **WP10-2** | Self-only pain visibility is Onyx's deliberate anti-metagame design. Also where `HealthExaminableSystem.PartStatus.cs` gets `_body`/`_pain` from — the two files do not compile apart |
+| `Content.Client/_Onyx/HealthExaminable/ExamineSystem.PartStatus.cs` | same | verbatim | **WP10-2** | Attaches straight to Wolfgate's `public sealed partial class ExamineSystem` in `namespace Content.Client.Examine` — no `_WF` indirection. Sandbox-clean; `Vector2Helpers` resolves through `Content.Client/GlobalUsings.cs`'s `global using Robust.Shared.Maths` |
+| `Content.Client/_Onyx/HealthExaminable/PartStatusTag.cs` | same | verbatim | **WP10-2** | `[partstatus]`/`[partstatusend]` need no engine tag registration — the client walks `message.Nodes` before anything reaches `RichTextLabel.SetMessage`'s `tagsAllowed` path |
+| - | `Content.Shared/_WF/Wolfmed/Compat/PartStatusSeverity.cs` | new | **WP10-2** | P2-D11. Declares `namespace Content.Shared._Onyx.Targeting` deliberately so the vendored file's `using` and unqualified `PartStatusSystem.GetSeverity(...)` resolve unedited. `GetSeverity` body verbatim from Onyx's `_Onyx/Targeting/PartStatusSystem.cs`; the D10-excluded Targeting-doll members (`PartStatus`, `Missing`, `PartStatusComponent`) are not ported. Per PLAN2 §2.1 the enum ships without Onyx's `[Serializable, NetSerializable]` — it is never networked here. Static class + enum: registers nothing, subscribes nothing |
+| - | `Content.Shared/HealthExaminable/HealthExaminableSystem.cs` | new (hook) | **WP10-2** | **GUARD F**, 5 sites: `using Content.Shared._Onyx.Wounds;`; `CreateMarkup(uid, args.User, ...)` at the verb `Act`; the `examiner` parameter on `CreateMarkup`; a `if (!HasComp<WoundHostComponent>(uid))` wrap around the legacy threshold loop + `msg.IsEmpty` fallback; and `else AddPartStatusMarkup(uid, examiner, msg);` (**P2-D20** — the `else`, never unconditional). Onyx's `GetAllDamage` swap inside the legacy branch is deliberately skipped, so the file needs no facade dependency. `HealthExaminableComponent.cs` untouched. Adds no subscription. Wrapped body left un-reindented so the upstream diff stays 4 added lines |
+| - | `Content.Client/Examine/ExamineSystem.cs` | new (hook) | **WP10-2** | **HOOK 14**, 2 sites: `new Popup { MaxWidth = 400 }` -> `560` (widens *every* examine popup — see Deviations) and the `richLabel` construction wrapped in `if (!TryAddPartStatusMessage(vBox, message))`. Adds no subscription, no new `using` (the callee is a member of the same partial class) |
+| - | `Content.Server/Body/Systems/BloodstreamSystem.cs` | new (hook) | WP6 / **WP10-2** | **WP10-2 landed GUARD E2** — `!HasComp<WoundHostComponent>(ent) &&` on the `bloodstream-component-looks-pale` condition in `OnHealthBeingExamined` (`:280`, drifted from PLAN's `:274`). No new `using` (GUARD E already added it). The two `BleedAmount` messages above are deliberately untouched: GUARD E3 projects wound bleeding onto the body's own `BleedAmount`, so they read correctly for wound hosts |
+| `Resources/Locale/en-US/_Onyx/medical/health-examinable.ftl` | same | verbatim | **WP10-2** | **36** message ids. The 4 `wound-examine-frame-*` keys have no consumer at the pin (harmless dead weight); the 4 `wound-examine-fracture-*` keys are the P2-D12 collision deleted from `wounds.ftl` in this same package |
+| `Resources/Locale/en-US/_Onyx/targeting/part-status.ftl` | - | skipped | **WP10-2** | Orphaned at the pin — its one key has zero consumers, and D10 excludes the Targeting doll that would use it |
+| `Content.Shared/_Onyx/Traits/HighPainThresholdComponent.cs` | same | verbatim | **WP10-3** | `[RegisterComponent, NetworkedComponent]`, one `[DataField] public float PainMultiplier = 0.75f;`. `grep -rn "HighPainThreshold"` across WG C#/YAML/FTL was zero hits before this WP — free registration |
+| `Content.Shared/_Onyx/Traits/HighPainThresholdSystem.cs` | same | verbatim | **WP10-3** | Subscribes `<HighPainThresholdComponent, ModifyPainGainEvent>` (`ref`, matching the event's `[ByRefEvent]` shape); pair free per PLAN2 §5.1 row 10 — `ModifyPainGainEvent` had zero subscribers anywhere in WG before this |
+| `Resources/Prototypes/_Onyx/Traits/quirks.yml` | same | adapted | **WP10-3** | Trimmed to the `HighPainThreshold` entry only (Onyx's `AlcoholTolerance`/`Parkour`/`Voracious`/`ColdBlooded`/etc. are unrelated features, same trim class as WP7's `_Onyx/Alerts/alerts.yml`). `conflicts: [PainNumbness]` -> `mutuallyExclusiveTraits: [PainNumbness]` (P2-D15, resolves against WG's existing `Resources/Prototypes/Traits/disabilities.yml:69` entry); `cost: 3` dropped (Quirks declares no `maxTraitPoints`, so cost is inert — see Deviations) |
+| `Resources/Locale/en-US/_Onyx/traits/quirks.ftl` | same | adapted | **WP10-3** | 2 keys only (`trait-high-pain-threshold-{name,desc}`), same trim |
+| `Content.Shared/_Onyx/Wounds/PainSystem.cs` | same | modified | **WP10-3** | 1 edit (P2-D8): `IsPainNumb` widened with `if (HasComp<PainNumbnessComponent>(entity)) return true;` before the existing `StatusEffectPainNumbness` check, so Wolfgate's shipped `PainNumbness` trait (which grants the legacy Mono `PainNumbnessComponent`, not Onyx's status-effect form) actually suppresses wound pain. Placed after the existing part->body redirect so it tests the body. No new `using` (`Content.Shared.Traits.Assorted` already imported at `:13`) |
+| `Content.Client/UserInterface/Systems/DamageOverlays/Overlays/DamageOverlay.cs` | same | new (hook) | **WP10-4** | **HOOK 15**, 2 one-line sites: (a) `TryApplyWolfmedPain();` call inserted after the eye/viewport guard, before the lerp block; (b) `_bruteShader.SetParameter("darknessAlphaOuter", 0.8f);` -> `0.8f * level` (ONYX `DamageOverlay.cs:175`). Body lives in the `_WF` partial so no new `using` lands upstream. Adds no subscription (an `Overlay`, not an `EntitySystem`) |
+| `Content.Client/UserInterface/Systems/DamageOverlays/DamageOverlayUiController.cs` | same | new (hook) | **WP10-4** | **HOOK 16**, 1 condition: the existing Mono `PainNumbnessComponent` check at the `MobState.Alive` brute/burn computation gains `&& !WolfmedPainOwnsVignette(entity)`. Predicate lives in the `_WF` partial; no new `using` upstream. Correctness depends on WP10-3's `IsPainNumb` widening (CRITIQUE2 m6) — already landed. Adds no subscription |
+| - | `Content.Client/_WF/Wolfmed/Overlays/DamageOverlay.Wolfmed.cs` | new | **WP10-4** | HOOK 15's body, `partial class DamageOverlay`. `TryApplyWolfmedPain()` reads the networked `PainComponent` on the local player directly (`GetPain / SoftPainCap`, floored at 0.05) and writes `BruteLevel`; bails on `MobState.Dead` or `SoftPainCap <= 0`. No `PainChangedEvent` subscription — every `PainSystem` mutator is server-gated and every reader here touches only `[AutoNetworkedField]` state, so a per-`Draw()` read needs no trigger |
+| - | `Content.Client/_WF/Wolfmed/Overlays/DamageOverlayUiController.Wolfmed.cs` | new | **WP10-4** | HOOK 16's `WolfmedPainOwnsVignette(EntityUid)` predicate, `partial class DamageOverlayUiController` — a one-line `HasComponent<PainComponent>` check |
+| `Content.Server/_Onyx/Chat/EmoteOnDamageSystem.PainSounds.cs` | same | modified | **WP10-5** | Vendored at Onyx's `_Onyx` path, namespace stays `Content.Server.Chat.Systems` (D13 pattern; a partial of the upstream `EmoteOnDamageSystem`). **5** `// WOLFGATE` edits: (1) `using Content.Shared._Onyx.Wounds;` added - PLAN2 claims it is already Onyx line 1, it is not (see Deviations); (2) `using Content.Shared._WF.Wolfmed.Compat;` (D12); (3) `[Dependency] DamageableSystem` -> `WolfmedDamageableSystem` (D12) - the `GetTotalDamage(uid).Float()` call site compiles unchanged via `Entity<T>`'s implicit `EntityUid` conversion; (4) the P2-D22 `HasComp<WoundHostComponent>` gate as the first statement of `HandlePainDamageEmote`; (5) `HasComp<PainNumbnessComponent>` added to the bail-out chain for parity with WP10-3's widened `PainSystem.IsPainNumb`. Onyx's `ProtoMan` swap was a confirmed no-op (the file never references it). **Registers no subscription** |
+| - | `Content.Server/Chat/EmoteOnDamageComponent.cs` | new (hook) | **WP10-5** | **HOOK 17**, purely additive: `emotesThreshold` (`Dictionary<float, HashSet<ProtoId<EmotePrototype>>>`), `allowedDamageType`, `painThreshold` (6f), `LastTotalDamage` (`[ViewVariables]`), plus `using Robust.Shared.Prototypes;`. Explicit `[DataField("...")]` names match this file's house style. **`Emotes` is left untouched** so `ZombieSystem.cs:181` / `ZombieSystem.Transform.cs:145`'s `AddEmote(uid, "Scream")` path is unaffected (P2-D9). The existing `[Access(typeof(EmoteOnDamageSystem))]` already covers the new fields |
+| - | `Content.Server/Chat/Systems/EmoteOnDamageSystem.cs` | new (hook) | **WP10-5** | **HOOK 18**, 1 line: `HandlePainDamageEmote(uid, emoteOnDamage, args);` as the first statement of `OnDamage`, before the existing `if (!args.DamageIncreased) return;` (Onyx's placement). **Never a second `<EmoteOnDamageComponent, DamageChangedEvent>` subscription** - that pair stays owned by this file's `Initialize` at `:22`. No `AddEmote`/`RemoveEmote` threshold overloads added (nothing calls them) |
+| - | `Resources/Prototypes/Entities/Mobs/Species/base.yml` | modified | **WP10-5** | P2-D7 `- type: PainShockTarget` + P2-D9 `- type: EmoteOnDamage` (`emotesThreshold: {50: [Scream], 80: [Scream, Crying]}`, `emoteChance: 0.6`, `withChat: true`, `hiddenFromChatWindow: true`, `emoteCooldown: 8`), both appended to the existing phase-1 `# WOLFGATE` block on `BaseMobSpeciesOrganic`. Onyx's `emotes:` key corrected to `emotesThreshold:`. `emotes:` deliberately left empty so the upstream `OnDamage` body still returns at its `Emotes.Count == 0` check - no double emote |
+| - | - | skipped | **WP10-5** | **No audio or locale assets were needed.** `Scream` (`Resources/Prototypes/Voice/speech_emotes.yml:3`) and `Crying` (`:110`) are existing upstream `Vocal`-category emote prototypes whose audio comes from each species' own `VocalComponent` `EmoteSounds` set. Nothing new was copied, so no `meta.json`/`attributions.yml` change was required |
 
 **Species included as wound hosts (17 of 18 `BaseMobSpeciesOrganic` descendants):** `arachnid`, `diona`,
 `dwarf`, `gingerbread`, `human`, `moth`, `reptilian`, `slime`, `vox` (base) · `chitinid`, `feroxi`,
@@ -143,6 +175,7 @@ Onyx-equivalent — §8.1 item 1(a)).
 **Species excluded (1 of 18):** `protogen` (`_Mono`) — carries `prototype: SiliconDeathgasp`
 (`_Mono/Entities/Mobs/Species/protogen.yml:74`), a synthetic. `WoundHostComponent` is stripped at
 `ComponentInit` by `WolfmedWoundHostExclusionSystem` before any wound system observes it.
+**Phase 2 note (P2-D22):** that system removes `WoundHostComponent` and nothing else, so protogen *does* carry the `PainShockTarget` and `EmoteOnDamage` components WP10-5 added beside it. `PainShockTarget` is inert there (`PainComponent` is only ever ensured on wound hosts) and the pain sounds are gated in C# by `HandlePainDamageEmote`'s `HasComp<WoundHostComponent>` guard, not by the YAML block.
 
 ## Deviations
 
@@ -357,7 +390,8 @@ Deliberate departures from Onyx behaviour, with the reason. A re-sync should not
   The Release YAML linter fails with "No localization message found" for all four without them. Fixed by
   appending the four keys (copied verbatim from `health-examinable.ftl`) to the end of `wounds.ftl` with a
   `# WOLFGATE` comment explaining the source and noting they should be deleted if `health-examinable.ftl`
-  is ported in WP10 (at which point they would be a duplicate key error instead — check then).
+  is ported in WP10 (at which point they would be a duplicate key error instead — check then). **RESOLVED in WP10-2:** `health-examinable.ftl`
+  is ported and the four stopgap keys were deleted from `wounds.ftl`.
 - **`Resources/Textures/_Onyx/Wounds/{brute,burn}_damage.rsi` are not ported**, per PLAN's explicit
   "textures deliberately not ported" note — `wounds.yml` has zero texture references, and the sprites are
   cosmetic re-skins of ones Wolfgate already ships.
@@ -471,6 +505,306 @@ Deliberate departures from Onyx behaviour, with the reason. A re-sync should not
   What survives is cascade-on-detach and down-at-zero-legs (Wolfgate goes down at zero legs, not at one).
 - **`DamageSpecifier.Empty` is not a usable 'nothing landed' assertion here.** `DamageableInit` seeds every
   supported type to zero (D30), so `BodyPartProfileContractsTest` asserts `GetTotal() == 0` instead.
+
+### WP10-1 (phase 2 — fractures)
+
+- **Corrected upstream bug: `OrganicFractureProfile.manipulationModifier` (DECISIONS §8.2-1, user decision).**
+  Onyx's YAML declares 0.92/0.84/0.75/0.75 for Hairline/Simple/Displaced/Comminuted, all below 1, but
+  `FractureEffectSystem.OnGetMultiplier` computes `args.Multiplier *= 1f + (modifier - 1f) * partScale *
+  treatmentScale` — below 1 makes the do-after *faster*. Shipped as 1.1/1.25/1.5/2.0, the C# defaults in
+  `WoundPrototype.cs` (`Hairline = new(8, 0.9f, 1.1f)` … `Comminuted = new(40, 0.4f, 2f)`), which also match
+  the non-fracture fallback's direction (`Disabled => 2.5f`, `Impaired => 1.25f`). This **overrides P2-D13**,
+  which had recorded the values as ship-unchanged-and-escalate; the user chose FIX. Onyx-divergent by design.
+- **P2-D2 — `TryGetUsedHandSymmetry` is a rewrite, not a shim.** Wolfgate's `SharedHandsSystem` has no
+  string-id `IsHolding`/`TryGetHand` pair; `GetActiveHand(Entity<HandsComponent?>)` returns `Hand?` and
+  `IsHolding(EntityUid, EntityUid?, out Hand?, HandsComponent?)` outs the `Hand` directly. An extension-method
+  shim cannot win: C# prefers the applicable instance member. Behaviour preserved (used-item hand, else active
+  hand; symmetry then filters `GetBodyChildren`). The only loss is `HandLocation.FunctionalLeft/Right`, which
+  no Wolfgate entity can carry (`HandLocation` is `{Left, Middle, Right}`).
+- **P2-D4 — the do-after bridge loses `Used` and loses `MultiplyDelay == false` do-afters.** Wolfgate's
+  `GetDoAfterDelayMultiplierEvent` carries no `Used` item, so the **active hand** decides symmetry
+  (zero-edit approximation, §8.2-2); and `SharedDoAfterSystem.cs:208-214` raises it only inside
+  `if (args.MultiplyDelay)`, so do-afters that opt out escape the fracture penalty entirely.
+- **P2-D18 — `FractureEffectSystem.RefreshTransferredPart` ships uncalled, deliberately.** Its only Onyx
+  caller is the D7/D16-deferred `SpeciesChangeEntityEffectSystem`. Kept verbatim so a re-sync sees no diff.
+- **WP10-1 gives `WoundStatusEffectSystem.HandlePartInserted`/`HandlePartRemoved` their first caller in
+  Wolfgate.** `FractureEffectSystem.OnPartChanged` calls both. Inert at the pin only because no wound
+  prototype populates `WoundStatusEffectBehavior.StatusEffect` (P2-D1). If one ever does, re-check.
+- **P2-D21 — the fracture test fixture is not Onyx's.** Onyx's `WoundFractureBody` has no hands either, so
+  `GetDurationMultiplier` there was always `1f` and Onyx's own `2f` literal could never have passed. Wolfgate's
+  fixture adds one left hand (plus a symmetric `WoundFractureHandsBody`) so the manipulation half measures
+  something. Deliberately one hand on `WoundFractureBody`: `AddHand` makes whichever hand attaches first
+  active, so a two-handed fixture would depend on body-graph slot order.
+- **P2-D17 carried forward — no client-side `OrganGot*` mirror.** `WolfmedBodyPartLifecycleSystem` is
+  server-only, so the client does not refresh movement speed on limb attach/detach;
+  `MovementSpeedModifierComponent`'s `[AutoNetworkedField]` modifiers correct it within one state.
+
+### WP10-2 (phase 2 — HealthExaminable part status + pain)
+
+- **P2-D20 — GUARD F calls `AddPartStatusMarkup` only for wound hosts; Onyx calls it unconditionally.**
+  `HealthExaminableComponent` sits on `BaseMob` in Wolfgate, not on `BaseMobSpeciesOrganic`, so an
+  unconditional call would give borg chassis, NPC silicons, animals and the D32-excluded Protogen the Onyx
+  part-status readout *in addition to* today's threshold text. It would not crash (`WoundSystem.GetWounds`
+  is `Resolve(..., false)`-guarded), so build, lint and startup all stay green — which is exactly why it is
+  written down. Non-wound-hosts keep today's behaviour byte for byte (D2).
+- **HOOK 14 (a) widens every examine popup in the game from 400 px to 560 px**, not only wound hosts'. It is
+  the one phase-2 hook site that is not behaviour-neutral for non-hosts. Onyx makes the same change.
+- **GUARD E2 retires "looks pale" for wound hosts only.** Non-hosts keep it. It lands in the same package as
+  the part-status readout on purpose: shipped alone it would delete a message with nothing replacing it.
+- **A fifth vendored-file edit PLAN2 did not predict: `DamageSpecifier.DamageDict` is keyed by `string`.**
+  Onyx's is keyed by `ProtoId<DamageTypePrototype>`, so `HealthExaminableSystem.PartStatus.cs`'s
+  `.OrderBy(entry => entry.Key.Id)` and `$"...-{type.Id.ToLowerInvariant()}"` both drop the `.Id`. Ordering
+  and the produced loc key are unchanged (`ProtoId.Id` *is* the string). Any later vendored file that reads
+  `DamageDict` keys will hit the same thing.
+- **The legacy threshold branch is wrapped, not re-indented.** GUARD F's `if (!HasComp<WoundHostComponent>)`
+  block leaves the wrapped body at its original indentation so the upstream diff is 4 added lines; Wolfgate
+  merges this file from upstream and a re-indented block would conflict on every upstream touch.
+- **`PartStatusSeverity.cs`'s enum drops Onyx's `[Serializable, NetSerializable]`** (PLAN2 §2.1's body). The
+  shim's value is only ever `ToString().ToLowerInvariant()`-ed into markup, never networked. Restore the
+  attributes if a later package networks a part-status snapshot.
+- **`Resources/Locale/en-US/_Onyx/targeting/part-status.ftl` is skipped** (orphaned, P2-D12), and Onyx's
+  Targeting-doll `PartStatus`/`PartStatusComponent` stay unported (D10).
+
+### WP10-3 (phase 2 — `HighPainThreshold` trait + pain-numbness widening)
+
+- **P2-D8 — `IsPainNumb` was permanently false before this WP.** Wolfgate's shipped `PainNumbness` trait
+  (`Resources/Prototypes/Traits/disabilities.yml:69`) grants the legacy `Content.Shared.Traits.Assorted.
+  PainNumbnessComponent`, but `PainSystem.IsPainNumb` tested only the Onyx status-effect form
+  (`PainNumbnessStatusEffectComponent`), which nothing in Wolfgate can apply — `TraitPrototype` has no
+  `specials:`, and none of `PainNumbnessStatusEffectBase`/`StatusEffectPainNumbness`/`TraitStatusEffectBase`
+  are ported (phase 4, with the narcotics — P2-D1/§8.4). Before this widening a pain-numb character still
+  got the pain vignette, still screamed from pain shock and still took the full pain stun; `HighPainThreshold`'s
+  `mutuallyExclusiveTraits: [PainNumbness]` guarded nothing observable. Fixed by widening `IsPainNumb` to also
+  honour `PainNumbnessComponent`, per PLAN2 (overrules `statuses.md` §7's "no action needed").
+- **P2-D15 — two prototype adaptations, both required, neither touching upstream Wolfgate files.**
+  `conflicts:` -> `mutuallyExclusiveTraits:` (Wolfgate's field name; checked in both directions client-side at
+  `Content.Client/Lobby/UI/HumanoidProfileEditor.xaml.cs:998`, so only the `_Onyx` entry needs the field —
+  `disabilities.yml`'s `PainNumbness` entry is untouched). `cost: 3` dropped: Wolfgate's `Quirks` category
+  (`Resources/Prototypes/Traits/categories.yml`) declares no `maxTraitPoints`, so `WithTraitPreference`
+  short-circuits the cost check and it would be inert anyway; WG's own `quirks.yml` entries carry no `cost:`.
+  `specials:` has no Wolfgate equivalent and is not ported (nothing reads it).
+- **Registration confirmed free.** `HighPainThreshold` was a zero-hit grep across WG C#/YAML/FTL before this
+  WP (§5.3). `<HighPainThresholdComponent, ModifyPainGainEvent>` is a new pair, but `ModifyPainGainEvent` had
+  zero existing subscribers anywhere in WG (§5.1 row 10) — no collision.
+- **No deviation from PLAN2 §4/WP10-3.** All five files landed exactly as specified: 2 verbatim `_Onyx`
+  C# files, 1 adapted prototype, 1 adapted locale file, 1 modified vendored file (`PainSystem.cs`).
+
+### WP10-4 (phase 2 — pain HUD overlay)
+
+- **No deviation from PLAN2 §4/WP10-4.** All 4 files landed exactly as specified: 2 upstream one/two-line
+  hooks (HOOK 15, HOOK 16) and 2 new `_WF` partials holding the bodies. Line numbers had drifted slightly
+  from PLAN2's citations (`DamageOverlay.cs`'s eye/viewport guard ends at `:64`, the call landed at `:66`;
+  `darknessAlphaOuter` at `:158` in PLAN2 is `:160` today; `DamageOverlayUiController.cs`'s condition is
+  still at `:98`) — re-verified against the tree before editing, not copied blind.
+- **P2-D6 confirmed at implementation time.** RT 277 still has no `SubscribeLocalEventAttribute`
+  (`grep -rn "class SubscribeLocalEventAttribute" RobustToolbox` — zero hits), so the `Draw()`-level read
+  stands: no client subscription to `PainChangedEvent` was added or would have worked (every
+  `RaisePainChanged` call site is inside a `_net.IsServer`-gated method).
+- **Ordering dependency (CRITIQUE2 m6) satisfied.** WP10-3's `PainSystem.IsPainNumb` widening had already
+  landed in the tree before this WP started (verified via `git status`), so HOOK 16 correctly suppresses
+  the vignette for pain-numb characters from the moment it ships — no window where WP10-4 alone would show
+  the vignette to a `PainNumbness` trait holder.
+- **Numbers not independently re-measured beyond a build check.** P2-4 asks that every pain-HUD number be
+  verified against a real mob; this WP's checkpoint is the build gate only (PLAN2 §4/WP10-4's own text:
+  "the vignette itself is not headlessly assertable"). WP10-6b owns T-PAIN-OVERLAY, which is the actual
+  measurement; until it lands, the `min(1, GetPain/SoftPainCap)` / 0.05-floor formula and the predicted
+  6.75/0.963 pain-level landmarks (`SoftPainCap = 135`) are PLAN2's derivation, not this WP's own
+  measurement.
+- **`DamageOverlay.Wolfmed.cs`'s `TryApplyWolfmedPain` resolves `PainSystem` via `_entityManager.System<T>()`
+  inside the method body, not through a `[Dependency]` field** — matching PLAN2's code exactly, because the
+  overlay is constructed from `DamageOverlayUiController.Initialize()`, which can run before entity systems
+  exist. A later refactor that moves overlay construction later could switch this to `[Dependency]`, but
+  should not do so without checking that ordering still holds.
+
+### WP10-6a (phase 2 — bridge tests: T-AP, T-PASSIVE-A, T-PASSIVE-B)
+
+- **T-AP passed as predicted.** Three `WolfmedBridgeBody` spawns (armoured@AP=0, armoured@AP=1, unarmoured@AP=0)
+  hit through the new `WolfmedBridgeArmor` (`Blunt: 0.5` coefficient, mirrors `WoundFractureArmor`) via
+  `DamageableSystem.TryChangeDamage(..., targetPart: TargetBodyPart.LeftArm, armorPenetration: X)`. Measured:
+  armoured/AP=0 arm damage 5, armoured/AP=1 arm damage 10 (full penetration is a true no-op, not a zero-out —
+  `DamageSpecifier.PenetrateArmor` returns an *empty* modifier set at `armorPenetration >= 1`, and applying an
+  empty set leaves every type unmodified), unarmoured arm damage 10. Confirms armour penetration survives
+  `WoundDamageRoutingSystem`'s detour through `WolfmedPartArmorSystem.OnPartDamageModify` (HOOK 10) rather than
+  only `DamageableSystem`'s own now-bypassed resistance block.
+- **T-PASSIVE-A's exact-value prediction was also wrong; corrected to a lower bound, still a strict D29 gate.**
+  The `PassiveDamageComponent.Damage.Empty` check (D29's `damage: {}`) passed as predicted. The "still exactly
+  10 after 60 simulated seconds" half did not: measured, the arm crept to **13.11**, not down. A real `MobHuman`
+  on a bare test map keeps every other body system running for those 60 seconds too (`Barotrauma`,
+  `Temperature`/`ThermalRegulator`, etc., all declared on `BaseMobSpeciesOrganic` — none of them Wolfmed's), and
+  any localized damage type they deal can land on the same arm via the identical "no requested part" random-part
+  routing T-PASSIVE-B documents. This is incidental environmental accrual, not healing, and not a Wolfmed
+  defect — but it makes an exact `EqualTo(10)` the wrong gate on a real, fully-simulated mob. Corrected to
+  `GreaterThanOrEqualTo(10)`, which is still a strict test of D29 (any *decrease* would mean the neutralised
+  `PassiveDamage` healed the arm) without depending on an environment this test does not control. D21/D32
+  species wiring and D29's neutralisation are both re-verified on a real mob, not a bespoke fixture.
+- **T-PASSIVE-B's measured result overturned PLAN2's own prediction — recorded here, not silently "fixed".**
+  PLAN2 §6.2 predicted "control heals; wound host does **not**." Measured on the first run: the wound host
+  *also* healed (10 -> 5 after a 2-second window that should have applied two -5 ticks; landed partway through
+  because the healing tick boundary drifts against whatever simulated time the map already sat at when the
+  entities spawned — not a fixed offset, so a short window is inherently flaky here). Root cause read from
+  `WoundDamageRoutingSystem.cs`: `OnBeforeDamageChanged` intercepts **any** `TryChangeDamage` on a
+  `WoundHostComponent` entity regardless of sign; for a negative, un-targeted amount `RouteThroughBodyModifiers`
+  skips picking a `_requestedParts` entry (its `localizedDamage` gate is `amount > 0`), so the change reaches
+  `OnDamageDealt` -> `RouteAppliedDamage`, which buckets a negative localized type as healing and
+  `ApplyLocalizedHealing` spreads it across whichever parts currently carry positive damage of that type —
+  exactly the same path a legitimate heal item uses. **There is no wound-host-specific code barrier against an
+  un-targeted heal reaching a part; D29's `damage: {}` on every shipped species is what actually stops this
+  today, and it is a YAML choice, not a code-level one.** Fixed the test itself (not a production bug — nothing
+  ships real `PassiveDamage` on a wound host) by running 300 ticks (10 simulated seconds, comfortably past
+  saturation for 10 damage healing at 5/tick) and asserting **both** the control and the wound host reach
+  exactly zero, which is deterministic and matches the corrected understanding. This is the actual value of a
+  canary: it is meant to be a documented finding, not a rubber stamp — see the test's own `// WOLFGATE` remarks
+  and XML doc for the full derivation. **A later phase that considers giving any wound host real `PassiveDamage`
+  must not rely on `WoundHostComponent` presence alone to keep it from healing wounds "for free" — the YAML
+  guard is the only thing doing that job today.**
+- **A separate, one-off pool-flake observed and dismissed, not fixed:** on the very first isolated debug run of
+  `RealWoundHostPassiveDamageIsNeutralisedTest` (before the fix above), `[SetUp]` hit `System.IO.IOException` on
+  `bin/Content.IntegrationTests/gravestone-*.txt` — a file-lock race between two concurrent `dotnet test`
+  invocations sharing the same build output directory (this session was running a full-file pass at the same
+  time), not a Wolfmed defect. Did not recur on any subsequent run. Re-run rather than investigate Wolfmed code
+  first if this class of `[SetUp]` `IOException` appears again (same trap class as the `db.ef` `admin_notes`
+  warning, PLAN2 §6.1 item 2).
+- **No production code changed.** This package is test-file-only: `WolfmedDamageBridgeTest.cs` (3 new
+  `[TestPrototypes]` entries + 3 new `[Test]` methods) and this manifest.
+
+### WP10-5 (phase 2 - pain sounds + mob wiring)
+
+- **P2-D9 / DECISIONS.md §8.2-3 - Onyx's pain sounds are shipped with the YAML key corrected, and this is new
+  behaviour, not a faithful port.** Onyx's `Resources/Prototypes/Body/species_base.yml:125` writes `emotes:` for
+  a field whose serialized name is `emotesThreshold` (`[DataField] public Dictionary<float, HashSet<ProtoId<EmotePrototype>>> EmotesThreshold`).
+  RT drops unknown mapping keys at *read* time (`RobustToolbox/Robust.Shared/Serialization/Manager/Definition/DataDefinition.cs:277`
+  raises `FieldNotFoundErrorNode` only on the **validate** path), so the feature is silently dead at the Onyx
+  pin and a headless server start would never have caught it. Wolfgate writes `emotesThreshold:`. Same class of
+  corrected-upstream-bug as WP9's `ModifyPainGainEvent(1f)` find. **Verified bound**, not assumed: the Release
+  YAML linter (the validate path) reports `No errors found` with the new block in place - an unbound key would
+  have produced a `FieldNotFoundErrorNode`.
+- **P2-D9 - `EmoteOnDamageComponent` is extended additively; Onyx replaces `Emotes`.** Wolfgate keeps both
+  `emotes` (legacy `HashSet<string>`, `PrototypeIdHashSetSerializer`) and the new `emotesThreshold`, because
+  replacing `Emotes` would silently change `ZombieSystem`'s two `AddEmote(uid, "Scream")` call sites. The two
+  paths are mutually exclusive at runtime by construction: the upstream `OnDamage` body returns at
+  `Emotes.Count == 0`, and `BaseMobSpeciesOrganic` leaves `emotes` empty.
+- **P2-D22 - the pain path is gated on `HasComp<WoundHostComponent>`; Onyx has no such check.** Required because
+  D32's opt-out (`WolfmedWoundHostExclusionSystem`) strips only `WoundHostComponent`, so a D32-excluded protogen
+  keeps the `EmoteOnDamage` block from `BaseMobSpeciesOrganic` and `HandlePainDamageEmote` - which reads
+  `GetTotalDamage` and never asks about wounds - would otherwise make synthetics scream. That is a D2 breach.
+- **Beyond PLAN2: `HasComp<PainNumbnessComponent>` added to `HandlePainDamageEmote`'s bail-out chain.** PLAN2
+  §4/WP10-5 leaves this as an explicit choice ("consider adding the same clause here for consistency, or record
+  the asymmetry"); the clause was added. Without it a character with Wolfgate's `PainNumbness` trait would get
+  no pain vignette and no pain-shock scream (WP10-3's widened `PainSystem.IsPainNumb`) yet still scream from the
+  `EmoteOnDamage` path, because Onyx's `PainNumbnessStatusEffectComponent` has no applier in Wolfgate at all.
+- **Correction to PLAN2 §3 / §4: `using Content.Shared._Onyx.Wounds;` is *not* "already line 1" of Onyx's
+  `EmoteOnDamageSystem.PainSounds.cs`.** The file opens with `using Content.Shared.Chat;` and never imports the
+  wounds namespace. The P2-D22 guard therefore costs one added `using`, marked `// WOLFGATE`, rather than zero.
+  Behaviourally irrelevant, recorded so a re-sync does not read the diff as an unexplained import.
+- **Known zombie interaction, not fixed (no authorised hook covers it).** `ZombieSystem.OnMobState`'s non-`Alive`
+  branch calls `RemoveEmote(uid, "Scream")`, whose `removeEmpty: true` default `RemCompDeferred`s the whole
+  `EmoteOnDamageComponent` once `Emotes` empties. Now that the component is YAML-declared on every organic
+  species, a zombie that leaves `Alive` loses the prototype's `emotesThreshold` data along with it, and the
+  `EnsureComp` on any later return to `Alive` produces a component with default (empty) thresholds. Effect is
+  confined to ex-zombies and is invisible while crit/dead (`HandlePainDamageEmote` already bails on
+  `MobState.Critical or Dead`). Fixing it means either `removeEmpty: false` at those two call sites or moving the
+  zombie groan onto its own component - both outside §3's authorised hook list.
+- **P2-D7 / pain shock is live on real mobs for the first time.** `- type: PainShockTarget` on
+  `BaseMobSpeciesOrganic` is what finally satisfies `PainSystem.Update`'s
+  `EntityQueryEnumerator<PainComponent, MobStateComponent, PainShockTargetComponent>` query, so the 2 s paralyse,
+  the forced `Scream`, the jitter and the 30 s x0.7 adrenaline window all run for the first time in this build.
+  Carried-forward WP9 warning applies: `StunSystemOnyxCompat` maps onto `TryParalyze`, which re-triggers stun VFX
+  on every call; `UpdatePainShock` disarms after each shock and rearms only below pain 110, so repeat firing is
+  bounded but not silent. Balance numbers remain unvalidated (P2-4).
+- **No new subscription registered by this package.** `<EmoteOnDamageComponent, DamageChangedEvent>` stays
+  exclusively owned by `Content.Server/Chat/Systems/EmoteOnDamageSystem.cs:22`; the pain path is *called from*
+  that handler (HOOK 18). A second subscription of that pair is a server-start `Duplicate Subscriptions` crash.
+- **No audio or locale assets copied.** `Scream` and `Crying` already ship in Wolfgate as `Vocal` emote
+  prototypes; their audio resolves through each species' `VocalComponent` `EmoteSounds`, so no
+  `meta.json`/`attributions.yml` licence entry was needed.
+
+### WP10-6b (phase 2 — fracture + pain tests)
+
+- **Every prediction in this package was measured, and all six new tests passed on the first run.** Measured
+  values, each pinned in a `// WOLFGATE` comment at its assertion: walk-speed modifier **0.5** after a
+  Comminuted leg (Onyx's stale literal is `0.4f`); do-after multiplier **2.0** after a Comminuted arm, **1.0**
+  after `TryMend`; walk **1.0** after detaching the leg; body pain **100.2** after one 60-Blunt routed hit on a
+  fracture-capable part and **135** (the soft cap) after the second, with `GetPain` **94.5** once the
+  adrenaline window opens; head pain **8.7** untraited vs **6.52** with `HighPainThreshold`; overlay levels
+  0 / 0 / 0.05 / 0.5 / 0.7 at pain 0 / 6 / 6.75 / 67.5 / 200.
+- **PLAN2 P2-D16's manipulation prediction of `0.75` is itself stale and was NOT used.** P2-D16 was written
+  against Onyx's shipped `manipulationModifier` values; DECISIONS.md §8.2-1 (the binding answer) had WP10-1
+  restore the C# defaults 1.1/1.25/1.5/2.0, so the correct expectation for a Comminuted arm is **2.0** —
+  which is, by coincidence, Onyx's own original literal. Derivation at the assertion: Comminuted arm
+  `manipulationModifier` 2.0, `Arm` absent from `PartEffectScales` so partScale 1, treatment `None` scale 1 →
+  `1 + (2.0 - 1) · 1 · 1 = 2.0`; the intact left hand falls through `GetEffect` to
+  `BodyPartFunctionalitySystem.GetState` = `Functional` (P2-3's cvar is false) → `1 + (1 - 1) · 0.75 · 1 = 1`;
+  product **2.0**. Verified by test, not by arithmetic alone.
+- **Two `[TestPrototypes]` additions beyond WP10-1's T-FIXTURE, both mandatory, both in `WoundFractureTest.cs`
+  (serialisation rule 0 gave that block to WP10-1, which is finished).** (1) `- type: Alerts` on
+  `WoundFractureBody`: `AlertsSystem.ShowAlert` early-returns when the entity has no `AlertsComponent`
+  (`AlertsSystem.cs:87`), so T-FRACT-ALERT would have read `false` for a reason with nothing to do with
+  `FractureAlertSystem`. (2) `WoundFractureHeldItem` (a bare `- type: Item`): T-FRACT-HANDS drives
+  `TryGetUsedHandSymmetry`'s `used` branch through `SharedHandsSystem.IsHolding`, which only resolves a hand
+  for a real item. Neither is a production-data change.
+- **T-FRACT-HANDS asserts both directions, not just Onyx's.** PLAN2 asks for "item in the right hand →
+  multiplier 1". The test also holds a second item in the *left* hand and asserts **2.0**, because the `1f`
+  half alone is indistinguishable from the "no hand found" failure mode P2-D21 warns about. Both items are
+  picked up with `checkActionBlocker: false, animate: false` (the fixture has no action-blocker components and
+  the pickup animation is irrelevant headlessly).
+- **T-HIGH-PAIN uses its own control fixture, not `WolfmedBridgeBody`.** PLAN2 §6.2 names
+  `WolfmedBridgeBody` (defined in `WolfmedDamageBridgeTest.cs`). `[TestPrototypes]` are pool-global so that
+  would have worked, but it makes one test file's fixture load-bearing for another's assertions;
+  `WolfmedPainControlBody`/`WolfmedHighPainThresholdBody` are a matched pair in the file that uses them.
+- **`6.52`, not `6.525` or `6.53`: `FixedPoint2` truncates.** `operator *(FixedPoint2, float)` is
+  `new((int) ApplyFloatEpsilon(a.Value * b))` (`FixedPoint2.cs:101`), so `870 × 0.75 = 652.5 → 652`. The same
+  truncation is why the overlay level floors to `0.04` at pain 6 (`FixedPoint2.cs:116`). Any later balance pass
+  that changes `HighPainThresholdComponent.PainMultiplier` must re-measure rather than re-multiply.
+- **The pain overlay level is asserted through a mirror of the client formula, not the client code.**
+  `DamageOverlay.Wolfmed.cs`'s `TryApplyWolfmedPain` lives on an `Overlay`, which a headless pair cannot draw;
+  `WolfmedPainTest.Level` reproduces its exact expression
+  (`FixedPoint2.Min(1f, GetPain / SoftPainCap).Float()`, floored to 0 below 0.05). **If HOOK 15's formula is
+  ever changed, this mirror must be changed with it** — nothing in the compiler couples them.
+- **A measured finding worth keeping: the pain vignette EASES as pain shock lands.** At raw pain 135 the
+  overlay reads `GetPain`, which the 30 s adrenaline window multiplies by 0.7, so the level drops from a
+  would-be 1.0 to **0.7** at the exact moment the player is paralysed. That is Onyx's design (the overlay is
+  deliberately fed the adrenaline-adjusted value), not a Wolfgate defect, and this is the first test in the
+  tree to pin it. Flagged for the balance pass.
+- **`- type: Jitter` in the P2-D24 allow-list is belt-and-braces, not load-bearing.** `Jitter` is
+  `alwaysAllowed: true` (`status_effects.yml:17`), so `SharedJitteringSystem.DoJitter` would have worked
+  without it; `Stun`/`KnockedDown` genuinely are required, and the test's failure message says so.
+- **No production code changed and no new subscription registered.** This package is test-file-only:
+  `WoundFractureTest.cs` (4 new `[Test]` methods, 2 `[TestPrototypes]` additions, 6 new `using`s), the new
+  `WolfmedPainTest.cs`, and this manifest. No headless-server run was needed — the only YAML touched is inside
+  `[TestPrototypes]` string literals, which the test pair itself parses (and did, 39/39 green).
+
+### Phase 2 — user decisions (DECISIONS.md §8.2), as shipped
+
+Reconciled here by WP10-7 so every §8.2 answer has one place that says what actually landed, cross-referenced
+to the WP section above that carries the full derivation.
+
+1. **Fracture manipulation balance — FIX.** `OrganicFractureProfile.manipulationModifier` shipped at the C#
+   defaults `1.1/1.25/1.5/2.0` (not Onyx's `0.92/0.84/0.75/0.75`), behind a `# WOLFGATE` balance comment in
+   `wounds.yml`. This **overrides** PLAN2's own P2-D13 (which had recommended ship-unchanged-and-escalate);
+   the user's answer is binding. Landed WP10-1, measured by WP10-6b (Comminuted arm multiplier **2.0**). See
+   WP10-1/WP10-6b deviations above.
+2. **Do-after `Used` semantics — zero-edit active-hand approximation, as recommended.** No edit to
+   `SharedDoAfterSystem.cs`/`DoAfterDelayMultiplierSystem.cs`. See WP10-1 deviations (P2-D4).
+3. **Onyx's `EmoteOnDamage` pain sounds — PORT with the YAML key corrected.** `emotes:` → `emotesThreshold:`,
+   recorded as a corrected-upstream-bug deviation (same class as WP9's `ModifyPainGainEvent` fix). Landed
+   WP10-5, verified bound via a clean Release YAML-linter pass. See WP10-5 deviations (P2-D9).
+4. **GUARD F + HOOK 14 — authorised.** Landed WP10-2.
+5. **HOOK 15 + HOOK 16 — authorised.** Landed WP10-4.
+6. **HOOK 17 + HOOK 18 — authorised (additive fields, no `_WF`-twin fallback taken).** Landed WP10-5.
+7. **`PartDamageVisualsComponent` — deferred to phase 3, noted here.** It is `EnsureComp`'d and networked by
+   `WoundDamageProjectionSystem` (WP4/WP5) but has zero consumers in this tree: Onyx's only reader
+   (`Content.Client/Damage/DamageVisualsSystem.cs` + `_Onyx/Wounds/{brute,burn}_damage.rsi`) is unported.
+   It is paying networking cost for nothing until phase 3 lands per-limb damage sprites. No phase-2 package
+   touched it; it is not on the phase-2 file list above for that reason.
+8. **Part status readout scope — wound hosts only (P2-D20), as recommended.** GUARD F calls
+   `AddPartStatusMarkup` from the `else` of the `HasComp<WoundHostComponent>` wrap, not unconditionally as
+   Onyx does, so borgs, NPC/EE silicons, animals and the D32-excluded Protogen keep today's threshold text
+   instead of gaining a duplicate readout. See WP10-2 deviations.
+9. **`WoundPrototype.HealingMultiplier = 1` on every ported wound — left for the balance pass, kept on
+   record.** Not touched in phase 2. First documented in WP9 (`WoundHealingTest`: healing a wound takes the
+   full heal off its severity — 15 → 5 for 10 points of Blunt healing — not Onyx's 13.5, because
+   `HealingMultiplier` defaults to 1 and `BluntWound` overrides nothing, in both trees). Restated here per
+   DECISIONS.md's explicit "keep on record" instruction; still not a phase-2 or phase-3 gate.
 
 ## Hazards
 

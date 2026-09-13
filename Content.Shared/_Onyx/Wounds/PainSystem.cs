@@ -326,6 +326,13 @@ public sealed partial class PainSystem : EntitySystem
         if (TryComp(entity, out BodyPartComponent? part) && part.Body is { } body)
             entity = body;
 
+        // WOLFGATE (P2-D8): Wolfgate's PainNumbness trait grants the legacy PainNumbnessComponent
+        // (Content.Shared/Traits/Assorted/PainNumbnessComponent.cs); Onyx's status-effect form
+        // (StatusEffectPainNumbness) has no applier here — TraitPrototype has no `specials:`, and the
+        // narcotics that apply it are phase 4. Honour both.
+        if (HasComp<PainNumbnessComponent>(entity))
+            return true;
+
         return _statusEffects.EnumerateStatusEffects<PainNumbnessStatusEffectComponent>(entity)
             .Any(effect => effect.Comp1.Applied);
     }
