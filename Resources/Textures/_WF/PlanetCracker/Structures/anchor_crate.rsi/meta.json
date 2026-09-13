@@ -1,0 +1,23 @@
+{
+  "version": 1,
+  "license": "CC-BY-SA-3.0",
+  "copyright": "Wolfgate placeholder, generated",
+  "size": {
+    "x": 64,
+    "y": 64
+  },
+  "states": [
+    {
+      "name": "closed",
+      "directions": 1
+    },
+    {
+      "name": "open",
+      "directions": 1
+    },
+    {
+      "name": "replacement",
+      "directions": 1
+    }
+  ]
+}

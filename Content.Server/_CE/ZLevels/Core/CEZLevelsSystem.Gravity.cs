@@ -90,6 +90,9 @@ public sealed partial class CEZLevelsSystem
                 if (xform.MapUid is not { } mapUid || !_zMapQuery.HasComp(mapUid))
                     continue;
 
+                if (WfIsOrbitLayer(mapUid)) // WOLFGATE: grids parked on a planet orbit layer never fall.
+                    continue;
+
                 if (_physQuery.TryComp(uid, out var body) && body.BodyType == BodyType.Static)
                     continue;
 

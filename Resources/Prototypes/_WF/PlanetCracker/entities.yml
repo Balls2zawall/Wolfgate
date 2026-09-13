@@ -1,0 +1,12 @@
+# Orbital insertion marker, spawned at the planet centre on every orbit layer.
+
+- type: entity
+  id: WFOrbitBeacon
+  name: Orbital insertion # Renamed at spawn
+  categories: [ HideSpawnMenu ]
+  components:
+    - type: WarpPoint
+    - type: FTLSmashImmune
+    - type: FTLBeacon
+    - type: IFF
+      color: '#7FFFD4'
