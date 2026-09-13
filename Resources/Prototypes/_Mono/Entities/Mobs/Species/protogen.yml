@@ -1,5 +1,7 @@
 - type: entity
   parent: BaseMobSpeciesOrganic
+  # WOLFGATE (D21/D32): synthetic (prototype: SiliconDeathgasp below) - WoundHost is stripped at runtime by
+  # WolfmedWoundHostExclusionSystem (RT has no YAML component removal), not by an override here.
   id: BaseMobProtogen
   name: Urist McHardDrive
   abstract: true

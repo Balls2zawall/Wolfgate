@@ -1,0 +1,102 @@
+# Wolfmed part data. Values are Onyx's (_Onyx/Body/chest_groin.yml @ 2f5bab9).
+# Onyx's Chest maps to Wolfgate's Torso; Onyx's Groin has no Wolfgate equivalent and is dropped (D9).
+#
+# These are separate abstracts, not additions to the existing BaseTorso/BaseHead/Base*Arm/etc ids: RT's
+# ComponentRegistrySerializer throws "Duplicate ID" if this file redeclared those ids directly. Each one
+# is instead added to the corresponding upstream abstract's `parent:` list with a one-line `# WOLFGATE`
+# edit in Resources/Prototypes/Body/Parts/base.yml and Resources/Prototypes/_Shitmed/Body/Parts/base.yml.
+
+- type: entity
+  id: WolfmedBaseTorso
+  abstract: true
+  components:
+  - type: WolfmedBodyPart
+    fractureProfile: OrganicFractureProfile
+    maxDamage: 250
+
+- type: entity
+  id: WolfmedBaseHead
+  abstract: true
+  components:
+  - type: WolfmedBodyPart
+    fractureProfile: OrganicFractureProfile
+    amputationThresholds:
+      Slash: 200
+      Piercing: 200
+      Blunt: 350
+
+- type: entity
+  id: WolfmedBaseLeftArm
+  abstract: true
+  components:
+  - type: WolfmedBodyPart
+    fractureProfile: OrganicFractureProfile
+    amputationThresholds: &wolfmedArmThresholds
+      Slash: 130
+      Piercing: 250
+      Blunt: 250
+
+- type: entity
+  id: WolfmedBaseRightArm
+  abstract: true
+  components:
+  - type: WolfmedBodyPart
+    fractureProfile: OrganicFractureProfile
+    amputationThresholds: *wolfmedArmThresholds
+
+- type: entity
+  id: WolfmedBaseLeftHand
+  abstract: true
+  components:
+  - type: WolfmedBodyPart
+    fractureProfile: OrganicFractureProfile
+    amputationThresholds: &wolfmedHandThresholds
+      Slash: 70
+      Piercing: 200
+      Blunt: 150
+
+- type: entity
+  id: WolfmedBaseRightHand
+  abstract: true
+  components:
+  - type: WolfmedBodyPart
+    fractureProfile: OrganicFractureProfile
+    amputationThresholds: *wolfmedHandThresholds
+
+- type: entity
+  id: WolfmedBaseLeftLeg
+  abstract: true
+  components:
+  - type: WolfmedBodyPart
+    fractureProfile: OrganicFractureProfile
+    amputationThresholds: &wolfmedLegThresholds
+      Slash: 150
+      Piercing: 250
+      Blunt: 300
+
+- type: entity
+  id: WolfmedBaseRightLeg
+  abstract: true
+  components:
+  - type: WolfmedBodyPart
+    fractureProfile: OrganicFractureProfile
+    amputationThresholds: *wolfmedLegThresholds
+
+- type: entity
+  id: WolfmedBaseLeftFoot
+  abstract: true
+  components:
+  - type: WolfmedBodyPart
+    fractureProfile: OrganicFractureProfile
+    amputationThresholds: &wolfmedFootThresholds
+      Slash: 80
+      Piercing: 220
+      Blunt: 170
+
+- type: entity
+  id: WolfmedBaseRightFoot
+  abstract: true
+  components:
+  - type: WolfmedBodyPart
+    fractureProfile: OrganicFractureProfile
+    amputationThresholds: *wolfmedFootThresholds

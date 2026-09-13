@@ -15,6 +15,7 @@ using Content.Shared.FixedPoint;
 using Content.Shared.Forensics;
 using Content.Shared.Forensics.Components;
 using Content.Shared.HealthExaminable;
+using Content.Shared._Onyx.Wounds; // WOLFGATE: Wolfmed wound hosts own their own bleeding.
 using Content.Shared.Mobs.Systems;
 using Content.Shared.Popups;
 using Content.Shared.Rejuvenate;
@@ -209,6 +210,10 @@ public sealed partial class BloodstreamSystem : EntitySystem
 
     private void OnDamageChanged(Entity<BloodstreamComponent> ent, ref DamageChangedEvent args)
     {
+        // WOLFGATE: GUARD E, wound hosts get their bleeding from WoundBleedingSystem instead.
+        if (HasComp<WoundHostComponent>(ent))
+            return;
+
         if (args.DamageDelta is null || !args.DamageIncreased)
         {
             return;
@@ -405,7 +410,22 @@ public sealed partial class BloodstreamSystem : EntitySystem
     /// </summary>
     public bool TryModifyBleedAmount(EntityUid uid, float amount, BloodstreamComponent? component = null)
     {
+        return TryModifyBleedAmount(uid, amount, component, woundProjection: false); // WOLFGATE: GUARD E3
+    }
+
+    // WOLFGATE: GUARD E3, sole write path for Wolfmed's WoundBleedingSystem once wounds own bleeding.
+    internal bool TryModifyWoundBleedProjection(EntityUid uid, float amount, BloodstreamComponent? component = null)
+    {
+        return TryModifyBleedAmount(uid, amount, component, woundProjection: true);
+    }
+
+    private bool TryModifyBleedAmount(EntityUid uid, float amount, BloodstreamComponent? component, bool woundProjection) // WOLFGATE: GUARD E3
+    {
         if (!Resolve(uid, ref component, logMissing: false))
+            return false;
+
+        // WOLFGATE: GUARD E3. This also silently no-ops the passive-decay call in Update(); that is deliberate.
+        if (HasComp<WoundHostComponent>(uid) && !woundProjection)
             return false;
 
         component.BleedAmount += amount;
