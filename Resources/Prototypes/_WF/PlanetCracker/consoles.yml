@@ -1,0 +1,55 @@
+# Cracker consoles and the mapper-placed chunk berth marker. F1 shells; no BUI until F2/F4.
+
+- type: entity
+  id: WFCrackConsole
+  parent: BaseComputer
+  name: crack control console
+  description: Targets an anchor pair and runs the cut. The screen is mostly warnings.
+  components:
+  - type: Sprite
+    layers:
+    - map: [ "computerLayerBody" ]
+      state: computer
+    - map: [ "computerLayerKeyboard" ]
+      state: generic_keyboard
+    - map: [ "computerLayerScreen" ]
+      sprite: _WF/PlanetCracker/Structures/crack_console.rsi
+      state: idle
+    - map: [ "computerLayerKeys" ]
+      state: generic_keys
+  - type: WFCrackConsole
+
+- type: entity
+  id: WFSectorSurveyConsole
+  parent: BaseComputer
+  name: sector survey console
+  description: Reads long-range density returns and lists which worlds are worth cracking.
+  components:
+  - type: Sprite
+    layers:
+    - map: [ "computerLayerBody" ]
+      state: computer
+    - map: [ "computerLayerKeyboard" ]
+      state: generic_keyboard
+    - map: [ "computerLayerScreen" ]
+      sprite: _WF/PlanetCracker/Structures/survey_console.rsi
+      state: idle
+    - map: [ "computerLayerKeys" ]
+      state: generic_keys
+  - type: WFSectorSurveyConsole
+
+- type: entity
+  id: WFChunkBerthMarker
+  parent: MarkerBase
+  name: chunk berth marker
+  description: Marks where the extracted chunk hangs. Face it away from the hull.
+  categories: [ Mapping ]
+  components:
+  - type: Sprite
+    sprite: _WF/PlanetCracker/Interface/icons.rsi
+    state: chunk
+    scale: 2, 2
+    noRot: false
+  - type: Rotatable
+    rotateWhileAnchored: true
+  - type: WFChunkBerth

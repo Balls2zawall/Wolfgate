@@ -450,6 +450,7 @@ public sealed partial class CEZLevelsSystem
 
             if (_physQuery.TryComp(grid, out var body))
                 mass += body.FixturesMass;
+            mass += GetWFVirtualMass(grid); // WOLFGATE: crated anchors aboard count against pooled lift (D11).
         }
 
         // capacity > 0 means at least one active generator exists; a set with no lift
@@ -606,6 +607,7 @@ public sealed partial class CEZLevelsSystem
             gridMass = body.FixturesMass;
         }
 
+        gridMass += GetWFVirtualMass(gridUid, networkGrids); // WOLFGATE: same virtual mass the lift check uses, so the readout agrees.
         return true;
     }
 

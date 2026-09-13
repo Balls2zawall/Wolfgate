@@ -1,0 +1,163 @@
+# Cracker hull machines: the gravitic centrifuge, the gravity projector and the anchor transport's gravgen. F1.
+
+- type: entity
+  id: WFCentrifuge
+  parent: [ BaseMachinePowered, ConstructibleMachine ]
+  name: gravitic centrifuge
+  description: A caged ring rotor. Its spin is what holds a ship and a chunk of planet in orbit.
+  components:
+  - type: Sprite
+    sprite: _WF/PlanetCracker/Structures/centrifuge.rsi
+    noRot: true
+    layers:
+    # BOTH layers are mandatory: Content.Client/Gravity/GravitySystem.cs:35 does an unconditional
+    # LayerMapGet(Core) whenever PowerChargeVisuals.Charge appears, and throws without it.
+    - map: [ "enum.GravityGeneratorVisualLayers.Base" ]
+      state: off
+    - map: [ "enum.GravityGeneratorVisualLayers.Core" ]
+      state: glow-unshaded
+      shader: unshaded
+  - type: Appearance
+  - type: Transform
+    anchored: true
+    noRot: true
+  - type: Physics
+    bodyType: Static
+  - type: Fixtures
+    fixtures:
+      fix1:
+        shape:
+          !type:PhysShapeAabb
+          bounds: "-1.5,-1.5,1.5,1.5"
+        density: 200
+        mask:
+        - MachineMask
+        layer:
+        - MachineLayer
+  - type: Anchorable
+    flags: None              # PowerChargeSystem.cs:35 zeroes Charge on unanchor, which would drop the ship
+  - type: ApcPowerReceiver
+    powerLoad: 12000
+  - type: ExtensionCableReceiver
+  - type: PowerCharge
+    windowTitle: wf-centrifuge-window-title
+    idlePower: 200
+    activePower: 12000
+    chargeRate: 0.00417      # 240 s cold to full, design section 5. A hull built by `wfcracker spawn cracker` is
+                             # therefore about four real minutes from gravity, not instant; that wait is the rate,
+                             # not a fault. Integration tests raise this rate rather than tick through it.
+  - type: GravityGenerator
+    maxHandledMass: 3000     # NEVER <= 0: Gravity.cs:69 reads <= 0 as infinite lift while the
+                             # console readout at :593 only reads < 0 that way.
+    lightRadiusMin: 0.75
+    lightRadiusMax: 3.0
+    # The placeholder RSI has no startup/idle/activating/activated core states, so all four point
+    # at the one animated glow state.
+    coreStartupState: glow-unshaded
+    coreIdleState: glow-unshaded
+    coreActivatingState: glow-unshaded
+    coreActivatedState: glow-unshaded
+    spriteMap:
+      broken: "broken"
+      unpowered: "off"
+      off: "off"
+      on: "spinning"
+  - type: WFCentrifuge
+  - type: AmbientSound
+    enabled: false
+    sound:
+      path: /Audio/Ambience/Objects/gravity_gen_hum.ogg
+    range: 10
+    volume: -4
+  - type: Repairable
+    qualities: [ Welding, Applicating ]   # BaseStructure narrows this to Applicating
+    fuelCost: 25
+    doAfterDelay: 10
+  - type: Destructible
+    thresholds:
+    - trigger:
+        !type:DamageTrigger
+        damage: 400
+      behaviors:
+      - !type:DoActsBehavior
+        acts: [ "Breakage" ]
+  - type: Machine
+    board: WFCentrifugeCircuitboard
+  - type: ActivatableUI
+    key: enum.PowerChargeUiKey.Key
+  - type: ActivatableUIRequiresPower
+  - type: UserInterface
+    interfaces:
+      enum.PowerChargeUiKey.Key:
+        type: PowerChargeBoundUserInterface
+
+- type: entity
+  id: WFGravityProjector
+  parent: [ BaseMachinePowered, ConstructibleMachine ]
+  name: gravity projector
+  description: A glass emitter on a riveted hull bracket. It beams straight down.
+  # The placeholder art is 64x64 (2x2) but the fixture is deliberately left at the inherited 1x1
+  # (base_structuremachines.yml:10-20). An even-sided AABB centred on a tile centre straddles four
+  # tiles by half-tiles and cannot align to the snap grid, and AnchorEntity claims one tile either
+  # way, so the sprite simply overhangs its machine tile. Keep mapped projectors >= 2 tiles apart.
+  components:
+  - type: Sprite
+    sprite: _WF/PlanetCracker/Structures/gravity_projector.rsi
+    layers:
+    - map: [ "enum.WFProjectorVisualLayers.Base" ]
+      state: off
+    - map: [ "enum.WFProjectorVisualLayers.Emitter" ]
+      state: emitter-unshaded
+      shader: unshaded
+      visible: false
+  - type: Appearance
+  - type: GenericVisualizer
+    visuals:
+      enum.WFProjectorVisuals.State:
+        enum.WFProjectorVisualLayers.Base:
+          Off:      { state: off }
+          Idle:     { state: idle }
+          Charging: { state: charging }
+          Firing:   { state: firing }
+          Broken:   { state: broken }
+        enum.WFProjectorVisualLayers.Emitter:
+          Off:      { visible: false }
+          Idle:     { visible: false }
+          Charging: { visible: true }
+          Firing:   { visible: true }
+          Broken:   { visible: false }
+  - type: Transform
+    anchored: true
+    noRot: false             # 4-direction sprite: the mapper faces it at the berth
+  - type: Rotatable
+    rotateWhileAnchored: true
+  - type: ApcPowerReceiver
+    powerLoad: 6000
+  - type: WFGravityProjector
+  - type: Machine
+    board: WFGravityProjectorCircuitboard
+  - type: Repairable
+    qualities: [ Welding, Applicating ]
+    fuelCost: 20
+    doAfterDelay: 8
+  - type: Destructible
+    thresholds:
+    - trigger:
+        !type:DamageTrigger
+        damage: 250
+      behaviors:
+      - !type:DoActsBehavior
+        acts: [ "Breakage" ]
+
+- type: entity
+  id: WFTransportGravgen
+  parent: GravityGeneratorMini
+  name: transport gravity generator
+  suffix: Anchor transport
+  description: Rated for one hull and one anchor. The placard is very clear about the "one".
+  components:
+  - type: GravityGenerator
+    maxHandledMass: 40       # 63-tile transport hull = 31.5 FixturesMass. One crated anchor adds
+                             # 6 virtual mass (37.5, flies); two add 12 (43.5, drops). See D11.
+  - type: WFAnchorCapacity
+    capacity: 1
