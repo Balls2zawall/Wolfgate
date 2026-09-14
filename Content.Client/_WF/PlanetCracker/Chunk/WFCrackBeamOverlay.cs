@@ -38,7 +38,7 @@ public sealed partial class WFCrackBeamOverlay : Overlay
 
     /// <summary>The beam texture; an RSI frame, so it is an atlas sub-region and must never be tiled by UV.</summary>
     private static readonly SpriteSpecifier BeamSprite =
-        new SpriteSpecifier.Rsi(new ResPath("_WF/PlanetCracker/Effects/crack_beam.rsi"), "beam");
+        new SpriteSpecifier.Rsi(new ResPath("/Textures/_WF/PlanetCracker/Effects/crack_beam.rsi"), "beam");
 
     /// <summary>
     /// Where the beam leaves the projector, in its own rotated frame. The placeholder art is 64x64 on a 1x1 fixture
