@@ -19,3 +19,10 @@ public readonly record struct WFCrackCompletedEvent(
 /// <summary>Raised as the hull is pushed into transit, so F5's chunk joins the same fall at a distinct progress (D-K).</summary>
 [ByRefEvent]
 public readonly record struct WFCrackerFallingEvent(EntityUid Cracker);
+
+/// <summary>
+/// Raised broadcast as the evacuation runs out so the chunk system drops the chunk, mirroring WFCrackerFallingEvent.
+/// The hull's own Disconnecting -> Released transition follows from WFChunkDroppedEvent, not from this event.
+/// </summary>
+[ByRefEvent]
+public readonly record struct WFCrackerReleasingEvent(EntityUid Cracker);

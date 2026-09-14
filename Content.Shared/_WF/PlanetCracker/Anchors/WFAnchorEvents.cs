@@ -48,6 +48,13 @@ public sealed class WFAnchorSwitchOffAttemptEvent(EntityUid anchor, EntityUid us
 [ByRefEvent]
 public readonly record struct WFAnchorSwitchedOffEvent(EntityUid Anchor);
 
+/// <summary>
+/// Raised after a switched-off anchor is put back to Locked. Only a lapsed disconnect pairing window and the admin
+/// command do this; there is no player-facing re-arm.
+/// </summary>
+[ByRefEvent]
+public readonly record struct WFAnchorReArmedEvent(EntityUid Anchor);
+
 /// <summary>Do-after for prying a crate open; must be shared and NetSerializable.</summary>
 [Serializable, NetSerializable]
 public sealed partial class WFAnchorUncrateDoAfterEvent : SimpleDoAfterEvent;

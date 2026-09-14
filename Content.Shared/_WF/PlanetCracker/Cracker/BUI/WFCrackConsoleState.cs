@@ -99,6 +99,18 @@ public sealed class WFCrackConsoleState : BoundUserInterfaceState
     /// <summary>True while the grace countdown is running.</summary>
     public bool GraceRunning;
 
+    /// <summary>True while the disconnect pairing window is open and waiting on the second anchor.</summary>
+    public bool DisconnectArmed;
+
+    /// <summary>Time left before the disconnect window lapses and the first anchor re-arms.</summary>
+    public TimeSpan DisconnectRemaining;
+
+    /// <summary>True while the evacuation countdown is running.</summary>
+    public bool EvacRunning;
+
+    /// <summary>Time left before the chunk is released.</summary>
+    public TimeSpan EvacRemaining;
+
     /// <summary>Which preconditions are failing; the window names them from locale keys, never a server string.</summary>
     public WFCrackFailure Failing;
 

@@ -15,6 +15,13 @@ public readonly record struct WFChunkExtractedEvent(
 [ByRefEvent]
 public readonly record struct WFChunkDroppedEvent(EntityUid Chunk, EntityUid Cracker);
 
+/// <summary>
+/// Raised broadcast once a dropped chunk has left its transit map and settled on the ground layer.
+/// Cracker and GroundMap may be EntityUid.Invalid when the back-link or the recorded map no longer resolves.
+/// </summary>
+[ByRefEvent]
+public readonly record struct WFChunkLandedEvent(EntityUid Chunk, EntityUid Cracker, EntityUid GroundMap);
+
 /// <summary>Raised broadcast when a sector body is flagged Cracked, so a planet can only ever be cut once; the F9 hook.</summary>
 [ByRefEvent]
 public readonly record struct WFPlanetCrackedEvent(EntityUid Planet, EntityUid Chunk, EntityUid Cracker);

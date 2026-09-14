@@ -118,6 +118,61 @@ public sealed partial class WFPlanetCrackerComponent : Component
     [DataField, AutoNetworkedField]
     public NetEntity? Chunk;
 
+    /// <summary>The anchor that was switched off first, holding the disconnect pairing window open.</summary>
+    [DataField]
+    public NetEntity? DisconnectAnchor;
+
+    /// <summary>When the disconnect pairing window lapses and the first anchor re-arms; meaningless unless DisconnectArmed.</summary>
+    [DataField(customTypeSerializer: typeof(TimeOffsetSerializer)), AutoPausedField]
+    public TimeSpan DisconnectEnd;
+
+    /// <summary>True while the disconnect pairing window is open and waiting on the second anchor.</summary>
+    [DataField]
+    public bool DisconnectArmed;
+
+    /// <summary>How many disconnect-window popup beats have already fired, so a re-entered sweep cannot repeat one.</summary>
+    [DataField]
+    public byte DisconnectBeat;
+
+    /// <summary>How long the crew has to switch the second anchor off before the first re-arms.</summary>
+    [DataField]
+    public TimeSpan DisconnectWindow = TimeSpan.FromSeconds(60);
+
+    /// <summary>When the evacuation runs out and the chunk is released; meaningless unless EvacRunning.</summary>
+    [DataField(customTypeSerializer: typeof(TimeOffsetSerializer)), AutoPausedField]
+    public TimeSpan EvacEnd;
+
+    /// <summary>True while the evacuation countdown is running.</summary>
+    [DataField]
+    public bool EvacRunning;
+
+    /// <summary>How many evacuation popup beats have already fired, so a re-entered sweep cannot repeat one.</summary>
+    [DataField]
+    public byte EvacBeat;
+
+    /// <summary>How long the crew has to clear the chunk once the disconnect is committed.</summary>
+    [DataField]
+    public TimeSpan EvacDuration = TimeSpan.FromSeconds(60);
+
+    /// <summary>
+    /// How often the evacuation alarm loop is stopped and replayed. A filtered PlayGlobal freezes its recipient set at
+    /// play time, so without the re-issue a latecomer boarding mid-countdown would hear nothing.
+    /// </summary>
+    [DataField]
+    public TimeSpan EvacReissue = TimeSpan.FromSeconds(15);
+
+    /// <summary>When the evacuation alarm loop is next re-issued.</summary>
+    [DataField(customTypeSerializer: typeof(TimeOffsetSerializer)), AutoPausedField]
+    public TimeSpan EvacNextLoop;
+
+    /// <summary>When the post-release settle finishes and the hull leaves Released.</summary>
+    [DataField(customTypeSerializer: typeof(TimeOffsetSerializer)), AutoPausedField]
+    public TimeSpan ReleaseEnd;
+
+    /// <summary>How long the hull sits in Released after the chunk is away.</summary>
+    [DataField]
+    public TimeSpan ReleaseSettle = TimeSpan.FromSeconds(10);
+
     /// <summary>How often the site camera kick repeats while the cut runs, in seconds.</summary>
     [DataField]
     public float SiteKickInterval = 2f;
@@ -146,6 +201,10 @@ public sealed partial class WFPlanetCrackerComponent : Component
     [DataField]
     public SoundSpecifier ExtractSound = new SoundPathSpecifier("/Audio/Effects/explosionfar.ogg");
 
+    /// <summary>Looped on the hull while the evacuation countdown runs.</summary>
+    [DataField]
+    public SoundSpecifier EvacSound = new SoundPathSpecifier("/Audio/Machines/alarm.ogg");
+
     /// <summary>
     /// Looped on the ground layer at the cut circle while the cut runs. The hull's own rumble is replicated to orbit
     /// but the client zeroes gain across maps, so the site needs a source of its own or it is silent.
@@ -168,4 +227,8 @@ public sealed partial class WFPlanetCrackerComponent : Component
     /// <summary>Live ground-side rumble loop at the cut site; server-only, never networked.</summary>
     [ViewVariables]
     public EntityUid? GroundRumbleStream;
+
+    /// <summary>Live evacuation alarm loop; server-only, never networked.</summary>
+    [ViewVariables]
+    public EntityUid? EvacStream;
 }

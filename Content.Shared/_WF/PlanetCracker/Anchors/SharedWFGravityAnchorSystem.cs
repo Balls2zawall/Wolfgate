@@ -10,8 +10,8 @@ public abstract partial class SharedWFGravityAnchorSystem : EntitySystem
     public static bool InBand(float distance, float min, float max) => distance >= min && distance <= max;
 
     /// <summary>True for states where the anchor is drilled in and must not be unwrenched.</summary>
-    // Off is armed and has no outgoing player transition in F3, so an Off anchor is stuck until it breaks or is
-    // destroyed; wf-anchor-locked-unwrench tells such a player to switch it off, which it already is. F7's re-arm
-    // or cut-out verb is what recovers it, and is where that refusal line should get its own state-aware wording.
+    // Off is armed and has no player-facing exit at all: an Off anchor is recovered automatically when a disconnect
+    // pairing window lapses, or by hand through the wfcracker rearm command, and the state-aware unwrench refusal
+    // now lives in WFGravityAnchorSystem.OnUnanchorAttempt rather than being promised here.
     public static bool IsArmed(WFAnchorState s) => s is WFAnchorState.Drilling or WFAnchorState.Locked or WFAnchorState.Off;
 }
