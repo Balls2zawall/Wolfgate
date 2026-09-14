@@ -47,4 +47,9 @@
   - type: Gravity
     enabled: true
     inherent: true
-  orbitComponents: []
+  # WFPlanetNetworkSystem RemComps MapLightComponent from the orbit map (WFPlanetNetworkSystem.cs:215),
+  # and the engine falls back to sRGB black with none present, so the chunk and every parked hull would
+  # otherwise be unlit. No Gravity here: per-grid inherent gravity is the chunk's own (F5).
+  orbitComponents:
+  - type: MapLight
+    ambientLightColor: "#2a3340"

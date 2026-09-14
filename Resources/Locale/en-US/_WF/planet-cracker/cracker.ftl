@@ -59,6 +59,7 @@ wf-crack-console-blocker-centrifuge-not-full = The centrifuge is not at full spi
 wf-crack-console-blocker-projectors-short = Not enough gravity projectors aboard
 wf-crack-console-blocker-projectors-unpowered = A gravity projector has no power
 wf-crack-console-blocker-projectors-broken = A gravity projector is broken
+wf-crack-console-blocker-planet-cracked = This planet has already been cracked
 
 # Server refusal popups.
 wf-crack-console-refuse-network = Refused: the hull is linked to another grid and cannot be moved.
@@ -83,7 +84,7 @@ wf-centrifuge-at-full = AT FULL
 
 ## wfcracker command
 cmd-wfcracker-desc = Spawn the code-built planet cracker test grids.
-cmd-wfcracker-help = Usage: { $command } spawn <cracker | transport> | { $command } state <stage> | { $command } complete <crack | drill> | { $command } disconnect | { $command } fall
+cmd-wfcracker-help = Usage: { $command } spawn <cracker | transport> | { $command } state <stage> | { $command } complete <crack | drill> | { $command } disconnect | { $command } fall | { $command } extract | { $command } drop
 cmd-wfcracker-invalid-args = Expected: spawn <cracker | transport>, state <stage>, complete <crack | drill>, disconnect or fall.
 cmd-wfcracker-unknown-kind = No test grid named "{ $kind }". Try cracker or transport.
 cmd-wfcracker-no-map = Attach to an entity on a map first.
@@ -94,7 +95,7 @@ cmd-wfcracker-completed = Forced the cut on { $grid } to finish.
 cmd-wfcracker-disconnected = Switched off both anchors of { $grid }.
 cmd-wfcracker-drilled = Finished drilling both anchors of { $grid }.
 cmd-wfcracker-no-cracker = Stand on a grid that has a planet cracker first.
-cmd-wfcracker-hint-sub = <spawn|state|complete|disconnect|fall>
+cmd-wfcracker-hint-sub = <spawn|state|complete|disconnect|fall|extract|drop>
 cmd-wfcracker-hint-kind = <cracker|transport>
 cmd-wfcracker-hint-state = <crack stage>
 cmd-wfcracker-hint-target = <crack|drill>
