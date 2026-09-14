@@ -101,6 +101,7 @@
     range: 12
     volume: -4
   - type: WFGravityAnchor
+  - type: WFFissureSpawner
   - type: StaticPrice
     price: 0
 

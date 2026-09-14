@@ -95,8 +95,8 @@ wf-centrifuge-at-full = AT FULL
 
 ## wfcracker command
 cmd-wfcracker-desc = Spawn the code-built planet cracker test grids.
-cmd-wfcracker-help = Usage: { $command } spawn <cracker | transport> | { $command } state <stage> | { $command } complete <crack | drill> | { $command } disconnect | { $command } rearm | { $command } release | { $command } fall | { $command } extract | { $command } drop | { $command } veins | { $command } mine
-cmd-wfcracker-invalid-args = Expected: spawn <cracker | transport>, state <stage>, complete <crack | drill>, disconnect, rearm, release, fall, extract, drop, veins or mine.
+cmd-wfcracker-help = Usage: { $command } spawn <cracker | transport> | { $command } state <stage> | { $command } begin drill | { $command } complete <crack | drill> | { $command } fissure <ring | surge> | { $command } disconnect | { $command } rearm | { $command } release | { $command } fall | { $command } extract | { $command } drop | { $command } veins | { $command } mine
+cmd-wfcracker-invalid-args = Expected: spawn <cracker | transport>, state <stage>, begin drill, complete <crack | drill>, fissure <ring | surge>, disconnect, rearm, release, fall, extract, drop, veins or mine.
 cmd-wfcracker-unknown-kind = No test grid named "{ $kind }". Try cracker or transport.
 cmd-wfcracker-no-map = Attach to an entity on a map first.
 cmd-wfcracker-spawned = Built { $kind } as { $grid } on map { $map }.
@@ -106,9 +106,14 @@ cmd-wfcracker-completed = Forced the cut on { $grid } to finish.
 cmd-wfcracker-disconnected = Switched off both anchors of { $grid }.
 cmd-wfcracker-drilled = Finished drilling both anchors of { $grid }.
 cmd-wfcracker-no-cracker = Stand on a grid that has a planet cracker first.
-cmd-wfcracker-hint-sub = <spawn|state|complete|disconnect|rearm|release|fall|extract|drop|veins|mine>
+cmd-wfcracker-hint-sub = <spawn|state|begin|complete|fissure|disconnect|rearm|release|fall|extract|drop|veins|mine>
 cmd-wfcracker-hint-kind = <cracker|transport>
 cmd-wfcracker-hint-state = <crack stage>
 cmd-wfcracker-hint-target = <crack|drill>
+cmd-wfcracker-hint-fissure = <ring | surge>
 cmd-wfcracker-rearmed = Re-armed both anchors of { $grid }.
 cmd-wfcracker-released = Forced { $grid } to release its chunk.
+cmd-wfcracker-began-drill = Started both drills on { $grid }.
+cmd-wfcracker-fissured = Spread { $count } fissure ring(s).
+cmd-wfcracker-surged = The extraction surge spawned { $count } threats.
+cmd-wfcracker-no-fissures = Neither anchor carries a fissure spawner.

@@ -19,6 +19,12 @@
   buildAtRoundStart: true
   sanctioned: true
   veins: WFVeinTableAsclepiu
+  # salvageFaction ids (Resources/Prototypes/Procedural/salvage_factions.yml:2 and :226) for F8's site
+  # threats. Both are ground mobs carrying NavSmash, which is what lets them chew a deployed anchor;
+  # Carps is deliberately not used because carps fly on FlyingMobMask and never collide with the
+  # anchor's MidImpassable/LowImpassable fixture.
+  faction: Xenos
+  unsanctionedFaction: Argocytes
   # Fixes the ground biome seed so the same planet yields the same terrain and the same deep veins every round.
   # Without it PlanetSystem.SpawnPlanet passes no seed and EnsurePlanet rolls _random.Next() (BiomeSystem.PlanetSetup.cs:33).
   seed: 20260913

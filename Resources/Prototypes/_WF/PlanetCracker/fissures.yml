@@ -1,0 +1,108 @@
+# Fissure decals, one-shot burst/emerge effects and the NPC targeting pair for F8's site threats:
+# fissures ringing an armed drill, mobs that emerge from them and hunt the anchor first.
+
+- type: decal
+  id: WFFissure1
+  tags: [ "wfcrack" ]
+  # Must stay false: true makes DecalOverlay snap the decal to the eye's cardinal and subtract that
+  # from the per-decal Angle argument (Content.Client/Decals/Overlays/DecalOverlay.cs:103-109), which
+  # would defeat the per-ring RingTangent rotation.
+  snapCardinals: false
+  defaultSnap: false
+  sprite: { sprite: _WF/PlanetCracker/Decals/fissure.rsi, state: fissure-1 }
+
+- type: decal
+  id: WFFissure2
+  tags: [ "wfcrack" ]
+  snapCardinals: false
+  defaultSnap: false
+  sprite: { sprite: _WF/PlanetCracker/Decals/fissure.rsi, state: fissure-2 }
+
+- type: decal
+  id: WFFissure3
+  tags: [ "wfcrack" ]
+  snapCardinals: false
+  defaultSnap: false
+  sprite: { sprite: _WF/PlanetCracker/Decals/fissure.rsi, state: fissure-3 }
+
+- type: decal
+  id: WFFissure4
+  tags: [ "wfcrack" ]
+  snapCardinals: false
+  defaultSnap: false
+  sprite: { sprite: _WF/PlanetCracker/Decals/fissure.rsi, state: fissure-4 }
+
+# Must be an entity, not a decal: DecalOverlay draws Frame0 only, so an animated burst has to replicate
+# as a real sprite. The state deliberately lives in the Decals rsi, not Effects/.
+- type: entity
+  id: WFEffectFissureBurst
+  categories: [ HideSpawnMenu ]
+  components:
+  - type: TimedDespawn
+    lifetime: 0.48 # 6 frames x 0.08 s, from fissure.rsi/meta.json
+  - type: Sprite
+    drawdepth: Effects
+    noRot: true
+    layers:
+    - shader: unshaded
+      sprite: _WF/PlanetCracker/Decals/fissure.rsi
+      state: burst
+  - type: Tag
+    tags: [ HideContextMenu ]
+
+# Parented to the MOB itself (SpawnAttachedTo with EntityCoordinates(mob, Vector2.Zero)), so it must
+# not inherit the mob's rotation.
+- type: entity
+  id: WFEffectMobEmerge
+  categories: [ HideSpawnMenu ]
+  components:
+  - type: TimedDespawn
+    lifetime: 0.48 # 6 frames x 0.08 s, from mob_emerge.rsi/meta.json
+  - type: Sprite
+    drawdepth: Effects
+    noRot: true
+    layers:
+    - shader: unshaded
+      sprite: _WF/PlanetCracker/Effects/mob_emerge.rsi
+      state: emerge
+  - type: Transform
+    noRot: true
+  - type: Tag
+    tags: [ HideContextMenu ]
+
+# Modelled on Resources/Prototypes/_Mono/NPCs/Shuttle/shuttle.yml:116-131.
+- type: utilityQuery
+  id: WFFissureTargets
+  query:
+  - !type:NearbyHostilesQuery
+  considerations:
+  # Replaces the stock TargetIsAliveCon: that scores a structure 0 and the scoring loop then drops it
+  # (Content.Server/NPC/Systems/NPCUtilitySystem.cs:386-389 and :153-160).
+  - !type:TargetIsAliveOrNACon
+    curve: !type:BoolCurve
+  - !type:TargetDistanceCon
+    curve: !type:PresetCurve
+      preset: TargetDistance
+  - !type:TargetAccessibleCon
+    curve: !type:BoolCurve
+  # TargetHealthCon is deliberately omitted: it reads MobThresholds, which a structure has not.
+  # Deliberately confines the anchor to the mob's vision radius (NPCUtilitySystem.cs:358-374) rather
+  # than being a map-wide target.
+  - !type:TargetInLOSOrCurrentCon
+    curve: !type:BoolCurve
+
+- type: htnCompound
+  id: WFFissureThreatCompound
+  branches:
+    - tasks:
+        - !type:HTNPrimitiveTask
+          operator: !type:UtilityOperator
+            proto: WFFissureTargets
+        - !type:HTNCompoundTask
+          task: MeleeAttackTargetCompound
+    - tasks:
+        - !type:HTNCompoundTask
+          task: MeleeCombatCompound
+    - tasks:
+        - !type:HTNCompoundTask
+          task: IdleCompound
