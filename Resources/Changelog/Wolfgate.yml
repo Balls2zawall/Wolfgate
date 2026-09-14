@@ -173,3 +173,10 @@ Entries:
   id: 100014
   time: '2026-09-13T17:01:05.0000000+00:00'
   url: https://github.com/VanguardControl/Wolfgate/pull/28
+- author: Gandalf2k15
+  changes:
+    - type: Add
+      message: Far better impact sounds across the board!
+  id: 100015
+  time: '2026-09-14T07:54:21.0000000+00:00'
+  url: https://github.com/VanguardControl/Wolfgate/pull/30
