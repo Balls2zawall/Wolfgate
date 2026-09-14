@@ -499,7 +499,9 @@ public sealed class PlanetNetworkTest
     {
         var server = pair.Server;
         var entMan = server.EntMan;
+        var proto = server.ResolveDependency<IPrototypeManager>();
         var networks = server.System<WFPlanetNetworkSystem>();
+        var registry = server.System<WFPlanetRegistrySystem>();
         var map = await pair.CreateTestMap();
         var fixture = new SectorFixture { SectorMap = map.MapUid };
 
@@ -507,10 +509,12 @@ public sealed class PlanetNetworkTest
         {
             fixture.Body = entMan.SpawnEntity(PlanetBody, new MapCoordinates(Vector2.Zero, map.MapId));
 
-            var sector = entMan.EnsureComponent<WFSectorPlanetComponent>(fixture.Body);
-            sector.Surface = Surface;
+            // Through the one production writer rather than a hand-written EnsureComponent/Surface pair, so
+            // WFPlanetRegistrySystem.ApplySurface is the only thing in the tree that writes Surface and Sanctioned and
+            // these tests run against a body whose Sanctioned actually mirrors its surface prototype.
+            var sector = registry.ApplySurface(fixture.Body, proto.Index<WFPlanetSurfacePrototype>(Surface));
 
-            Assert.That(networks.TryBuildNetwork((fixture.Body, sector), out var network), Is.True,
+            Assert.That(networks.TryBuildNetwork(sector, out var network), Is.True,
                 "The sector body's planet network failed to build.");
 
             fixture.Stack.Network = network;

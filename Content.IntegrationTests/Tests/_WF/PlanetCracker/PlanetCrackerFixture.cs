@@ -17,6 +17,7 @@ using Content.Shared._WF.PlanetCracker.Cracker;
 using Content.Shared._WF.PlanetCracker.Cracker.BUI;
 using Content.Shared._WF.PlanetCracker.Planets;
 using Content.Shared.Parallax.Biomes;
+using Content.Shared.Parallax.Biomes.Markers;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Map;
 using Robust.Shared.Map.Components;
@@ -45,6 +46,9 @@ public static class PlanetCrackerFixture
 
     /// <summary>Deck plating, used for both hull decks and hand-laid ground.</summary>
     public const string FloorTile = "FloorSteel";
+
+    /// <summary>What <see cref="AttachViewer"/> attaches the session to; a mob, never a ghost.</summary>
+    public const string ViewerProto = "MobHuman";
 
     /// <summary>Turns the feature on for this pair; TestPair reverts the change when the pair is returned.</summary>
     public static async Task EnableFeature(TestPair pair)
@@ -92,10 +96,14 @@ public static class PlanetCrackerFixture
         {
             body = entMan.SpawnEntity(PlanetBodyProto, new MapCoordinates(Vector2.Zero, map.MapId));
 
-            var sector = entMan.EnsureComponent<WFSectorPlanetComponent>(body);
-            sector.Surface = SurfaceProto;
+            // Through the one production writer rather than a hand-written EnsureComponent/Surface pair, so
+            // WFPlanetRegistrySystem.ApplySurface really is the only thing in the tree that writes Surface and
+            // Sanctioned and a fixture body's Sanctioned mirrors its surface prototype (plan D-J).
+            ApplySurfaceTo(pair, body, SurfaceProto);
 
-            Assert.That(networks.TryBuildNetwork((body, sector), out var network), Is.True,
+            var sector = new Entity<WFSectorPlanetComponent>(body, entMan.GetComponent<WFSectorPlanetComponent>(body));
+
+            Assert.That(networks.TryBuildNetwork(sector, out var network), Is.True,
                 "The sector body's planet network failed to build.");
 
             layers.AddRange(entMan.GetComponent<WFPlanetNetworkComponent>(network).Layers);
@@ -103,6 +111,82 @@ public static class PlanetCrackerFixture
 
         await server.WaitRunTicks(1);
         return (layers, body, map.MapUid);
+    }
+
+    /// <summary>
+    /// Attaches this pair's one session to a fresh entity on a map, which is the only thing that makes a biome
+    /// generate anything at all.
+    /// BiomeSystem.Update early-exits while _handledEntities is empty (Content.Server/Parallax/BiomeSystem.cs:198-202)
+    /// and that set is filled only by ProcessPlayerChunkRequests, from attached players and from view subscriptions
+    /// (BiomeSystem.PlayerTracker.cs:25-61). From there the path is AddChunksInRange (:70, the 16-tile _loadArea at
+    /// BiomeSystem.cs:49/:65) plus AddMarkerChunksInRange (:80) -> LoadChunks (BiomeSystem.cs:248) ->
+    /// BuildMarkerChunks (BiomeSystem.MarkerProcessor.cs:24) -> LoadChunkMarkers (:259), which is the only engine path
+    /// that ever spawns a marker entity, and it only runs for chunks inside that load area. BiomeSystem.Preload
+    /// (BiomeSystem.PlanetSetup.cs:152) registers chunk indices and spawns nothing, so it is not a substitute.
+    /// A ghost is deliberately not used: CanLoad excludes GhostComponent holders that lack the AllowBiomeLoading tag
+    /// (BiomeSystem.PlayerTracker.cs:65-68), so an observer would generate nothing.
+    /// </summary>
+    public static async Task<EntityUid> AttachViewer(TestPair pair, EntityUid map, Vector2 pos)
+    {
+        var server = pair.Server;
+        var entMan = server.EntMan;
+        var viewer = EntityUid.Invalid;
+
+        Assert.That(pair.Player, Is.Not.Null,
+            "AttachViewer needs a session, so the pair has to be built with PoolSettings { Connected = true }.");
+
+        await server.WaitPost(() =>
+        {
+            viewer = entMan.SpawnEntity(ViewerProto, new EntityCoordinates(map, pos));
+            server.PlayerMan.SetAttachedEntity(pair.Player!, viewer);
+        });
+
+        await pair.RunTicksSync(2);
+        return viewer;
+    }
+
+    /// <summary>
+    /// Forces one marker layer to generate under whatever viewer is already attached, and actually forces it.
+    /// Both writes are required and the order matters: BuildMarkerChunks returns for a chunk that is already in
+    /// LoadedMarkers BEFORE it ever reads ForcedMarkerLayers (BiomeSystem.MarkerProcessor.cs:38-41), and
+    /// ForcedMarkerLayers is cleared at the end of every pass (:118), so it is a one-shot that has to be set
+    /// immediately before the ticks. The only in-repo precedent is BiomeSystem.Commands.cs:158-163, which writes the
+    /// same pair. Pass clearLoaded false to leave LoadedMarkers alone, which is what exercises the double-spawn guard.
+    /// Note that forcing also bulldozes any anchored entity already sitting on a candidate tile
+    /// (BiomeSystem.MarkerProcessor.cs:58-70): acceptable on a throwaway test stack, never in production.
+    /// </summary>
+    public static async Task ForceMarkers(TestPair pair, EntityUid ground, string layer, int ticks = 40, bool clearLoaded = true)
+    {
+        var server = pair.Server;
+        var entMan = server.EntMan;
+
+        await server.WaitPost(() =>
+        {
+            var biome = entMan.GetComponent<BiomeComponent>(ground);
+
+            // BiomeComponent is [Access(typeof(SharedBiomeSystem))] and nothing public forces a layer, so the three
+            // marker sets are written by reflection the same way Energise writes PowerChargeComponent's ramp.
+            MarkerLayers(biome).Add(layer);
+
+            if (clearLoaded)
+                LoadedMarkers(biome).Remove(layer);
+
+            ForcedMarkerLayers(biome).Add(layer);
+        });
+
+        await pair.RunTicksSync(ticks);
+    }
+
+    /// <summary>
+    /// Stamps a surface onto a test body through the one production writer, so a hand-built body carries Sanctioned
+    /// as well as Surface. Must be called from inside a server thread callback.
+    /// </summary>
+    public static void ApplySurfaceTo(TestPair pair, EntityUid body, string surfaceId)
+    {
+        var proto = pair.Server.ResolveDependency<IPrototypeManager>();
+
+        pair.Server.System<WFPlanetRegistrySystem>()
+            .ApplySurface(body, proto.Index<WFPlanetSurfacePrototype>(surfaceId));
     }
 
     /// <summary>
@@ -680,6 +764,33 @@ public static class PlanetCrackerFixture
             .CompareTo(entMan.GetComponent<TransformComponent>(y).LocalPosition.X));
 
         return found;
+    }
+
+    /// <summary>The marker-layer set a biome generates from, which is access-locked to SharedBiomeSystem.</summary>
+    private static HashSet<ProtoId<BiomeMarkerLayerPrototype>> MarkerLayers(BiomeComponent biome)
+    {
+        return (HashSet<ProtoId<BiomeMarkerLayerPrototype>>) ResolveField("MarkerLayers").GetValue(biome)!;
+    }
+
+    /// <summary>The one-shot forcing set, cleared at the end of every marker pass.</summary>
+    private static HashSet<ProtoId<BiomeMarkerLayerPrototype>> ForcedMarkerLayers(BiomeComponent biome)
+    {
+        return (HashSet<ProtoId<BiomeMarkerLayerPrototype>>) ResolveField("ForcedMarkerLayers").GetValue(biome)!;
+    }
+
+    /// <summary>Which marker chunks are already done, which is the guard a second forced pass has to trip over.</summary>
+    private static Dictionary<string, HashSet<Vector2i>> LoadedMarkers(BiomeComponent biome)
+    {
+        return (Dictionary<string, HashSet<Vector2i>>) ResolveField("LoadedMarkers").GetValue(biome)!;
+    }
+
+    /// <summary>One access-locked biome field, failing loudly here rather than as a null deref in a test.</summary>
+    private static FieldInfo ResolveField(string name)
+    {
+        var field = typeof(BiomeComponent).GetField(name, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+
+        Assert.That(field, Is.Not.Null, $"BiomeComponent.{name} was not found.");
+        return field!;
     }
 
     /// <summary>PowerChargeComponent.ChargeRate, which is access-locked to its own system.</summary>

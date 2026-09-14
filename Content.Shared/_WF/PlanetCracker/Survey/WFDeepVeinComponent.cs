@@ -1,3 +1,4 @@
+using System.Numerics;
 using Content.Shared.Maps;
 using Content.Shared.Mining;
 using Robust.Shared.GameStates;
@@ -26,9 +27,18 @@ public sealed partial class WFDeepVeinComponent : Component
     [DataField, AutoNetworkedField]
     public int TotalYield;
 
-    /// <summary>True in the top quarter of the table's yield range; drives the richer sprite state.</summary>
+    /// <summary>True in the top quarter of <see cref="YieldRange"/>; drives the richer sprite state.</summary>
     [DataField, AutoNetworkedField]
     public bool Rich;
+
+    /// <summary>
+    /// The range <see cref="TotalYield"/> was actually rolled inside, the world's unsanctioned multiplier included.
+    /// Stamped alongside the yield because the vein carries no reference back to the table it came from, and both the
+    /// rich flag and the examine band have to be read against the range this vein could really have rolled - banding a
+    /// doubled unsanctioned yield against the sanctioned ceiling puts every vein in the top bucket.
+    /// </summary>
+    [DataField, AutoNetworkedField]
+    public Vector2 YieldRange = WFVeinTablePrototype.DefaultYieldRange;
 
     /// <summary>Units per extraction tick, copied from the table. F6's; unused by F2.</summary>
     [DataField]

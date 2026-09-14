@@ -76,10 +76,11 @@ public sealed partial class SharedWFSurveySystem : EntitySystem
         args.PushMarkup(Loc.GetString("wf-vein-examine-ore", ("ore", GetOreName(ent.Comp.Ore))));
 
         // A band word, never the number: the exact tonnage is F6's business and is not a survey readout.
-        // The vein carries no reference to the table it rolled from, so the shared examine bands against the default
-        // range; a caller that has the real table passes it instead.
+        // Banded against the range the vein itself was stamped with, not the table default: the server scales that
+        // range by the world's unsanctioned multiplier, so a fixed range would read every unsanctioned vein as
+        // exceptional. An unstamped vein still falls back to the default range through the component's own default.
         args.PushMarkup(Loc.GetString("wf-vein-examine-yield",
-            ("band", Loc.GetString(YieldBandKey(ent.Comp.TotalYield, WFVeinTablePrototype.DefaultYieldRange)))));
+            ("band", Loc.GetString(YieldBandKey(ent.Comp.TotalYield, ent.Comp.YieldRange)))));
     }
 
     /// <summary>Whether this viewer has revealed that vein with a surveyor pulse.</summary>

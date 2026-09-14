@@ -73,6 +73,12 @@ public sealed partial class WFSurveyCommand : LocalizedEntityCommands
 
         var state = _consoles.BuildState(console);
 
+        if (state.Planets.Count == 0)
+        {
+            shell.WriteLine(Loc.GetString("cmd-wfsurvey-list-empty"));
+            return;
+        }
+
         shell.WriteLine(Loc.GetString("cmd-wfsurvey-list-header",
             ("system", state.SystemName),
             ("count", state.Planets.Count)));
@@ -96,6 +102,12 @@ public sealed partial class WFSurveyCommand : LocalizedEntityCommands
             return;
 
         var veins = GetVeins(caller, radius);
+
+        if (veins.Count == 0)
+        {
+            shell.WriteLine(Loc.GetString("cmd-wfsurvey-veins-none"));
+            return;
+        }
 
         shell.WriteLine(Loc.GetString("cmd-wfsurvey-veins-header",
             ("count", veins.Count),

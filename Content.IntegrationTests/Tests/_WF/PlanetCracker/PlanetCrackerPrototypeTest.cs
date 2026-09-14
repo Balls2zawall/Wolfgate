@@ -10,6 +10,7 @@ using Content.Shared.Cargo.Components;
 using Content.Shared.Computer;
 using Content.Shared.Decals;
 using Content.Shared._WF.PlanetCracker.Cracker;
+using Content.Shared._WF.PlanetCracker.Survey;
 using Content.Shared.Repairable;
 using Content.Shared.UserInterface;
 using Content.Shared.Wires;
@@ -34,7 +35,15 @@ namespace Content.IntegrationTests.Tests._WF.PlanetCracker;
 [TestFixture]
 public sealed class PlanetCrackerPrototypeTest
 {
-    /// <summary>Every prototype this feature adds, in the order the plan lists them.</summary>
+    /// <summary>
+    /// Every prototype this feature adds, in the order the plan lists them.
+    /// WFDeepVein and WFEffectSurveyPulse are deliberately NOT here. SpawnAll lays a FloorSteel grid on a
+    /// map-initialised test map, so WFDeepVein's MapInit handler deletes itself twice over - the tile is not in its
+    /// AllowedTiles and the grid resolves no WFPlanetLayer -> WFPlanetNetwork -> surface -> veins chain - and
+    /// EveryPrototypeSpawns' EntityExists assert would fail. WFEffectSurveyPulse despawns after 0.48 s, which is
+    /// shorter than EverySpriteStateExists' 15 ticks at net.tickrate 30 (0.50 s). Both are covered instead by
+    /// DeepVeinTest and SurveyorTest, which spawn them in a context where they survive and assert their RSI states there.
+    /// </summary>
     private static readonly string[] Prototypes =
     {
         "WFGravityAnchor",
@@ -50,6 +59,7 @@ public sealed class PlanetCrackerPrototypeTest
         "WFGravityProjectorCircuitboard",
         "WFEffectChunkBurst",
         "WFCrackSkyBeam",
+        "WFSurveyor",
     };
 
     /// <summary>The rim ring's two decals, which F5 stamps by hand rather than through a tile prototype.</summary>
@@ -79,6 +89,18 @@ public sealed class PlanetCrackerPrototypeTest
 
     /// <summary>The console's own screen RSI, as the prototype names it.</summary>
     private const string ScreenRsi = "/Textures/_WF/PlanetCracker/Structures/crack_console.rsi";
+
+    /// <summary>The sector survey console, which F2 gives a UserInterface block and a second screen visualiser.</summary>
+    private const string SurveyConsole = "WFSectorSurveyConsole";
+
+    /// <summary>The survey console's own screen RSI, as the prototype names it.</summary>
+    private const string SurveyScreenRsi = "/Textures/_WF/PlanetCracker/Structures/survey_console.rsi";
+
+    /// <summary>The handheld surveyor's RSI, as the prototype names it.</summary>
+    private const string SurveyorRsi = "/Textures/_WF/PlanetCracker/Objects/surveyor.rsi";
+
+    /// <summary>The one state the surveyor prototype names; `scanning` ships unused this pass (plan D-N).</summary>
+    private const string SurveyorState = "icon";
 
     /// <summary>UserInterfaceComponent.Interfaces, which the engine keeps internal.</summary>
     private static readonly FieldInfo InterfacesField = typeof(UserInterfaceComponent)
@@ -343,6 +365,105 @@ public sealed class PlanetCrackerPrototypeTest
                     Assert.That(rsi.TryGetState(state!, out _), Is.True,
                         $"The {face} face names state '{state}', which crack_console.rsi does not have.");
                 }
+            }
+        });
+
+        await pair.CleanReturnAsync();
+    }
+
+    /// <summary>
+    /// The survey console's half of the same trap, one document further down the same file: its own screen key beside
+    /// the two it has to re-declare, and two faces that have to name states survey_console.rsi actually ships.
+    /// Its new UserInterface block is covered by EveryActivatableUiResolvesItsInterface, which walks the same array.
+    /// </summary>
+    [Test]
+    public async Task SurveyConsoleScreenStatesExist()
+    {
+        await using var pair = await PoolManager.GetServerClient();
+        var client = pair.Client;
+        var protoMan = client.ResolveDependency<IPrototypeManager>();
+        var cache = client.ResolveDependency<IResourceCache>();
+
+        await client.WaitAssertion(() =>
+        {
+            var console = protoMan.Index<EntityPrototype>(SurveyConsole);
+
+            Assert.That(console.TryGetComponent<GenericVisualizerComponent>(out var visualizer,
+                    client.ResolveDependency<IComponentFactory>()), Is.True,
+                "The survey console has no GenericVisualizer at all; it lost even the inherited one.");
+
+            var keys = visualizer!.Visuals.Keys.Select(key => key.ToString()).ToList();
+
+            using (Assert.EnterMultipleScope())
+            {
+                Assert.That(keys, Does.Contain(nameof(ComputerVisuals.Powered)),
+                    "The re-declared ComputerVisuals.Powered block is gone, so the screen no longer blanks when unpowered.");
+                Assert.That(keys, Does.Contain(nameof(WiresVisuals.MaintenancePanelState)),
+                    "The re-declared WiresVisuals.MaintenancePanelState block is gone, so the maintenance panel no longer shows.");
+                Assert.That(keys, Does.Contain(nameof(WFSurveyConsoleVisuals.Screen)),
+                    "The console's own screen key is missing.");
+                Assert.That(keys, Has.Count.EqualTo(3),
+                    $"Expected exactly the three visualiser keys; got {string.Join(", ", keys)}.");
+            }
+
+            var screen = visualizer.Visuals
+                .First(entry => entry.Key.ToString() == nameof(WFSurveyConsoleVisuals.Screen)).Value;
+
+            Assert.That(screen.ContainsKey(ScreenLayer), Is.True,
+                "The survey console's screen visualiser does not drive the screen layer.");
+
+            var rsi = cache.GetResource<RSIResource>(new ResPath(SurveyScreenRsi)).RSI;
+
+            using (Assert.EnterMultipleScope())
+            {
+                foreach (var face in Enum.GetNames<WFSurveyConsoleScreen>())
+                {
+                    Assert.That(screen[ScreenLayer].ContainsKey(face), Is.True,
+                        $"The survey screen visualiser has no entry for the {face} face.");
+
+                    var state = screen[ScreenLayer][face].State;
+
+                    Assert.That(state, Is.Not.Null, $"The {face} face names no RSI state.");
+                    Assert.That(rsi.TryGetState(state!, out _), Is.True,
+                        $"The {face} face names state '{state}', which survey_console.rsi does not have.");
+                }
+            }
+        });
+
+        await pair.CleanReturnAsync();
+    }
+
+    /// <summary>
+    /// The surveyor names one state and leans on its BaseRSI for the in-hands, so a renamed icon is a missing sprite in
+    /// every hand and nothing in the item block would say so.
+    /// </summary>
+    [Test]
+    public async Task SurveyorSpriteResolves()
+    {
+        // Connected, because the sprite layers only exist on the client half.
+        await using var pair = await PoolManager.GetServerClient(new PoolSettings { Connected = true });
+        var client = pair.Client;
+        var clientEntMan = client.EntMan;
+        var cache = client.ResolveDependency<IResourceCache>();
+
+        var spawned = await SpawnAll(pair);
+        await pair.RunTicksSync(10);
+
+        await client.WaitAssertion(() =>
+        {
+            var uid = pair.ToClientUid(spawned["WFSurveyor"]);
+
+            Assert.That(clientEntMan.TryGetComponent(uid, out SpriteComponent? sprite), Is.True,
+                "The surveyor never reached the client with a sprite.");
+
+            var rsi = cache.GetResource<RSIResource>(new ResPath(SurveyorRsi)).RSI;
+
+            using (Assert.EnterMultipleScope())
+            {
+                Assert.That(rsi.TryGetState(SurveyorState, out _), Is.True,
+                    $"surveyor.rsi has no '{SurveyorState}' state for the prototype to name.");
+                Assert.That(sprite!.AllLayers.Any(layer => layer.RsiState.Name == SurveyorState), Is.True,
+                    $"The surveyor's sprite names no layer in the '{SurveyorState}' state.");
             }
         });
 

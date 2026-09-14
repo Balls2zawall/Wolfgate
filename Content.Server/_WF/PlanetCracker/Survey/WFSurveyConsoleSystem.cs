@@ -1,6 +1,7 @@
 using System.Numerics;
 using Content.Server._WF.PlanetCracker.Planets;
 using Content.Server.Shuttles.Components;
+using Content.Server.Warps;
 using Content.Shared._FarHorizons.StarSystem;
 using Content.Shared._FarHorizons.StarSystem.Prototypes;
 using Content.Shared._WF.PlanetCracker.Cracker;
@@ -44,6 +45,9 @@ public sealed partial class WFSurveyConsoleSystem : EntitySystem
 
     /// <summary>Registered sector bodies keyed by their surface's planet type, rebuilt per state build.</summary>
     private readonly Dictionary<string, Entity<WFSectorPlanetComponent>> _registryBuffer = new();
+
+    /// <summary>Every sector body on the star-system map keyed by its display name, rebuilt per state build.</summary>
+    private readonly Dictionary<string, EntityUid> _bodyBuffer = new(StringComparer.OrdinalIgnoreCase);
 
     /// <summary>Next push.</summary>
     private TimeSpan _nextUpdate;
@@ -124,13 +128,14 @@ public sealed partial class WFSurveyConsoleSystem : EntitySystem
         var positionKnown = TryGetConsoleSectorPosition(console, out var consolePos);
         state.ConsolePositionKnown = positionKnown;
 
-        if (!TryGetSectorMap(out var systemProto))
+        if (!TryGetSectorMap(out var sectorMap, out var systemProto))
             return state;
 
         // StarSystemPrototype carries no display name field, so its id is the only name there is to show.
         state.SystemName = systemProto.ID;
 
         BuildRegistry();
+        BuildBodies(sectorMap);
 
         _rowBuffer.Clear();
 
@@ -160,6 +165,14 @@ public sealed partial class WFSurveyConsoleSystem : EntitySystem
                 sanctioned = body.Comp.Sanctioned;
                 cracked = body.Comp.Cracked;
                 veinsKnown = TryRate(body.Comp, sanctioned, out veins);
+            }
+            else if (_bodyBuffer.TryGetValue(name, out var unregistered))
+            {
+                // An unregistered body is still a spawned PlanetEntity and still a beacon: registration is gated on
+                // wf.planet_networks, which is SERVERONLY and defaults false (PlanetCrackerCVars.cs:15), so on a stock
+                // server every row would otherwise read "no destination" about a body that has carried an FTL beacon
+                // since round start. Planet stays null - that field means "registered body", not "reachable body".
+                hasBeacon = HasComp<FTLBeaconComponent>(unregistered);
             }
 
             // Raw Vector2 subtraction, never MapCoordinates.InRange: that one returns false for differing MapIds before
@@ -250,22 +263,47 @@ public sealed partial class WFSurveyConsoleSystem : EntitySystem
     }
 
     /// <summary>The first star-system map in the world that has a system assigned.</summary>
-    private bool TryGetSectorMap(out StarSystemPrototype systemProto)
+    private bool TryGetSectorMap(out EntityUid map, out StarSystemPrototype systemProto)
     {
+        map = default;
         systemProto = default!;
 
         var query = AllEntityQuery<StarSystemMapComponent>();
 
-        while (query.MoveNext(out _, out var comp))
+        while (query.MoveNext(out var uid, out var comp))
         {
             if (comp.System is not { } systemId || !_proto.TryIndex(systemId, out var proto))
                 continue;
 
+            map = uid;
             systemProto = proto;
             return true;
         }
 
         return false;
+    }
+
+    /// <summary>
+    /// Indexes every sector body on the star-system map by its display name, registered or not.
+    /// The bodies are the map's own direct children - StarSystemMapSystem spawns each one at
+    /// EntityCoordinates(map, position) and renames it to the planet's name (StarSystemMapSystem.cs:62-65) - so a
+    /// warp point parented to a grid, which is what a station's own warp points are, is never picked up here.
+    /// Identity is WarpPointComponent rather than FTLBeaconComponent on purpose: the row's HasBeacon is the regression
+    /// guard for the beacon itself, and keying the lookup on it would make that guard vacuously true.
+    /// </summary>
+    private void BuildBodies(EntityUid map)
+    {
+        _bodyBuffer.Clear();
+
+        var query = AllEntityQuery<WarpPointComponent, TransformComponent>();
+
+        while (query.MoveNext(out var uid, out _, out var xform))
+        {
+            if (xform.ParentUid != map)
+                continue;
+
+            _bodyBuffer[MetaData(uid).EntityName] = uid;
+        }
     }
 
     /// <summary>

@@ -74,9 +74,14 @@ public sealed partial class WFDeepVeinSystem : EntitySystem
 
         ent.Comp.Ore = PickOre(table, rand);
 
+        // The multiplier scales the whole band, not just the roll, so the stamped range is what the rich flag and the
+        // examine band are measured against. Against the raw table ceiling every vein on an unsanctioned world would
+        // be rich, because the smallest doubled roll already clears it.
+        var multiplier = sanctioned ? 1f : table.UnsanctionedMultiplier;
         var rolled = rand.Next((int) table.YieldRange.X, (int) table.YieldRange.Y + 1);
-        ent.Comp.TotalYield = (int) (rolled * (sanctioned ? 1f : table.UnsanctionedMultiplier));
-        ent.Comp.Rich = ent.Comp.TotalYield >= table.YieldRange.Y * 0.75f;
+        ent.Comp.YieldRange = table.YieldRange * multiplier;
+        ent.Comp.TotalYield = (int) (rolled * multiplier);
+        ent.Comp.Rich = ent.Comp.TotalYield >= ent.Comp.YieldRange.Y * 0.75f;
         ent.Comp.Rate = table.Rate;
         ent.Comp.Remaining = ent.Comp.TotalYield;
         Dirty(ent.Owner, ent.Comp);
