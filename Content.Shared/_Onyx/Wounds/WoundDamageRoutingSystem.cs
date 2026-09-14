@@ -248,7 +248,43 @@ public sealed partial class WoundDamageRoutingSystem : EntitySystem
         return TryApplyDamage(body, damage, origin, part, ignoreResistances, healWounds);
     }
 
+    // WOLFGATE (P4-D14): the distributed entry points bypass OnBeforeDamageChanged, the only other writer of
+    // _routedModifiers, so without this the re-entrant routed pass reaches SharedArmorPlateSystem with
+    // OriginFlag == null and its gate (Origin == null && OriginFlag != Explosion) refuses plate protection
+    // against explosions outright. The entry is saved and restored rather than removed because the dictionary has
+    // a second writer and a bare remove would be the non-reentrancy bug of PLAN4 trap T3.
     public bool TryApplyDistributedDamage(
+        EntityUid body,
+        DamageSpecifier damage,
+        TargetBodyPart mask,
+        DamageDistribution mode,
+        EntityUid? origin = null,
+        bool ignoreResistances = false,
+        bool interruptsDoAfters = true,
+        float variation = 0f,
+        bool isExplosion = false,
+        float woundSeverityMultiplier = 1f,
+        DamageableSystem.DamageOriginFlag? originFlag = null) // WOLFGATE (P4-D14): optional, so existing callers are unchanged.
+    {
+        var hadModifiers = _routedModifiers.TryGetValue(body, out var previousModifiers); // WOLFGATE (P4-D14)
+        _routedModifiers[body] = (0f, null, originFlag); // WOLFGATE (P4-D14)
+        try
+        {
+            return ApplyDistributedDamageCore(body, damage, mask, mode, origin, ignoreResistances,
+                interruptsDoAfters, variation, isExplosion, woundSeverityMultiplier);
+        }
+        finally
+        {
+            if (hadModifiers) // WOLFGATE (P4-D14)
+                _routedModifiers[body] = previousModifiers;
+            else
+                _routedModifiers.Remove(body);
+        }
+    }
+
+    // WOLFGATE (P4-D14): Onyx's body verbatim, made private so the public entry point can wrap it in the
+    // _routedModifiers scope above without re-indenting the whole method.
+    private bool ApplyDistributedDamageCore(
         EntityUid body,
         DamageSpecifier damage,
         TargetBodyPart mask,
@@ -911,7 +947,8 @@ public sealed partial class WoundDamageRoutingSystem : EntitySystem
         bool interruptsDoAfters = true,
         float variation = 0f,
         bool isExplosion = false,
-        float woundSeverityMultiplier = 1f)
+        float woundSeverityMultiplier = 1f,
+        DamageableSystem.DamageOriginFlag? originFlag = null) // WOLFGATE (P4-D14): optional, so existing callers are unchanged.
     {
         if (!TryComp<WoundHostComponent>(body, out _) || !_net.IsServer || _routing.Contains(body) ||
             mode is not DamageDistribution.SplitEvenly and not DamageDistribution.SplitByPartWeight and not DamageDistribution.SplitWithVariation)
@@ -926,7 +963,8 @@ public sealed partial class WoundDamageRoutingSystem : EntitySystem
             interruptsDoAfters,
             variation,
             isExplosion,
-            woundSeverityMultiplier);
+            woundSeverityMultiplier,
+            originFlag); // WOLFGATE (P4-D14): carry Mono's plate-protection flag into the routed pass.
         return true;
     }
 

@@ -1,7 +1,11 @@
+using System.Collections.Generic;
 using System.Linq;
 using Content.IntegrationTests.Fixtures;
 using Content.Server.Body.Components; // WOLFGATE: BloodstreamComponent is server-only here.
+using Content.Server._Shitmed.Medical.Surgery; // WOLFGATE: GetSingleton lives on the concrete server system.
 using Content.Shared._Onyx.Wounds;
+using Content.Shared._Shitmed.Medical.Surgery; // WOLFGATE: SurgeryStepEvent.
+using Content.Shared._Shitmed.Medical.Surgery.Conditions; // WOLFGATE: SurgeryValidEvent, the HOOK 25 seam.
 using Content.Shared._WF.Wolfmed.Body; // WOLFGATE: D8, WolfmedBodyPartSystem.Get
 using Content.Shared._WF.Wolfmed.Compat; // WOLFGATE: Onyx's SharedBodySystem.TryDetachPart lives on WolfmedBodySystem here.
 using Content.Shared.Body.Part;
@@ -100,6 +104,131 @@ public sealed class WolfmedReattachTest : GameTest
             Assert.That(bloodstream.BleedAmount, Is.GreaterThan(0f),
                 "the reattached part's fresh wound must rejoin the body's bleed total.");
         });
+    }
+
+    /// <summary>
+    /// PLAN4 §6.2 T-REATTACH-BLOCKED. HOOK 25 closes the phase-3 P3-D2 gap at the SURGERY layer, not at
+    /// SharedBodySystem.CanAttachPart (P4-D18): the body layer has five non-surgery callers, two of which are
+    /// the Mono prosthetics traits that exist precisely to bolt a limb onto a stump.
+    /// </summary>
+    [Test]
+    public async Task AmputatedLimbCannotBeReattachedUntilConsequenceTreatedTest()
+    {
+        var server = Pair.Server;
+        await server.WaitIdleAsync();
+        var entities = server.ResolveDependency<IEntityManager>();
+        var map = await Pair.CreateTestMap();
+
+        await server.WaitAssertion(() =>
+        {
+            // WolfmedAmputationTest's fixture: torso + head + both arms, and a torso that carries
+            // `amputationConsequenceSeverity: 50`.
+            var body = entities.SpawnEntity("WolfmedAmputationBody", map.GridCoords);
+            var graph = entities.System<SharedBodySystem>();
+            var wounds = entities.System<WoundSystem>();
+            var routing = entities.System<WoundDamageRoutingSystem>();
+            var surgeries = entities.System<SurgerySystem>();
+            var parts = graph.GetBodyChildren(body).ToList();
+            var torso = parts.Single(part => part.Component.PartType == BodyPartType.Torso).Id;
+            var arm = parts.Single(part =>
+                part.Component.PartType == BodyPartType.Arm &&
+                part.Component.Symmetry == BodyPartSymmetry.Left).Id;
+            var attach = surgeries.GetSingleton("SurgeryAttachLeftArm")!.Value;
+
+            // Arm Slash threshold 130 arms the limb; Slash 15 is the host finishing minimum and detaches it.
+            Assert.That(routing.TryApplyPartDamage(body, arm, Spec("Slash", 130)));
+            Assert.That(routing.TryApplyPartDamage(body, arm, Spec("Slash", 15)));
+            Assert.That(graph.BodyHasChild(body, arm), Is.False);
+            Assert.That(Consequences(entities, wounds, torso), Has.Count.EqualTo(1));
+
+            Assert.Multiple(() =>
+            {
+                Assert.That(AttachCancelled(entities, attach, body, torso), Is.True,
+                    "an untreated stump must hide every SurgeryAttach* surgery that targets it (HOOK 25).");
+                // P4-D18's guard: the BODY layer is deliberately NOT gated, so the two Mono prosthetics traits
+                // and the three admin commands that go through AttachPart keep working on exactly this stump.
+                Assert.That(graph.CanAttachPart(torso, "left arm", arm), Is.True,
+                    "CanAttachPart must stay true - hooking it would silently QueueDel a prosthetic.");
+            });
+
+            // WolfmedWoundSurgeryTest's bare `WolfmedSurgeryTreatWoundEffect { woundPrototype:
+            // AmputationConsequenceWound }` step - the same component WP12-5 puts on
+            // SurgeryStepHealAmputationConsequence.
+            var step = entities.SpawnEntity("WolfmedStepHealAmputation", map.GridCoords);
+            var ev = new SurgeryStepEvent(body, body, torso, new List<EntityUid>(), step);
+            entities.EventBus.RaiseLocalEvent(step, ref ev);
+
+            Assert.Multiple(() =>
+            {
+                Assert.That(Consequences(entities, wounds, torso), Is.Empty);
+                Assert.That(AttachCancelled(entities, attach, body, torso), Is.False,
+                    "treating the consequence must put the attach surgery back on the list.");
+                Assert.That(graph.CanAttachPart(torso, "left arm", arm), Is.True);
+            });
+        });
+    }
+
+    /// <summary>
+    /// PLAN4 §6.2 T-SURG-AMP-CLEAN. Only AmputationSystem's traumatic path sets the block; a surgical removal
+    /// leaves a clean stump.
+    /// </summary>
+    [Test]
+    public async Task SurgicallyRemovedLimbCanStillBeReattachedTest()
+    {
+        var server = Pair.Server;
+        await server.WaitIdleAsync();
+        var entities = server.ResolveDependency<IEntityManager>();
+        var map = await Pair.CreateTestMap();
+
+        await server.WaitAssertion(() =>
+        {
+            var body = entities.SpawnEntity("WolfmedAmputationBody", map.GridCoords);
+            var graph = entities.System<SharedBodySystem>();
+            var wounds = entities.System<WoundSystem>();
+            var surgeries = entities.System<SurgerySystem>();
+            var parts = graph.GetBodyChildren(body).ToList();
+            var torso = parts.Single(part => part.Component.PartType == BodyPartType.Torso).Id;
+            var arm = parts.Single(part =>
+                part.Component.PartType == BodyPartType.Arm &&
+                part.Component.Symmetry == BodyPartSymmetry.Left).Id;
+            var attach = surgeries.GetSingleton("SurgeryAttachLeftArm")!.Value;
+
+            // TryDetachPart is what Shitmed's SurgeryPartRemoved path ends in; ApplyAmputationConsequences has
+            // exactly one caller, AmputationSystem.TryAmputate, and this is not it.
+            Assert.That(entities.System<WolfmedBodySystem>().TryDetachPart(arm));
+
+            Assert.Multiple(() =>
+            {
+                Assert.That(graph.BodyHasChild(body, arm), Is.False);
+                Assert.That(Consequences(entities, wounds, torso), Is.Empty,
+                    "a surgical removal must leave no amputation consequence on the stump.");
+                Assert.That(AttachCancelled(entities, attach, body, torso), Is.False,
+                    "so the limb can be put straight back on.");
+            });
+        });
+    }
+
+    private static bool AttachCancelled(
+        IEntityManager entities,
+        EntityUid surgery,
+        EntityUid body,
+        EntityUid part)
+    {
+        // WolfmedStumpBlocksAttachment is private, so HOOK 25 is asserted through the event SharedSurgerySystem
+        // actually raises (SurgeryValidEvent on the surgery singleton) rather than through the helper.
+        var ev = new SurgeryValidEvent(body, part);
+        entities.EventBus.RaiseLocalEvent(surgery, ref ev);
+        return ev.Cancelled;
+    }
+
+    private static List<Entity<WoundComponent>> Consequences(
+        IEntityManager entities,
+        WoundSystem wounds,
+        EntityUid part)
+    {
+        return wounds.GetWounds((part, entities.GetComponent<WoundableComponent>(part)))
+            .Where(wound => wound.Comp.Prototype == new ProtoId<WoundPrototype>("AmputationConsequenceWound"))
+            .ToList();
     }
 
     private static DamageSpecifier Spec(string type, int amount) => new()

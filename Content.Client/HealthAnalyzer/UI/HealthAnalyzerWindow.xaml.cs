@@ -109,6 +109,7 @@ namespace Content.Client.HealthAnalyzer.UI
         // Not all of this function got messed with, but it was spread enough to warrant being covered entirely by a Shitmed Change
         public void Populate(HealthAnalyzerScannedUserMessage msg)
         {
+            PopulateWolfmed(msg); // WOLFGATE: HOOK 26 - first statement; Populate early-returns below and a trailing call would leave the previous patient's rows on screen.
             // Start-Shitmed
             _target = _entityManager.GetEntity(msg.TargetEntity);
             EntityUid? part = msg.Part != null ? _entityManager.GetEntity(msg.Part.Value) : null;
@@ -118,6 +119,7 @@ namespace Content.Client.HealthAnalyzer.UI
                 || !_entityManager.TryGetComponent<DamageableComponent>(isPart ? part : _target, out var damageable))
             {
                 NoPatientDataText.Visible = true;
+                HideWolfmed(); // WOLFGATE: HOOK 26 - a target outside client PVS can still carry non-null diagnostics.
                 return;
             }
 

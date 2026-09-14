@@ -1,10 +1,10 @@
 # Wolfmed status
 
-Phases 1, 2 and 3 of the Space Onyx wound port are implemented, build, and pass their tests. Nothing is committed.
+Phases 1, 2, 3 and 4 of the Space Onyx wound port are implemented, build, and pass their tests. Nothing is committed.
 
 - **Branch / worktree:** `clanker/wolfmed-port-orchestration-454c3d` in `.claude/worktrees/rules-motd-updates-11c89c`.
 - **Onyx pin:** `2f5bab9946539cbe083010c9ae6fbc59b47ae377`. Reference sparse checkout at `C:\tmp\onyx` (recreate with the clone command in `WOLFMED_HANDOFF.md`, using `core.longpaths=true` and a short path).
-- **Documents:** `DECISIONS.md` (D1–D35 plus the phase-2 and phase-3 sections), `WOLFMED_PLAN.md` (phase 1's file-level plan), `WOLFMED_PLAN2.md` (phase 2's), `WOLFMED_PLAN3.md` (phase 3's), `WOLFMED_MANIFEST.md` (every file: Onyx path, Wolfgate path, status, deviations, including the phase-2 §8.2 and phase-3 §8.6 user-decision summaries), `reports/analysis` (phase 1), `reports/analysis/phase2` (phase 2's five analyst reports plus `CRITIQUE2.md`) and `reports/analysis/phase3` (phase 3's five analyst reports plus `CRITIQUE3.md`), `reports/work-packages` (phase 1), `reports/work-packages/phase2` (one report and one verification per WP10-N package) and `reports/work-packages/phase3` (one report and one verification per WP11-N package).
+- **Documents:** `DECISIONS.md` (D1–D35 plus the phase-2, phase-3 and phase-4 sections), `WOLFMED_PLAN.md` (phase 1's file-level plan), `WOLFMED_PLAN2.md` (phase 2's), `WOLFMED_PLAN3.md` (phase 3's), `WOLFMED_PLAN4.md` (phase 4's), `WOLFMED_MANIFEST.md` (every file: Onyx path, Wolfgate path, status, deviations, including the phase-2 §8.2, phase-3 §8.6 and phase-4 §8.4 user-decision summaries), `reports/analysis` (phase 1), `reports/analysis/phase2` (phase 2's five analyst reports plus `CRITIQUE2.md`), `reports/analysis/phase3` (phase 3's five analyst reports plus `CRITIQUE3.md`) and `reports/analysis/phase4` (phase 4's five analyst reports plus `CRITIQUE4.md`), `reports/work-packages` (phase 1), `reports/work-packages/phase2` (one report and one verification per WP10-N package), `reports/work-packages/phase3` (one report and one verification per WP11-N package) and `reports/work-packages/phase4` (one report and one verification per WP12-N package).
 
 ## What phase 1 delivers
 
@@ -101,22 +101,101 @@ T-AMP-EXPLOSION/T-AMP-CONSEQUENCE-SEPARATE and 3 of Onyx's `AmputationConsequenc
 including the Wolfgate-only `PartModifiersRouteThroughArmorPenetrationTest` (WP11-3); the restored
 `TraumaticAmputationCreatesSevereStumpBleedingTest` (WP11-5).
 
-**Known gaps, recorded for phase 4+:** organ damage has no healing path yet (`OrganHealthSystem.ChangeHealth`
-exists and is public — a chem/surgery step is ~15 lines); there is no organ-damage readout on the health
-analyzer or in examine (phase 4); `AmputationConsequenceWound` is inert — it marks a stump for examine but
-does not yet block Shitmed's `CanAttachPart`, so a severed limb can still be surgically re-attached (P3-D2,
-by design — hooking it in phase 3 would make re-attachment permanently impossible). Explosion amputation
-also stays out (§8.6-6) pending an `ExplosionSystem` hook phase 4/5 will add alongside a plate regression
-test. One pre-existing upstream bug was found and flagged, not fixed:
-`Content.Shared/Gibbing/Systems/GibbingSystem.cs:141` throws `InvalidOperationException` when a body part
-holding contents (e.g. an arm holding its hand) crosses a `Destructible` gib threshold — routing makes this
-more reachable by concentrating damage on one part, but the bug and its one-line `.ToArray()` fix are both
-pre-existing and out of PLAN3's authorised edit list.
+**Gaps closed in phase 4** (struck from the phase-3 list above, WP12-10 reconcile): organ damage now has a
+healing path (`SurgeryHeal<Organ>` via `OrganHealthSystem.ChangeHealth`, reversible while the organ lives —
+P4-D24); the health analyzer now reports wounds, fractures, bleeding, organs, chemicals and vital damage
+(WP12-6/7); `AmputationConsequenceWound` now blocks re-attachment — through the surgery layer (HOOK 25,
+P4-D18), **not** `SharedBodySystem.CanAttachPart`, which stays deliberately ungated so Mono's prosthetic
+traits and the Goob autosurgeon are untouched — and the affected attach surgeries are **hidden, not greyed**:
+six of them (Head, both arms, both legs, Hands) for an untreated torso stump, one (that limb's hand or foot)
+for an arm or leg stump. Explosion amputation landed (§8.6-6 reversed, see below). The pre-existing
+`GibbingSystem.cs:141` container-mutation crash was fixed before phase 4 started (two `.ToArray()` snapshots,
+marked `// WOLFGATE`, manifest row added by WP12-10).
+
+**Gaps still open, carried to phase 5+:** pain numbness / narcotics (`ModifyStatusEffect`) is skipped and
+recorded (P4-D8) — the cure for a destroyed organ remains `SurgeryInsert<Organ>` (no organ is repaired once
+`Health` reaches 0, only while it is dying); the cable coil is the first `treatmentCapabilities` annotation
+due in phase 5 (P4-D7), the only item in the tree where the omission is a real gap rather than a restated
+default.
+
+## What phase 4 delivers
+
+Phase 4 (WP12-0 through WP12-10, `PLAN4.md`) is the treatment phase: everything phases 1–3 inflict, a medic
+can now undo. What a medic can do that they could not before, per treatment:
+
+- **Stop bleeding fast with a tourniquet.** Wolfgate's existing `Tourniquet` item (id unchanged) now stops
+  bleeding on one selected limb entirely while applied, in exchange for that limb's use — a real trade instead
+  of the old flat `Healing` stopgap. Works on any wound host; the excluded Protogen loses tourniquet function
+  entirely (P4-D11), same as every other wound mechanic it sits outside of.
+- **Field-craft a medical patch.** A new craftable item (1 Cloth or 4 WebSilk, 5 s do-after) that sticks to a
+  target and transfers its solution over time — zero placement in loot/vending/cargo, mirroring Onyx exactly
+  (P4-D13).
+- **A four-rung painkiller ladder plus a dedicated fracture medicine.** Ibuprofen (0.5 suppression) → Ketorolac
+  (0.9) → Tramadol (1.25) → Oxycodone (2.0), each decaying over its own duration; Cognac, Bicaridine and
+  Desoxyephedrine also carry a lesser suppression alongside their existing uses. Stasizium — already in every
+  combat medkit — now mends fractures in place (extended, not renamed: P4-D3).
+- **Treat wounds surgically, on Shitmed's own step system.** Six new wound surgeries reachable through the
+  existing surgery BUI: stop external bleeding (clamp), tend a deep brute/burn wound (a severity window keeps
+  the two shallow tend surgeries from also listing on a badly wounded limb, P4-D19), stop internal bleeding,
+  mend a fracture in two steps (BoneSetter reduces, then BoneGel mends — a Hairline fracture is reachable only
+  at the Mended step, corrected from a naive read of the completion check, P4-D20), heal the amputation
+  consequence on a stump (clearing it for re-attachment), and heal a damaged organ (7 human organs, including
+  the fork's first kidney surgery, `SurgeryHealKidneys`).
+- **Surgery now hurts and can scar.** Every new wound surgery step inflicts pain (`WolfmedSurgeryPainEffect`,
+  Onyx's amounts) — mechanisms (`PainSystem`, `WoundScarSystem` + `surgery.scar_chance`) that were fully built
+  and unreachable since phases 1–2. Opening a surgical incision now also opens a real, clampable
+  `SurgicalIncisionWound` beside the existing flat bloodloss cost (the four-prototype scar chain, P4-D21); a
+  cleanly closed incision may leave a permanent medical scar.
+- **Read a real diagnostics readout.** The health analyzer gained a self-contained parallel panel
+  (`WolfmedDiagnosticPanel`, mounted by three marked lines — P4-D25) reporting per-part wounds, fracture grade
+  and treatment, bleeding and its clotting phase, pain, organ health/function, and relevant blood chemistry —
+  none of which the stock analyzer showed for a wound host before.
+- **Explosions now spread across limbs and can sever them.** The distributed-damage mechanic that has been
+  fully ported and unreachable since phase 1 (`TryApplyDistributedDamage`, `PickExplosionAmputationCandidate`)
+  is live (HOOK 22, P4-D14) — a blast can pick a random limb and, if damage is high enough, amputate it. The
+  same change closes the phase-3 armour-plate hole for explosions: a plated wound host absorbs blast damage on
+  the distributed path for the first time (T-EXPLOSION-PLATE: 0 damage plated, 40 unplated for the same
+  40-Blunt blast).
+- **A rewritten guidebook.** Two new entries, `Wounds` and `Wound treatment`, inserted into the existing
+  Medical guide (PROTO L) and written for what Wolfgate actually shipped — organic species only, guns and
+  lasers can finish an amputation, fracture effects described qualitatively, the painkiller ladder named, and
+  the amputation-consequence stump behaviour explained in plain terms.
+
+Test counts: **98 of 98 passed, 0 skipped** (`Content.IntegrationTests/Tests/_Onyx/Wounds` +
+`Tests/_Onyx/Body` + `Tests/_Onyx/Medical` + `Tests/_WF/Wolfmed`,
+`--filter "FullyQualifiedName~_Onyx.Wounds|FullyQualifiedName~_Onyx.Body|FullyQualifiedName~_Onyx.Medical|FullyQualifiedName~Wolfmed"`),
+per `C:\tmp\wolfmed-plan\p4\wp\WP12-9-report-tests.log` — up from phase 3's 65 (33 new: 31 new test methods
+plus 2 phase-1/3 skips restored, `TourniquetStopsOnlySelectedPartTest` and
+`SurgicalHealRemovesConsequenceAndUnblocksTest`). Smoke filter `EntityTest|PrototypeSaveTest|DockTest`:
+**9 passed, 0 failed**, the 2 skips being the two permanently `[Ignore]`d upstream tests
+(`WP12-9-report-smoke.log`). `DockTest` run first every package per project memory: 3/3 each time. Headless
+server (120 s) reached `Server Version 277.0.0.0 -> Ready` with zero `[ERRO]`/`[FATL]`/exception lines on
+every phase-4 package that touched a prototype or locale file, including this reconcile package's guidebook
+addition (`WP12-10-report-server.log`).
 
 ## Upstream footprint
 
-**27 tracked upstream files** carry `// WOLFGATE` hooks (see the manifest) — 16 shipped in phase 1, 6 more
-in phase 2, 5 more in phase 3: `Content.Client/Damage/DamageVisualsSystem.cs` (HOOK 20),
+**47 tracked upstream files** carry `// WOLFGATE` hooks (see the manifest) — 16 shipped in phase 1, 6 more
+in phase 2, 5 more in phase 3, and **20 more in phase 4** (measured via
+`git diff 6329d204e3 --name-only`, filtered to files outside `_Onyx`/`_WF`/`Content.IntegrationTests`):
+`Content.Client/HealthAnalyzer/UI/HealthAnalyzerWindow.xaml(.cs)` (HOOK 26),
+`Content.Server/EntityEffects/Effects/{HealthChange,EvenHealthChange}.cs` (HOOK 9),
+`Content.Server/Explosion/EntitySystems/ExplosionSystem.Processing.cs` (HOOK 22),
+`Content.Server/Medical/HealthAnalyzerSystem.cs` (HOOK 23), `Content.Shared/Gibbing/Systems/GibbingSystem.cs`
+(the pre-phase-4 gibbing fix), `Content.Shared/MedicalScanner/HealthAnalyzerScannedUserMessage.cs` (4
+nullable fields), `Content.Shared/_Shitmed/Surgery/{SharedSurgerySystem.cs, Conditions/SurgeryWoundedConditionComponent.cs}`
+(HOOK 24/25 + EXT 1), `Resources/Locale/en-US/medical/components/health-analyzer-component.ftl`,
+`Resources/Prototypes/Catalog/Fills/Items/firstaidkits.yml` (withdrawn edit, comment only),
+`Resources/Prototypes/Entities/Objects/Specific/Medical/healing.yml` (PROTO D, `Tourniquet` in place),
+`Resources/Prototypes/Guidebook/medical.yml` (PROTO L, 2 lines), `Resources/Prototypes/Reagents/Consumable/Drink/alcohol.yml`
+(PROTO K), `Resources/Prototypes/Reagents/{medicine,narcotics}.yml` (PROTO I/J),
+`Resources/Prototypes/_Goobstation/Reagents/medicine.yml` (PROTO H, Stasizium), `Resources/Prototypes/_Shitmed/Entities/Surgery/{surgeries,surgery_steps}.yml`
+(PROTO F severity window, PROTO G the four-site scar chain). This measured count of 20 is 2 files above
+PLAN4 §3.4's predicted "27 → 45" — the two extras are `Resources/Prototypes/Guidebook/medical.yml` (PROTO L,
+this WP) and `Content.Shared/Gibbing/Systems/GibbingSystem.cs` (the pre-phase-4 fix), both of which PLAN4's
+running total accounted for elsewhere; no untracked upstream edit exists beyond this list.
+
+**Phase 1–3 hooks (unchanged):** `Content.Client/Damage/DamageVisualsSystem.cs` (HOOK 20),
 `Content.Shared/Body/Part/BodyPartComponent.cs` (HOOK 21, a single word), `Resources/Prototypes/Body/Organs/human.yml`
 (PROTO A, 7 one-line `parent:` edits), `Resources/Prototypes/_Mono/Entities/Clothing/Head/Helmets/bulletproof_helmets.yml`
 and `.../OuterClothing/Armor/bulletproof_vests.yml` (PROTO B, 6 `coverage:` lines total) — plus one more phase-3
@@ -153,52 +232,84 @@ both owned by vendored/hook-body files, not by editing an upstream `Initialize()
   `MaxDamage` only gates `AmputationSystem`'s overflow branch (dead for every organic limb, in Onyx too);
   `amputationThresholds` is what gates severing, and it was already populated for all ten limb abstracts
   since WP7 — no YAML gap ever existed (P3-D12). Corrected in the manifest, not a code change.
-- **(Phase 3) Pre-existing upstream bug found, not fixed:** `GibbingSystem.cs:141`'s `Drop` branch enumerates
-  a container while removing from it (`InvalidOperationException`), reachable whenever a body part holding
-  contents crosses a `Destructible` gib threshold. Flagged for a later package; not in PLAN3's authorised
-  edit list.
+- **(Phase 3, fixed before phase 4) Pre-existing upstream bug:** `GibbingSystem.cs:141`'s `Drop`/`Gib`
+  branches enumerate a container while removing from it (`InvalidOperationException`), reachable whenever a
+  body part holding contents crosses a `Destructible` gib threshold. Flagged in phase 3, fixed ahead of
+  phase 4 with two `.ToArray()` snapshots + `using System.Linq`, all marked `// WOLFGATE`; manifest row added
+  by WP12-10.
+- **(Phase 4) `TakeStaminaDamage` honours `Immediate` where Onyx's own effect never reads it** — a
+  corrected-upstream-bug deviation (P4-D5), keeping Onyx's `false` default since Wolfgate's
+  `StaminaSystem.TakeStaminaDamage(..., immediate: true)` default silently refuses to apply a negative amount
+  to an already-critical target.
+- **(Phase 4) `WoundFractureSystem.CanTreat`'s `Reduced` gate requires at least a Simple fracture grade** —
+  a naive "complete when `Treatment == Reduced`" surgery check would stall forever on the commonest (Hairline)
+  fracture. `WolfmedSurgeryMendFractureEffect`'s completion check was written to also complete when `CanTreat`
+  can never succeed (P4-D20), not fixed by editing the vendored gate.
+- **(Phase 4) A test runner false-positive, not a Wolfmed bug:** a dirty-disposed integration-test pair can
+  report a genuinely failing test as `Skipped` while the run summary still reads `Test Run Successful`.
+  Recorded so a future phase-4+ log is read for `Skipped:` as carefully as for `Failed:`.
 
 ## Known deviations and balance flags
 
-See `WOLFMED_PLAN.md` §8.2, `WOLFMED_PLAN2.md` §8.2, `WOLFMED_PLAN3.md` §8, and the manifest's Deviations
-section (including the consolidated phase-2 §8.2 and phase-3 §8.6 user-decisions summaries). Notable for
-playtest: limb damage versus armour changes (armour now applies once), environmental damage creates limb
-wounds, do-afters no longer interrupt on wound hosts, wound-host damage is unpredicted (transient client
-mispredict), pain stun re-triggers stun VFX per call, a fractured arm's do-after penalty is lost if the
-do-after itself opts out of `MultiplyDelay`, the client never mirrors a server-side limb attach/detach
-movement-speed refresh (corrects within one network state), and **`WoundPrototype.HealingMultiplier` is
-still 1 for every wound** — a balance-pass item kept on record since phase 1. Phase-3-specific: **guns and
-lasers can now sever limbs** (§8.6-1, a deliberate deviation from Onyx's melee-only defaults, expressed only
-in `_WF/Wolfmed/Body/parts.yml`); **the five `_Mono` vests + one BP helmet quadruple aimed-headshot damage
-for their wearer** (§8.6-2); **organ damage is permanent** with no healing path yet (§8.6-4); **explosion
-amputation is out** (§8.6-6); **`AmputationConsequenceWound` is inert** — it does not block re-attachment
-(P3-D2); Onyx's `MaskComponent.IsToggled` armour gate and its `traumaDeductions` field are not ported
-(P3-D20); the two Onyx locational-armour tests that are red against Onyx's own shipped code were rewritten
-against the corrected (first-match-wins-then-coverage-fallback) behaviour instead of skipped.
+See `WOLFMED_PLAN.md` §8.2, `WOLFMED_PLAN2.md` §8.2, `WOLFMED_PLAN3.md` §8, `WOLFMED_PLAN4.md` §8, and the
+manifest's Deviations section (including the consolidated phase-2 §8.2, phase-3 §8.6 and phase-4 §8.4
+user-decisions summaries). Notable for playtest: limb damage versus armour changes (armour now applies
+once), environmental damage creates limb wounds, do-afters no longer interrupt on wound hosts, wound-host
+damage is unpredicted (transient client mispredict), pain stun re-triggers stun VFX per call, a fractured
+arm's do-after penalty is lost if the do-after itself opts out of `MultiplyDelay`, the client never mirrors a
+server-side limb attach/detach movement-speed refresh (corrects within one network state), and
+**`WoundPrototype.HealingMultiplier` is still 1 for every wound** — a balance-pass item kept on record since
+phase 1. Phase-3-specific: **guns and lasers can now sever limbs** (§8.6-1, a deliberate deviation from
+Onyx's melee-only defaults, expressed only in `_WF/Wolfmed/Body/parts.yml`); **the five `_Mono` vests + one
+BP helmet quadruple aimed-headshot damage for their wearer** (§8.6-2); Onyx's `MaskComponent.IsToggled`
+armour gate and its `traumaDeductions` field are not ported (P3-D20); the two Onyx locational-armour tests
+that are red against Onyx's own shipped code were rewritten against the corrected
+(first-match-wins-then-coverage-fallback) behaviour instead of skipped.
+
+**Phase-4-specific:** **organ heal ships at `amount: 3` per step, not Onyx's `amount: 1`** (§8.4-2, P4-D23) —
+~10 s per organ instead of ~30 s, the one deliberate pace deviation from D4; organ damage is now **reversible
+only while the organ lives** (P4-D24) — a destroyed organ (`Health <= 0`) is still unrecoverable, and
+`SurgeryRemoveKidneys`/`InsertKidneys` still do not exist. **Explosions now sever limbs** (§8.4-1, P4-D14,
+reversing the phase-3 record), tunable by `explosion.damage_variation`/`explosion.wounding_multiplier`.
+**Opening a surgical incision on a wound host costs more than it did** on `SurgeryStepOpenIncisionScalpel`
+only — the existing flat 10 Bloodloss stays *and* a severity-10 `SurgicalIncisionWound` opens beside it
+(deviation 9, §7.3 of `WOLFMED_PLAN4.md`); `SurgeryStepCarefulIncisionScalpel` is unchanged. **Surgery now
+hurts and can scar** (P4-D21/D22) — both mechanisms existed and were unreachable since phases 1–2.
+**Non-wound-hosts (Protogen only) lose tourniquet function entirely**, and the tourniquet's begin/end sounds
+lose client-side prediction, degrading to server-fired PVS audio (P4-D10/D11). **`SalicylicAcid` is dropped
+outright, not ported or renamed** (P4-D4) — WG's is an unrelated Frontier precursor reagent; 20 of Onyx's 22
+medicine reagents are not ported (Tier B/C and the virology set, P4-D2). **Pain numbness / narcotics
+(`ModifyStatusEffect`) is skipped** (§8.4-8, P4-D8) — `PainNumbnessStatusEffectComponent` remains dead code
+with two readers and no writer; re-entry cost is roughly half a day (~45 LOC, a new `_WF` action enum member,
+2 prototypes, 2 locale keys, 1 test). **No `treatmentCapabilities:` annotation was added to any existing
+item or reagent** (§8.4-7, P4-D7) — the cable coil is recorded as the first phase-5 action. **No organ
+examine line was added** (§8.4-6). **`GroupHealSpecifier` is not ported** (P4-D12) — it carries a second
+licence (Wega, GPL-3.0) under Onyx's AGPL and is relevant only if Vampire is ever ported.
+**`AmputationConsequenceWound` now blocks re-attachment through the surgery layer, not `CanAttachPart`**
+(P4-D18) — a prosthetic can still be bolted to an untreated stump via the non-surgery `AttachPart` callers
+(two Mono traits, the Goob autosurgeon, Shitmed's child-part generation), which is deliberate: those callers
+are not surgery and should not be blocked by a surgery-shaped gate.
 
 ## Next phases (not started)
 
-1. **Phase 4:** treatment and the health analyzer — reagent treatment effects rewritten old-style
-   (`SuppressPain`, `MendFractures`, `TakeStaminaDamage`, `TreatmentCapabilities` on
-   `HealthChange`/`EvenHealthChange`), tourniquet, medical patch, wound surgeries as Shitmed steps (extend
-   Wolfgate's `SurgeryTendWoundsEffectComponent`/`SurgeryWoundedConditionComponent`, do not vendor Onyx's),
-   health analyzer wound/organ diagnostics (needs a parallel-UI-vs-graft decision), an organ-healing path,
-   the `AmputationConsequenceWound`/`CanAttachPart` gate, and a refund for P3-D1's vital-part Bloodloss
-   charge on re-attachment. Reagent id collisions to resolve first: `Stasizium`, `SalicylicAcid`.
-2. **Phase 5:** IPC, cybernetic, slime and plant profiles (including their organ-damage and dismemberment
+1. **Phase 5:** IPC, cybernetic, slime and plant profiles (including their organ-damage and dismemberment
    coverage, currently silent no-ops per §8.6-7). Blocked on a shared stage-based metabolizer for
-   non-organic circulatory streams.
-3. **Phase 6:** predicted routing; explosion amputation (`ExplosionSystem` hook + a plate regression test,
-   §8.6-6); the full 272-entry locational-armour content pass (P3-D6); `HurtCommand` part argument (patch
-   kept at `reports/work-packages` as `WP8-hurtcommand-deferred.patch` in `C:\tmp\wolfmed-plan\wp`);
-   the `Gibbing/Systems/GibbingSystem.cs:141` container-mutation-during-enumeration fix.
+   non-organic circulatory streams. Also carries two phase-4 handoffs: annotate the cable coil (and any
+   future non-organic healing item) with `treatmentCapabilities` once a non-Biological `bodyPartProfile`
+   exists to make HOOK 9 non-inert (P4-D1/D7); and, if narcotics ever need it, land pain numbness /
+   `ModifyStatusEffect` (P4-D8, ~45 LOC, 2 prototypes, 2 locale keys, 1 test).
+2. **Phase 6:** predicted routing (wound-host damage is still unpredicted, D35); the full 272-entry
+   locational-armour content pass (P3-D6); `HurtCommand` part argument (patch kept at
+   `reports/work-packages` as `WP8-hurtcommand-deferred.patch` in `C:\tmp\wolfmed-plan\wp`). Explosion
+   amputation and the `GibbingSystem.cs` container-mutation fix, both previously slated for phase 6, shipped
+   in phase 4 instead and are struck from this list.
 
 ## How to verify
 
 ```bash
 dotnet build Content.Server/Content.Server.csproj -c DebugOpt
 dotnet build Content.Client/Content.Client.csproj -c DebugOpt
-dotnet test Content.IntegrationTests/Content.IntegrationTests.csproj -c DebugOpt --filter "FullyQualifiedName~_Onyx.Wounds|FullyQualifiedName~Wolfmed"
+dotnet test Content.IntegrationTests/Content.IntegrationTests.csproj -c DebugOpt --filter "FullyQualifiedName~_Onyx.Wounds|FullyQualifiedName~_Onyx.Body|FullyQualifiedName~_Onyx.Medical|FullyQualifiedName~Wolfmed"
 dotnet run --project Content.YAMLLinter -c Release
 ```
 

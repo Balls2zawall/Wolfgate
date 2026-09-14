@@ -3,6 +3,7 @@ using Content.IntegrationTests.Fixtures;
 // WOLFGATE: D13 moves WoundBleedingSystem to Content.Server but keeps its Onyx namespace, so no extra using.
 using Content.Server.Body.Components; // WOLFGATE: BloodstreamComponent is server-only here.
 using Content.Server.Body.Systems; // WOLFGATE: BloodstreamSystem is server-only here.
+using Content.Shared._Onyx.Medical.Tourniquet; // WOLFGATE: P4-D10 relocates TourniquetSystem to Content.Server but keeps this namespace.
 using Content.Shared._Onyx.Wounds;
 using Content.Shared._WF.Wolfmed.Compat; // WOLFGATE: §2.7 TryDetachPart.
 using Content.Shared.Body.Part;
@@ -144,8 +145,60 @@ public sealed class WoundBleedingTest : GameTest
         });
     }
 
-    // WOLFGATE: Onyx's TourniquetStopsOnlySelectedPartTest is not ported — the `Tourniquet` prototype and
-    // TourniquetSystem are phase 4 (PLAN §6.1, WP11).
+    /// <summary>
+    /// Onyx's TourniquetStopsOnlySelectedPartTest, restored in WP12-9 now that WP12-3 has vendored
+    /// TourniquetSystem and swapped the shipped `Tourniquet` entity's Healing block for a real one (PROTO D).
+    /// The phase-1 skip note this replaces was correct only while neither existed.
+    /// </summary>
+    /// <remarks>PLAN4 §6.2 T-TOURNIQUET.</remarks>
+    [Test]
+    public async Task TourniquetStopsOnlySelectedPartTest()
+    {
+        var server = Pair.Server;
+        await server.WaitIdleAsync();
+        var entityManager = server.ResolveDependency<IEntityManager>();
+        var map = await Pair.CreateTestMap();
+
+        await server.WaitAssertion(() =>
+        {
+            var body = entityManager.SpawnEntity("WoundBleedingBody", map.GridCoords);
+            var graph = entityManager.System<SharedBodySystem>();
+            var wounds = entityManager.System<WoundSystem>();
+            var bleeding = entityManager.System<WoundBleedingSystem>();
+            var tourniquet = entityManager.System<TourniquetSystem>(); // WOLFGATE: P4-D10 puts it in Content.Server.
+            var parts = graph.GetBodyChildren(body).ToList();
+            var head = parts.Single(part => part.Component.PartType == BodyPartType.Head).Id;
+            // WOLFGATE: D9, Onyx targets BodyPartType.Chest here.
+            var torso = parts.Single(part => part.Component.PartType == BodyPartType.Torso).Id;
+
+            // SlashWound's bleeding behaviour has `minimumSeverity: 9`, so 10 is the smallest severity that
+            // actually bleeds on both parts - the same correction AutomaticClottingDeadlineTest carries.
+            Assert.That(wounds.CreateOrMergeWound(head, "SlashWound", 10), Is.Not.Null);
+            Assert.That(wounds.CreateOrMergeWound(torso, "SlashWound", 10), Is.Not.Null);
+            Assert.Multiple(() =>
+            {
+                Assert.That(bleeding.GetPartRate(head), Is.GreaterThan(0f));
+                Assert.That(bleeding.GetPartRate(torso), Is.GreaterThan(0f));
+            });
+
+            // WOLFGATE: Apply is called directly (PLAN4 §6.1 trap 9). The do-after and the
+            // TargetingComponent round trip TryStart goes through are UI layers, not the mechanic.
+            Assert.That(tourniquet.Apply(body, head), Is.True);
+
+            Assert.Multiple(() =>
+            {
+                // BleedingTreatment.Clamped is a 0f multiplier (WoundBleedingSystem.cs:469), applied to every
+                // bleeding wound on the part.
+                Assert.That(bleeding.GetPartRate(head), Is.Zero);
+                Assert.That(bleeding.GetPartRate(torso), Is.GreaterThan(0f),
+                    "a tourniquet must clamp only the part it was applied to.");
+            });
+
+            // WOLFGATE: a check Onyx's own test never made. CanApply requires GetPartRate(part) > 0, so a
+            // second application to an already-clamped limb is refused rather than silently re-clamping.
+            Assert.That(tourniquet.Apply(body, head), Is.False);
+        });
+    }
 
     /// <summary>
     /// PLAN3 §6.2 T-AMP-THRESHOLD. Restored in WP11-5 now that WP11-1 has vendored AmputationSystem (D26

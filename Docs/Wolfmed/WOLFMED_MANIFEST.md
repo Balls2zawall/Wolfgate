@@ -93,11 +93,11 @@ Status values: `verbatim` (byte-identical), `modified` (vendored `_Onyx` file wi
 | `Content.Shared/_Onyx/Wounds/WoundFractureSystem.cs` | same | modified | WP6 | additional WP6 edit: same `internal` to `public` change on `HandlePartDamageApplied` |
 | — | `Content.Server/Body/Systems/BloodstreamSystem.cs` | new (hook) | WP6 | **GUARD E** (`HasComp<WoundHostComponent>` early-return in `OnDamageChanged`) + **GUARD E3** (`TryModifyBleedAmount` split into the public wound-host-gated entry, `internal TryModifyWoundBleedProjection`, and a private `bool woundProjection` implementation). One gate also silently no-ops the passive-decay call in `Update()` — deliberate, not duplicated. **GUARD E2 is WP10** |
 | — | `Content.Server/_Mono/Traits/Physical/HemophiliaSystem.cs` | new (hook) | WP6 | **GUARD E4** — one `HasComp<WoundHostComponent>` early-return at the top of `OnDamageChanged` |
-| — | `Content.Server/Medical/Components/HealingComponent.cs` | new (hook) | WP6 | **HOOK 7 / D14** — four additive `[DataField]`s (`HealDamage`, `HealWounds`, `HashSet<TreatmentCapability> TreatmentCapabilities`, `HashSet<string>? AllowedWoundStages`) + `using Content.Shared._Onyx.Wounds;`. `HashSet<>` is mandatory (D31: `ResolveHealingPartEvent` takes `IReadOnlySet<>`) |
+| — | `Content.Server/Medical/Components/HealingComponent.cs` | new (hook) | WP6 | **HOOK 7 / D14** — four additive `[DataField]`s (`HealDamage`, `HealWounds`, `HashSet<TreatmentCapability> TreatmentCapabilities`, `HashSet<string>? AllowedWoundStages`) + `using Content.Shared._Onyx.Wounds;`. `HashSet<>` is mandatory (D31: `ResolveHealingPartEvent` takes `IReadOnlySet<>`). **WP12-10 reconcile:** items and reagents reach wounds by two different mechanisms and phase 4 does not unify them. Items pass `TreatmentCapabilities` explicitly into `WoundHealingSystem.ResolveHealingPart`; reagents open `WithTreatmentCapabilities` (HOOK 9). Do not nest the two — the scope is a non-reentrant dictionary with a `finally` remove |
 | — | `Content.Server/Medical/HealingSystem.cs` | new (hook) | WP6 | **HOOK 8**, call-site only after the tidy pass: `OnDoAfter`'s wound-host branch (calls `OnWoundHostDoAfter`) and `TryHeal`'s `woundHost` gate (calls `IsWoundDamaged`/`ResolveWoundTargetPart`). The hook body — `OnWoundHostDoAfter`, `ResolveWoundTargetPart`, `GetHealingContainers`, `IsWoundDamaged`, and the `WoundHealingSystem`/`WoundTargetResolver` dependencies — moved to `Content.Server/_WF/Wolfmed/Medical/HealingSystem.Wolfmed.cs`. Requested part comes from the healer's Shitmed `TargetingComponent` (see Deviations) |
 | — | `Content.Server/_WF/Wolfmed/Medical/HealingSystem.Wolfmed.cs` | new | WP6 (split out in the HOOK 8/10 tidy pass) | HOOK 8's body, `partial class HealingSystem` sharing the upstream file's private fields (`_popupSystem`, `_stacks`, `_adminLogger`, `_bloodstreamSystem`, `_bodySystem`, `_solutionContainerSystem`, `_audio`, `EntityManager`). Logic is byte-identical to the original hook, just relocated |
 | `Content.Server/Body/Systems/RespiratorSystem.cs` | — | skipped | never | PLAN 3 lists it under "explicitly NOT touched"; `hooks-a.md` 3a/3b confirm no phase-1 hook exists (breathing immunity already present, `InitiallyLungedComponent`/OrganConsequences are Nubody glue) |
-| `Content.Shared/_Onyx/Wounds/{ReagentTreatmentEffects,ReagentTreatmentSystems,SuppressPainEntityEffect}.cs` | — | skipped | WP11 | D16 — rewritten old-style in `_WF/Wolfmed/EntityEffects`; `HealthChange`/`EvenHealthChange` get HOOK 9 instead |
+| `Content.Shared/_Onyx/Wounds/{ReagentTreatmentEffects,ReagentTreatmentSystems,SuppressPainEntityEffect}.cs` | — | **skipped (re-authored)** | WP11 / **WP12-1** | D16 — rewritten old-style as four classes in `_WF/Wolfmed/EntityEffects` (WP12-1); `HealthChange`/`EvenHealthChange` get HOOK 9 instead. **`DistributedHealthChange` is not needed, not deferred** (P4-D6): zero `!type:` uses in Onyx's reagent set and zero references in WG — **WP12-10 reconcile** |
 | — | `Content.Shared/_WF/Wolfmed/Body/WolfmedBodyPartComponent.cs` | new | WP4 | D8/PLAN 2.12; 6 fields; not networked. `MaxDamage` default 0 disables amputation overflow — WP7's `parts.yml` must cover all 13 limb abstracts |
 | — | `Content.Shared/_WF/Wolfmed/Body/WolfmedBodyPartSystem.cs` | new | WP4 | D8/PLAN 2.12; `Get(EntityUid)` with a shared zeroed default |
 | — | `Content.Shared/_WF/Wolfmed/Targeting/WoundTargetResolver.cs` | new | WP4 | D10/PLAN 2.13; folds `TargetBodyPart.Groin` to the torso; no anatomical-odds scatter in phase 1 |
@@ -129,7 +129,7 @@ Status values: `verbatim` (byte-identical), `modified` (vendored `_Onyx` file wi
 | — | `Resources/Locale/en-US/_Onyx/commands/damage-command.ftl` | skipped | WP8 | Created in WP8 round 1, **deleted in fix round 1** with the command that used it. The path does not exist in the pinned Onyx sparse checkout, so its "verbatim" claim was never diffable — see Deviations |
 | `Resources/Locale/en-US/damage/damage-command.ftl` | same | skipped | WP8 | Usage-string edit reverted in fix round 1 with `HurtCommand.cs`; byte-identical to HEAD again |
 | `Content.IntegrationTests/Tests/_Onyx/Wounds/WoundDamageFoundationTest.cs` | same | adapted | WP9 | 9 of Onyx's 12 tests. Shitmed `body` prototype instead of Nubody `InitialBody`; Chest -> Torso (D9); `WolfmedDamageableSystem`/`WolfmedBodySystem`/`WoundTargetResolver` in place of Onyx's; Onyx's `TargetingComponent.DefaultOdds()`/`TryConvert` assertions dropped (D10); the two armour tests that need `coverage`/`partModifiers` dropped and folded into one applies-exactly-once test; `SuppressPain` entity effect replaced by the identical `PainSystem.SuppressPain` path (D16, phase 4) |
-| `Content.IntegrationTests/Tests/_Onyx/Wounds/WoundBleedingTest.cs` | same | adapted | WP9 / **WP11-5** | **5 of Onyx's 6** (WP11-6 reconciliation). Server-side `WoundBleedingSystem`/`BloodstreamComponent` (D13); tourniquet test still skipped (phase 4); two auto-clotting severities raised above `SlashWound.minimumSeverity: 9`. **`TraumaticAmputationCreatesSevereStumpBleedingTest` restored in WP11-5** (T-AMP-THRESHOLD) once D26 lifted `AmputationSystem`; the phase-1 skip note was deleted. **P3-D14:** Onyx's `BleedAmount Is.GreaterThanOrEqualTo(40f)` corrected to `Is.EqualTo(bloodstream.MaxBleedAmount)` (10f) — a Head `DismembermentWound` at severity 200 gives a raw 60, which `BloodstreamSystem` clamps to `MaxBleedAmount`. Also asserts `DismembermentWound` severity **200** and `AmputationConsequenceWound` severity **35** (the stock `WolfmedBodyPartComponent` default), and that the severed head is a live re-parented entity, not deleted |
+| `Content.IntegrationTests/Tests/_Onyx/Wounds/WoundBleedingTest.cs` | same | adapted | WP9 / **WP11-5** / **WP12-9** | **6 of Onyx's 6** (WP12-10 reconcile: `TourniquetStopsOnlySelectedPartTest` restored in WP12-9, driven through `TourniquetSystem.Apply` directly, plus a new does-not-double-apply assertion Onyx never made — no longer skipped). Server-side `WoundBleedingSystem`/`BloodstreamComponent` (D13); two auto-clotting severities raised above `SlashWound.minimumSeverity: 9`. **`TraumaticAmputationCreatesSevereStumpBleedingTest` restored in WP11-5** (T-AMP-THRESHOLD) once D26 lifted `AmputationSystem`; the phase-1 skip note was deleted. **P3-D14:** Onyx's `BleedAmount Is.GreaterThanOrEqualTo(40f)` corrected to `Is.EqualTo(bloodstream.MaxBleedAmount)` (10f) — a Head `DismembermentWound` at severity 200 gives a raw 60, which `BloodstreamSystem` clamps to `MaxBleedAmount`. Also asserts `DismembermentWound` severity **200** and `AmputationConsequenceWound` severity **35** (the stock `WolfmedBodyPartComponent` default), and that the severed head is a live re-parented entity, not deleted |
 | `Content.IntegrationTests/Tests/_Onyx/Wounds/WoundScarTest.cs` | same | adapted | WP9 | 1 test. Shitmed body graph; `WolfmedBodySystem.TryDetachPart` + `SharedBodySystem.AttachPart`; `CCVars.SurgeryScarChance` pinned to 1 for the duration (Onyx's copy is 35 % flaky) |
 | `Content.IntegrationTests/Tests/_Onyx/Wounds/WoundFractureTest.cs` | same | adapted | WP9 / **WP10-1** | 2 of Onyx's 3. `FractureEffectSystem` test still deferred (WP10-6b owns every assertion); grade boundaries corrected to `OrganicFractureProfile`'s own 20/35/50/60. **WP10-1 landed the `[TestPrototypes]` block only (T-FIXTURE / P2-D21):** `WoundFractureBodyGraph` gains a `left hand` slot (`LeftHandHuman`) and `WoundFractureBody` a `- type: Hands`, plus a second `WoundFractureHandsBodyGraph`/`WoundFractureHandsBody` (both arms, both hands) for T-FRACT-HANDS. Exactly one hand on `WoundFractureBody` so the `used: null` active-hand path is unambiguous. **WP10-6b wrote every assertion:** Onyx's `EffectsRefreshOnTreatmentHealingAndDetachTest` ported (T-FRACT-EFFECTS) plus three tests Onyx does not have - `FractureManipulationUsesHeldHandSymmetryTest` (T-FRACT-HANDS, the only coverage of the P2-D2 `TryGetUsedHandSymmetry` rewrite), `FractureAlertTracksGradeAndTreatmentTest` (T-FRACT-ALERT) and `FractureAlertRespectsMinimumGradeTest` (T-FRACT-ALERT-NEG). Two further `[TestPrototypes]` edits WP10-6b had to make: `- type: Alerts` on `WoundFractureBody` (`AlertsSystem.ShowAlert` returns silently without `AlertsComponent`) and a new `WoundFractureHeldItem` (`IsHolding` only resolves a hand for a real item). Every literal re-derived against the shipped data (P2-D16) and every fracture created at severity >= 60 (P2-D23) |
 | `Content.IntegrationTests/Tests/_Onyx/Wounds/WoundHealingTest.cs` | same | adapted | WP9 | 4 of Onyx's 5. Server-side `WoundHealingSystem` + `Content.Server` `HealingComponent` (D13/D14); `Repairable`/`TransplantCompatibility` dropped; `WoundTargetResolver` for the exact-target test; repair-event test skipped (`_Onyx.Repairable` not in scope) |
@@ -196,9 +196,15 @@ Onyx-equivalent — §8.1 item 1(a)).
 | `Resources/Textures/_Onyx/Wounds/brute_damage.rsi` (77 states, 78 files incl. meta.json) | same | new | **WP11-4** | Byte-copied from ONYX via `git show`. `meta.json` license `CC-BY-SA-3.0`, copyright `Drawn by Ubaser.` — **identical artist and licence already shipped and accepted** in WG's own `Resources/Textures/Mobs/Effects/brute_damage.rsi` (verified). All 77 states have a matching `.png`; no orphan states |
 | `Resources/Textures/_Onyx/Wounds/burn_damage.rsi` (77 states, 78 files incl. meta.json) | same | new | **WP11-4** | Same licence/attribution as above, verified identically. All 77 states have a matching `.png` |
 | — | `Resources/Prototypes/Entities/Mobs/Species/base.yml` | modified (hook) | **WP11-4** | **PROTO C**, 2 lines. The `- type: DamageVisuals` block's `damageOverlayGroups.Brute.sprite`/`.Burn.sprite` retargeted from `Mobs/Effects/{brute,burn}_damage.rsi` to `_Onyx/Wounds/{brute,burn}_damage.rsi`. No `Groin` layer added (D9), no Hand/Foot `targetLayers` added (Onyx does not either; the live overlay stays 6 layers in both trees) |
-| `Content.IntegrationTests/Tests/_Onyx/Wounds/AmputationConsequenceTest.cs` (3 of Onyx's 5) | same path | new | **WP11-5** | T-AMP-CONSEQUENCE-1/-2/-3. Fixture rebuilt Shitmed-shaped (PLAN3 §6.1 trap 9): a `- type: body` graph in place of Onyx's `InitialBody`, `TransplantCompatibility`/`bodyPartProfile` dropped, `partType: Chest` → parts inheriting `TorsoHuman`/`HeadHuman` (D9), and Onyx's part-level `amputationThresholds` moved to `- type: WolfmedBodyPart` (D8). The fixture torso carries `amputationConsequenceSeverity: 50` — **load-bearing** (PLAN3 §8.7 hazard 7 / CRITIQUE3 M3-2): 35 is both the component default and `WolfmedBodyPartSystem.Get`'s fallback, so only a non-default value can prove edit #9 reads the severity off the **parent stump**. Onyx's `HasAmputationConsequence` / `TryAttachPart … Is.False` assertions dropped (B-2/P3-D2); `SurgicalHealRemovesConsequenceAndUnblocks` (needs `SurgeryStepEvent`, D7) and `HealingDamageKeepsConsequenceBlocked` (payload is the dropped gate) are recorded as skips in the file's `<remarks>` |
+| `Content.IntegrationTests/Tests/_Onyx/Wounds/AmputationConsequenceTest.cs` (**4 of Onyx's 5** — WP12-10 reconcile: `SurgicalHealRemovesConsequenceAndUnblocksTest` restored in WP12-9 against HOOK 25's surgery-layer gate; `HealingDamageKeepsConsequenceBlocked` stays skipped because P4-D18 deliberately leaves `CanAttachPart` ungated) | same path | new | **WP11-5** / **WP12-9** | T-AMP-CONSEQUENCE-1/-2/-3. Fixture rebuilt Shitmed-shaped (PLAN3 §6.1 trap 9): a `- type: body` graph in place of Onyx's `InitialBody`, `TransplantCompatibility`/`bodyPartProfile` dropped, `partType: Chest` → parts inheriting `TorsoHuman`/`HeadHuman` (D9), and Onyx's part-level `amputationThresholds` moved to `- type: WolfmedBodyPart` (D8). The fixture torso carries `amputationConsequenceSeverity: 50` — **load-bearing** (PLAN3 §8.7 hazard 7 / CRITIQUE3 M3-2): 35 is both the component default and `WolfmedBodyPartSystem.Get`'s fallback, so only a non-default value can prove edit #9 reads the severity off the **parent stump**. Onyx's `HasAmputationConsequence` / `TryAttachPart … Is.False` assertions dropped (B-2/P3-D2); `SurgicalHealRemovesConsequenceAndUnblocks` (needs `SurgeryStepEvent`, D7) and `HealingDamageKeepsConsequenceBlocked` (payload is the dropped gate) are recorded as skips in the file's `<remarks>` |
 | — | `Content.IntegrationTests/Tests/_WF/Wolfmed/WolfmedAmputationTest.cs` | new | **WP11-5** | 5 tests. **T-AMP-VITAL** (both halves: the wound host's readout moves `+115` = the finishing hit + Shitmed's flat `VitalDamage` 100, with systemic `Bloodloss` at **315**; a `MobMonkey` non-host still charges **exactly 100**, the D2 guard the withdrawn HOOK 19 would have failed). **T-AMP-GUN** — replaces PLAN3's T-AMP-NOGUN per DECISIONS.md §8.6-1: a hand over its Piercing threshold is severed by one 14-Piercing round (hit 16), over its Heat threshold by one 16-Heat shot (hit 14), a below-threshold foot by neither, and the untouched melee case still needs 6 machete-grade Slash 32 hits on an arm. **T-AMP-OVERFLOW** (a: `AmputationOverflow` stays 0 on a shipped part through 16 × Blunt 25, `Severable` flips exactly at the threshold, one Blunt 50 detaches; b: a bespoke `maxDamage: 50` part accumulates **30**). **T-AMP-EXPLOSION** (`TryRouteDistributedDamage(..., isExplosion: true)`, single-part mask, saturated chance). **T-AMP-CONSEQUENCE-SEPARATE** (two `AmputationConsequenceWound` at **50** + two `DismembermentWound` at **120**; `mergeMode: SeparateInstances`, P3-D10 — replaces `tests.md`'s merge test). New `[TestPrototypes]`: `WolfmedAmputationBodyGraph/Body/Torso`, `WolfmedAmputationOverflowGraph/Body/Part` |
 | — | `Content.IntegrationTests/Tests/_WF/Wolfmed/WolfmedOrganTest.cs` | new | **WP11-5** | 8 tests. **T-ORG-DATA** (all seven `OrganHuman*` resolve with `WolfmedOrgan` 15/15 and WP11-2's measured `OrganDamage` numbers — catches a mistyped PROTO A `parent:`). **T-ORG-CAP** (`15 × 0.3 = 4.5` per application: 15 → 10.5 → 6.0, unchanged by a ×10 bigger hit). **T-ORG-DESTROY** (lungs → `InternalBleedingWound` severity **35** on the torso, organ deleted). **T-ORG-HEART** (`DelayedDeathComponent` — the only proof P3-D8's Shitmed-consequence argument holds). **T-ORG-BRAIN** (mob `Dead`, organ **not** deleted — pins P3-D22). **T-ORG-EYES** (`TemporaryBlindnessComponent`, landing at the *disable*, before destruction). **T-ORG-FUNC** (the only coverage of `WolfmedOrganConsequenceSystem`: an `onAdd` grant is revoked in the one-tick window, and the deliberate second disable is harmless). **T-ORG-INERT** (D2/D3/D32: same graph, same torso profile, same organ, minus `WoundHostComponent` → routing refuses it and the organ loses nothing). New `[TestPrototypes]`: `WolfmedOrganTestProfile`, `WolfmedOrganTestGraph/Body/Torso/Organ`, `WolfmedOrganControlBody`, `WolfmedOrganFuncGraph/Body/Organ` |
+| `Content.Server/_Onyx/Medical/MedicalPatchComponent.cs` | same | verbatim | **WP12-0** | zero edits; `InjectAmmountOnAttatch`/`InjectPercentageOnAttatch` field names keep Onyx's misspelling |
+| `Content.Server/_Onyx/Medical/MedicalPatchSystem.cs` | same | verbatim | **WP12-0** | zero edits; registers `<MedicalPatchComponent, EntityStuckEvent>` and `<MedicalPatchComponent, EntityUnstuckEvent>`, both free (§5.1 row 1/2) |
+| `Resources/Prototypes/_Onyx/Entities/Objects/Specific/Medical/medical_patch.yml` | same | modified | **WP12-0** (icon fix by orchestrator after WP12-10) | `BaseMedicalPatch` (abstract), `MedicalPatchMakeshift` (spawnable, `updateTime: 2`, `singleUse: true`), `UsedMedicalPatch`, `UsedMedicalPatchMakeshift`, and the `MedicalPatchMakeshift`/`SilkPatchMakeshift` construction graphs. No fill/vending/cargo/loadout placement (P4-D13). `# WOLFGATE` `icon:` added to both `construction` prototypes: Wolfgate's construction prototype requires one (Release linter error `File not found. (/Textures)`), Onyx's did not |
+| `Resources/Prototypes/_Onyx/Tags/medical_patch.yml` | same | verbatim | **WP12-0** | one tag, `MedicalPatch`; grepped free in WG before adding |
+| `Resources/Textures/_Onyx/Objects/Medical/medical_patch.rsi` (22 files: 21 PNG + `meta.json`) | same | new | **WP12-0** | byte-copied via `git show`. `meta.json` license `CC-BY-SA-3.0`, copyright `@jorgun  inspired by Studenterhue of Goonstation` — **new artist/licence pair for Wolfmed**, recorded here |
+| `Resources/Locale/en-US/_Onyx/medical/medical_patch.ftl` | same | verbatim | **WP12-0** | 8 keys |
 
 ## Deviations
 
@@ -1242,3 +1248,853 @@ for the full question text.
   (`Content.Shared/_WF/Wolfmed/Body/`), not opted out via YAML — RT has no component-removal mechanism
   (see WP7 Deviations). Check this list whenever a fork adds another `BaseMobSpeciesOrganic` descendant
   that is not truly organic.
+
+## Phase 4 (2026-09-13)
+
+Phase 3 is committed (`6329d204e3 Phase 3 completion`). Phase 4 = treatment and diagnostics
+(`PLAN4.md`). Packages run sequentially in the one worktree; each appends its own rows/deviations directly.
+
+### WP12-0 (phase 4 — medical patch, P4-2a)
+
+- **Zero wound coupling, zero upstream edits, zero fill/vending/cargo/loadout placement (P4-D13).**
+  `MedicalPatchComponent`/`MedicalPatchSystem` are a `StickyComponent`-driven periodic solution transfer with
+  no dependency on any wound system — every dependency (`IGameTiming`, `SharedSolutionContainerSystem`,
+  `ReactiveSystem`, `StickySystem`, `SharedHandsSystem`, `ISharedAdminLogManager`, `UnremoveableComponent`)
+  is vanilla and already present in WG. Both files vendored byte-identical (verified via `file`: ASCII,
+  CRLF, matching the working tree's line-ending convention; content diffed equal to
+  `git -C C:/tmp/onyx show HEAD:<path>`).
+  `MedicalPatchMakeshift` is placed nowhere per Onyx (`git grep -i medicalpatch` over Onyx's
+  `Resources/Prototypes` returns only the definition and tag files); WG mirrors that exactly.
+- **`GroupHealSpecifier` NOT ported (P4-D12).** `MedicalPatchComponent.cs`/`MedicalPatchSystem.cs` were read
+  in full and reference it nowhere — the task brief's "if PLAN4 vendors it here" resolves to no.
+- **Subscriptions registered:** `<MedicalPatchComponent, EntityStuckEvent>` and
+  `<MedicalPatchComponent, EntityUnstuckEvent>` — both on a brand-new component, confirmed free by grep
+  before adding (PLAN4 §5.1 rows 1–2). No other pair, no component-name collision (`MedicalPatch` grepped
+  0 hits before creation).
+  No `MedicalPatch` tag prototype existed in WG before this package; `Trash`, `SpiderCraft`, `Cloth`,
+  `WebSilk`, `BaseHealingItem`, `StickyVisualizer`, `MixableSolution`, and `construction-category-tools`
+  were all confirmed present before referencing them.
+- **RSI licence/attribution recorded:** `Resources/Textures/_Onyx/Objects/Medical/medical_patch.rsi/meta.json`
+  — `"license": "CC-BY-SA-3.0"`, `"copyright": "@jorgun  inspired by Studenterhue of Goonstation"` (double
+  space after "jorgun" preserved verbatim from Onyx's `meta.json`). This is a new artist/licence pair for
+  Wolfmed, distinct from the Ubaser wound-visuals attribution in phase 3. File count independently confirmed
+  at 22 (21 PNG + `meta.json`) via `git -C C:/tmp/onyx ls-tree -r --name-only HEAD` on the rsi path, matching
+  PLAN4's corrected count.
+- **No deviations from PLAN4.** This package matches WP12-0's table exactly: 6 files, 0 upstream edits.
+- **Checkpoint:** `Content.Server` and `Content.Client` **0 errors** (`-c DebugOpt`). Headless server run
+  (~120 s, port 1299) reached `Server Version 277.0.0.0 -> Ready` with no `[ERRO]`/`[FATL]`/exception lines
+  and no `Duplicate Subscriptions` throw; the only `[WARN]` lines are pre-existing and unrelated
+  (`PullingSystem` command-bind notice, emote-word duplicates, `MainLoop: Cannot keep up!`). See
+  `C:/tmp/wolfmed-plan/p4/wp/WP12-0-report-server.log`.
+
+### WP12-1 (phase 4 — reagent effect classes and HOOK 9, P4-1a)
+
+| Onyx source | Wolfgate destination | Status | WP | Notes |
+|---|---|---|---|---|
+| `Content.Shared/_Onyx/Wounds/SuppressPainEntityEffect.cs` | `Content.Shared/_WF/Wolfmed/EntityEffects/SuppressPain.cs` | new (re-authored old-style) | **WP12-1** | D16 — Onyx's `EntityEffectSystem<PainComponent, SuppressPain>` pair collapsed into one old-style `EntityEffect`. The ECS component filter becomes an explicit `TryGetComponent<PainComponent>`; `PainSystem` is resolved through `args.EntityManager.System<T>()`, as WG's own `HealthChange` does. The class name is load-bearing (`!type:` resolves by bare `Type.Name`) |
+| `Content.Shared/_Onyx/Wounds/ReagentTreatmentEffects.cs:27-54` + `ReagentTreatmentSystems.cs` (`MendFracturesEntityEffectSystem`) | `Content.Shared/_WF/Wolfmed/EntityEffects/MendFractures.cs` | new (re-authored old-style) | **WP12-1** | D16. Onyx's `WoundHostComponent` ECS filter becomes an explicit `HasComponent<WoundHostComponent>`. `GetBodyChildren` yields parts and `GetFracture` returns on the first hit before any mutation, so no `.ToArray()` snapshot is needed — if this is ever changed to heal *every* fracture per part, materialise first (the `GibbingSystem` container-mutation class) |
+| `Content.Shared/_Onyx/Chemistry/TakeStaminaDamageEntityEffectSystem.cs` | `Content.Shared/_WF/Wolfmed/EntityEffects/TakeStaminaDamage.cs` | new (re-authored old-style) | **WP12-1** | D16. **P4-D5 divergence: `Immediate` is honoured** (Onyx's system never reads it). The datafield keeps Onyx's `false` default — WG's `StaminaSystem.TakeStaminaDamage` defaults `immediate: true`, and that branch returns *without applying the value* when the target is already critical. The class is `StaminaSystem`, not Onyx's `SharedStaminaSystem`. Onyx's `Scale == 1` gate is kept, marked in-file |
+| `Content.Shared/_Onyx/Chemistry/StaminaDamageCondition.cs` | `Content.Shared/_WF/Wolfmed/EntityEffects/StaminaDamageCondition.cs` | new (re-authored old-style) | **WP12-1** | D16, on `EntityEffectCondition` — WG's base has neither Onyx's `Inverted` flag nor its `sourceEnt`, and no in-scope YAML uses either. Modelled on `Content.Server/EntityEffects/EffectConditions/TotalDamage.cs:16-26` |
+| `Content.Shared/_Onyx/Wounds/ReagentTreatmentEffects.cs:9-13` | `Content.Server/EntityEffects/Effects/HealthChange.cs` | modified (hook) | **WP12-1** | **HOOK 9(a).** Three marked additions: `using Content.Shared._Onyx.Wounds;`, a `HashSet<TreatmentCapability> TreatmentCapabilities = [TreatmentCapability.Biological]` datafield, and the single `TryChangeDamage` call turned into a local `Apply()` delegate branched through `WoundDamageRoutingSystem.WithTreatmentCapabilities` when the change heals **and** the target is a wound host. The Shitmed/Mono argument block survives byte-for-byte (`targetPart: TargetBodyPart.All`, `partMultiplier: 1.00f, // Mono, 0.5f->1.00f`, `canSever: false`); `change = Damage * scale` is kept, i.e. the discarded-universal-modifier behaviour is deliberately NOT "fixed" (PLAN4 §3.4, trap T4) |
+| `Content.Shared/_Onyx/Wounds/ReagentTreatmentEffects.cs:15-19` | `Content.Server/EntityEffects/Effects/EvenHealthChange.cs` | modified (hook) | **WP12-1** | **HOOK 9(b).** The same three additions **plus `using System.Linq;`**, which was absent. The file's pre-existing `groupDamage.Values.Sum()` was binding to `Content.Shared.FixedPoint`'s own `Sum(this IEnumerable<FixedPoint2>)` extension (`FixedPoint2.cs:313`); `System.Linq` declares no `Sum` overload for `IEnumerable<FixedPoint2>` and no parameterless generic `Sum<T>`, so the new `using` introduces no ambiguity — confirmed by a clean build. The healing test is `Damage.Values.Any(a => a < 0)` over the group dictionary; the delegate captures `final = dspec * scale` |
+| `Resources/Locale/en-US/_Onyx/guidebook/entity-effects.ftl` | same path | adapted | **WP12-1** | Onyx's 3 guidebook bodies verbatim with the keys renamed `entity-effect-guidebook-*` → `reagent-effect-guidebook-*` (WG convention, marked `# WOLFGATE`), the 4 `fracture-grade-*` keys **unrenamed** (`MendFractures` builds them by string interpolation), plus one key with **no Onyx source**, `reagent-effect-guidebook-take-stamina-damage` — Onyx's effect overrides no guidebook text, but WG's `ReagentEffectGuidebookText` is `abstract` and returning `null` would hide the effect from the chemistry guidebook. `NATURALFIXED`/`MANY` confirmed registered (`ContentLocalizationManager.cs:38,52`); all 8 ids grepped 0 hits in `Resources/Locale` before creation |
+
+**WP12-1 notes**
+
+- **P4-D1 — HOOK 9 is inert plumbing today, deliberately.** `OrganicBodyPartProfile` is the only
+  `bodyPartProfile` in the tree and it is `treatmentCapabilities: [Biological]`, and
+  `WoundDamageRoutingSystem.CanTreatPart` returns `true` whenever no scope is open, so the capability gate can
+  never refuse in phase 4. It becomes live the moment phase 5 adds an IPC/cybernetic profile, with no further
+  upstream edit needed.
+- **Structural limit, recorded so nobody debugs it later (P4-D7):** `RouteAppliedDamage` sends only
+  *localized* negatives through `CanTreatPart`, so healing of Toxin, Airloss, Bloodloss, Genetic, Cellular and
+  Radiation bypasses the capability gate entirely. Onyx behaves the same way.
+- **No `treatmentCapabilities:` was written into any Wolfgate reagent or item** (P4-D7, DECISIONS §8.4-7). The
+  `[Biological]` default is already correct for all 11 `HealingComponent` entities and all ~173
+  `HealthChange`/`EvenHealthChange` uses. The cable coil (`Entities/Objects/Tools/cable_coils.yml:36-45`,
+  `damageContainers: [Silicon]`) remains the recorded first phase-5 action.
+- **`DistributedHealthChange` is *not needed*, not deferred (P4-D6).** Zero `!type:DistributedHealthChange` in
+  Onyx's reagent set and zero references anywhere in WG, so DECISIONS P4-1's conditional resolves to no. The
+  third partial in Onyx's `ReagentTreatmentEffects.cs` is therefore not ported.
+- **`WithTreatmentCapabilities` must never nest** (PLAN4 §8.5 trap 3): `_treatmentCapabilities` is a plain
+  dictionary with a `finally`-remove, so an inner scope clears the outer one and the rest of the outer heal
+  runs unscoped. Neither hook nests, and `HealingSystem.Wolfmed` deliberately does not use it.
+- **Subscription pairs registered: none. Components registered: none.** The four classes are
+  `[ImplicitDataDefinitionForInheritors]` data classes dispatched by a direct virtual call
+  (`MetabolizerSystem.cs:218`); HOOK 9 mutates two existing classes and adds no handler (PLAN4 §5.1).
+- **Name audit before creation:** `SuppressPain`, `MendFractures`, `TakeStaminaDamage` and
+  `StaminaDamageCondition` each grepped **0 hits** across `Content.Shared`, `Content.Server` and
+  `Content.Client`. A duplicate bare name would be a `!type:` load-time ambiguity, not a compile error.
+- **Deviations from PLAN4: none behavioural.** Two cosmetic departures from the plan's quoted code, both
+  recorded here: `StaminaDamageCondition.Condition` assigns `damage` to a plain local instead of the
+  `is var damage &&` pattern the plan quotes (identical semantics, more readable), and every datafield carries
+  a `/// <summary>` one-liner per `_WF` style. The two authorised divergences (P4-D5's `Immediate` honouring
+  and the retained `Scale == 1` gate) are marked `// WOLFGATE (P4-D5)` in `TakeStaminaDamage.cs`.
+- **Checkpoint:** `Content.Server`, `Content.Client` and `Content.IntegrationTests` all **0 errors**
+  (`-c DebugOpt`). Headless server (~120 s, port 1299) reached `Server Version 277.0.0.0 -> Ready` with
+  **zero** `[ERRO]`/`[FATL]`/exception lines — including no Fluent duplicate-id error for the new ftl — see
+  `C:/tmp/wolfmed-plan/p4/wp/WP12-1-report-server.log`. The phase-4 gate filter
+  (`_Onyx.Wounds|_Onyx.Body|_Onyx.Medical|Wolfmed`) is **65 passed / 65 total**, unchanged by HOOK 9 — see
+  `C:/tmp/wolfmed-plan/p4/wp/WP12-1-report-tests.log`. Release YAML lint **not run**: this package touches no
+  YAML or prototype file, and the new FTL is covered by the clean headless start.
+
+### WP12-2 (phase 4 — reagent content, Tier A, P4-1b)
+
+| Onyx source | Wolfgate destination | Status | WP | Notes |
+|---|---|---|---|---|
+| `Resources/Prototypes/_Onyx/Reagents/Medicine/medicine.yml` (rows `Osteogen`, `Ibuprofen`, `Ketorolac`, `Tramadol`, `Oxycodone`) | `Resources/Prototypes/_Onyx/Reagents/Medicine/medicine.yml` | new (vendored, Tier A subset) | **WP12-2** | The painkiller ladder (`SuppressPain` 0.5 → 0.9 → 1.25 → 2.0) plus the dedicated fracture medicine. **Every `Bloodstream:` group header is translated to `Medicine:`** — Wolfgate has no `Bloodstream` metabolism group (`Poison, Medicine, Narcotic, Alcohol, Food, Drink, Gas, PlantMetabolisms` + `Cryogenic`), the key is `ProtoId`-validated, and a copied header is a whole-file prototype-load failure. `!type:` translations applied: `ReagentCondition` → `ReagentThreshold`, `ModifyBleed` → `ModifyBleedAmount`, `TemperatureCondition` → `Temperature`. `HealthChange`, `AdjustTemperature`, `GenericStatusEffect`, `PlantAdjustWeeds`/`PlantAdjustHealth`, `SuppressPain`, `MendFractures`, `TakeStaminaDamage` are all SAME. The 17 other reagents in Onyx's file are **not** ported (Tier B/C, P4-D2) |
+| `Resources/Prototypes/_Onyx/Recipes/Reactions/medicine.yml` (rows `Osteogen`, `Ibuprofen`, `Tramadol`, `Ketorolac`, `Oxycodone`) | `Resources/Prototypes/_Onyx/Recipes/Reactions/medicine.yml` | new (vendored, Tier A subset), 1 marked deviation | **WP12-2** | All reactants verified present in WG before writing: `Bicaridine, Milk, Phosphorus, Charcoal, Benzene, Fluorine, Acetone, Inaprovaline, Ethanol, Carbon, Plasma, Epinephrine`. File ordered so `Ibuprofen` and `Tramadol` precede `Ketorolac`. **`Oxycodone`'s recipe is re-authored (P4-D2): `Heroin` → `Ethanol`**, marked `# WOLFGATE (P4-D2)`; `Heroin` is in `_Onyx/Reagents/Narcotics/opioids.yml`, outside P4-1's scope and absent from WG (`grep "id: Heroin"` → 0 hits). Every other reactant, the `Plasma` catalyst and the 1u yield are Onyx's. **The five Tier-A reagents are reaction-only (chemist-craftable), matching Onyx** — no chem-dispenser jug, no medkit, no vending, no cargo placement (CRITIQUE4 M2; medkit fills belong to WP12-3) |
+| `Resources/Locale/en-US/_Onyx/reagents/medicine.ftl` (10 of 24 keys) | same path | new (vendored subset) | **WP12-2** | `reagent-name-*` / `reagent-desc-*` for the five, Onyx's bodies verbatim; the keys for unported reagents are omitted. All 10 ids grepped **0 hits** in `Resources/Locale` before creation. The `reagent-physical-desc-{opaque,thick,pungent}` keys they reference already exist (`reagents/meta/physical-desc.ftl:39,45,75`) |
+| `ONYX _Onyx/Reagents/Medicine/first_aid.yml:29-33` | `Resources/Prototypes/_Goobstation/Reagents/medicine.yml` | modified — **PROTO H** | **WP12-2** | One marked `- !type:MendFractures` block on `Stasizium` (`amount: 10`, `wounds: []`, `minimumGrade: Hairline`, `maximumGrade: Comminuted`), inserted after the five-group −20 heal and before the overdose block, matching Onyx's ordering. **P4-D3: WG's entry is extended in place; no `OnyxStasizium` is created.** Group is `Medicine:`, not Onyx's `Bloodstream:`. WG's `HealthChange`-vs-`EvenHealthChange` and its `-50000` temperature are Wolfgate balance and were left alone |
+| `ONYX Resources/Prototypes/Reagents/medicine.yml:153-159` (`<Onyx-PartPain>`) | `Resources/Prototypes/Reagents/medicine.yml` | modified — **PROTO I** | **WP12-2** | One marked `- !type:SuppressPain` block on `Bicaridine` (`0.75 / 18 s / ×1.75`, identifier `Bicaridine`) in the **`Medicine:`** group — Bicaridine's only group in WG; Onyx's is `Bloodstream:`. Placed after the `ModifyBleedAmount` and before the overdose `HealthChange`, matching Onyx's position relative to the brute heal |
+| `ONYX Resources/Prototypes/Reagents/narcotics.yml:50-56` + `:632-638` (`<Onyx-PartPain>`) | `Resources/Prototypes/Reagents/narcotics.yml` | modified — **PROTO J** | **WP12-2** | Two marked `- !type:SuppressPain` blocks. `Desoxyephedrine` (`0.75 / 9 s / ×1.75`) goes in the **`Narcotic:`** group, **not** `Poison:` — WG splits this reagent across `Poison`/`Narcotic`/`Medicine` and the drug effects live in `Narcotic`; a `Poison:` placement would lint clean and be silently wrong (§8.5 trap 4). `Happiness` (`0.4 / 9 s / ×1.5`) goes in `Narcotic:`, its only group |
+| `ONYX Resources/Prototypes/Reagents/Consumable/Drink/alcohol.yml:115-123` (`<Onyx-PartPain>`) | `Resources/Prototypes/Reagents/Consumable/Drink/alcohol.yml` | modified — **PROTO K** | **WP12-2** | One marked `- !type:SuppressPain` block on `Cognac` (`0.25 / 9 s / ×1.1`, identifier `Painkiller`) in the **`Drink:`** group. Onyx puts its copy in a `Digestion:` group Wolfgate does not have. Cognac redeclares the whole `Drink:` block rather than inheriting `BaseAlcohol`'s, so the addition goes into Cognac's own block — deviation 24 (stomach metabolizer, not liver) |
+
+**WP12-2 notes**
+
+- **New reagent ids** (`Osteogen`, `Ibuprofen`, `Ketorolac`, `Tramadol`, `Oxycodone`) and **new reaction ids**
+  (the same five) were each grepped `^  id: X$` over `Resources/Prototypes` → **0 hits** before creation.
+  `Heroin` → 0 hits, which is what forced the Oxycodone re-author.
+- **Metabolism-group mapping, as shipped** — the one thing a future re-sync must not "restore" to Onyx's
+  headers: `Osteogen`/`Ibuprofen`/`Ketorolac`/`Tramadol`/`Oxycodone`/`Stasizium`/`Bicaridine` → `Medicine:`;
+  `Desoxyephedrine`/`Happiness` → `Narcotic:`; `Cognac` → `Drink:`.
+- **Subscription pairs registered: none. Components registered: none.** This package is entirely YAML + FTL.
+- **P4-D4 — `SalicylicAcid` is dropped, not ported and not renamed.** WG's `SalicylicAcid`
+  (`_NF/Reagents/chemicals.yml:1-6`) is an inert Frontier precursor with no `group:`, no `metabolisms:` and no
+  effects, consumed by two `_NF` reactions; Onyx's is a `group: Medicine` brute healer whose interesting
+  branch needs the absent `TypedDamageThreshold` condition, and Onyx's **reaction** carries the same id, so a
+  rename would cascade. Its role is already covered by Bicaridine + Brutepack.
+- **Tier B (`Probital` + `Mitogen`) was NOT taken**, and the reason is a real port defect, not time. Probital's
+  payload is `- !type:TakeStaminaDamage { amount: -100, immediate: true }` gated on
+  `StaminaDamageCondition { min: 100 }` — i.e. a stamina *heal* fired at a target that is in stamina crit.
+  Under P4-D5, WG's `StaminaSystem.TakeStaminaDamage` (`:288-292`) does
+  `if (component.Critical && immediate) { EnterStamCrit(uid, component, true); return; }` — it returns
+  **without applying the value**, so Onyx's self-rescue branch would silently invert into a re-crit in
+  Wolfgate. Shipping Probital needs a balance decision (drop `immediate`, or hook the crit branch), which is
+  out of WP12-2's scope. `Mitogen` is a `Probital` by-product (`AdjustReagent`) and has no standalone recipe,
+  so it was dropped with it. Recorded as a phase-4 omission; re-entry cost is 2 reagents, 4 reactions
+  (`Probital` + the three `Mitotrophin*`), 4 locale keys and the `immediate` decision.
+- **Checkpoint:** `Content.Server`, `Content.Client` and `Content.IntegrationTests` all **0 errors**
+  (`-c DebugOpt`). Headless server (~120 s, port 1299) reached `Server Version 277.0.0.0 -> Ready` with
+  **zero** `[ERRO]`/`[FATL]`/exception lines — no unknown `!type:`, no duplicate reagent/reaction id, no
+  missing metabolism group, no Fluent duplicate id (`C:/tmp/wolfmed-plan/p4/wp/WP12-2-report-server.log`).
+  Release YAML lint (`dotnet run --project Content.YAMLLinter -c Release`): **1 error, none of it this
+  package's** — see the hazard below. Phase-4 gate filter
+  (`_Onyx.Wounds|_Onyx.Body|_Onyx.Medical|Wolfmed`) **65 passed / 65 total**
+  (`C:/tmp/wolfmed-plan/p4/wp/WP12-2-report-tests.log`).
+- **HAZARD handed forward — pre-existing Release-lint failure in WP12-0's file, not fixed here (ownership).**
+  `Content.YAMLLinter -c Release` reports
+  `::error file=/Prototypes/_Onyx/Entities/Objects/Specific/Medical/medical_patch.yml … File not found. (/Textures)`.
+  Cause: the two `- type: construction` prototypes in that file (`MedicalPatchMakeshift`, `SilkPatchMakeshift`)
+  carry no `icon:`, and WG's `ConstructionPrototype.Icon` defaults to `SpriteSpecifier.Invalid`, which the
+  Release linter resolves as the empty texture path `/Textures`. Onyx's own copy has no `icon:` either, so
+  this is a strict-lint divergence, not a transcription error — the headless server starts clean and the item
+  works. The fix is one `icon: { sprite: _Onyx/Objects/Medical/medical_patch.rsi, state: MakeshiftPatch }` per
+  construction prototype. **`medical_patch.yml` is WP12-0's file; WP12-2 did not touch it.** WP12-10 (or a
+  re-run of WP12-0) should land the fix, because the phase cannot be green in CI until it does.
+
+### WP12-3 (phase 4 — tourniquet, P4-2b)
+
+| Onyx source | Wolfgate destination | Status | WP | Notes |
+|---|---|---|---|---|
+| `Content.Shared/_Onyx/Medical/Tourniquet/TourniquetComponent.cs` | same path | new (vendored), verbatim | **WP12-3** | No licence header in Onyx; none invented. `TourniquetDoAfterEvent` in the same file, also verbatim |
+| `Content.Shared/_Onyx/Medical/Tourniquet/TourniquetSystem.cs` | **`Content.Server/_Onyx/Medical/Tourniquet/TourniquetSystem.cs`** (relocated, namespace unchanged: `Content.Shared._Onyx.Medical.Tourniquet`) | new (vendored, relocated), 4 marked edits | **WP12-3** | D13 — `WoundBleedingSystem`/`WoundDamageRoutingSystem`/`WoundSystem` are `Content.Server` assemblies, so the class cannot compile in `Content.Shared` where Onyx has it |
+| `Resources/Prototypes/Entities/Objects/Specific/Medical/healing.yml:268-299` (`Tourniquet` entity) | same path | modified — **PROTO D** | **WP12-3** | In-place swap of the existing `id: Tourniquet`'s `- type: Healing` block for `- type: Tourniquet`. Zero new ids, zero touched fill/vending/spawner files beyond PROTO E |
+| `Resources/Prototypes/Catalog/Fills/Items/firstaidkits.yml`, `MedkitAdvancedFilled` | same path | modified — **PROTO E** | **WP12-3** | One line adding `Tourniquet` to `contents:`, matching Onyx's own `<Onyx-MedkitContents>` edit. `MedkitCombatFilled` deliberately not touched (Onyx doesn't add one there) |
+| `Resources/Locale/en-US/_Onyx/medical/tourniquet.ftl` | same path | new, verbatim | **WP12-3** | 3 keys: `tourniquet-selected-part-missing`, `tourniquet-no-bleeding`, `tourniquet-applied` |
+| — | `Docs/Wolfmed/WOLFMED_MANIFEST.md` | this section | **WP12-3** | |
+
+**Every `// WOLFGATE` edit in `TourniquetSystem.cs`, with reason:**
+
+1. `using Content.Shared._Onyx.Targeting;` → `using Content.Shared._Shitmed.Targeting;` + `using Content.Shared._WF.Wolfmed.Targeting;` — D10. Onyx's own `TargetingComponent` registers as the bare name `"Targeting"`, which Shitmed's copy already claims; porting it is a `ComponentFactory` boot crash. Shitmed's `TargetingComponent.Target` field is identical, so the read site (`targeting.Target`) is unchanged.
+2. `[Dependency] private TargetResolverSystem _targeting` → `[Dependency] private WoundTargetResolver _targeting` — `TargetResolverSystem` doesn't exist in WG (D5); `WoundTargetResolver.TryResolveExact(EntityUid, TargetBodyPart, out EntityUid)` is a signature-exact replacement already shipped in phase 1.
+3. Dropped the `[Dependency] private INetManager _net` field and its `using Robust.Shared.Network;`, and simplified both call sites that read `_net.IsServer` (the `OnDoAfter` `QueueDel` guard, and a second, plan-unlisted `!_net.IsServer ||` half of the guard inside `Apply()`) — the class is `Content.Server`-only after the D13 relocation, so both conditions are always true/false respectively. **Deviation from PLAN4 §2.2's "3 edits" wording:** the plan's prose named only the `OnDoAfter` guard; `Apply()` carries a second, textually identical `_net.IsServer` check the plan's quoted diff didn't call out. Both are the same edit for the same reason, so they're recorded as one WOLFGATE reason applied at two sites rather than a new deviation.
+
+**Traps avoided:** no `Tourniquet` tag added (P4-D9 — no such tag prototype in WG, would fail the Release lint); no second `id: Tourniquet` entity created; `TourniquetSystem.cs` left in `Content.Shared` was never attempted (would not compile).
+
+**Deviations from PLAN4:** none behavioural. The one textual correction (the `Apply()` guard site) is recorded above.
+
+**Subscription pairs registered:** `<TourniquetComponent, UseInHandEvent>`, `<TourniquetComponent, AfterInteractEvent>`, `<TourniquetComponent, TourniquetDoAfterEvent>` — all on a brand-new component, all grepped free before creation (PLAN4 §5.1 rows 3-5). **Components registered: `TourniquetComponent` — grepped 0 hits repo-wide before creation** (`class TourniquetComponent`, `class TourniquetSystem`, `id: Tourniquet` all confirmed unique post-creation).
+
+**D2 spot check:** `CanApply` requires `HasComp<WoundableComponent>(part)`, which only wound-host parts carry (per D32, Protogen alone lacks it). A non-wound-host simply fails `CanApply` and gets the existing "not bleeding" popup rather than throwing — accepted loss, P4-D11, not exercised at runtime in this package (no test harness run; `TourniquetStopsOnlySelectedPartTest` is WP12-9's).
+
+**Checkpoint:** `Content.Server`, `Content.Client` and `Content.IntegrationTests` all **0 errors** (`-c DebugOpt`),
+see `C:/tmp/wolfmed-plan/p4/wp/WP12-3-report-*.log`. Headless server (~120 s, port 1299) reached
+`Server Version 277.0.0.0 -> Ready` with **zero** `[ERRO]`/`[FATL]`/exception lines
+(`C:/tmp/wolfmed-plan/p4/wp/WP12-3-report-server.log`). Release YAML lint
+(`dotnet run --project Content.YAMLLinter -c Release`): **1 error, not this package's** — the same
+pre-existing WP12-0 `medical_patch.yml` icon hazard already on record above; nothing from `healing.yml`,
+`firstaidkits.yml` or the new locale file. No integration tests run for this WP (none specified for WP12-3;
+the tourniquet test belongs to WP12-9).
+
+### WP12-4 (phase 4 — wound surgery C# and HOOK 24/25, P4-3a)
+
+| Onyx source | Wolfgate destination | Status | WP | Notes |
+|---|---|---|---|---|
+| `Content.Shared/_Onyx/Medical/Surgery/WoundSurgeryComponents.cs` + `SurgeryEffects.cs:9-13,53-57` | `Content.Shared/_WF/Wolfmed/Surgery/WolfmedSurgeryComponents.cs` | new (`_WF`, re-authored) | **WP12-4** | 10 components + `WolfmedIncisionTreatment` enum. All names take the `WolfmedSurgery*` prefix per P4-D17 — two of Onyx's collide outright with Shitmed (`SurgeryWoundedCondition`, `SurgeryTendWoundsEffect`), five more read as upstream Shitmed names. Every one `[RegisterComponent, NetworkedComponent]`; the shared condition handlers need them client-side |
+| `Content.Server/_Onyx/Medical/Surgery/WoundSurgerySystem.cs:167-231` (`FindWound`, `GetGroupSeverity`) + `SharedSurgerySystem.Organs.cs:95-124` | `Content.Shared/_WF/Wolfmed/Surgery/WolfmedSurgeryConditionSystem.cs` | new (`_WF`) | **WP12-4** | S1–S8. Shared by necessity: `SurgeryBui.cs:281` runs `GetNextStep`→`IsStepComplete` and `:310` `CanPerformStep` client-side (§8.5 trap 10). `FindWound`/`GetGroupSeverity`/`TryFindOrgan` are `public` so the server system binds them instead of duplicating ~60 lines |
+| `Content.Server/_Onyx/Medical/Surgery/WoundSurgerySystem.cs` + `SurgerySystem.WoundEffects.cs:13-42` | `Content.Server/_WF/Wolfmed/Surgery/WolfmedWoundSurgerySystem.cs` | new (`_WF`) | **WP12-4** | V1–V7. Server by necessity: `WoundBleedingSystem` and `OrganHealthSystem` are `Content.Server` assemblies despite their `Content.Shared._Onyx.*` namespaces (D13, §8.5 trap 11) |
+| — | `Content.Shared/_WF/Wolfmed/Surgery/SharedSurgerySystem.Wolfmed.cs` | new (`_WF` partial) | **WP12-4** | HOOK 24 + HOOK 25 bodies and their two `[Dependency]` fields, so neither upstream site gains a `using` or a dependency line. Precedent: `Content.Server/_WF/Wolfmed/Medical/HealingSystem.Wolfmed.cs` |
+| — | `Content.Shared/_Shitmed/Surgery/Conditions/SurgeryWoundedConditionComponent.cs` | modified — **EXT 1** | **WP12-4** | 3 marked datafields (`woundGroup`, `minWoundSeverity`, `maxWoundSeverity`) + 3 marked `using`s. Purely additive; null bounds keep pre-Wolfmed behaviour exactly |
+| — | `Content.Shared/_Shitmed/Surgery/SharedSurgerySystem.cs` | modified — **HOOK 24** (`OnWoundedValid`) + **HOOK 25** (`OnPartRemovedConditionValid`) | **WP12-4** | +4 lines total. First Wolfmed touch of this file; it now carries two hooks |
+| — | `Docs/Wolfmed/WOLFMED_MANIFEST.md` | this section | **WP12-4** | |
+
+**Every `// WOLFGATE` edit outside `_WF`, with reason:**
+
+1. **HOOK 24** — `SharedSurgerySystem.cs`, end of `OnWoundedValid` (after the shipped `args.Cancelled = true;`):
+   two lines, `if (WolfmedWoundWindowFails(ent, args.Body, args.Part)) args.Cancelled = true;`. P4-D19's
+   wound-severity window, so the two shallow tend surgeries stop overlapping the deep ones WP12-5 adds. The
+   body returns `false` immediately when both bounds are null **or** the body is not a wound host.
+2. **HOOK 25** — `SharedSurgerySystem.cs`, inside `OnPartRemovedConditionValid`, immediately after the
+   `CanAttachToSlot` guard block: two lines,
+   `if (WolfmedStumpBlocksAttachment(args.Part)) { args.Cancelled = true; return; }`. P4-D18 closes the
+   phase-3 P3-D2 gap at the **surgery** layer, not at `SharedBodySystem.CanAttachPart` — that method is
+   reached by five non-surgery callers (Mono prybar prosthetics, bionic legs, Goob autosurgeon,
+   `GenerateChildPartSystem`, `TryCreatePartSlotAndAttach`'s admin commands) which would silently `QueueDel`
+   the replacement limb on exactly the stump they exist for (§8.5 trap 13).
+3. **EXT 1** — `SurgeryWoundedConditionComponent.cs`: the file's `… : Component;` becomes a body with
+   `WoundGroup` / `MinWoundSeverity` / `MaxWoundSeverity`, plus the three `using`s those types need
+   (`Content.Shared.Damage.Prototypes`, `Content.Shared.FixedPoint`, `Robust.Shared.Prototypes`).
+
+**Deviations from PLAN4 §2.4–§2.7, all mechanical:**
+
+1. `GetGroupSeverity` takes `Entity<WoundableComponent?>` rather than the plan's bare `EntityUid`, and opens
+   with a `Resolve(..., false)` guard. Call-compatible (`Entity<T?>` has an implicit conversion from
+   `EntityUid`), and it is what makes the helper return `Zero` rather than walking an empty container for a
+   non-woundable part. `FindWound` takes the same shape, as Onyx's does.
+2. `GetGroupSeverity`'s type test is `prototype.DamageTypes.Keys.Any(type => types.Contains(type.Id))`, not
+   Onyx's method-group `Any(types.Contains)` — **Wolfgate's `DamageGroupPrototype.DamageTypes` is
+   `List<string>` (`DamageGroupPrototype.cs:27`) where Onyx's is `List<ProtoId<DamageTypePrototype>>`**.
+   Copying Onyx's line is `CS0123`, and it was, on the first build.
+3. `OnOrganValid` (S3) requires `0 < Health < MaxHealth`, i.e. **damaged but still alive**, per P4-D24 and
+   §2.4's own summary line. Onyx's `SurgeryOrganConditionComponent.Damaged` has no lower bound; Wolfgate needs
+   one because `OrganHealthSystem.Update` destroys any organ at `Health <= 0` on the next tick, so a
+   `SurgeryHeal<Organ>` listed on a dead organ would be unreachable by the time the do-after finished.
+4. EXT 1 is +13 lines, not the plan's "+6" — the three `using`s and the one-line `/// <summary>` per datafield
+   that `_WF` style calls for were not in the plan's count. Purely additive either way.
+5. `OnIncisionCheck` (S8) is spelled out rather than left to the implementer: `Clamp` is pending while a
+   matching wound carries a `WoundBleedingComponent` whose `Treatment < BleedingTreatment.Clamped` (a `!=`
+   test would re-clamp — i.e. downgrade — an already-cauterised incision); `Close` is pending while a matching
+   wound is `Open` or `Stabilized`, which is exactly the set V7's `Close` branch acts on.
+
+**Traps avoided (PLAN4 §8.5 / WP12-4's four):** visibility conditions are components meant for the **surgery**
+singleton, never a step (trap 9 / WP12-4 trap 1) — WP12-5 owns the placement and must honour it; no
+`SubSurgery<T>` (trap 17) — all 15 subscriptions are written out because the two step events are deliberately
+split across assemblies; nothing built on `SurgeryCompletedEvent` (trap 16); `OnFractureCheck` honours
+`ReductionMinimumGrade` (trap 12, P4-D20) via a private `CanEverReach` that re-states
+`WoundFractureSystem.CanTreat`'s rule instead of touching the upstream `private static` — without it
+`SurgeryMendFracture` stalls forever on a Hairline fracture, the commonest grade
+(`OrganicFractureProfile.reductionMinimumGrade` is `Simple`).
+
+**Subscription pairs registered — 15, every one on a brand-new component, all re-grepped free before creation:**
+S1 `<WolfmedSurgeryWoundCondition, SurgeryValidEvent>`, S2 `<WolfmedSurgeryFractureCondition, SurgeryValidEvent>`,
+S3 `<WolfmedSurgeryOrganDamagedCondition, SurgeryValidEvent>`, S4–S8 the five `SurgeryStepCompleteCheckEvent`
+pairs (`ClampBleedingEffect`, `TreatWoundEffect`, `MendFractureEffect`, `OrganHealEffect`,
+`IncisionTreatmentEffect`), V1–V7 the seven `SurgeryStepEvent` pairs. `ClampBleedingEffect`,
+`TreatWoundEffect`, `MendFractureEffect`, `OrganHealEffect` and `IncisionTreatmentEffect` are each handled by
+**two** systems — legal, because the crash rule is one registration per *(component, event)* pair and the
+events differ. **Components registered: the 10 `WolfmedSurgery*` names, all 0 hits repo-wide before creation.**
+No pair from §5.2 was re-subscribed: HOOK 24 and HOOK 25 extend the existing
+`<SurgeryWoundedCondition, SurgeryValidEvent>` and `<SurgeryPartRemovedCondition, SurgeryValidEvent>` handler
+bodies, they do not re-register.
+
+**D2 spot check.** `WolfmedWoundWindowFails` returns `false` unless the body has `WoundHostComponent` *and* a
+bound is declared; `WolfmedStumpBlocksAttachment` returns `false` unless the parent part's body is a wound
+host carrying an `AmputationConsequenceWound`; V6 (`OnOpenIncision`) is `HasComp<WoundHostComponent>`-gated;
+V5 (`OnSurgeryPain`) no-ops because only a wound host's parts carry `PainComponent`
+(`WoundDamageProjectionSystem.SetupBody:224`); every remaining handler goes through `FindWound` /
+`GetFracture` / `GetWounds`, all of which `Resolve(WoundableComponent, false)` and return empty for a
+non-host. No component in this package is on any shipped prototype yet — WP12-5 places them.
+
+**Inertness, measured rather than assumed:**
+
+- **HOOK 24 is inert today.** `grep -rn "minWoundSeverity\|maxWoundSeverity\|woundGroup" Resources/Prototypes`
+  → **0 hits**; the only two `- type: SurgeryWoundedCondition` users are `surgeries.yml:294`
+  (`SurgeryTendWoundsBrute`) and `:307` (`SurgeryTendWoundsBurn`), which is exactly where PROTO F writes the
+  bounds in WP12-5.
+- **HOOK 25 is NOT inert, and that is intended — but it is a hard dependency on WP12-5.** See the handoff below.
+
+**HANDOFF — WP12-5 must land `SurgeryHealAmputationConsequence` or traumatic amputation becomes permanent.**
+`AmputationConsequenceWound` is created on the **parent** part by `AmputationSystem.ApplyAmputationConsequences`
+today (phase 3, shipped), and its prototype is `damageTypes: {}` (`_Onyx/Wounds/wounds.yml:398-401`), so no
+reagent, topical or `TryHealWounds` path can ever match and remove it — wound healing selects by damage type.
+As of this package that wound cancels `SurgeryValidEvent` for every `SurgeryAttach*` surgery whose
+`SurgeryPartRemovedCondition` targets the stump: a torso stump hides 6 of the 10 (Head, LeftArm, RightArm,
+LeftLeg, RightLeg, Hands), an arm stump hides that side's `AttachHand`, a leg stump that side's `AttachFoot`
+(P4-D18). Until WP12-5 ships the surgery that clears it, **a traumatically amputated wound host cannot have
+the limb re-attached by any means.** Surgical limb removal is unaffected — `ApplyAmputationConsequences` has
+exactly one caller, `AmputationSystem.TryAmputate:130`, and Shitmed's `SurgeryDetachPart` does not go through it.
+
+**Checkpoint:** `Content.Server`, `Content.Client` and `Content.IntegrationTests` all **0 errors**
+(`-c DebugOpt`). Headless server (~130 s, port 1299) reached `Server Version 277.0.0.0 -> Ready` with
+**zero** `[ERRO]`/`[FATL]`/exception lines and **no `Duplicate Subscriptions` throw** — the gate for this
+package, which adds more directed subscriptions than the rest of phase 4 combined
+(`C:/tmp/wolfmed-plan/p4/wp/WP12-4-report-server.log`). Phase-4 gate filter
+(`_Onyx.Wounds|_Onyx.Body|_Onyx.Medical|Wolfmed`): **65 passed / 65 total**
+(`C:/tmp/wolfmed-plan/p4/wp/WP12-4-report-tests.log`). No YAML/FTL/RSI/XAML touched, so the Release lint was
+not re-run; WP12-3's standing `medical_patch.yml` icon hazard is unchanged.
+
+---
+
+### WP12-5 (phase 4 — wound surgery content, P4-3b)
+
+| Onyx source | Wolfgate destination | Status | WP | Notes |
+|---|---|---|---|---|
+| `_Onyx/Entities/Surgery/surgery_steps.yml` (the wound/organ steps) | `Resources/Prototypes/_WF/Wolfmed/Surgery/surgery_steps.yml` | new (`_WF`, re-authored) | **WP12-5** | 12 concrete steps + `SurgeryStepHealOrganBase`. All tools and sprites reuse Wolfgate's shipped Shitmed set (`Hemostat`, `Tending`, `BoneSetter`, `BoneGel`) — **no new tool prototype and no new sprite**. Every prototype carries `name:` **and** `categories: [ HideSpawnMenu ]` (CRITIQUE4 M6): the two Shitmed bases set `categories` but no `name`, and an unnamed prototype renders as an empty label in the surgery BUI — shipped-broken UI that no lint catches |
+| `_Onyx/Entities/Surgery/surgeries.yml:908-1200` | `Resources/Prototypes/_WF/Wolfmed/Surgery/surgeries.yml` | new (`_WF`, re-authored) | **WP12-5** | 13 surgeries: `SurgeryStopBleeding`, `SurgeryStopInternalBleeding`, `SurgeryMendFracture`, `SurgeryHealAmputationConsequence`, `SurgeryTendWoundsBrute/BurnDeep`, and `SurgeryHeal{Heart,Lungs,Liver,Stomach,Kidneys,Brain,Eyes}`. Requirements reuse `SurgeryOpenIncision` / `SurgeryOpenRibcage`; terminal steps reuse `SurgeryStepSealTendWound` / `SurgeryStepSealOrganWound` |
+| — | `Resources/Prototypes/_Shitmed/Entities/Surgery/surgeries.yml` | modified — **PROTO F** | **WP12-5** | 3 marked lines on the two shipped tend surgeries (P4-D19) |
+| — | `Resources/Prototypes/_Shitmed/Entities/Surgery/surgery_steps.yml` | modified — **PROTO G** | **WP12-5** | 4 marked component additions on `:9`, `:31`, `:168`, `:359` (P4-D21). `SurgeryStepCarefulIncisionScalpel` (`:303`) deliberately **not** touched |
+| — | `Resources/Locale/en-US/_WF/wolfmed/surgery-popup.ftl` | new | **WP12-5** | 12 `surgery-popup-step-*` keys in Wolfgate's `{$user}` style (no inner spaces). Entity **names** are inline `name:` in Wolfgate YAML, so Onyx's entity-name ftl is not needed |
+| — | `Docs/Wolfmed/WOLFMED_MANIFEST.md` | this section | **WP12-5** | |
+
+**Every `// WOLFGATE` edit outside `_WF`, with reason (7 marked lines in 2 upstream files):**
+
+1. **PROTO F** — `_Shitmed/…/surgeries.yml`, `SurgeryTendWoundsBrute`'s `- type: SurgeryWoundedCondition`
+   (`:294`): `maxWoundSeverity: 99.99`. Without an upper bound a badly wounded limb lists **four** overlapping
+   tend surgeries instead of two (P4-D19).
+2. **PROTO F** — same file, `SurgeryTendWoundsBurn` (`:307`): `woundGroup: Burn` **and**
+   `maxWoundSeverity: 99.99`. The `woundGroup` line is required as well as the bound — EXT 1's datafield
+   defaults to `Brute`, so without it `GetGroupSeverity` would measure the wrong group on the burn surgery and
+   the window would be nonsense. D2-safe: `WolfmedWoundWindowFails` returns `false` for any body without
+   `WoundHostComponent`, and both bounds stay null on every other prototype.
+3. **PROTO G** — `_Shitmed/…/surgery_steps.yml`, `SurgeryStepOpenIncisionScalpel`:
+   `- type: WolfmedSurgeryIncisionWoundEffect { severity: 10 }` **added beside** the existing
+   `SurgeryDamageChangeEffect { Bloodloss: 10 }`, never replacing it — replacing would strip the incision cost
+   from non-wound-hosts, a D2 breach (§8.5 trap 14). The effect handler is itself
+   `HasComp<WoundHostComponent>`-gated (V6).
+4. **PROTO G** — `SurgeryStepClampBleeders`: `- type: WolfmedSurgeryIncisionTreatmentEffect { treatment: Clamp }`.
+5. **PROTO G** — `SurgeryStepCloseIncision`: `- type: WolfmedSurgeryIncisionTreatmentEffect { treatment: Close }`.
+6. **PROTO G** — `SurgeryStepSealTendWound`: `- type: WolfmedSurgeryIncisionTreatmentEffect { treatment: Close }`.
+   This is the Wolfgate adaptation Onyx has no equivalent for: the wound surgeries end on the seal step, which
+   removes only `IncisionOpen`, so without a `Close` effect there the incision wound would survive
+   clamped-but-open until the medic separately ran `SurgeryCloseIncision`.
+
+**The chain shipped complete, as P4-D21 requires — all four or none.** Shipping only the incision-wound effect
+leaves a `mergeMode: SeparateInstances` bleeder stacking one new wound per operation (§8.5 traps 15/15a).
+`SurgeryStepCarefulIncisionScalpel` is untouched (CRITIQUE4 B1): its only two consumers,
+`SurgeryTendWoundsBrute` and `…Burn`, contain neither a clamp nor a close step, so a wound effect there would
+leak one permanent bleeder per tend operation — the commonest surgery in the game. Onyx's careful incision
+carries no bleed effect either, so dropping it is Onyx parity as well as the safe call. **Consequence for the
+record:** `surgery.scar_chance` (0.35, dormant since phase 1) is live for the first time, and an incision on a
+wound host now costs Wolfgate's flat `Bloodloss: 10` **plus** a severity-10 `SurgicalIncisionWound`
+(~1.3× the old cost) — deviation 9 in PLAN4 §7.3, chosen over a D2 breach.
+
+**Balance deviation shipped (P4-D23, §8.4 decision 2):** every organ-heal step carries `amount: 3` with
+`# WOLFGATE (P4 balance): Onyx ships 1; 15 repeats of a 2 s step is dead time. Revert by editing this line.`
+Five repeats of a 2 s step ≈ 10 s per organ instead of ≈ 30 s. The C# default on
+`WolfmedSurgeryOrganHealEffectComponent` stays Onyx's `1`, so the balance number lives in YAML where reverting
+is one line per step.
+
+**Surgery pain (P4-D22):** `- type: WolfmedSurgeryPainEffect` on all 12 new steps at Onyx's amounts — `12` on
+both fracture steps, `24` with `sleepModifier: 0` on `SurgeryStepHealOrganBase`, the component default `5`
+elsewhere. `sleepModifier` ships inert (Wolfgate has no anaesthesia-scaling consumer).
+
+**Decisions honoured, with the evidence re-checked in the tree:**
+
+- **Placement.** All three visibility conditions (`WolfmedSurgeryWoundCondition`,
+  `WolfmedSurgeryFractureCondition`, `WolfmedSurgeryOrganDamagedCondition`) sit on the **surgery** singleton,
+  never on a step — `SurgerySystem.RefreshUI` raises `SurgeryValidEvent` on the surgery only, so Onyx's
+  step-level placement would bite at do-after completion instead of hiding the surgery (§8.5 trap 9,
+  WP12-4 trap 1).
+- **Fracture ladder (P4-D20).** `SurgeryStepSetBone` (`BoneSetter`, `treatment: Reduced`) then
+  `SurgeryStepMendFracture` (`BoneGel`, `treatment: Mended`). `BoneSetterComponent` was shipped on three items
+  and referenced by **zero** step prototypes before this package — a free slot. A Hairline fracture skips the
+  reduce step rather than stalling it, via WP12-4's `CanEverReach`.
+- **The organ bone gate (CRITIQUE4 M7).** The five torso heals need **no** `SurgeryStepSawBones`:
+  `SurgeryOpenRibcage` is itself `requirement: SurgeryOpenIncision` + `[ SawBones, PriseOpenBones ]`, so the
+  saw is already spent before any `requirement: SurgeryOpenRibcage` surgery is reachable (~20 s end to end).
+  `SurgeryHealBrain` and `SurgeryHealEyes` **do** get the saw prefixed: `SurgeryOpenIncision` is
+  `[ OpenIncisionScalpel, RetractSkin, ClampBleeders ]` and does not saw, and Shitmed's own
+  `SurgeryRemove/InsertBrain` and `…Eyes` all saw first (~24 s end to end).
+- **`SurgeryStepSealOrganWound` is safe as the terminal organ step.** It carries `SurgeryAffixOrganStep`, but
+  both handlers early-return unless the **surgery** entity carries `SurgeryOrganConditionComponent` with
+  `Reattaching == true` (`SharedSurgerySystem.Steps.cs:587-592`, `:603-609`). The heal surgeries carry
+  `WolfmedSurgeryOrganDamagedCondition` instead, so the affix logic never engages and the step is a plain 2 s
+  cautery. `SurgeryOrganCondition` is deliberately **not** added to them.
+- **Organ slots, verified against `Body/Prototypes/human.yml:11-27`:** head → `brain`, `eyes`; torso →
+  `heart`, `lungs`, `stomach`, `liver`, `kidneys`. **Seven, not Onyx's ten** — Wolfgate has no Tongue / Ears /
+  Appendix slot in any body graph and no `Groin` part (D9). `SurgeryHealKidneys` is the fork's **first** kidney
+  surgery of any kind; `SurgeryRemove/InsertKidneys` still do not exist, so a *destroyed* kidney remains
+  unrecoverable (P4-D24 — organ damage is reversible only while the organ lives).
+- **`SurgeryStepClampInternalBleeders` deliberately not added** to the organ heals (PLAN4 §4, deviation 25):
+  Shitmed's own `SurgeryInsert*` surgeries omit it too, and healing does not breach the organ, only the cavity.
+
+**Behaviours recorded rather than fixed:**
+
+- **`OnTendWoundsCheck` is body-scoped, not part-scoped** (`SharedSurgerySystem.Steps.cs:367-372`): the repeat
+  loop runs while *any* Brute/Burn remains on the **body**, so `SurgeryTendWoundsBruteDeep` keeps repeating
+  until the whole patient is clean. Pre-existing Shitmed behaviour, inherited by the two new deep surgeries.
+- **`SurgeryStopBleeding`'s tight condition sits on the surgery** (`state: Open, bleeding: true`), as PLAN4 §4
+  specifies. `args.Repeat` re-runs `IsSurgeryValid`, so the repeat loop ends with a
+  `"tried to start invalid surgery"` log line the instant the last bleeder is clamped — the accepted-warning
+  branch of WP12-4 trap 2, not a malfunction.
+- **`SurgeryRemovePart` still amputates cleanly.** WP12-5 adds no consequence wound to the surgical path, so a
+  surgically removed limb is still re-attachable; only `AmputationSystem`'s traumatic path sets the block.
+
+**Handoff closed:** WP12-4's HANDOFF is satisfied — `SurgeryHealAmputationConsequence` now exists, so a
+traumatically amputated wound host can be made re-attachable again (open incision → repair the amputation
+damage with `Tending` → seal). P4-D15's guidebook amputation-consequence paragraph may therefore ship in
+WP12-10.
+
+**Subscription pairs / components registered: none.** This package is pure YAML and locale.
+
+**Checkpoint:** `Content.Server` and `Content.Client` **0 errors** (`-c DebugOpt`). Headless server (~130 s,
+port 1299) reached `Server Version 277.0.0.0 -> Ready` with **zero** `[ERRO]`/`[FATL]`/exception lines
+(`C:/tmp/wolfmed-plan/p4/wp/WP12-5-report-server.log`). Release YAML lint: **1 error, pre-existing and not
+this package's** — WP12-0's `_Onyx/…/medical_patch.yml` missing-texture hazard, unchanged since WP12-3 and
+still owned by WP12-10. Prototype-resolution smoke check: all 17 distinct `Surgery.steps` entries and both
+`requirement:` ids resolve to exactly one prototype each, and the server loaded all 26 new prototypes without
+a single unknown-component or missing-parent error.
+
+### WP12-6 (phase 4 — analyzer payload and server, P4-4a)
+
+| Onyx source | Wolfgate destination | Status | WP | Notes |
+|---|---|---|---|---|
+| `Content.Shared/_Onyx/Medical/HealthAnalyzerWoundDiagnostic.cs` | same path | new (vendored), 1 marked `using` | **WP12-6** | `HealthAnalyzerWoundDiagnostic` + `HealthAnalyzerVisibleWound` + `HealthAnalyzerClottingPhase` + `HealthAnalyzerWoundDiagnostics`, all `[Serializable, NetSerializable]`. No licence header in Onyx; none invented |
+| `Content.Shared/_Onyx/Medical/HealthAnalyzerOrganInfo.cs` | same path | new (vendored), verbatim | **WP12-6** | 4-field `readonly record struct`; `Order` is the medical reading order the client sorts by |
+| `Content.Shared/_Onyx/Medical/HealthAnalyzerChemicalInfo.cs` | same path | new (vendored), verbatim | **WP12-6** | `HealthAnalyzerSolutionType` / `HealthAnalyzerReagentInfo` / `HealthAnalyzerChemicalInfo` |
+| — | `Content.Shared/MedicalScanner/HealthAnalyzerScannedUserMessage.cs` | modified — **EXT 2** | **WP12-6** | 4 nullable fields + 4 appended optional ctor parameters + 2 marked `using`s. Purely additive; `CryoPodSystem.cs:206-221`'s nine positional arguments keep compiling untouched |
+| `Content.Server/Medical/HealthAnalyzerSystem.cs:316-515` (Onyx) | `Content.Server/_WF/Wolfmed/Medical/HealthAnalyzerSystem.Wolfmed.cs` | new (`_WF` partial of the upstream `sealed partial` class) | **WP12-6** | 5 `[Dependency]` fields + 4 **public** builders (P4-D26) + 2 private helpers, ~215 lines. `namespace Content.Server.Medical` so `HealthAnalyzerComponent`'s `[Access(typeof(HealthAnalyzerSystem), …)]` is satisfied and `_bodySystem`/`_solutionContainerSystem` are reachable |
+| — | `Content.Server/Medical/HealthAnalyzerSystem.cs` | modified — **HOOK 23**, 1 line | **WP12-6** | Four builder calls appended to the `ServerSendUiMessage` argument list. No `using` and no `[Dependency]` land upstream |
+| — | `Docs/Wolfmed/WOLFMED_MANIFEST.md` | this section | **WP12-6** | |
+
+**Every `// WOLFGATE` edit outside `_WF`, with reason (1 hook line + 7 marked lines in 2 upstream files):**
+
+1. **HOOK 23** — `Content.Server/Medical/HealthAnalyzerSystem.cs`, the `ServerSendUiMessage` argument list:
+   `BuildWoundDiagnostics(target), BuildOrganInfo(target), BuildChemicalInfo(target, bloodstream), BuildVitalDamage(target)`
+   on one marked line after `part != null ? GetNetEntity(part) : null,`. `bloodstream` is already in scope from
+   the `TryComp` at `:256`. Every builder returns `null` for a non-wound-host, so the message a non-host scan
+   sends is identical to today's apart from four `null`s (D2).
+2. **EXT 2** — `Content.Shared/MedicalScanner/HealthAnalyzerScannedUserMessage.cs`: two marked `using`s
+   (`Content.Shared._Onyx.Medical`, `Content.Shared.FixedPoint`), four marked nullable fields
+   (`WoundDiagnostics`, `Organs`, `Chemicals`, `VitalDamage`) after `Uncloneable`, four appended optional
+   constructor parameters after `NetEntity? part = null`, and a marked four-line assignment block. NetSerializer
+   emits members in declaration order for peers built from the same tree, so appending is a clean wire change.
+
+**Every `// WOLFGATE` edit inside the vendored files:**
+
+1. `Content.Shared/_Onyx/Medical/HealthAnalyzerWoundDiagnostic.cs` — `using Content.Shared._Onyx.Targeting;` →
+   `using Content.Shared._Shitmed.Targeting;` (D10). Onyx's own `TargetingComponent` registers the bare name
+   `"Targeting"` that Shitmed already claims, so `_Onyx/Targeting` is not ported; `TargetBodyPart` is identical
+   in both dialects. `HealthAnalyzerOrganInfo.cs` and `HealthAnalyzerChemicalInfo.cs` are byte-verbatim, 0 edits.
+
+**`_WF` builder deviations from Onyx, each marked in `HealthAnalyzerSystem.Wolfmed.cs`:**
+
+- **`BuildWoundDiagnostics` gate: `HasComp<WoundHostComponent>` instead of Onyx's `HasComp<SurgeryTargetComponent>`**
+  (D2, PLAN4 §8.5 trap 20). A borg or a Protogen is a Shitmed surgery target with no `WoundableComponent`
+  anywhere; Onyx's gate would hand the client an always-empty dict that renders as "no findings" rather than
+  "unavailable".
+- **`SharedTargetingSystem.TryConvert` → `_bodySystem.GetTargetBodyPart(PartType, Symmetry)`** — Onyx's helper
+  does not exist in WG; the Shitmed one is the exact equivalent and returns `null` for anything unmappable, so
+  **no `Groin` key can ever be emitted** (D9, §8.5 trap 18).
+- **`BuildOrganInfo` reads `WolfmedOrganComponent.Health`/`.MaxHealth` and orders by `OrganComponent.SlotId`**
+  (D8) — Onyx's `OrganComponent.Health` and `OrganCategoryPrototype` are Nubody. Organs without
+  `WolfmedOrganComponent` are skipped rather than reported at 0/0. `OrganOrder` takes `string?` because
+  `SlotId` is nullable in WG, and lower-cases before matching because Shitmed's slot ids are lower-case
+  (`brain, eyes, lungs, heart, stomach, liver, kidneys`) where Onyx's category ids were capitalised.
+- **`BuildChemicalInfo` reads `bloodstream.ChemicalSolutionName`** (`"chemicals"`) where Onyx reads
+  `MetabolitesSolutionName`, **keeping `HealthAnalyzerSolutionType.Metabolites` as the wire value** so the
+  payload type does not churn; WP12-7 localises that row as "Chemicals". Its gate keeps Onyx's shape minus the
+  `SurgeryTarget` requirement — chemicals are not a wound feature, so any target with a bloodstream or organs
+  gets a list (D2 does not apply; a non-host's list is data the old UI simply never showed).
+- **`BuildChemicalInfo` returns `List<…>?`** (PLAN4 §2.9's signature) where Onyx's is non-nullable. It never
+  actually returns `null` today; the nullable signature matches the message field's type and lets WP12-7 treat
+  "no chemicals section" and "empty list" uniformly.
+- **`BuildVitalDamage` is new to Wolfgate** (PLAN4 §2.9): `MobThresholdSystem.CheckVitalDamage` for wound hosts,
+  `null` otherwise. Today's "Total Damage" readout is the projection sum, which diverges from the figure that
+  actually decides crit and death on a wound host.
+- **`BuildPartDamage` deliberately NOT ported** (P4-D27) — WG's client already reads exact per-part damage off
+  the selected part's networked `DamageableComponent` and 11-part severity buckets off `msg.Body`; Onyx's
+  version additionally aliases `Groin` to `Chest` by reference, which is wrong for WG under D9.
+- **All four builders are `public`** (P4-D26) so `WolfmedAnalyzerTest` (WP12-9) can call them without a client
+  harness — `UpdateScannedUser` ends in `ServerSendUiMessage` and has no headless capture point.
+
+**Behaviours recorded rather than fixed:**
+
+- **The Organs tab shows 7 rows for a human and nothing for any other species** until phase 5 annotates more
+  organ prototypes — only the seven PROTO A organs carry `WolfmedOrganComponent`. Same idea as Onyx's
+  "hide `MaxHealth == 0`" filter, expressed as a `TryComp` skip.
+- **The whole per-part dict ships on every update, independent of the Shitmed part selection** (PLAN4 §4's
+  recorded rejected alternative): a triaging medic wants to know *which* limb is bleeding, and
+  `BuildWoundDiagnostics` iterates every part regardless, so the round-trip alternative saves the server nothing.
+- **Clean parts are omitted from the dict entirely** (`HasFindings`), so an undamaged wound host sends a
+  non-null but **empty** `Parts` dictionary — WP12-7 must distinguish that ("no findings") from
+  `WoundDiagnostics == null` ("diagnostics unavailable").
+- **Cost per scan is paid on every 1 Hz update for every scanned wound host**, including the chemical
+  enumeration, which walks every organ. Unchanged from Onyx and unmeasured here; if the analyzer ever shows up
+  in a profile, the first move is to gate the chemical walk on the client actually having the tab open.
+- **`_wounds`/`_pain`/`_functionality` are shared systems and `_mobThreshold` is the shared partial
+  `Content.Shared.Mobs.Systems.MobThresholdSystem`** (phase-1 HOOK 11's `CheckVitalDamage` lives there), so the
+  five new dependencies resolve on the server without touching the upstream dependency block.
+
+**Subscription pairs registered: none.** `UpdateScannedUser` is already reached from the five existing handlers
+and the Shitmed `HealthAnalyzerPartMessage` round-trip is untouched; this package adds **no BUI message** and
+**no component** (PLAN4 §5.1 records WP12-6 as registering nothing; §5.2's analyzer pairs were all left to
+their existing owners at `HealthAnalyzerSystem.cs:46-55`).
+
+**New type names, all grepped 0 hits repo-wide before creation:** `HealthAnalyzerWoundDiagnostic`,
+`HealthAnalyzerWoundDiagnostics`, `HealthAnalyzerVisibleWound`, `HealthAnalyzerClottingPhase`,
+`HealthAnalyzerOrganInfo`, `HealthAnalyzerSolutionType`, `HealthAnalyzerReagentInfo`,
+`HealthAnalyzerChemicalInfo`.
+
+**Deviations from PLAN4:** none behavioural. Two textual notes: `BuildChemicalInfo` keeps PLAN4 §2.9's nullable
+return type rather than Onyx's non-nullable one (recorded above), and `OrganOrder`'s parameter is `string?`
+rather than the plan's `string` because `OrganComponent.SlotId` is nullable in WG — a compile requirement, not a
+behaviour change (a null slot falls to the `_ => 10` arm exactly as an unknown id does).
+
+**Checkpoint:** `Content.Server`, `Content.Client` and `Content.IntegrationTests` all **0 errors**
+(`-c DebugOpt`). `Content.Client` is the build that would catch a non-NetSerializable field and it is green.
+Headless server (~130 s, port 1299) reached `Server Version 277.0.0.0 -> Ready` with **zero**
+`[ERRO]`/`[FATL]`/exception lines (`C:/tmp/wolfmed-plan/p4/wp/WP12-6-report-server.log`) — which also exercises
+the serializer's startup scan over the four new `[NetSerializable]` types and the five new `[Dependency]`
+fields. No YAML/FTL/XAML/RSI touched, so no Release lint run for this package. No integration tests run (none
+specified for WP12-6; `T-AN-*` belongs to WP12-9).
+
+---
+
+### WP12-7 (phase 4 — analyzer client UI and locale, P4-4b)
+
+| Onyx source | Wolfgate destination | Status | WP | Notes |
+|---|---|---|---|---|
+| `Content.Client/_Onyx/Medical/HealthAnalyzer/EllipsisLabel.cs` | same path | new (vendored), **byte-verbatim, 0 edits** | **WP12-7** | 133 lines. No licence header in Onyx; none invented. Sandbox-clean: `System.Text.Rune`, `StringRuneEnumerator`, `StringBuilder` and `string.EnumerateRunes()` are all whitelisted (`Sandbox.yml:896`, `:994`, `:900-927`, `:1509`) and `Font.GetCharMetrics(Rune, float, bool)` exists (`Robust.Client/Graphics/Font.cs:73`) |
+| `Content.Client/HealthAnalyzer/UI/HealthAnalyzerControl.xaml` (structure only) | `Content.Client/_WF/Wolfmed/Medical/WolfmedDiagnosticPanel.xaml` | new (`_WF`), 68 lines | **WP12-7** | Root is a **`BoxContainer`**, not a window — its `[GenerateTypedNameReferences]` scope is its own, so none of its 12 names touch `FancyWindow`'s reserved `WindowTitle`/`HelpButton`/`CloseButton`/`ContentsContainer` or `DefaultWindow`'s `TitleLabel`/`WindowHeader`. 4-button tab strip `DamageButton`/`WoundsButton`/`OrgansButton`/`ChemicalsButton` (`OpenRight`/`OpenBoth`/`OpenBoth`/`OpenLeft`), `TabBody`, `WoundsTab`/`OrgansTab`/`ChemicalsTab`, `VitalDamageRow`/`VitalDamageLabel`, `WoundStateLabel`, `WoundFindingsContainer`, `OrgansContainer`, `ChemicalsContainer`. All three tab bodies scroll |
+| `…/HealthAnalyzerControl.xaml.cs:252-331, 357-409, 413-520` | `Content.Client/_WF/Wolfmed/Medical/WolfmedDiagnosticPanel.xaml.cs` | new (`_WF`), ~345 lines | **WP12-7** | `Populate(HealthAnalyzerScannedUserMessage)`, `Clear()`, `ReleaseDamageSection()`, `DamageSection` property, `DrawWoundDiagnostics`/`DrawOrgans`/`DrawChemicals`, the organ-row diffing cache, `IsDangerousBloodLevel`, Onyx's `Capitalize`/`OopsConcat` pair kept verbatim, plus local `CreateDiagnosticGroupTitle`/`CreateDiagnosticItemLabel`/`GetTexture` copies (duplicating three small upstream helpers beats making them public). Reads the message directly — Onyx's `HealthAnalyzerUiState` is not ported |
+| — | `Content.Client/_WF/Wolfmed/Medical/HealthAnalyzerWindow.Wolfmed.cs` | new (`_WF` partial of the upstream window), 39 lines | **WP12-7** | `PopulateWolfmed(msg)` + `HideWolfmed()` — the HOOK 26 bodies. `namespace Content.Client.HealthAnalyzer.UI; public sealed partial class HealthAnalyzerWindow`, legal because the window is `public sealed partial` (`HealthAnalyzerWindow.xaml.cs:33`), and necessary because `WolfmedPanel`/`WolfmedDamageGroupsPanel` are private generated fields a standalone control could not reach |
+| — | `Content.Client/HealthAnalyzer/UI/HealthAnalyzerWindow.xaml` | modified — **HOOK 26**, 3 marked lines | **WP12-7** | `xmlns:wolfmed`, `Name="WolfmedDamageGroupsPanel"` on the existing damage `PanelContainer`, and the `<wolfmed:WolfmedDiagnosticPanel Name="WolfmedPanel" Visible="False" />` mount as the last child of `RootContainer` |
+| — | `Content.Client/HealthAnalyzer/UI/HealthAnalyzerWindow.xaml.cs` | modified — **HOOK 26**, 2 marked lines | **WP12-7** | `PopulateWolfmed(msg);` as the **first** statement of `Populate`, and `HideWolfmed();` inside the `_target == null` / no-`DamageableComponent` early-return block |
+| `Resources/Locale/en-US/_Onyx/medical/health-analyzer-component.ftl:6-16` | same path | new, **15 keys** | **WP12-7** | Onyx's 11 live wound keys verbatim + 4 fracture keys (P4-D25). The 4 disease keys and the dead `health-analyzer-wound-pain` at Onyx `:5` are not ported |
+| `Resources/Locale/en-US/_Onyx/targeting/targeting.ftl:20-32` | same path | new, **10 keys** | **WP12-7** | `targeting-part-*`. Onyx's `chest` → `torso`, `groin` omitted (D9). WG had zero `targeting-part-*` keys |
+| — | `Resources/Locale/en-US/medical/components/health-analyzer-component.ftl` | modified — **LOC A**, 19 appended keys in one marked block | **WP12-7** | vital damage, 4 tab names, organ unavailable/health, chemicals unavailable/no-vessels, 4 solution names, solution empty/reagent, wound-diagnostics title/inactive/unavailable, blood-level-dangerous |
+| — | `Docs/Wolfmed/WOLFMED_MANIFEST.md` | this section | **WP12-7** | |
+
+**Every `// WOLFGATE` edit outside `_WF` / `_Onyx`, with reason (HOOK 26, 5 functional lines + 3 XAML marker comments across 2 upstream files, plus LOC A):**
+
+1. **HOOK 26 (a)** — `HealthAnalyzerWindow.xaml`, root element: `xmlns:wolfmed="clr-namespace:Content.Client._WF.Wolfmed.Medical"`. The `<!-- WOLFGATE: HOOK 26 … -->` marker sits on its own line **above** the root element because XML forbids a comment inside an element's attribute list; Onyx marks its own copy of this file the same way.
+2. **HOOK 26 (b)** — `HealthAnalyzerWindow.xaml:288`, `Name="WolfmedDamageGroupsPanel"` added to the previously un-named damage-groups `PanelContainer`. The name goes on the **outer** panel so the Damage tab can hide the whole section; hiding the inner `GroupsContainer` alone would leave an empty expanded black panel.
+3. **HOOK 26 (c)** — `HealthAnalyzerWindow.xaml`, last child of `RootContainer`: `<wolfmed:WolfmedDiagnosticPanel Name="WolfmedPanel" Visible="False" />`. Starts hidden, so a client that never scans a wound host renders the window byte-for-byte as before.
+4. **HOOK 26 (d)** — `HealthAnalyzerWindow.xaml.cs:112`, `PopulateWolfmed(msg);` as the **first** statement of `Populate`. `Populate` early-returns at `:119-123`; a trailing call would leave the panel showing the previous patient's rows next to "No patient data", reachable once a second by walking out of range (CRITIQUE4).
+5. **HOOK 26 (e)** — `HealthAnalyzerWindow.xaml.cs:122`, `HideWolfmed();` inside that early-return block, because a target outside client PVS can still carry non-null diagnostics.
+6. **LOC A** — `Resources/Locale/en-US/medical/components/health-analyzer-component.ftl`, 19 keys appended under one `# WOLFGATE (P4-4)` comment block. Purely additive; no existing key is touched or shadowed.
+
+**Every `// WOLFGATE` edit inside the vendored file:** none. `EllipsisLabel.cs` is byte-verbatim from ONYX `2f5bab9`.
+
+**Subscriptions registered by WP12-7:** **none**. **Components registered:** **none**. **New BUI message:** **none** (PLAN4 §5.1/§5.2 — the four payload fields ride the existing once-per-second `HealthAnalyzerScannedUserMessage`).
+
+**New type names, all grepped 0 hits repo-wide before creation:** `EllipsisLabel`, `WolfmedDiagnosticPanel`, `WolfmedDiagnosticTab`.
+
+**Locale ids added:** 15 + 10 + 19 = **44**, each grepped and confirmed to resolve exactly once across `Resources/Locale/en-US` (a 50-key audit covering every `Loc.GetString` the panel can reach, including the reused `fracture-grade-*` and `chem-master-window-unknown-reagent-text` keys, returned 0 misses and 0 duplicates).
+
+**D2 gate:** `PopulateWolfmed` hides the panel outright when `msg.WoundDiagnostics == null && msg.Organs == null` — both are `HasComp<WoundHostComponent>`-gated server-side (WP12-6) — and `HideWolfmed` additionally calls `ReleaseDamageSection()` so the window's damage-groups section is restored to `Visible = true`. A borg, an animal or a Protogen therefore renders exactly as it does today.
+
+**Deviations from PLAN4 (all recorded, none behavioural against the decision set):**
+
+1. **Tab set is `Damage` / `Wounds` / `Organs` / `Chemicals`** as §2.10 specifies, so LOC A ships `health-analyzer-window-damage-tab` and `-wounds-tab` in place of §2.12's `health-analyzer-window-whole-body` and `-entity-damage-part-text`. Those two Onyx keys have **no consumer in Wolfgate** — WG's window has a `ReturnButton` and a `PartNameLabel` instead of Onyx's whole-body button and damage-scope label. LOC A is still exactly 19 keys.
+2. **Four fracture keys, not two.** P4-D25 names the two summary keys; rendering `FractureTreatment` needs a word for `Reduced` and `Mended`, and WG had none. `health-analyzer-wound-fracture-treatment-reduced`/`-mended` are the two extra. The grade word itself reuses the `fracture-grade-*` keys WP12-1 already shipped rather than adding four more.
+3. **`targeting.ftl` ships 10 keys, not §2.12's "11".** Onyx `:20-32` is 11 part keys; `groin` is omitted under D9, so 10 remain. `chest` is renamed `torso` to match `PartKey(TargetBodyPart.Torso)`.
+4. **HOOK 26 (e) is `HideWolfmed();`, not the literal `WolfmedPanel.Visible = false;`.** Same one line, same site, but the body stays in the `_WF` partial (ground rule 2/3) and additionally clears the stale rows and hands the damage section back — without which an early return taken while the Wounds tab was selected would leave the window with **both** sections hidden.
+5. **The mount line carries no `VerticalExpand="True"`.** PLAN4 §3.1's snippet sets it, but `RootContainer` is a vertical `BoxContainer` and `WolfmedDamageGroupsPanel` is already a `VerticalExpand` child: a second permanently-expanding sibling would halve the damage section on the Damage tab. `ApplyTab()` sets `VerticalExpand = TabBody.Visible` instead, so the panel expands only while it owns the area.
+6. **`EllipsisLabel`'s "`OopsConcat` trick" is in the panel, not in `EllipsisLabel`.** §2.10 says to keep it in the vendored file; at the pin `EllipsisLabel.cs` contains no such helper — it lives in `HealthAnalyzerControl.xaml.cs:516` beside `Capitalize`, and both were carried into the panel verbatim.
+7. **No `MaxWidth="430"` on the finding labels.** Onyx's window is 790 px wide; WG's is `SetWidth="350"`, so the labels use `HorizontalExpand` inside an `HScrollEnabled="False"` `ScrollContainer` and wrap to the real width.
+8. **The bullet and separator glyphs are ASCII (`- `, ` - `, `x2`)** rather than Onyx's bullet, middot and multiplication sign, to keep the file ASCII-clean like the rest of `_WF`.
+
+**Known limitation, carried from WP12-6, restated here because it is what a medic sees:** the Organs tab shows **7 rows for a human and "Organ data unavailable." for every other species**, because only the seven organs PROTO A annotated in phase 3 carry `WolfmedOrganComponent`. Phase 5 widens it.
+
+**Checkpoint:** `Content.Client` **0 errors**, `Content.Server` **0 errors**, `Content.IntegrationTests` **0 errors** (all `-c DebugOpt`, sequential). Headless server (120 s, port 1299) reached `Server Version 277.0.0.0 -> Ready` with **zero** `[ERRO]`/`[FATL]`/exception lines (`C:/tmp/wolfmed-plan/p4/wp/WP12-7-report-server.log`), which is the gate for the three FTL files (a duplicate or malformed Fluent id is logged there). **Headless BUI exercise:** the existing `Content.IntegrationTests/Tests/UserInterface/UiControlTest.TestWindows` instantiates every content `BaseWindow` with an empty constructor inside a connected client pair — that now loads `HealthAnalyzerWindow.xaml`, resolves the `wolfmed:` xmlns, constructs `WolfmedDiagnosticPanel` from its own XAML and runs both constructors including `ApplyTab()`. **Passed** in 26 s (`C:/tmp/wolfmed-plan/p4/wp/WP12-7-report-tests.log`). What it does **not** cover — and what still needs a live scan or WP12-9 — is `Populate` with a real payload: the tab switching, the per-part findings text and the organ row diffing. No sprite-pixel or screenshot test was run (project memory: prefer logic tests, and the user may be working).
+
+---
+
+### WP12-8 (phase 4 — explosion amputation, P4-6 / P4-D14)
+
+| Onyx source | Wolfgate destination | Status | WP | Notes |
+|---|---|---|---|---|
+| — | `Content.Shared/_Onyx/Wounds/WoundDamageRoutingSystem.cs` | modified (vendored), **3 marked sites** | **WP12-8** | optional trailing `DamageableSystem.DamageOriginFlag? originFlag = null` on `TryApplyDistributedDamage` and `TryRouteDistributedDamage`, plus the `_routedModifiers` save/restore scope around the distributed body. Every pre-existing caller (`TryApplyLethalDamage:541`, `WoundDamageFoundationTest`, `WoundHealingTest`, `WolfmedAmputationTest`) keeps compiling and behaving identically — the default `null` reproduces the `GetValueOrDefault` tuple those paths already saw. The two `before: [typeof(SharedArmorPlateSystem)]` registrations at `:64`/`:66` are untouched (D23, §5.4) |
+| — | `Content.Server/_WF/Wolfmed/Explosion/WolfmedExplosionSystem.cs` | new (`_WF`), 45 lines | **WP12-8** | `TryApplyExplosionDamage(EntityUid, DamageSpecifier)`: `HasComp<WoundHostComponent>` gate, then `TryRouteDistributedDamage(TargetBodyPart.All, SplitWithVariation, ignoreResistances: true, interruptsDoAfters: false, variation, isExplosion: true, woundSeverityMultiplier, originFlag: Explosion)`. Holds both CVar reads, so **`ExplosionSystem.CVars.cs` is not touched at all** (unlike Onyx). No subscriptions — two `Subs.CVar` callbacks only |
+| — | `Content.Server/Explosion/EntitySystems/ExplosionSystem.Processing.cs` | modified — **HOOK 22**, 3 marked lines | **WP12-8** | 1 `using`, 1 `[Dependency]`, and the `if (!_wolfmedExplosion.TryApplyExplosionDamage(entity, damage))` guard in front of the existing `TryChangeDamage` call at `:471` |
+| — | `Docs/Wolfmed/WOLFMED_MANIFEST.md` | this section | **WP12-8** | |
+
+**Every `// WOLFGATE` edit outside `_WF` / `_Onyx`, with reason (HOOK 22, 3 marked lines in 1 upstream file):**
+
+1. **HOOK 22 (a)** — `ExplosionSystem.Processing.cs:5`, `using Content.Server._WF.Wolfmed.Explosion;`. Required for the `[Dependency]` type name.
+2. **HOOK 22 (b)** — `ExplosionSystem.Processing.cs:32`, `[Dependency] private WolfmedExplosionSystem _wolfmedExplosion = default!;`. Placed in this partial rather than `ExplosionSystem.cs` so the whole hook lands in one upstream file.
+3. **HOOK 22 (c)** — `ExplosionSystem.Processing.cs:474`, `if (!_wolfmedExplosion.TryApplyExplosionDamage(entity, damage))` immediately above the existing `_damageableSystem.TryChangeDamage(...)` call. The call itself — including its `// Mono: Explosion flag for plate protection` comment and its `originFlag:` argument — is **unchanged byte-for-byte**, and the `if` is deliberately brace-free so the hook is one line rather than three (ground rule 3: one or two marked lines per site). Non-wound-hosts take the `HasComp` early-out inside the body and fall straight through to today's call, so **D2 holds structurally**: a borg, an animal, a Protogen or a crate sees the identical code path with identical arguments.
+
+**Every `// WOLFGATE` edit inside the vendored `WoundDamageRoutingSystem.cs` (3 sites, 10 marked lines):**
+
+1. **`TryApplyDistributedDamage` gains `DamageableSystem.DamageOriginFlag? originFlag = null`** and a `_routedModifiers` scope: `var hadModifiers = _routedModifiers.TryGetValue(body, out var previousModifiers); _routedModifiers[body] = (0f, null, originFlag);` in a `try`, restored (not removed) in the `finally`. Reason: the distributed entry points bypass `OnBeforeDamageChanged`, which is `_routedModifiers`' only other writer, so the re-entrant routed pass reached `SharedArmorPlateSystem.OnBeforeDamageChanged` with `OriginFlag == null` and its gate (`Origin == null && OriginFlag != Explosion`, `SharedArmorPlateSystem.cs:60`) refused plate protection against explosions outright — the P3-D3 hole. **Save/restore rather than a bare `Remove`** is PLAN4 §8.5 trap T3's shape: the dictionary has a second writer and a bare remove would clear an outer scope.
+2. **The method's original body is now `private bool ApplyDistributedDamageCore(...)`**, verbatim, with the public entry point wrapping it (see deviation 1).
+3. **`TryRouteDistributedDamage` gains the same optional parameter** and forwards it as the 11th argument.
+
+**Subscriptions registered by WP12-8:** **none** (PLAN4 §5.1). `WolfmedExplosionSystem.Initialize` registers only two `Subs.CVar` callbacks, which are not directed subscriptions, and this package adds no `SubscribeLocalEvent` anywhere. **Components registered:** **none**. **New prototypes / locale ids:** **none**. **New type names:** `WolfmedExplosionSystem` (grepped, 0 hits before creation) and the private method `ApplyDistributedDamageCore`.
+
+**CVars consumed for the first time since phase 1:** `explosion.damage_variation` (2f) and `explosion.wounding_multiplier` (4f), `Content.Shared/_Onyx/CCVar/CCVars.Wounds.cs:22-26`. Both are `CVar.SERVERONLY`; setting `explosion.wounding_multiplier` to `1` and `explosion.damage_variation` to `0` returns wound-host blasts to an even, unamplified split. The feature as a whole cannot be switched off by CVar — it is the `HasComp<WoundHostComponent>` gate that decides.
+
+**Deviations from PLAN4, with justification:**
+
+1. **The `_routedModifiers` scope is a public wrapper around a renamed private core, not a `try`/`finally` wrapped around the existing body in place.** PLAN4 §2.11 sketches `try { ... } finally { ... }` inside `TryApplyDistributedDamage`. The method body is ~95 lines with three separate `return` points, so an in-place `try` means re-indenting the whole method — a 95-line whitespace diff in a vendored file that would bury the ~25 existing `// WOLFGATE` marks and make any future Onyx re-sync harder to read. `ApplyDistributedDamageCore` holds Onyx's body byte-for-byte and the wrapper is 18 new lines. Semantics are identical, including the re-entrant case: the core's own `_routing.Contains(body)` guard still refuses a nested call, and the wrapper's `finally` restores the outer entry before anything can read it.
+2. **The wrapper writes `_routedModifiers[body]` before the core's wound-host/`_net.IsServer`/mode guard runs**, so a call that the guard refuses briefly holds a `(0f, null, originFlag)` entry. No damage is applied inside that window (the guard returns `false` immediately) and the `finally` restores the previous value, so this is observationally inert; adding a duplicate guard to the wrapper was judged worse than the window.
+3. **`ignoreGlobalModifiers` is not carried into the routed pass.** Vanilla explosion damage passes `ignoreGlobalModifiers: true`; `RouteThroughBodyModifiers` calls `WolfmedDamageableSystem.ChangeDamage` without it. **This is pre-existing phase-1 behaviour, not a WP12-8 change** — explosion damage on a wound host has been routed through `OnBeforeDamageChanged` since GUARD D, and that path never carried the flag either. Recorded here because WP12-8 is the package that makes explosions a designed wound-host mechanic; closing it would be a one-argument change in `RouteThroughBodyModifiers` that affects every routed hit, not just explosions, so it is left for the balance pass.
+4. **`TargetBodyPart.All` includes `Groin`, which D9 forbids as a key.** No Groin key is emitted: `WoundTargetResolver.GetMatchingParts` enumerates the body's actual children and maps each through `GetTargetBodyPart`, so a bit with no matching part contributes nothing. This is the same mask phase 3's `TryRouteDistributedDamage` call already used.
+
+**What changes in play:** a grenade or bomb that catches a wound host now splits its localised damage across every attached limb with a per-limb weight roll of up to `1 + variation` (default up to 3x), applies wounds at `woundSeverityMultiplier` 4x, and nominates exactly one non-torso limb with amputation thresholds as the explosion amputation candidate — `AmputationSystem.TryExplosionAmputate` (`AmputationSystem.cs:43`, `:85`) then rolls that limb off if the blast pushed it past its threshold. Systemic damage types still go to the body as one lump. **Armour plates now protect against explosions on wound hosts, which they did not before this package** — the fix and the feature ship together on purpose, because the distributed path is what made the hole reachable.
+
+**Checkpoint:** `Content.Server` **0 errors**, `Content.Client` **0 errors**, `Content.IntegrationTests` **0 errors** (all `-c DebugOpt`, sequential). Headless server (120 s, port 1299) reached `Server Version 277.0.0.0 -> Ready` with **zero** `[ERRO]`/`[FATL]`/exception lines (`C:/tmp/wolfmed-plan/p4/wp/WP12-8-report-server.log`) — the gate for the new `[Dependency]` edge `ExplosionSystem -> WolfmedExplosionSystem`, which would throw at system-manager init if it could not resolve. **Tests:** `DockTest` + the whole `WolfmedAmputationTest` class, **8/8 passed** (`C:/tmp/wolfmed-plan/p4/wp/WP12-8-report-tests.log`), including phase 3's `ExplosionAmputatesDeterministicallyTest`, which is the regression gate for the new optional parameter defaulting to `null`. No YAML/FTL/XAML/RSI touched, so no Release lint run. **T-EXPLOSION-PLATE and T-EXPLOSION-WRAPPER do not exist yet and belong to WP12-9** — there is no armour-plate test anywhere in `Content.IntegrationTests` today (grepped), so the plate half of P4-D14 is currently covered by code reading only.
+
+---
+
+### WP12-9 (phase 4 — tests, P4-8)
+
+**This package is the sole owner of every file under `Content.IntegrationTests`.** Six new test files, three
+modified, plus one withdrawn prototype line (see the deviations below). No new C# outside the test project.
+
+| Onyx source | Wolfgate destination | Status | WP | Notes |
+|---|---|---|---|---|
+| — | `Content.IntegrationTests/Tests/_WF/Wolfmed/WolfmedMedicalPatchTest.cs` | new, 2 tests | **WP12-9** | T-PATCH, split in two (deviation 1). Bespoke inert reagent `WolfmedPatchTestChem` keeps the file independent of WP12-2's content |
+| — | `Content.IntegrationTests/Tests/_WF/Wolfmed/WolfmedReagentTreatmentTest.cs` | new, 7 tests | **WP12-9** | T-REAGENT-CAP-YES / -CAP-NO / -SYSTEMIC-BYPASS / -SUPPRESS / -MEND / -STAM / -PROTOTYPE-SANITY |
+| `Content.IntegrationTests/Tests/_Onyx/Wounds/WoundBleedingTest.cs` | same path | **modified** | **WP12-9** | T-TOURNIQUET restored in place of the phase-1 skip note at `:147-148` |
+| — | `Content.IntegrationTests/Tests/_WF/Wolfmed/WolfmedWoundSurgeryTest.cs` | new, 9 tests | **WP12-9** | T-SURG-BLEED / -FRACTURE / -INTERNAL / -AMPCONSEQ / -ORGAN (2 tests) / -WINDOW / -SCAR / -PAIN, plus 11 bare single-component step prototypes and 2 body fixtures |
+| `Content.IntegrationTests/Tests/_WF/Wolfmed/WolfmedReattachTest.cs` | same path | **modified**, +2 tests | **WP12-9** | T-REATTACH-BLOCKED and T-SURG-AMP-CLEAN beside the existing `ReattachedPartRejoinsWoundTrackingTest` |
+| `Content.IntegrationTests/Tests/_Onyx/Wounds/AmputationConsequenceTest.cs` | same path | **modified**, +1 test | **WP12-9** | Onyx's `SurgicalHealRemovesConsequenceAndUnblocksTest` restored; the `<remarks>` skip block rewritten |
+| — | `Content.IntegrationTests/Tests/_WF/Wolfmed/WolfmedAnalyzerTest.cs` | new, 8 tests | **WP12-9** | T-AN-GATE / -FINDINGS / -CLEARS / -CLOT / -PAIN / -ORGANS / -CHEM / -VITAL, all through P4-D26's public builders |
+| — | `Content.IntegrationTests/Tests/_WF/Wolfmed/WolfmedExplosionTest.cs` | new, 3 tests | **WP12-9** | T-EXPLOSION-PLATE, T-EXPLOSION-WRAPPER and T-SURGERY-PROTOTYPE-SANITY (co-located; it needs no mob) |
+| — | `Resources/Prototypes/Catalog/Fills/Items/firstaidkits.yml` | **modified — PROTO E WITHDRAWN** | **WP12-9** | deviation 2; the one added `- id: Tourniquet` line becomes a 7-line `# WOLFGATE` note |
+| — | `Docs/Wolfmed/WOLFMED_MANIFEST.md` | this section | **WP12-9** | |
+
+**Test count: 33 new** (31 new methods plus the 2 restored skips), taking the wound suite from **65 to 98**.
+Filter `FullyQualifiedName~_Onyx.Wounds|FullyQualifiedName~_Onyx.Body|FullyQualifiedName~_Onyx.Medical|FullyQualifiedName~Wolfmed`
+-> **98 passed, 0 failed, 0 skipped**.
+
+**Every `// WOLFGATE` edit outside the test project (1 site):**
+
+1. **`Resources/Prototypes/Catalog/Fills/Items/firstaidkits.yml`, `MedkitAdvancedFilled`** — WP12-3's PROTO E
+   line `- id: Tourniquet` is replaced by a marked 7-line comment recording why it was withdrawn and what has to
+   change if it is wanted back. No other line in the file is touched. See deviation 2.
+
+**Subscriptions registered by WP12-9:** **none**. **Components registered:** **none**. **New C# type names:**
+the six test fixture classes only, all grepped 0 hits before creation.
+
+**New `[TestPrototypes]` ids** (a global pool, PLAN4 §4 rule 3 — every id grepped repo-wide, 0 hits before
+creation): reagent `WolfmedPatchTestChem`; entities `WolfmedPatchTrash`, `WolfmedPatchItem`,
+`WolfmedPatchSingleUse`, `WolfmedPatchTarget`, `WolfmedReagentBody`, `WolfmedReagentControlBody`,
+`WolfmedSurgeryBody`, `WolfmedSurgeryControlBody`, `WolfmedStepClamp`, `WolfmedStepSetBone`,
+`WolfmedStepMendBone`, `WolfmedStepStopInternal`, `WolfmedStepHealAmputation`, `WolfmedStepHealHeartTest`,
+`WolfmedStepHealFuncOrganTest`, `WolfmedStepSurgeryPain`, `WolfmedStepOpenIncisionWound`,
+`WolfmedStepClampIncision`, `WolfmedStepCloseIncision`, `WolfmedAnalyzerPlainTarget`,
+`WolfmedAnalyzerSurgeryTarget`, `WolfmedPlateVest`; body prototypes `WolfmedReagentBodyGraph` and
+`WolfmedSurgeryBodyGraph`. `[TestPrototypes]` strings are pooled across the whole assembly
+(`PoolManager.Prototypes.cs`), so WP12-9 deliberately reuses phase-3's `WolfmedAmputationBody`,
+`WolfmedOrganFuncBody`/`WolfmedOrganFuncOrgan` and `AmputationConsequenceTestBody` rather than cloning them.
+
+**Deviations from PLAN4 §6.2, with justification:**
+
+1. **T-PATCH is two tests, not one.** `singleUse: true` deletes the patch inside `EntityUnstuckEvent`, which
+   would make PLAN4's assertion (c) — "after unsticking, no further transfer" — vacuously true.
+   `WolfmedPatchItem` (not single-use) measures the Update loop actually stopping; `WolfmedPatchSingleUse`
+   covers (d).
+2. **PROTO E is withdrawn: `MedkitAdvancedFilled` no longer contains a `Tourniquet`.** This was a **real
+   production failure**, red since WP12-3 and never caught because that package ran no tests. `MedkitAdvanced`
+   inherits `Medkit`'s `grid: [0,0,3,1]` (8 cells, `maxItemSize: Small`); the four existing entries fill it, so
+   every spawn logged `[ERRO] system.storage: Tried to StorageFill tourniquet ... but can't. reason: No room!`
+   and failed **`EntityTest.SpawnAndDeleteAllEntitiesInTheSameSpot`** and
+   **`EntityTest.SpawnAndDeleteAllEntitiesOnDifferentMaps`**. Withdrawing the line is the smallest fix (it
+   removes an edit rather than adding one) and costs nothing reachable: the `Tourniquet` id is unchanged and
+   still spawns through its eight existing references (sec/gib vending, security spawners, `job.yml` belts,
+   `cmo_webbing.yml`, two `_NF` loot fills, `nfsdtec.yml`). **If the medkit placement is wanted, the fix is a
+   bigger `grid:` on `MedkitAdvanced` in
+   `Resources/Prototypes/Entities/Objects/Specific/Medical/medkits.yml` — a file no phase-4 WP owns, so it is
+   escalated to WP12-10 / the user rather than taken here.**
+3. **T-PATCH's fixture runs on a disconnected pair (`PoolSettings => PsDisconnected`).** Sticking and then
+   unsticking hands the patch between the target's `stickers_container` and the user's hands inside one tick,
+   and RT's **client** `ContainerSystem.HandleComponentState` trips its own
+   `DebugTools.Assert(container.Contains(entity))` replicating that churn
+   (`RobustToolbox/Robust.Client/GameObjects/EntitySystems/ContainerSystem.cs:206`). That is vanilla
+   `StickySystem` behaviour shared by every sticky item and untouched by phase 4, so the pair runs disconnected
+   rather than the vendored file being worked around. `MedicalPatchSystem` is server-only (P4-D13) and the test
+   reads no client state.
+4. **T-AN-CLEARS asserts the FRACTURE disappears from the LeftArm row, not the whole row.** PLAN4 predicts the
+   row vanishes; it does not, and should not — the same 75-Blunt hit that broke the bone also left a
+   `BluntWound` and part pain, both genuine findings. The row-disappearance half is asserted where it really is
+   true: detaching the head removes the `Head` key entirely.
+5. **T-SURGERY-PROTOTYPE-SANITY's closed-loop invariant is CLAMPABILITY, not closability.** PLAN4 asks that
+   every surgery reaching an incision-opening step also reach a `Close` step through its own requirement chain.
+   **The shipped tree says that is false for roughly thirty surgeries** — `SurgeryAttachHands`,
+   `SurgeryInsertBorgBrain`, every organ remove/insert, and WP12-5's own `SurgeryHealBrain`/`SurgeryHealEyes`,
+   which end on `SurgeryStepSealOrganWound` — because `SurgeryCloseIncision` is a **separate** surgery the medic
+   runs afterwards. WP12-5's handoff note B says the same. The invariant that actually kills CRITIQUE4 B1's bug
+   class is that the operation which opened a `SeparateInstances` bleeder can always **stop** it, so the test
+   asserts every such surgery reaches a `Clamp` step (they all inherit `SurgeryOpenIncision`'s
+   `SurgeryStepClampBleeders`), **plus** that `SurgeryCloseIncision` carries `Close`, **plus** that WP12-5's five
+   incision-based wound surgeries close their own incision on `SurgeryStepSealTendWound` (PROTO G's fourth
+   site), **plus** that `SurgeryTendWoundsBrute`/`Burn` reach neither an opening step nor a clamp step.
+6. **T-SURG-ORGAN is two tests** — the health ladder on a real `MobHuman` heart, and the function-restore half
+   on WolfmedOrganTest's `MutedComponent` fixture organ, which needs its own `[Test]` because the one-tick
+   window has to be measured before `Pair.RunTicksSync`.
+7. **T-REAGENT-SYSTEMIC-BYPASS uses `Poison`, not PLAN4's `Toxin`.** `Toxin` is a damage **group** in Wolfgate
+   (`Resources/Prototypes/Damage/groups.yml:32`), not a damage type; its types are `Poison` and `Radiation`.
+   `Poison` has the property the test needs: absent from `WoundHostComponent.LocalizedDamageTypes`.
+8. **T-SURG-BLEED uses `SlashWound` + `PiercingWound`, not two `SlashWound`s.** Both default to
+   `mergeMode: MergeByPrototype`, so PLAN4's "a wound at 20 and a second at 10" would merge into one wound at 30
+   and the worst-bleeder-first ordering could not be measured.
+9. **Bare single-component step prototypes rather than WP12-5's shipped steps.** PLAN4 §6.2 asks for exactly
+   this ("spawn a bare `WolfmedSurgeryClampBleedingEffect { amount: 10 }` entity"); recorded because it means a
+   failure in `WolfmedWoundSurgeryTest` is a failure of the **effect**, while the shipped step and surgery
+   wiring is covered separately by T-SURGERY-PROTOTYPE-SANITY.
+10. **Not ported, each per an existing decision:** Onyx's
+    `HealthAnalyzerPartDamageTest.BuildsIsolatedPartSnapshotTest` (P4-D27), `ClassifiesDangerousBloodLevel`
+    (client-side), and Onyx's `WoundSurgeryTest`/`WoundSurgeryScarTest` as written (they target the excluded
+    Onyx surgery framework; only their pattern is adopted, per §6.1 trap 9).
+
+**Two findings recorded rather than fixed — neither is a port defect:**
+
+1. **A stuck medical patch cannot be unstuck, in Wolfgate or in Onyx.** `MedicalPatchSystem.OnStuck` adds
+   `UnremoveableComponent`; `SharedInteractionSystem` subscribes that component to
+   `ContainerGettingRemovedAttemptEvent` and cancels unconditionally
+   (`Content.Shared/Interaction/SharedInteractionSystem.cs:213-216`), so `StickySystem.UnstickFromEntity` can
+   never take the patch out of the target's sticker container — **including the call
+   `MedicalPatchSystem.Update` makes itself when the patch runs dry**, which leaves `singleUse` and
+   `trashObject` unreachable in normal play. Onyx's own `SharedInteractionSystem` cancels identically at the pin
+   (`:216`), so the vendored file is faithful and WP12-0 transcribed it correctly. Both tests remove the
+   component first, exactly as the gib / unequip paths do. **Balance-pass item, not a phase-4 bug.**
+2. **A failing test inside a `GameTest` fixture can be reported by the runner as `Skipped` while the run summary
+   still reads `Test Run Successful`.** Observed three times during this package: the pair is dirty-disposed,
+   NUnit marks the test skipped, and the total line stays green. **Anyone reading a phase-4 test log must treat
+   a non-zero `Skipped:` count as a failure until each skipped test has been re-run individually.** The only two
+   legitimately skipped tests in this repo are `EntityTest.SpawnAndDeleteEntityCountTest` and
+   `EntityTest.SpawnAndDirtyAllEntities`, both permanently `[Ignore]`d upstream.
+
+**Numbers measured here that earlier packages only predicted** (P2-D16; each is documented at its assertion):
+
+* A stuck medical patch transfers `injectAmmountOnAttatch` synchronously **and** a full `transferAmount` on the
+  very next server tick — `MedicalPatchComponent.NextUpdate` defaults to `TimeSpan.Zero` and `OnStuck` never
+  seeds it. 2u + 5u land before `updateTime` has elapsed at all.
+* `PainSystem.SuppressPain`'s `DecayPerSecond` is a `FixedPoint2`, i.e. rounded to two places: 40 over 30 s is
+  stored as `1.33`, so decaying for the nominal duration leaves `0.1` behind. T-REAGENT-SUPPRESS decays 60 s.
+* `wounds.bleeding_auto_stop_enabled` defaults to **true**, so every fresh bleeder is given an
+  `AutomaticClottingAt` deadline and reads as `InProgress`; the analyzer's `None` clotting phase only appears on
+  a wound whose deadline has been cleared.
+* `ArmorPlateBlunt_Slash` absorbs Blunt at ratio 1, so with WP12-8's origin-flag passthrough a 40-Blunt routed
+  blast lands **exactly zero** damage on a plated wound host and 40 on an unplated one.
+* `BluntWound` from a 20-Blunt hit is severity 20 and heals 1:1 (`severityMultiplier: 1`,
+  `HealingMultiplier` 1), which is what T-REAGENT-CAP-YES/-NO measure to the point.
+
+**HOOK 22 checklist grep (PLAN4 §6.2's T-EXPLOSION-WRAPPER pairing):**
+`grep -n "_wolfmedExplosion.TryApplyExplosionDamage" Content.Server/Explosion/EntitySystems/ExplosionSystem.Processing.cs`
+-> **1 hit at `:474`**. HOOK 22 is present, and T-EXPLOSION-WRAPPER pins its contract so it cannot be silently
+dropped.
+
+**Checkpoint:** `Content.Server` **0 errors**, `Content.Client` **0 errors**, `Content.IntegrationTests`
+**0 errors** (all `-c DebugOpt`, sequential). `DockTest` first: **3/3 passed**. Wound suite
+(`_Onyx.Wounds|_Onyx.Body|_Onyx.Medical|Wolfmed`): **98/98 passed, 0 skipped**
+(`C:/tmp/wolfmed-plan/p4/wp/WP12-9-report-tests.log`). Smoke filter
+(`EntityTest|PrototypeSaveTest|DockTest`): **9 passed, 0 failed** (`WP12-9-report-smoke.log`), the 2 skips being
+the permanently `[Ignore]`d upstream pair. Headless server (120 s, port 1299) reached
+`Server Version 277.0.0.0 -> Ready` with **zero** `[ERRO]`/`[FATL]`/exception lines
+(`WP12-9-report-server.log`) — run because this package edits a prototype fill file. Release YAML lint:
+**1 error, and it is not this package's** — WP12-0's standing `medical_patch.yml` missing-`icon:` hazard, still
+unowned (`WP12-9-report-lint.log`).
+
+### WP12-10 (phase 4 — guidebook, docs and manifest reconcile, P4-7 / P4-9)
+
+| Onyx source | Wolfgate destination | Status | WP | Notes |
+|---|---|---|---|---|
+| `Resources/ServerInfo/_Onyx/Guidebook/Medical/Wounds.xml` | `Resources/ServerInfo/_WF/Wolfmed/Guidebook/Medical/Wounds.xml` | new, adapted | **WP12-10** | Drops the whole "Part material" section (slime/plant, IPC mechanical, cybernetic mechanical, material-electrical) and the `SyntheticRepairTool` embed — nothing in phases 1-4 supports non-organic wounds (D3). Folds `BodyPartDamage`'s three paragraphs in (its XML is outside the ONYX sparse checkout, so it is not reconstructed as a fourth page). Rewords "Fracture" qualitatively (no quoted numbers - §8.2-1 corrected the shipped `manipulationModifier` values) and "Dismemberment" for guns/lasers (§8.6-1). Adds a `Tourniquet` embed. Keeps the amputation-consequence paragraph (P4-D15) and says what it actually does (CRITIQUE4 m7): hidden, not greyed, six attach surgeries for a torso stump |
+| `Resources/ServerInfo/_Onyx/Guidebook/Medical/WoundTreatment.xml` | `Resources/ServerInfo/_WF/Wolfmed/Guidebook/Medical/WoundTreatment.xml` | new, adapted | **WP12-10** | Drops the "IPCs and cybernetics" section and its `Welder`/`SyntheticRepairTool`/`CableApcStack` embeds outright (D3). Adds a `Tourniquet` embed to the biological-tissue box and the two-step fracture ladder (Bonesetter -> BoneGel) to the fractures paragraph |
+| `Resources/Prototypes/_Onyx/Guidebook/medical.yml` (2 of its 5 entries) | `Resources/Prototypes/_WF/Wolfmed/Guidebook/medical.yml` | new | **WP12-10** | `Wounds` and `WoundTreatment` `guideEntry` rows only - the other three (`Virology`, `BodyPartDamage`, `Surgery`) are not ported (D3, P4-D15) |
+| — | `Resources/Prototypes/Guidebook/medical.yml` | **modified — PROTO L**, 2 lines | **WP12-10** | `- Wounds` and `- WoundTreatment` inserted into `Medical`'s `children:` list after `MedicalDoctor` and before `Chemist` (`:5-12`, corrected citation per CRITIQUE4 m4) |
+| `Resources/Locale/en-US/_Onyx/guidebook/wounds.ftl` | `Resources/Locale/en-US/_WF/Wolfmed/guidebook/wounds.ftl` | new, adapted subset | **WP12-10** | 21 of Onyx's 30 keys carried forward and reworded (all under a fresh `guidebook-wolfmed-*` prefix to avoid any accidental key aliasing with Onyx's un-ported original); the 9 IPC/slime/cybernetic/material keys dropped entirely. Adds one sentence naming the Tier-A painkiller ladder (ibuprofen 0.5 -> ketorolac 0.9 -> tramadol 1.25 -> oxycodone 2.0, verified directly against `Resources/Prototypes/_Onyx/Reagents/Medicine/medicine.yml`) and the tourniquet to the treatment checklist |
+| — | `Docs/Wolfmed/WOLFMED_PLAN4.md` | new (copy of `C:/tmp/wolfmed-plan/p4/PLAN4.md`) | **WP12-10** | |
+| — | `Docs/Wolfmed/CRITIQUE4.md`, `Docs/Wolfmed/reports/analysis/phase4/{reagents,tools,surgery,analyzer,tests}.md` | new (copies) | **WP12-10** | the five phase-4 analyst reports |
+| — | `Docs/Wolfmed/reports/work-packages/phase4/*-report.md`, `*-verify.md` | new (copies, 20 files: WP12-0..WP12-9, report+verify each) | **WP12-10** | |
+| — | `Docs/Wolfmed/WOLFMED_MANIFEST.md`, `WOLFMED_STATUS.md` | modified — reconcile | **WP12-10** | this section plus the §7.1 row edits above and the "Phase 4 - user decisions" subsection below |
+| — | `Content.Shared/Gibbing/Systems/GibbingSystem.cs` | modified (pre-phase-4 fix, DECISIONS "Gibbing fix") | **WP12-10 records it; the fix predates this WP** | Two `.ToArray()` snapshots (`TryGibEntityWithRef`'s `Drop`/`Gib` branches, `:141` and `:155`) + `using System.Linq;`, all marked `// WOLFGATE`. Fixes the `InvalidOperationException: Collection was modified` flagged as an unfixed upstream bug in phase 3's manifest (`GibbingSystem.cs:141`, "Upstream bug found, NOT fixed") — `TryGibEntityWithRef`'s `GibContentsOption.Drop`/`Gib` branches enumerated `container.ContainedEntities` while `DropEntity`/`GibEntity` removed from it. Wolfmed made the crash more reachable because routing concentrates damage on one part (an arm holding its own hand crossing a `Destructible` gib threshold). Verified present in the working tree at the start of this WP (`git diff 6329d204e3 -- Content.Shared/Gibbing/Systems/GibbingSystem.cs`) |
+
+**Reconciliation of two stale plan-document lines, both struck as records rather than by editing the plan files (PLAN.md/PLAN2.md are not edited per the hard rules):**
+
+* **PLAN.md §8.2's `Scale` tuning note is struck (P4-D30).** The note read "Onyx's framework clamps `Scale` to
+  <=1 unless `Scaling` is set; Wolfgate's is unclamped" — the opposite of the truth. WG's `MetabolizerSystem`
+  computes `scale = mostToRemove / rate` from a `FixedPoint2.Clamp(rate, 0, quantity)` numerator, which is
+  structurally `[0, 1]`; Onyx's own `scale` can exceed 1 when `!MetabolizeAll`. No tuning work item follows
+  from this; `MinScale` is not ported (no reagent in `_Onyx/Reagents/**` sets it).
+* **PLAN.md WP11's `GroupHealSpecifier` line is struck (P4-D12).** It bundled `GroupHealSpecifier` with the
+  Tourniquet/Medical Patch line item; there is no dependency edge - `MedicalPatchComponent.cs`/
+  `MedicalPatchSystem.cs` reference it nowhere (confirmed WP12-0). Its only consumers in the whole Onyx tree
+  are Vampire-antagonist files with no decision document naming Vampire in scope, and it carries a second
+  licence (Wega, GPL-3.0) layered under Onyx's AGPL — a reason not to port it casually, not a phase-4 task.
+
+**Embed check for both XML documents (already run against the shipped tree):** `Gauze`, `Brutepack`,
+`Ointment`, `MedicatedSuture`, `RegenerativeMesh`, `Bonesetter`, `BoneGel`, `HandheldHealthAnalyzer`,
+`ChemDispenser`, `Syringe`, `Tourniquet` all resolve (`grep "^  id: <Entity>$" Resources/Prototypes/Entities` ->
+1 hit each). `Welder`, `CableApcStack` and `SyntheticRepairTool` are not embedded — the whole IPC/cybernetic
+section that used them is dropped.
+
+**Subscriptions registered by WP12-10: none. Components registered: none.** Two `guideEntry` prototypes and
+two locale files are pure content; the only code-adjacent touch is the 2-line PROTO L edit to an existing
+upstream YAML list (§5.1 of PLAN4 — WP12-10 registers nothing).
+
+**Deviations from PLAN4 §4/WP12-10, with justification:**
+
+1. **Locale keys are `guidebook-wolfmed-*`, not `guidebook-onyx-*`.** PLAN4's table cites the Onyx source path
+   as a location reference; the content itself is reworded Wolfgate prose (organic-only, gun/laser severing,
+   qualitative fracture text), so it is authored under a fresh prefix rather than kept under Onyx's naming —
+   consistent with how the file also moves from `_Onyx/guidebook/` to `_WF/Wolfmed/guidebook/` in PLAN4's own
+   destination column.
+2. **`guidebook-wolfmed-wounds-examination` is a new key**, not present in Onyx's file, formed by folding
+   `BodyPartDamage`'s "Examination" and "Damage and wounds" paragraphs (reworded, IPC material-check sentence
+   dropped) into the `Wounds` entry per PLAN4's fold-in instruction — the split across two Onyx keys did not
+   survive the merge cleanly as one-to-one.
+3. **The tourniquet embed appears in both documents** (`Wounds.xml`'s common-trauma box and
+   `WoundTreatment.xml`'s biological-tissue box) rather than only the one PLAN4's prose suggested, because both
+   boxes already group the relevant treatment tools (bleeding-control items in `Wounds`, the full biological kit
+   in `WoundTreatment`) and the entity resolves cleanly in either.
+
+**Docs copied, not adapted:** `WOLFMED_PLAN4.md` is a byte-identical copy of `C:/tmp/wolfmed-plan/p4/PLAN4.md`
+(PLAN4 does not get Wolfgate-side edits — it documents what was planned, not what shipped; deviations are
+recorded in this manifest instead). Likewise `CRITIQUE4.md` and the five analyst reports are copied verbatim
+as evidence, and the ten `WP12-*-report.md` / `WP12-*-verify.md` pairs are copied verbatim as the phase-4
+work-package record.
+
+**Checkpoint:** `Content.Client` **0 errors** (`-c DebugOpt`) — this package touches no server-only C#, so
+`Content.Server` was also rebuilt to confirm the upstream PROTO L YAML edit does not disturb prototype loading
+(**0 errors**, both builds sequential). Headless server (120 s, port 1299) reached
+`Server Version 277.0.0.0 -> Ready` with **zero** `[ERRO]`/`[FATL]`/exception lines
+(`C:/tmp/wolfmed-plan/p4/wp/WP12-10-report-server.log`) — the guidebook prototype, its two `Box`/`FTLTextpart`
+XML documents and every embedded entity id resolved with no missing-file or missing-key error. Release YAML
+lint (`WP12-10-report-lint.log`): **1 error, unchanged from WP12-9** — the pre-existing, unowned
+`medical_patch.yml` missing-`icon:` hazard; zero new lint errors from this package's PROTO L edit or new
+prototype file.
+
+## Phase 4 — user decisions (DECISIONS.md §8.4)
+
+All defaults taken (orchestrator; user pre-authorised more lethality in phase 3). Recorded here verbatim
+against what shipped, per the manifest's role as the reconciled record:
+
+* **§8.4-1 Explosion amputation: SHIP.** Landed in **WP12-8** (P4-D14), gated on **T-EXPLOSION-PLATE** +
+  **T-EXPLOSION-WRAPPER**, tunable via Onyx's `explosion.damage_variation` / `explosion.wounding_multiplier`
+  CVars. This reverses the phase-3 record "explosion amputation is out (§8.6-6)" and closes the P3-D3
+  armour-plate hole in the same change.
+* **§8.4-2 Organ heal rate: `amount: 3`.** Shipped in **WP12-5**, marked `# WOLFGATE (P4 balance)` on every
+  organ-heal step, not Onyx's `amount: 1` — a deliberate pace deviation from D4 (P4-D23).
+* **§8.4-3 Surgery scarring / incision bleeding: ship the four-prototype chain as revised.** Shipped in
+  **WP12-5** (PROTO G, P4-D21): `SurgeryStepOpenIncisionScalpel` gains the wound effect beside its existing
+  flat `Bloodloss: 10` (never replacing it — a D2 breach would strip the cost from non-hosts); `Clamp` on
+  `SurgeryStepClampBleeders`; `Close` on both `SurgeryStepCloseIncision` and `SurgeryStepSealTendWound` (the
+  latter a Wolfgate adaptation with no Onyx counterpart, so the wound surgeries self-close). The careful
+  incision path (`SurgeryStepCarefulIncisionScalpel`) gets nothing — it carries no damage effect in either
+  tree and its only consumers have no clamp/close step.
+* **§8.4-4 Reagents: Tier A shipped.** Landed in **WP12-2**: the four `SuppressPain` blocks (Cognac,
+  Bicaridine, Desoxyephedrine, Happiness), `MendFractures` on Stasizium, and five new reagents (`Osteogen`,
+  `Ibuprofen`, `Ketorolac`, `Tramadol`, `Oxycodone`). **Tier B was not taken** — WP12-2's report records the
+  package as complete without needing the pre-authorised extension; `Probital`/`Mitogen` remain unported.
+* **§8.4-5 Analyzer UI: PARALLEL.** Landed in **WP12-7** (P4-D25): a self-contained `_WF` panel
+  (`WolfmedDiagnosticPanel`) mounted by three marked lines in `HealthAnalyzerWindow.xaml`/`.xaml.cs` (HOOK 26).
+  Shitmed's window geometry is untouched; the panel prints the fracture grade Onyx carries and never renders.
+* **§8.4-6 No organ examine line.** Taken as instructed — no phase-4 package added an organ-damage line to
+  the generic `examine` verb.
+* **§8.4-7 No `treatmentCapabilities` annotation on existing items now.** Taken as instructed (P4-D7). The
+  cable coil (`Entities/Objects/Tools/cable_coils.yml:36-45`) remains recorded as the first phase-5 action.
+* **§8.4-8 Pain numbness skipped and recorded.** Taken as instructed (P4-D8). `PainNumbnessStatusEffectComponent`
+  remains dead code with two readers (`PainSystem.cs:336`, `EmoteOnDamageSystem.PainSounds.cs:37`) and no
+  writer. Re-entry cost recorded in `WOLFMED_STATUS.md`: ~45 LOC for `ModifyStatusEffect`, a new `_WF` action
+  enum member, 2 prototypes, 2 locale keys, 1 test — roughly half a day.
+* **Gibbing fix:** `Content.Shared/Gibbing/Systems/GibbingSystem.cs` two `.ToArray()` snapshots +
+  `using System.Linq`, all marked `// WOLFGATE` — landed before WP12-0 started, manifest row added by
+  **WP12-10** (table above). Fixes the container-mutation crash phase 3's manifest flagged and left unfixed.

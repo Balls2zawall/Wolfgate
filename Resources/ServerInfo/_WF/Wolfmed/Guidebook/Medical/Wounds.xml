@@ -1,0 +1,24 @@
+<Document>
+  <FTLTextpart Key="guidebook-wolfmed-wounds-content"/>
+  <FTLTextpart Key="guidebook-wolfmed-wounds-examination"/>
+  <FTLTextpart Key="guidebook-wolfmed-wounds-effects"/>
+  <FTLTextpart Key="guidebook-wolfmed-wounds-traumatic-heading"/>
+  <FTLTextpart Key="guidebook-wolfmed-wounds-blunt"/>
+  <FTLTextpart Key="guidebook-wolfmed-wounds-slash"/>
+  <FTLTextpart Key="guidebook-wolfmed-wounds-piercing"/>
+  <FTLTextpart Key="guidebook-wolfmed-wounds-burn"/>
+  <FTLTextpart Key="guidebook-wolfmed-wounds-electrical"/>
+  <Box>
+    <GuideEntityEmbed Entity="Gauze"/>
+    <GuideEntityEmbed Entity="Bonesetter"/>
+    <GuideEntityEmbed Entity="Tourniquet"/>
+  </Box>
+  <FTLTextpart Key="guidebook-wolfmed-wounds-special-heading"/>
+  <FTLTextpart Key="guidebook-wolfmed-wounds-fracture"/>
+  <FTLTextpart Key="guidebook-wolfmed-wounds-incision"/>
+  <FTLTextpart Key="guidebook-wolfmed-wounds-dismemberment-wound"/>
+  <FTLTextpart Key="guidebook-wolfmed-wounds-amputation-consequence"/>
+  <FTLTextpart Key="guidebook-wolfmed-wounds-internal-bleeding"/>
+  <FTLTextpart Key="guidebook-wolfmed-wounds-medical-scar"/>
+  <FTLTextpart Key="guidebook-wolfmed-wounds-dismemberment"/>
+</Document>

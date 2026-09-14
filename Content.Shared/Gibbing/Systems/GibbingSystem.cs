@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics.CodeAnalysis;
+using System.Linq; // WOLFGATE
 using System.Numerics;
 using Content.Shared.Gibbing.Components;
 using Content.Shared.Gibbing.Events;
@@ -138,7 +139,7 @@ public sealed partial class GibbingSystem : EntitySystem
             {
                 foreach (var container in validContainers)
                 {
-                    foreach (var ent in container.ContainedEntities)
+                    foreach (var ent in container.ContainedEntities.ToArray()) // WOLFGATE: snapshot, DropEntity/GibEntity mutate the container
                     {
                         DropEntity(new Entity<GibbableComponent?>(ent, null), parentXform, randomSpreadMod,
                             ref droppedEntities, launchGibs,
@@ -152,7 +153,7 @@ public sealed partial class GibbingSystem : EntitySystem
             {
                 foreach (var container in validContainers)
                 {
-                    foreach (var ent in container.ContainedEntities)
+                    foreach (var ent in container.ContainedEntities.ToArray()) // WOLFGATE: snapshot, DropEntity/GibEntity mutate the container
                     {
                         GibEntity(new Entity<GibbableComponent?>(ent, null), parentXform, randomSpreadMod,
                             ref droppedEntities, launchGibs,
