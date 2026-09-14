@@ -60,4 +60,13 @@ public sealed partial class WFGravityAnchorComponent : Component
     /// <summary>Mass this adds to a carrying hull's gravgen load while it rides as cargo (design D11).</summary>
     [DataField]
     public float VirtualMass = 6f;
+
+    /// <summary>
+    /// How far the running cut has got, 0 to 1; what the cut circle overlay draws its growing arc from.
+    /// It lives on the anchor rather than on the hull because the anchors carry CEPvsOverrideComponent and so replicate
+    /// to every viewer on every layer, while the hull grid is four layers above a surface viewer and not in their PVS.
+    /// Defaults to 1 so an idle pair still previews the whole circle.
+    /// </summary>
+    [DataField, AutoNetworkedField]
+    public float CrackProgress = 1f;
 }

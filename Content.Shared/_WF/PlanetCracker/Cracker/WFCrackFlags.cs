@@ -64,4 +64,7 @@ public enum WFCrackBlocker : ushort
 
     /// <summary>At least one projector is past its Breakage threshold.</summary>
     ProjectorsBroken = 1 << 10,
+
+    /// <summary>This planet has already been cracked; the only permanent fault in the list.</summary>
+    PlanetCracked = 1 << 11,
 }

@@ -1,5 +1,6 @@
 using System.Numerics;
 using Content.Shared._WF.PlanetCracker.Anchors;
+using Content.Shared._WF.PlanetCracker.Planets;
 using Robust.Shared.Map;
 
 namespace Content.Shared._WF.PlanetCracker.Cracker;
@@ -13,6 +14,13 @@ namespace Content.Shared._WF.PlanetCracker.Cracker;
 public abstract partial class SharedWFCrackerSystem : EntitySystem
 {
     [Dependency] protected SharedTransformSystem TransformSystem = default!;
+
+    /// <summary>
+    /// Initial downward speed of a crack fall, in levels per second; above the transit exit band of 0.1.
+    /// Shared so the hull's fall and the chunk's drop cannot drift apart: two grids entering transit at different
+    /// speeds swap order mid-descent and are AABB-tested into an explosion.
+    /// </summary>
+    public const float FallSeedVelocity = 0.3f;
 
     /// <summary>World centre of the hull's chunk berth, Distance tiles out along the marker's own facing.</summary>
     public bool TryGetBerthCentre(Entity<WFPlanetCrackerComponent> ent, out MapCoordinates centre)
@@ -92,6 +100,33 @@ public abstract partial class SharedWFCrackerSystem : EntitySystem
 
         offset = circleCentre - centre.Position;
         return true;
+    }
+
+    /// <summary>The sector body an orbit layer map belongs to, walked through the layer's own back-link.</summary>
+    public bool TryGetPlanetFromOrbit(EntityUid mapUid, out Entity<WFSectorPlanetComponent> planet)
+    {
+        planet = default;
+
+        if (!TryComp<WFOrbitLayerComponent>(mapUid, out var orbit))
+            return false;
+
+        if (orbit.Planet is not { } netPlanet || !TryGetEntity(netPlanet, out var body))
+            return false;
+
+        if (!TryComp<WFSectorPlanetComponent>(body, out var sector))
+            return false;
+
+        planet = (body.Value, sector);
+        return true;
+    }
+
+    /// <summary>Whether the planet this hull is orbiting has already been cracked; false when the hull is not in orbit.</summary>
+    public bool IsPlanetCracked(Entity<WFPlanetCrackerComponent> ent)
+    {
+        if (Transform(ent.Owner).MapUid is not { } mapUid)
+            return false;
+
+        return TryGetPlanetFromOrbit(mapUid, out var planet) && planet.Comp.Cracked;
     }
 
     /// <summary>

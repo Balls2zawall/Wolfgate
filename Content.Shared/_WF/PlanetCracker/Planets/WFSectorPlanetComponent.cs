@@ -20,4 +20,11 @@ public sealed partial class WFSectorPlanetComponent : Component
     /// <summary>The orbit layer map of this body's network, once built.</summary>
     [DataField, AutoNetworkedField]
     public NetEntity? OrbitMap;
+
+    /// <summary>
+    /// True once a disc has been cut out of this body. It lives here rather than on the z-network because the network
+    /// can be torn down and rebuilt, and this is what the sector survey console enumerates.
+    /// </summary>
+    [DataField, AutoNetworkedField]
+    public bool Cracked;
 }

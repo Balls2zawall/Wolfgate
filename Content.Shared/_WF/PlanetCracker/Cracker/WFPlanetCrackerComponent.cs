@@ -114,6 +114,18 @@ public sealed partial class WFPlanetCrackerComponent : Component
     [DataField]
     public int RequiredProjectors = 2;
 
+    /// <summary>The chunk grid hanging in this hull's berth, once one has been cut.</summary>
+    [DataField, AutoNetworkedField]
+    public NetEntity? Chunk;
+
+    /// <summary>How often the site camera kick repeats while the cut runs, in seconds.</summary>
+    [DataField]
+    public float SiteKickInterval = 2f;
+
+    /// <summary>Tiles added to the cut radius to get the range of the site camera kick.</summary>
+    [DataField]
+    public float SiteKickPadding = 6f;
+
     /// <summary>Looped while the cut runs.</summary>
     [DataField]
     public SoundSpecifier RumbleSound = new SoundPathSpecifier("/Audio/Ambience/Objects/crushing.ogg");
@@ -130,6 +142,17 @@ public sealed partial class WFPlanetCrackerComponent : Component
     [DataField]
     public SoundSpecifier LockSound = new SoundCollectionSpecifier("MetalThud");
 
+    /// <summary>One-shot boom as the disc tears free; played globally on both layers at extraction.</summary>
+    [DataField]
+    public SoundSpecifier ExtractSound = new SoundPathSpecifier("/Audio/Effects/explosionfar.ogg");
+
+    /// <summary>
+    /// Looped on the ground layer at the cut circle while the cut runs. The hull's own rumble is replicated to orbit
+    /// but the client zeroes gain across maps, so the site needs a source of its own or it is silent.
+    /// </summary>
+    [DataField]
+    public SoundSpecifier GroundRumbleSound = new SoundPathSpecifier("/Audio/Ambience/Objects/crushing.ogg");
+
     /// <summary>Live rumble loop; server-only, never networked, stopped on every state edge.</summary>
     [ViewVariables]
     public EntityUid? RumbleStream;
@@ -141,4 +164,8 @@ public sealed partial class WFPlanetCrackerComponent : Component
     /// <summary>Live fall alarm loop; server-only, never networked.</summary>
     [ViewVariables]
     public EntityUid? FallStream;
+
+    /// <summary>Live ground-side rumble loop at the cut site; server-only, never networked.</summary>
+    [ViewVariables]
+    public EntityUid? GroundRumbleStream;
 }
