@@ -45,10 +45,13 @@ public sealed partial class WFTestGridFactory : EntitySystem
         // cracker never scans for its berth. Adding it first lets the marker's own map-init back-link do the work.
         EnsureComp<WFPlanetCrackerComponent>(grid.Owner);
 
-        // Layout is plan section F.1 verbatim; the Stage 6 tests assert every one of these fourteen.
+        // Layout is plan section F.1 plus the FTL drive; the Stage 6 tests assert every one of these fifteen.
         SpawnOnHull(grid, "ComputerShuttle", 2, 2);
         SpawnOnHull(grid, "WFCrackConsole", 4, 2);
         SpawnOnHull(grid, "DebugGyroscope", 7, 2);
+        // Monolith's FTL rework gives a hull no range at all without a powered drive (SharedShuttleSystem.GetFTLRange),
+        // so the test cracker could never jump to a planet. SpawnOnHull switches it to !NeedsPower like the rest.
+        SpawnOnHull(grid, "MachineFTLDrive", 11, 2);
         SpawnOnHull(grid, "WFCentrifuge", 7, 7);
         SpawnOnHull(grid, "WFGravityProjector", 5, 14, 180);
         SpawnOnHull(grid, "WFGravityProjector", 9, 14, 180);

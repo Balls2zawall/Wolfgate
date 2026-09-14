@@ -38,12 +38,13 @@ public sealed class CrackerTestGridTest
     private const string Anchor = "WFGravityAnchor";
     private const string Gravgen = "WFTransportGravgen";
 
-    /// <summary>Plan F.1: fourteen entities on the tiny cracker.</summary>
+    /// <summary>Plan F.1 plus the FTL drive: fifteen entities on the tiny cracker.</summary>
     private static readonly Dictionary<string, int> CrackerContents = new()
     {
         ["ComputerShuttle"] = 1,
         ["WFCrackConsole"] = 1,
         ["DebugGyroscope"] = 1,
+        ["MachineFTLDrive"] = 1,
         ["WFCentrifuge"] = 1,
         ["WFGravityProjector"] = 2,
         ["WFChunkBerthMarker"] = 1,
@@ -133,7 +134,7 @@ public sealed class CrackerTestGridTest
             var children = Children(entMan, cracker).ToList();
 
             Assert.That(children, Has.Count.EqualTo(CrackerContents.Values.Sum()),
-                "Precondition: the hull carries its fourteen entities.");
+                "Precondition: the hull carries its fifteen entities.");
 
             using (Assert.EnterMultipleScope())
             {
