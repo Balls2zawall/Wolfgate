@@ -9,6 +9,25 @@ namespace Content.Server._WF.PlanetCracker.Anchors;
 public sealed partial class WFGravityAnchorSystem
 {
     /// <summary>
+    /// Arms the unattended drill on a paired anchor: StartDrill without the verb's unused user.
+    /// It exists because NO admin or test path raises WFAnchorDrillStartedEvent at all today - the verb is the only
+    /// caller of StartDrill, and both `wfcracker complete drill` and the fixture's DeployPair go straight to
+    /// <see cref="CompleteDrill"/>, which raises only WFAnchorDrillFinishedEvent.
+    /// </summary>
+    public bool BeginDrill(Entity<WFGravityAnchorComponent> ent)
+    {
+        if (ent.Comp.State != WFAnchorState.Paired)
+            return false;
+
+        ent.Comp.DrillEnd = _timing.CurTime + ent.Comp.DrillDuration;
+        SetState(ent, WFAnchorState.Drilling);
+
+        var ev = new WFAnchorDrillStartedEvent(ent.Owner);
+        RaiseLocalEvent(ref ev);
+        return true;
+    }
+
+    /// <summary>
     /// Finishes a drill at once: the same lock, thunk and event the 1 Hz sweep would have raised when the timer ran out.
     /// </summary>
     public bool CompleteDrill(Entity<WFGravityAnchorComponent> ent)

@@ -3,6 +3,7 @@ using System.Numerics;
 using Content.Server._WF.PlanetCracker.Anchors;
 using Content.Server._WF.PlanetCracker.Chunk;
 using Content.Server._WF.PlanetCracker.Cracker;
+using Content.Server._WF.PlanetCracker.Fissures;
 using Content.Server._WF.PlanetCracker.Mining;
 using Content.Server._WF.PlanetCracker.Testing;
 using Content.Server.Administration;
@@ -10,6 +11,7 @@ using Content.Shared._WF.Administration;
 using Content.Shared._WF.PlanetCracker.Anchors;
 using Content.Shared._WF.PlanetCracker.Chunk;
 using Content.Shared._WF.PlanetCracker.Cracker;
+using Content.Shared._WF.PlanetCracker.Fissures;
 using Content.Shared._WF.PlanetCracker.Mining;
 using Content.Shared._WF.PlanetCracker.Survey;
 using Content.Shared.Administration;
@@ -32,13 +34,16 @@ public sealed partial class WFCrackerCommand : LocalizedEntityCommands
     [Dependency] private SharedWFSurveySystem _survey = default!;
     [Dependency] private WFCrackerSystem _crackers = default!;
     [Dependency] private WFCrackMinerSystem _miners = default!;
+    [Dependency] private WFFissureSpawnerSystem _fissures = default!;
     [Dependency] private WFGravityAnchorSystem _anchors = default!;
     [Dependency] private WFPlanetChunkSystem _chunks = default!;
     [Dependency] private WFTestGridFactory _factory = default!;
 
     private const string SubSpawn = "spawn";
     private const string SubState = "state";
+    private const string SubBegin = "begin";
     private const string SubComplete = "complete";
+    private const string SubFissure = "fissure";
     private const string SubDisconnect = "disconnect";
     private const string SubReArm = "rearm";
     private const string SubRelease = "release";
@@ -57,15 +62,20 @@ public sealed partial class WFCrackerCommand : LocalizedEntityCommands
     private const string TargetCrack = "crack";
     private const string TargetDrill = "drill";
 
+    private const string TargetRing = "ring";
+    private const string TargetSurge = "surge";
+
     private static readonly string[] Subcommands =
     {
-        SubSpawn, SubState, SubComplete, SubDisconnect, SubReArm, SubRelease, SubFall, SubExtract, SubDrop, SubVeins,
-        SubMine,
+        SubSpawn, SubState, SubBegin, SubComplete, SubFissure, SubDisconnect, SubReArm, SubRelease, SubFall, SubExtract,
+        SubDrop, SubVeins, SubMine,
     };
 
     private static readonly string[] Kinds = { KindCracker, KindTransport };
 
     private static readonly string[] Targets = { TargetCrack, TargetDrill };
+
+    private static readonly string[] FissureTargets = { TargetRing, TargetSurge };
 
     /// <summary>Offset from the caller to the cracker hull, so it does not land on their head.</summary>
     private static readonly Vector2 CrackerOffset = new(8f, 8f);
@@ -95,8 +105,14 @@ public sealed partial class WFCrackerCommand : LocalizedEntityCommands
             case SubState when args.Length == 2:
                 ExecuteState(shell, args[1]);
                 return;
+            case SubBegin when args.Length == 2:
+                ExecuteBegin(shell, args[1]);
+                return;
             case SubComplete when args.Length == 2:
                 ExecuteComplete(shell, args[1]);
+                return;
+            case SubFissure when args.Length == 2:
+                ExecuteFissure(shell, args[1]);
                 return;
             case SubDisconnect when args.Length == 1:
                 ExecuteDisconnect(shell);
@@ -169,6 +185,92 @@ public sealed partial class WFCrackerCommand : LocalizedEntityCommands
 
         _crackers.SetState(cracker, state);
         Report(shell, "cmd-wfcracker-state-set", cracker.Owner, state);
+    }
+
+    /// <summary>
+    /// Starts both anchors' drills, which is the only route to WFAnchorDrillStartedEvent outside the anchor verb.
+    /// Without it there is no way to watch a site's fissure rings spread by hand: every other admin route jumps
+    /// straight to the lock.
+    /// </summary>
+    private void ExecuteBegin(IConsoleShell shell, string target)
+    {
+        if (!TryGetCracker(shell, out var cracker))
+            return;
+
+        switch (target)
+        {
+            case TargetDrill:
+                if (!TryGetPair(cracker, out var a, out var b))
+                {
+                    shell.WriteError(Loc.GetString("cmd-wfcracker-no-cracker"));
+                    return;
+                }
+
+                _anchors.BeginDrill(a);
+                _anchors.BeginDrill(b);
+
+                shell.WriteLine(Loc.GetString("cmd-wfcracker-began-drill",
+                    ("grid", EntityManager.ToPrettyString(cracker.Owner).ToString())));
+                return;
+
+            default:
+                Reject(shell);
+                return;
+        }
+    }
+
+    /// <summary>Spreads a fissure ring on each anchor now, or runs the extraction surge without waiting for a cut.</summary>
+    private void ExecuteFissure(IConsoleShell shell, string target)
+    {
+        if (!TryGetCracker(shell, out var cracker))
+            return;
+
+        switch (target)
+        {
+            case TargetRing:
+                if (!TryGetPair(cracker, out var a, out var b))
+                {
+                    shell.WriteError(Loc.GetString("cmd-wfcracker-no-cracker"));
+                    return;
+                }
+
+                var carriers = 0;
+                var spread = 0;
+
+                if (EntityManager.TryGetComponent<WFFissureSpawnerComponent>(a.Owner, out var spawnerA))
+                {
+                    carriers++;
+
+                    if (_fissures.ForceRing((a.Owner, spawnerA)))
+                        spread++;
+                }
+
+                if (EntityManager.TryGetComponent<WFFissureSpawnerComponent>(b.Owner, out var spawnerB))
+                {
+                    carriers++;
+
+                    if (_fissures.ForceRing((b.Owner, spawnerB)))
+                        spread++;
+                }
+
+                if (carriers == 0)
+                {
+                    shell.WriteError(Loc.GetString("cmd-wfcracker-no-fissures"));
+                    return;
+                }
+
+                shell.WriteLine(Loc.GetString("cmd-wfcracker-fissured", ("count", spread)));
+                return;
+
+            case TargetSurge:
+                shell.WriteLine(Loc.GetString("cmd-wfcracker-surged",
+                    ("count", _fissures.ForceSurge(cracker.Owner))));
+                return;
+
+            default:
+                Reject(shell);
+                return;
+        }
     }
 
     /// <summary>Finishes either the running cut or both anchors' drills at once.</summary>
@@ -556,8 +658,14 @@ public sealed partial class WFCrackerCommand : LocalizedEntityCommands
                         return CompletionResult.FromHintOptions(
                             Enum.GetNames<WFCrackState>(),
                             Loc.GetString("cmd-wfcracker-hint-state"));
+                    case SubBegin:
+                        return CompletionResult.FromHintOptions(Targets, Loc.GetString("cmd-wfcracker-hint-target"));
                     case SubComplete:
                         return CompletionResult.FromHintOptions(Targets, Loc.GetString("cmd-wfcracker-hint-target"));
+                    case SubFissure:
+                        return CompletionResult.FromHintOptions(
+                            FissureTargets,
+                            Loc.GetString("cmd-wfcracker-hint-fissure"));
                     default:
                         return CompletionResult.Empty;
                 }
