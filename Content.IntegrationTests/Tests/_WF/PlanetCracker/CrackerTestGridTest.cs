@@ -5,6 +5,7 @@ using System.Numerics;
 using System.Reflection;
 using Content.IntegrationTests.Pair;
 using Content.Server._CE.ZLevels.Core;
+using Content.Server._CE.ZLevels.Core.Components;
 using Content.Server._WF.PlanetCracker.Cracker;
 using Content.Server._WF.PlanetCracker.Planets;
 using Content.Server._WF.PlanetCracker.Testing;
@@ -21,6 +22,7 @@ using Robust.Shared.Map.Components;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics.Components;
 using Robust.Shared.Prototypes;
+using static Content.IntegrationTests.Tests._WF.PlanetCracker.PlanetCrackerFixture;
 
 namespace Content.IntegrationTests.Tests._WF.PlanetCracker;
 
@@ -32,11 +34,9 @@ namespace Content.IntegrationTests.Tests._WF.PlanetCracker;
 [TestOf(typeof(WFTestGridFactory))]
 public sealed class CrackerTestGridTest
 {
-    private const string Surface = "WFSurfaceAsclepiu";
     private const string Crate = "WFAnchorCrate";
     private const string Anchor = "WFGravityAnchor";
     private const string Gravgen = "WFTransportGravgen";
-    private const string HullTile = "FloorSteel";
 
     /// <summary>Plan F.1: fourteen entities on the tiny cracker.</summary>
     private static readonly Dictionary<string, int> CrackerContents = new()
@@ -535,6 +535,93 @@ public sealed class CrackerTestGridTest
         await pair.CleanReturnAsync();
     }
 
+    /// <summary>
+    /// The centrifuge sweep's readout: it climbs from a cold start with the charge, and the at-full latch closes only
+    /// at FullOn and then holds until the spin falls below FullOff (design D25). Stands in for the headless vv check,
+    /// which no automated run can perform.
+    /// </summary>
+    [Test]
+    public async Task CentrifugeSpinReadoutTracksChargeWithHysteresis()
+    {
+        await using var pair = await PoolManager.GetServerClient();
+        var server = pair.Server;
+        var entMan = server.EntMan;
+
+        var map = await pair.CreateTestMap();
+        var cracker = await BuildCracker(pair, map.MapId);
+        var centrifuge = EntityUid.Invalid;
+        var cold = 1f;
+
+        await server.WaitAssertion(() =>
+        {
+            foreach (var uid in Children(entMan, cracker))
+            {
+                if (entMan.HasComponent<WFCentrifugeComponent>(uid))
+                    centrifuge = uid;
+            }
+
+            Assert.That(centrifuge, Is.Not.EqualTo(EntityUid.Invalid), "The cracker hull carries no centrifuge.");
+
+            var comp = entMan.GetComponent<WFCentrifugeComponent>(centrifuge);
+            cold = comp.Spin;
+
+            using (Assert.EnterMultipleScope())
+            {
+                Assert.That(cold, Is.LessThan(0.1f), "charge: 0 did not leave the rotor cold.");
+                Assert.That(comp.AtFull, Is.False, "A cold rotor already reads as at full.");
+            }
+        });
+
+        await SetCharge(pair, centrifuge, 0.5f);
+
+        await server.WaitAssertion(() =>
+        {
+            var comp = entMan.GetComponent<WFCentrifugeComponent>(centrifuge);
+
+            using (Assert.EnterMultipleScope())
+            {
+                Assert.That(comp.Spin, Is.GreaterThan(cold), "The spin readout did not climb with the charge.");
+                Assert.That(comp.Spin, Is.EqualTo(0.5f).Within(0.05f),
+                    "The spin readout is not the charge as a fraction of MaxCharge.");
+                Assert.That(comp.AtFull, Is.False, "Half spin reads as at full.");
+            }
+        });
+
+        await SetCharge(pair, centrifuge, 0.96f);
+
+        await server.WaitAssertion(() =>
+        {
+            Assert.That(entMan.GetComponent<WFCentrifugeComponent>(centrifuge).AtFull, Is.False,
+                "The at-full latch closed below FullOn.");
+        });
+
+        await SetCharge(pair, centrifuge, 0.99f);
+
+        await server.WaitAssertion(() =>
+        {
+            Assert.That(entMan.GetComponent<WFCentrifugeComponent>(centrifuge).AtFull, Is.True,
+                "The at-full latch never closed at FullOn.");
+        });
+
+        await SetCharge(pair, centrifuge, 0.96f);
+
+        await server.WaitAssertion(() =>
+        {
+            Assert.That(entMan.GetComponent<WFCentrifugeComponent>(centrifuge).AtFull, Is.True,
+                "The latch let go between FullOff and FullOn, so there is no hysteresis.");
+        });
+
+        await SetCharge(pair, centrifuge, 0.94f);
+
+        await server.WaitAssertion(() =>
+        {
+            Assert.That(entMan.GetComponent<WFCentrifugeComponent>(centrifuge).AtFull, Is.False,
+                "The latch held below FullOff.");
+        });
+
+        await pair.CleanReturnAsync();
+    }
+
     /// <summary>The berth hangs eight tiles beyond the north hull edge, clear of the 15x15 deck.</summary>
     [Test]
     public async Task BerthCentreSitsOffTheHull()
@@ -567,6 +654,60 @@ public sealed class CrackerTestGridTest
                 var index = maps.LocalToTile(cracker, grid, new EntityCoordinates(cracker, local));
                 Assert.That(maps.TryGetTileRef(cracker, grid, index, out var tile) && !tile.Tile.IsEmpty, Is.False,
                     "The berth centre sits on the hull instead of off it.");
+            }
+        });
+
+        await pair.CleanReturnAsync();
+    }
+
+    /// <summary>The berth rectangle is one derivation off the berth centre, so the two can never drift apart.</summary>
+    [Test]
+    public async Task BerthRectIsCentredOnTheBerthCentre()
+    {
+        await using var pair = await PoolManager.GetServerClient();
+        var server = pair.Server;
+        var entMan = server.EntMan;
+        var crackers = server.System<WFCrackerSystem>();
+        var maps = server.System<SharedMapSystem>();
+
+        var map = await pair.CreateTestMap();
+        var cracker = await BuildCracker(pair, map.MapId);
+
+        // The factory sizes the berth after spawning its marker, so the pose the radar ghost reads is only final once
+        // the cracker sweep has refreshed it.
+        await server.WaitRunTicks(pair.SecondsToTicks(1.1f));
+
+        await server.WaitAssertion(() =>
+        {
+            var comp = entMan.GetComponent<WFPlanetCrackerComponent>(cracker);
+
+            Assert.That(crackers.TryGetBerthCentre((cracker, comp), out var centre), Is.True,
+                "Precondition: the berth centre resolves.");
+            Assert.That(crackers.TryGetBerthRect((cracker, comp), out var rect), Is.True,
+                "The berth rectangle could not be computed.");
+
+            var berth = entMan.GetComponent<WFChunkBerthComponent>(entMan.GetEntity(comp.Berth!.Value));
+
+            using (Assert.EnterMultipleScope())
+            {
+                Assert.That(rect.Center.X, Is.EqualTo(centre.Position.X).Within(0.01f),
+                    "The berth rectangle is not centred on the berth centre.");
+                Assert.That(rect.Center.Y, Is.EqualTo(centre.Position.Y).Within(0.01f),
+                    "The berth rectangle is not centred on the berth centre.");
+                Assert.That(rect.Box.Width, Is.EqualTo((float) berth.Size.X).Within(0.01f),
+                    "The berth rectangle is not the marker's width.");
+                Assert.That(rect.Box.Height, Is.EqualTo((float) berth.Size.Y).Within(0.01f),
+                    "The berth rectangle is not the marker's height.");
+
+                // The radar ghost draws the rectangle straight off this field, so it has to be the berth CENTRE, not
+                // the marker: nothing on the client can recover the marker-to-centre distance, which is not networked.
+                var localCentre = maps.WorldToLocal(cracker, entMan.GetComponent<MapGridComponent>(cracker),
+                    centre.Position);
+
+                Assert.That(comp.BerthLocalPos.X, Is.EqualTo(localCentre.X).Within(0.01f),
+                    "The grid component holds the marker pose, not the berth centre the radar ghost draws around.");
+                Assert.That(comp.BerthLocalPos.Y, Is.EqualTo(localCentre.Y).Within(0.01f),
+                    "The grid component holds the marker pose, not the berth centre the radar ghost draws around.");
             }
         });
 
@@ -636,7 +777,7 @@ public sealed class CrackerTestGridTest
         await server.WaitPost(() =>
         {
             var grid = mapMan.CreateGridEntity(map.MapId);
-            var floor = new Tile(tileDefs[HullTile].TileId);
+            var floor = new Tile(tileDefs[FloorTile].TileId);
             var tiles = new List<(Vector2i GridIndices, Tile Tile)>();
 
             for (var x = 0; x < 4; x++)
@@ -677,163 +818,137 @@ public sealed class CrackerTestGridTest
         await pair.CleanReturnAsync();
     }
 
-    /// <summary>Builds the tiny cracker through the factory and lets its fixtures settle.</summary>
-    private static async Task<EntityUid> BuildCracker(TestPair pair, MapId map, Vector2? offset = null)
-    {
-        var server = pair.Server;
-        var factory = server.System<WFTestGridFactory>();
-        var grid = EntityUid.Invalid;
-
-        await server.WaitPost(() => grid = factory.BuildCracker(map, offset ?? Vector2.Zero));
-        await server.WaitRunTicks(pair.SecondsToTicks(1f));
-        return grid;
-    }
-
-    /// <summary>Builds the micro transport through the factory and lets its fixtures settle.</summary>
-    private static async Task<EntityUid> BuildTransport(TestPair pair, MapId map, Vector2? offset = null)
-    {
-        var server = pair.Server;
-        var factory = server.System<WFTestGridFactory>();
-        var grid = EntityUid.Invalid;
-
-        await server.WaitPost(() => grid = factory.BuildTransport(map, offset ?? new Vector2(100f, 0f)));
-        await server.WaitRunTicks(pair.SecondsToTicks(1f));
-        return grid;
-    }
-
     /// <summary>
-    /// Winds every PowerCharge machine on a hull up to full so its gravity generator activates. The shipped charge
-    /// rates are 100 s for the mini gravgen and 240 s for the centrifuge, which no integration test can tick through;
-    /// PowerChargeComponent is [Access(typeof(PowerChargeSystem))], so the rate is raised by reflection and the
-    /// machine still has to charge, activate and light the grid on its own.
+    /// Every wfcracker subcommand the crack control added, run through the console host against a spawned hull.
+    /// The arity is per subcommand rather than a blanket length check, so this pins both halves: the one-argument forms
+    /// dispatch and move the hull, and a one-argument form handed a second argument is refused instead. Stands in for
+    /// the by-hand console pass, which no automated run can perform.
     /// </summary>
-    private static async Task Energise(TestPair pair, EntityUid grid)
+    [Test]
+    public async Task WfCrackerCommandSubcommandsDispatch()
     {
+        await using var pair = await PoolManager.GetServerClient();
         var server = pair.Server;
         var entMan = server.EntMan;
+        var transform = server.System<SharedTransformSystem>();
 
-        var rate = typeof(PowerChargeComponent).GetProperty("ChargeRate",
-            BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+        await EnableFeature(pair);
 
-        Assert.That(rate, Is.Not.Null, "PowerChargeComponent.ChargeRate was not found.");
+        var stack = await BuildStandalone(pair);
+        var ground = stack[0];
+        var orbit = stack[^1];
+        var orbitMap = MapId.Nullspace;
+
+        await server.WaitAssertion(() =>
+        {
+            Assert.That(entMan.HasComponent<WFOrbitLayerComponent>(orbit), Is.True,
+                "Precondition: the top layer of the stack is the orbit layer.");
+
+            orbitMap = entMan.GetComponent<MapComponent>(orbit).MapId;
+        });
+
+        await LayTiles(pair, ground, new Vector2i(-4, -4), new Vector2i(28, 8));
+
+        // The hull has to be on the orbit layer for the survey edge and for the fall to have somewhere to go.
+        var cracker = await BuildCracker(pair, orbitMap);
+        var anchors = new List<EntityUid>();
 
         await server.WaitPost(() =>
         {
-            foreach (var uid in Children(entMan, grid))
+            anchors.Add(entMan.SpawnEntity(Anchor, new EntityCoordinates(ground, new Vector2(0.5f, 0.5f))));
+            anchors.Add(entMan.SpawnEntity(Anchor, new EntityCoordinates(ground, new Vector2(24.5f, 0.5f))));
+
+            // Hand-spawned anchors belong to nobody, and an unowned pair is invisible to the hull's state machine.
+            foreach (var anchor in anchors)
             {
-                if (entMan.TryGetComponent(uid, out PowerChargeComponent? charge))
-                    rate!.SetValue(charge, 10f);
+                entMan.GetComponent<WFGravityAnchorComponent>(anchor).Cracker = entMan.GetNetEntity(cracker);
             }
         });
 
         await server.WaitRunTicks(pair.SecondsToTicks(2f));
-    }
-
-    /// <summary>Turns the feature on for this pair; TestPair reverts the change when the pair is returned.</summary>
-    private static async Task EnableFeature(TestPair pair)
-    {
-        await pair.Server.WaitPost(() => pair.Server.CfgMan.SetCVar(PlanetCrackerCVars.PlanetNetworks, true));
-    }
-
-    /// <summary>Builds an unowned Asclepiu stack at the origin and returns its layers, ground first.</summary>
-    private static async Task<List<EntityUid>> BuildStandalone(TestPair pair)
-    {
-        var server = pair.Server;
-        var entMan = server.EntMan;
-        var proto = server.ResolveDependency<IPrototypeManager>();
-        var networks = server.System<WFPlanetNetworkSystem>();
-        var layers = new List<EntityUid>();
-
         await server.WaitPost(() =>
         {
-            var surface = proto.Index<WFPlanetSurfacePrototype>(Surface);
-            var built = networks.BuildNetwork(surface, Vector2.Zero, "Asclepiu", null);
-
-            Assert.That(built, Is.Not.Null, "The planet network failed to build.");
-            layers.AddRange(entMan.GetComponent<WFPlanetNetworkComponent>(built!.Value).Layers);
-        });
-
-        await server.WaitRunTicks(1);
-        return layers;
-    }
-
-    /// <summary>
-    /// Materialises a rectangle of ground so the footprint checks have solid tiles to find. SetTiles is deliberate:
-    /// unlike BiomeSystem.ReserveTiles it leaves BiomeComponent.ModifiedTiles alone, so a reservation test can still
-    /// tell what the anchor pinned.
-    /// </summary>
-    private static async Task LayTiles(TestPair pair, EntityUid ground, Vector2i from, Vector2i to)
-    {
-        var server = pair.Server;
-        var entMan = server.EntMan;
-        var maps = server.System<SharedMapSystem>();
-        var tileDefs = server.ResolveDependency<ITileDefinitionManager>();
-
-        await server.WaitPost(() =>
-        {
-            var grid = entMan.GetComponent<MapGridComponent>(ground);
-            var floor = new Tile(tileDefs[HullTile].TileId);
-            var tiles = new List<(Vector2i GridIndices, Tile Tile)>();
-
-            for (var x = from.X; x <= to.X; x++)
-            for (var y = from.Y; y <= to.Y; y++)
+            foreach (var anchor in anchors)
             {
-                tiles.Add((new Vector2i(x, y), floor));
-            }
-
-            maps.SetTiles(ground, grid, tiles);
-        });
-
-        await server.WaitRunTicks(1);
-    }
-
-    /// <summary>Tears a stack down through its own network entity.</summary>
-    private static async Task Teardown(TestPair pair, List<EntityUid> layers)
-    {
-        var server = pair.Server;
-        var entMan = server.EntMan;
-        var networks = server.System<WFPlanetNetworkSystem>();
-
-        await server.WaitPost(() =>
-        {
-            if (entMan.TryGetComponent(layers[0], out Content.Shared._CE.ZLevels.Core.Components.CEZMapComponent? zMap) &&
-                zMap.NetworkUid is { } network)
-            {
-                networks.DeleteNetwork(network);
+                transform.AnchorEntity(anchor);
             }
         });
 
-        await server.WaitRunTicks(5);
-    }
+        await server.WaitRunTicks(pair.SecondsToTicks(2f));
 
-    /// <summary>Every entity parented straight to a grid; machine parts live inside their machine, not here.</summary>
-    private static IEnumerable<EntityUid> Children(IEntityManager entMan, EntityUid grid)
-    {
-        var found = new List<EntityUid>();
-        var query = entMan.AllEntityQueryEnumerator<TransformComponent>();
+        await server.WaitAssertion(() =>
+            Assert.That(entMan.GetComponent<WFPlanetCrackerComponent>(cracker).State,
+                Is.EqualTo(WFCrackState.AnchorsPlaced),
+                "Precondition: an owned pair on the surface puts the hull at anchors-placed."));
 
-        while (query.MoveNext(out var uid, out var xform))
+        // Two arguments: both drills finish at once and the pair becomes targetable.
+        await server.WaitPost(() => server.ConsoleHost.ExecuteCommand(null, "wfcracker complete drill"));
+        await server.WaitRunTicks(pair.SecondsToTicks(1f));
+
+        await server.WaitAssertion(() =>
         {
-            if (xform.ParentUid == grid)
-                found.Add(uid);
-        }
+            using (Assert.EnterMultipleScope())
+            {
+                foreach (var anchor in anchors)
+                {
+                    Assert.That(entMan.GetComponent<WFGravityAnchorComponent>(anchor).State,
+                        Is.EqualTo(WFAnchorState.Locked), "complete drill left an anchor unlocked.");
+                }
 
-        return found;
-    }
+                Assert.That(entMan.GetComponent<WFPlanetCrackerComponent>(cracker).State,
+                    Is.EqualTo(WFCrackState.AnchorsLocked), "complete drill did not move the hull's stage.");
+            }
+        });
 
-    /// <summary>Prototype id to count for everything sitting on a grid.</summary>
-    private static Dictionary<string, int> Contents(IEntityManager entMan, EntityUid grid)
-    {
-        var counts = new Dictionary<string, int>();
+        // One argument, which the old blanket two-argument gate would have refused outright.
+        await server.WaitPost(() => server.ConsoleHost.ExecuteCommand(null, "wfcracker disconnect"));
+        await server.WaitRunTicks(pair.SecondsToTicks(1f));
 
-        foreach (var uid in Children(entMan, grid))
+        await server.WaitAssertion(() =>
         {
-            if (entMan.GetComponent<MetaDataComponent>(uid).EntityPrototype?.ID is not { } id)
-                continue;
+            using (Assert.EnterMultipleScope())
+            {
+                foreach (var anchor in anchors)
+                {
+                    Assert.That(entMan.GetComponent<WFGravityAnchorComponent>(anchor).State,
+                        Is.EqualTo(WFAnchorState.Off),
+                        "The one-argument disconnect did not switch both anchors off.");
+                }
+            }
+        });
 
-            counts[id] = counts.GetValueOrDefault(id) + 1;
-        }
+        // Two arguments again: the stage is forced straight to a cut, which is the only escape hatch design D23 leaves.
+        await server.WaitPost(() => server.ConsoleHost.ExecuteCommand(null, "wfcracker state Cracking"));
+        await server.WaitRunTicks(1);
 
-        return counts;
+        await server.WaitAssertion(() =>
+            Assert.That(entMan.GetComponent<WFPlanetCrackerComponent>(cracker).State, Is.EqualTo(WFCrackState.Cracking),
+                "state <stage> did not move the hull's stage."));
+
+        // The refusal paths (`state NotAStage`, `fall now`) are deliberately NOT driven here: every one of them ends in
+        // shell.WriteError, and TestingServerConsoleHost.WriteError is an Assert.Fail, so a pair cannot watch a console
+        // command refuse anything. What the per-subcommand arity buys is covered positively instead - `disconnect` above
+        // and `fall` below are one-argument forms the old blanket two-argument gate would have rejected outright.
+
+        await server.WaitPost(() => server.ConsoleHost.ExecuteCommand(null, "wfcracker fall"));
+        await server.WaitRunTicks(1);
+
+        await server.WaitAssertion(() =>
+        {
+            using (Assert.EnterMultipleScope())
+            {
+                Assert.That(entMan.GetComponent<WFPlanetCrackerComponent>(cracker).State,
+                    Is.EqualTo(WFCrackState.Falling), "The one-argument fall did not push the hull.");
+                Assert.That(entMan.HasComponent<CEZGridFallerComponent>(cracker), Is.True,
+                    "The fall never made the hull a faller.");
+            }
+        });
+
+        // The hull is mid-transit, so it goes before the stack it was falling into.
+        await server.WaitPost(() => entMan.DeleteEntity(cracker));
+        await server.WaitRunTicks(1);
+
+        await Teardown(pair, stack);
+        await pair.CleanReturnAsync();
     }
 }

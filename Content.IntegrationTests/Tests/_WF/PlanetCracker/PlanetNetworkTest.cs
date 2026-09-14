@@ -13,6 +13,7 @@ using Content.Shared._CE.ZLevels.Core.Components;
 using Content.Shared._WF.CCVar;
 using Content.Shared._WF.PlanetCracker.Planets;
 using Content.Shared.Atmos;
+using Content.Shared.Gravity;
 using Content.Shared.Parallax.Biomes;
 using Content.Shared.Shuttles.Components;
 using Robust.Shared.GameObjects;
@@ -24,9 +25,10 @@ using Robust.Shared.Prototypes;
 namespace Content.IntegrationTests.Tests._WF.PlanetCracker;
 
 /// <summary>
-/// A planet is a z-map network: a biome ground layer, fall-through air layers, a cloud layer and a vacuum orbit layer
-/// that is the only FTL door in or out. These cover the build order, the per-layer fixups, the fall exemption and both
-/// halves of the FTL gate.
+/// A planet is a z-map network: a biome ground layer, fall-through air layers and a vacuum orbit layer that is the only
+/// FTL door in or out. These cover the build order, the per-layer fixups, the fall exemption and both halves of the FTL
+/// gate. A crackable world carries no cloud layer, because a cloud deck ends the client's downward z-walk and paints
+/// over everything below it, which hid the crack site from the one place the crew watches it from.
 /// </summary>
 [TestFixture]
 [TestOf(typeof(WFPlanetNetworkSystem))]
@@ -41,8 +43,11 @@ public sealed class PlanetNetworkTest
     /// <summary>The network registry's mixture, which is stamped over every layer at MapInit.</summary>
     private const float RegistryTemperature = 293.15f;
 
-    /// <summary>Layer roles for WFSurfaceAsclepiu: 0 ground, 1-2 air, 3 cloud, 4 orbit.</summary>
+    /// <summary>Layer roles for WFSurfaceAsclepiu: 0 ground, 1-3 air, 4 orbit. No cloud layer.</summary>
     private const int LayerCount = 5;
+
+    /// <summary>The air layers of the Asclepiu stack, which airLayers 3 puts at depths 1, 2 and 3.</summary>
+    private const int AirLayerCount = 3;
 
     /// <summary>Everything a built stack exposes to a test.</summary>
     private sealed class Stack
@@ -142,8 +147,13 @@ public sealed class PlanetNetworkTest
             using (Assert.EnterMultipleScope())
             {
                 Assert.That(IsSpace(atmos, stack.Ground), Is.False, "The ground layer should not be space.");
-                Assert.That(IsSpace(atmos, stack.Layers[1]), Is.False, "Air layer 1 should not be space.");
-                Assert.That(IsSpace(atmos, stack.Layers[2]), Is.False, "Air layer 2 should not be space.");
+
+                // Layer 3 is the one the dropped cloud deck used to occupy; airLayers 3 has to give it real air.
+                for (var depth = 1; depth <= AirLayerCount; depth++)
+                {
+                    Assert.That(IsSpace(atmos, stack.Layers[depth]), Is.False, $"Air layer {depth} should not be space.");
+                }
+
                 Assert.That(IsSpace(atmos, stack.Orbit), Is.True, "The orbit layer should be vacuum.");
             }
 
@@ -154,6 +164,56 @@ public sealed class PlanetNetworkTest
             // post-init SetMapAtmosphere fixup undid the registry stamp.
             Assert.That(ground!.Temperature, Is.EqualTo(GroundTemperature).Within(0.01f),
                 $"The ground layer kept the network registry's {RegistryTemperature} K air instead of its own surface mixture.");
+        });
+
+        await Teardown(pair, stack.Network);
+        await pair.CleanReturnAsync();
+    }
+
+    /// <summary>
+    /// A crackable world has no cloud deck: the client's downward z-walk stops at the first cloud layer and the cloud's
+    /// own pass then paints an opaque full-screen deck, which hid the crack circle from orbit. airLayers 3 replaces it,
+    /// so the stack is still five maps deep with orbit at depth 4 and every layer between is breathable air.
+    /// </summary>
+    [Test]
+    public async Task CrackableStackHasNoCloudLayer()
+    {
+        await using var pair = await PoolManager.GetServerClient();
+        var server = pair.Server;
+        var entMan = server.EntMan;
+
+        await EnableFeature(pair);
+        var stack = await BuildStandalone(pair);
+
+        await server.WaitAssertion(() =>
+        {
+            Assert.That(stack.Layers, Has.Count.EqualTo(LayerCount),
+                "Dropping the cloud layer must not change the depth of the stack.");
+
+            using (Assert.EnterMultipleScope())
+            {
+                foreach (var layer in stack.Layers)
+                {
+                    Assert.That(entMan.HasComponent<CEZCloudLayerComponent>(layer), Is.False,
+                        $"Layer {entMan.GetComponent<CEZMapComponent>(layer).Depth} is a cloud deck, which blocks the view from orbit.");
+                }
+
+                // The cloud layer carried the same MapLight and inherent Gravity as an air layer, so the third air
+                // layer that replaced it has to carry both or the stack lost a level of lit, gravity-bearing fall.
+                for (var depth = 1; depth <= AirLayerCount; depth++)
+                {
+                    var layer = stack.Layers[depth];
+                    Assert.That(entMan.HasComponent<MapLightComponent>(layer), Is.True,
+                        $"Air layer {depth} has no map light.");
+                    Assert.That(entMan.HasComponent<GravityComponent>(layer), Is.True,
+                        $"Air layer {depth} has no inherent gravity.");
+                    Assert.That(entMan.HasComponent<WFOrbitLayerComponent>(layer), Is.False,
+                        $"Air layer {depth} is marked as orbit.");
+                }
+
+                Assert.That(entMan.GetComponent<CEZMapComponent>(stack.Orbit).Depth, Is.EqualTo(LayerCount - 1),
+                    "Orbit must stay at depth 4, because every fall duration is keyed to it.");
+            }
         });
 
         await Teardown(pair, stack.Network);
@@ -385,10 +445,14 @@ public sealed class PlanetNetworkTest
         await pair.CleanReturnAsync();
     }
 
-    /// <summary>Turns the feature on for this pair; TestPair reverts the change when the pair is returned.</summary>
-    private static async Task EnableFeature(TestPair pair)
+    /// <summary>
+    /// Turns the feature on for this pair, through the shared fixture. BuildStandalone and Teardown below stay local:
+    /// they wrap the layers in a Stack and tear down through the network uid, so they are a different shape rather than
+    /// a copy of the fixture's.
+    /// </summary>
+    private static Task EnableFeature(TestPair pair)
     {
-        await pair.Server.WaitPost(() => pair.Server.CfgMan.SetCVar(PlanetCrackerCVars.PlanetNetworks, true));
+        return PlanetCrackerFixture.EnableFeature(pair);
     }
 
     /// <summary>Builds an unowned Asclepiu stack at the origin, with no sector body behind it.</summary>

@@ -132,7 +132,7 @@ public sealed partial class WFGravityAnchorSystem
     }
 
     /// <summary>World distance in tiles to this anchor's partner, which may be out of PVS or already gone.</summary>
-    private bool TryGetPairDistance(Entity<WFGravityAnchorComponent> ent, out float distance)
+    public bool TryGetPairDistance(Entity<WFGravityAnchorComponent> ent, out float distance)
     {
         distance = 0f;
 

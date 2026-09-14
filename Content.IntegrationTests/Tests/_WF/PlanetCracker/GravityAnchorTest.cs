@@ -13,6 +13,7 @@ using Content.Server.Destructible.Thresholds.Triggers;
 using Content.Shared._CE.ZLevels.Core.Components;
 using Content.Shared._WF.CCVar;
 using Content.Shared._WF.PlanetCracker.Anchors;
+using Content.Shared._WF.PlanetCracker.Cracker;
 using Content.Shared._WF.PlanetCracker.Planets;
 using Content.Shared.Construction.Components;
 using Content.Shared.Damage;
@@ -31,6 +32,7 @@ using Robust.Shared.Map;
 using Robust.Shared.Map.Components;
 using Robust.Shared.Maths;
 using Robust.Shared.Prototypes;
+using static Content.IntegrationTests.Tests._WF.PlanetCracker.PlanetCrackerFixture;
 
 namespace Content.IntegrationTests.Tests._WF.PlanetCracker;
 
@@ -43,7 +45,6 @@ namespace Content.IntegrationTests.Tests._WF.PlanetCracker;
 [TestOf(typeof(WFGravityAnchorSystem))]
 public sealed class GravityAnchorTest
 {
-    private const string Surface = "WFSurfaceAsclepiu";
     private const string Anchor = "WFGravityAnchor";
     private const string Crate = "WFAnchorCrate";
     private const string Wall = "WallSolid";
@@ -85,7 +86,7 @@ public sealed class GravityAnchorTest
         await EnableFeature(pair);
         var stack = await BuildStandalone(pair);
         var deck = await pair.CreateTestMap();
-        await LayGround(pair, stack[0], new Vector2i(-4, -4), new Vector2i(8, 8));
+        await LayTiles(pair, stack[0], new Vector2i(-4, -4), new Vector2i(8, 8));
         var parked = await ParkHull(pair, stack[0], new Vector2(20f, 20f));
 
         await server.WaitAssertion(() =>
@@ -136,7 +137,7 @@ public sealed class GravityAnchorTest
 
         await EnableFeature(pair);
         var stack = await BuildStandalone(pair);
-        await LayGround(pair, stack[0], new Vector2i(-4, -4), new Vector2i(8, 8));
+        await LayTiles(pair, stack[0], new Vector2i(-4, -4), new Vector2i(8, 8));
 
         var wall = EntityUid.Invalid;
 
@@ -180,7 +181,7 @@ public sealed class GravityAnchorTest
 
         await EnableFeature(pair);
         var stack = await BuildStandalone(pair);
-        await LayGround(pair, stack[0], new Vector2i(-4, -4), new Vector2i(8, 8));
+        await LayTiles(pair, stack[0], new Vector2i(-4, -4), new Vector2i(8, 8));
 
         // One tick throughout: the anchor is still a dynamic body here, and letting physics run while a wall overlaps
         // its three-by-three fixture would shove it off the tile the test is about.
@@ -226,7 +227,7 @@ public sealed class GravityAnchorTest
 
         await EnableFeature(pair);
         var stack = await BuildStandalone(pair);
-        await LayGround(pair, stack[0], new Vector2i(-4, -4), new Vector2i(8, 8));
+        await LayTiles(pair, stack[0], new Vector2i(-4, -4), new Vector2i(8, 8));
 
         await server.WaitAssertion(() =>
         {
@@ -288,7 +289,7 @@ public sealed class GravityAnchorTest
 
         await EnableFeature(pair);
         var stack = await BuildStandalone(pair);
-        await LayGround(pair, stack[0], new Vector2i(-4, -4), new Vector2i(56, 4));
+        await LayTiles(pair, stack[0], new Vector2i(-4, -4), new Vector2i(56, 4));
 
         var log = server.System<WFAnchorTestEventSystem>();
         await server.WaitPost(() => log.Clear());
@@ -357,7 +358,7 @@ public sealed class GravityAnchorTest
 
         await EnableFeature(pair);
         var stack = await BuildStandalone(pair);
-        await LayGround(pair, stack[0], new Vector2i(-4, -4), new Vector2i(32, 4));
+        await LayTiles(pair, stack[0], new Vector2i(-4, -4), new Vector2i(32, 4));
 
         await server.WaitAssertion(() =>
         {
@@ -406,8 +407,8 @@ public sealed class GravityAnchorTest
         var stack = await BuildStandalone(pair);
         var other = await BuildStandalone(pair);
 
-        await LayGround(pair, stack[0], new Vector2i(-4, -4), new Vector2i(4, 4));
-        await LayGround(pair, other[0], new Vector2i(20, -4), new Vector2i(28, 4));
+        await LayTiles(pair, stack[0], new Vector2i(-4, -4), new Vector2i(4, 4));
+        await LayTiles(pair, other[0], new Vector2i(20, -4), new Vector2i(28, 4));
 
         await server.WaitAssertion(() =>
         {
@@ -446,7 +447,7 @@ public sealed class GravityAnchorTest
 
         await EnableFeature(pair);
         var stack = await BuildStandalone(pair);
-        await LayGround(pair, stack[0], new Vector2i(-4, -4), new Vector2i(32, 4));
+        await LayTiles(pair, stack[0], new Vector2i(-4, -4), new Vector2i(32, 4));
 
         var log = server.System<WFAnchorTestEventSystem>();
         await server.WaitPost(() => log.Clear());
@@ -527,7 +528,7 @@ public sealed class GravityAnchorTest
 
         await EnableFeature(pair);
         var stack = await BuildStandalone(pair);
-        await LayGround(pair, stack[0], new Vector2i(-4, -4), new Vector2i(32, 4));
+        await LayTiles(pair, stack[0], new Vector2i(-4, -4), new Vector2i(32, 4));
 
         var log = server.System<WFAnchorTestEventSystem>();
         await server.WaitPost(() => log.Clear());
@@ -643,7 +644,7 @@ public sealed class GravityAnchorTest
 
         await EnableFeature(pair);
         var stack = await BuildStandalone(pair);
-        await LayGround(pair, stack[0], new Vector2i(-4, -4), new Vector2i(32, 4));
+        await LayTiles(pair, stack[0], new Vector2i(-4, -4), new Vector2i(32, 4));
 
         var log = server.System<WFAnchorTestEventSystem>();
         await server.WaitPost(() => log.Clear());
@@ -705,7 +706,7 @@ public sealed class GravityAnchorTest
 
         await EnableFeature(pair);
         var stack = await BuildStandalone(pair);
-        await LayGround(pair, stack[0], new Vector2i(-4, -4), new Vector2i(32, 4));
+        await LayTiles(pair, stack[0], new Vector2i(-4, -4), new Vector2i(32, 4));
 
         var log = server.System<WFAnchorTestEventSystem>();
         await server.WaitPost(() => log.Clear());
@@ -768,7 +769,7 @@ public sealed class GravityAnchorTest
 
         await EnableFeature(pair);
         var stack = await BuildStandalone(pair);
-        await LayGround(pair, stack[0], new Vector2i(-4, -4), new Vector2i(32, 4));
+        await LayTiles(pair, stack[0], new Vector2i(-4, -4), new Vector2i(32, 4));
 
         var a = EntityUid.Invalid;
         var b = EntityUid.Invalid;
@@ -840,7 +841,7 @@ public sealed class GravityAnchorTest
 
         await EnableFeature(pair);
         var stack = await BuildStandalone(pair);
-        await LayGround(pair, stack[0], new Vector2i(-4, -4), new Vector2i(32, 4));
+        await LayTiles(pair, stack[0], new Vector2i(-4, -4), new Vector2i(32, 4));
 
         var log = server.System<WFAnchorTestEventSystem>();
         await server.WaitPost(() => log.Clear());
@@ -908,7 +909,7 @@ public sealed class GravityAnchorTest
         await EnableFeature(pair);
         var stack = await BuildStandalone(pair);
         var deck = await pair.CreateTestMap();
-        await LayGround(pair, stack[0], new Vector2i(-4, -4), new Vector2i(8, 8));
+        await LayTiles(pair, stack[0], new Vector2i(-4, -4), new Vector2i(8, 8));
         var parked = await ParkHull(pair, stack[0], new Vector2(20f, 20f));
 
         await server.WaitAssertion(() =>
@@ -1098,63 +1099,6 @@ public sealed class GravityAnchorTest
         return match.Success ? int.Parse(match.Groups[1].Value) : null;
     }
 
-    /// <summary>Turns the feature on for this pair; TestPair reverts the change when the pair is returned.</summary>
-    private static async Task EnableFeature(TestPair pair)
-    {
-        await pair.Server.WaitPost(() => pair.Server.CfgMan.SetCVar(PlanetCrackerCVars.PlanetNetworks, true));
-    }
-
-    /// <summary>Builds an unowned Asclepiu stack and returns its layers, ground first.</summary>
-    private static async Task<List<EntityUid>> BuildStandalone(TestPair pair)
-    {
-        var server = pair.Server;
-        var entMan = server.EntMan;
-        var proto = server.ResolveDependency<IPrototypeManager>();
-        var networks = server.System<WFPlanetNetworkSystem>();
-        var layers = new List<EntityUid>();
-
-        await server.WaitPost(() =>
-        {
-            var surface = proto.Index<WFPlanetSurfacePrototype>(Surface);
-            var built = networks.BuildNetwork(surface, Vector2.Zero, "Asclepiu", null);
-
-            Assert.That(built, Is.Not.Null, "The planet network failed to build.");
-            layers.AddRange(entMan.GetComponent<WFPlanetNetworkComponent>(built!.Value).Layers);
-        });
-
-        await server.WaitRunTicks(1);
-        return layers;
-    }
-
-    /// <summary>
-    /// Materialises a rectangle of ground. SetTiles is deliberate: unlike BiomeSystem.ReserveTiles it leaves
-    /// BiomeComponent.ModifiedTiles alone, so the reservation test can still tell what the anchor itself pinned.
-    /// </summary>
-    private static async Task LayGround(TestPair pair, EntityUid ground, Vector2i from, Vector2i to)
-    {
-        var server = pair.Server;
-        var entMan = server.EntMan;
-        var maps = server.System<SharedMapSystem>();
-        var tileDefs = server.ResolveDependency<ITileDefinitionManager>();
-
-        await server.WaitPost(() =>
-        {
-            var grid = entMan.GetComponent<MapGridComponent>(ground);
-            var floor = new Tile(tileDefs[GroundTile].TileId);
-            var tiles = new List<(Vector2i GridIndices, Tile Tile)>();
-
-            for (var x = from.X; x <= to.X; x++)
-            for (var y = from.Y; y <= to.Y; y++)
-            {
-                tiles.Add((new Vector2i(x, y), floor));
-            }
-
-            maps.SetTiles(ground, grid, tiles);
-        });
-
-        await server.WaitRunTicks(1);
-    }
-
     /// <summary>A small hull parked on the ground layer: the cargo bay the ground rule has to refuse.</summary>
     private static async Task<EntityUid> ParkHull(TestPair pair, EntityUid ground, Vector2 position)
     {
@@ -1186,22 +1130,6 @@ public sealed class GravityAnchorTest
 
         await server.WaitRunTicks(1);
         return hull;
-    }
-
-    /// <summary>Tears a stack down through its own network entity.</summary>
-    private static async Task Teardown(TestPair pair, List<EntityUid> layers)
-    {
-        var server = pair.Server;
-        var entMan = server.EntMan;
-        var networks = server.System<WFPlanetNetworkSystem>();
-
-        await server.WaitPost(() =>
-        {
-            if (entMan.TryGetComponent(layers[0], out CEZMapComponent? zMap) && zMap.NetworkUid is { } network)
-                networks.DeleteNetwork(network);
-        });
-
-        await server.WaitRunTicks(5);
     }
 }
 
@@ -1235,6 +1163,15 @@ public sealed class WFAnchorTestEventSystem : EntitySystem
     /// <summary>Every anchor that switched off since the last Clear.</summary>
     public readonly List<WFAnchorSwitchedOffEvent> SwitchedOff = new();
 
+    /// <summary>Every crack stage change since the last Clear.</summary>
+    public readonly List<WFCrackStateChangedEvent> StateChanges = new();
+
+    /// <summary>Every crack that finished cutting since the last Clear; the F5 extraction hook.</summary>
+    public readonly List<WFCrackCompletedEvent> CracksCompleted = new();
+
+    /// <summary>Every hull pushed into a fall since the last Clear; the F5 chunk hook.</summary>
+    public readonly List<WFCrackerFallingEvent> Falling = new();
+
     /// <summary>While true, every switch-off attempt is refused, exactly as a later feature's own veto would.</summary>
     public bool VetoSwitchOff;
 
@@ -1252,6 +1189,12 @@ public sealed class WFAnchorTestEventSystem : EntitySystem
         SubscribeLocalEvent<WFAnchorDestroyedEvent>((ref WFAnchorDestroyedEvent ev) => Destroyed.Add(ev));
         SubscribeLocalEvent<WFAnchorSwitchedOffEvent>((ref WFAnchorSwitchedOffEvent ev) => SwitchedOff.Add(ev));
         SubscribeLocalEvent<WFAnchorSwitchOffAttemptEvent>(OnSwitchOffAttempt);
+
+        // F4's three are broadcast [ByRefEvent] record structs too, so they belong on this recorder rather than on a
+        // second system competing for the same broadcast subscriptions.
+        SubscribeLocalEvent<WFCrackStateChangedEvent>((ref WFCrackStateChangedEvent ev) => StateChanges.Add(ev));
+        SubscribeLocalEvent<WFCrackCompletedEvent>((ref WFCrackCompletedEvent ev) => CracksCompleted.Add(ev));
+        SubscribeLocalEvent<WFCrackerFallingEvent>((ref WFCrackerFallingEvent ev) => Falling.Add(ev));
     }
 
     /// <summary>Forgets everything recorded so far and lifts the veto.</summary>
@@ -1265,6 +1208,9 @@ public sealed class WFAnchorTestEventSystem : EntitySystem
         Broken.Clear();
         Destroyed.Clear();
         SwitchedOff.Clear();
+        StateChanges.Clear();
+        CracksCompleted.Clear();
+        Falling.Clear();
         VetoSwitchOff = false;
     }
 

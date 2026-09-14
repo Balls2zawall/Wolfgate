@@ -1,0 +1,30 @@
+<controls:FancyWindow xmlns="https://spacestation14.io"
+                      xmlns:controls="clr-namespace:Content.Client.UserInterface.Controls"
+                      xmlns:cracker="clr-namespace:Content.Client._WF.PlanetCracker.Cracker"
+                      MinSize="330 300"
+                      SetSize="380 340">
+    <BoxContainer Orientation="Vertical" Margin="6">
+        <BoxContainer Orientation="Horizontal" Margin="0 0 0 4">
+            <Label Text="{Loc 'power-charge-window-power'}" StyleClasses="StatusFieldTitle"
+                   HorizontalExpand="True" VerticalAlignment="Center" />
+            <Button Name="PowerOnButton" Text="{Loc 'power-charge-window-power-on'}" StyleClasses="OpenRight" />
+            <Button Name="PowerOffButton" Text="{Loc 'power-charge-window-power-off'}" StyleClasses="OpenLeft" />
+        </BoxContainer>
+
+        <BoxContainer Orientation="Horizontal" Margin="0 0 0 4">
+            <Label Text="{Loc 'power-charge-window-status'}" StyleClasses="StatusFieldTitle"
+                   HorizontalExpand="True" VerticalAlignment="Center" />
+            <Label Name="ChargeStatusLabel" />
+        </BoxContainer>
+
+        <BoxContainer Orientation="Horizontal" Margin="0 0 0 4">
+            <Label Text="{Loc 'power-charge-window-eta'}" StyleClasses="StatusFieldTitle"
+                   HorizontalExpand="True" VerticalAlignment="Center" />
+            <Label Name="ChargeEtaLabel" />
+        </BoxContainer>
+
+        <!-- The dial reads the networked WFCentrifuge fields, not the byte-quantised PowerChargeState charge, so it
+             behaves the same here as it does on the crack console. -->
+        <cracker:WFCentrifugeDial Name="RotorDial" VerticalExpand="True" MinSize="300 190" />
+    </BoxContainer>
+</controls:FancyWindow>

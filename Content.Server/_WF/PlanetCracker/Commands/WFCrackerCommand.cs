@@ -1,8 +1,12 @@
 using System.Linq;
 using System.Numerics;
+using Content.Server._WF.PlanetCracker.Anchors;
+using Content.Server._WF.PlanetCracker.Cracker;
 using Content.Server._WF.PlanetCracker.Testing;
 using Content.Server.Administration;
 using Content.Shared._WF.Administration;
+using Content.Shared._WF.PlanetCracker.Anchors;
+using Content.Shared._WF.PlanetCracker.Cracker;
 using Content.Shared.Administration;
 using Robust.Shared.Console;
 using Robust.Shared.Map;
@@ -10,22 +14,36 @@ using Robust.Shared.Map;
 namespace Content.Server._WF.PlanetCracker.Commands;
 
 /// <summary>
-/// Spawns the code-built planet cracker test grids next to the calling admin.
+/// Spawns the code-built planet cracker test grids next to the calling admin, and drives one hull's crack by hand:
+/// the state field, the two completions, the anchor disconnect and the fall.
+/// Design D23 leaves no in-round way out of a running cut, so `state` is the only escape hatch there is.
 /// </summary>
 [AdminCommand(AdminFlags.Spawn | AdminFlags.Mapping)]
 public sealed partial class WFCrackerCommand : LocalizedEntityCommands
 {
     [Dependency] private SharedTransformSystem _transform = default!;
+    [Dependency] private WFCrackerSystem _crackers = default!;
+    [Dependency] private WFGravityAnchorSystem _anchors = default!;
     [Dependency] private WFTestGridFactory _factory = default!;
 
     private const string SubSpawn = "spawn";
+    private const string SubState = "state";
+    private const string SubComplete = "complete";
+    private const string SubDisconnect = "disconnect";
+    private const string SubFall = "fall";
 
     private const string KindCracker = "cracker";
     private const string KindTransport = "transport";
 
-    private static readonly string[] Subcommands = { SubSpawn };
+    private const string TargetCrack = "crack";
+    private const string TargetDrill = "drill";
+
+    private static readonly string[] Subcommands =
+        { SubSpawn, SubState, SubComplete, SubDisconnect, SubFall };
 
     private static readonly string[] Kinds = { KindCracker, KindTransport };
+
+    private static readonly string[] Targets = { TargetCrack, TargetDrill };
 
     /// <summary>Offset from the caller to the cracker hull, so it does not land on their head.</summary>
     private static readonly Vector2 CrackerOffset = new(8f, 8f);
@@ -39,19 +57,46 @@ public sealed partial class WFCrackerCommand : LocalizedEntityCommands
     /// <inheritdoc/>
     public override void Execute(IConsoleShell shell, string argStr, string[] args)
     {
-        if (args.Length != 2 || !Subcommands.Contains(args[0]))
+        if (args.Length == 0 || !Subcommands.Contains(args[0]))
         {
-            shell.WriteError(Loc.GetString("cmd-wfcracker-invalid-args"));
-            shell.WriteLine(Help);
+            Reject(shell);
             return;
         }
 
+        // The arity is per subcommand: two of the five take no argument at all, and a single blanket length check
+        // would refuse `fall` outright and let `state Cracking` fall through into the wrong error.
+        switch (args[0])
+        {
+            case SubSpawn when args.Length == 2:
+                ExecuteSpawn(shell, args[1]);
+                return;
+            case SubState when args.Length == 2:
+                ExecuteState(shell, args[1]);
+                return;
+            case SubComplete when args.Length == 2:
+                ExecuteComplete(shell, args[1]);
+                return;
+            case SubDisconnect when args.Length == 1:
+                ExecuteDisconnect(shell);
+                return;
+            case SubFall when args.Length == 1:
+                ExecuteFall(shell);
+                return;
+            default:
+                Reject(shell);
+                return;
+        }
+    }
+
+    /// <summary>Builds one of the code-built test hulls beside the caller.</summary>
+    private void ExecuteSpawn(IConsoleShell shell, string kind)
+    {
         if (!TryGetPlayerPosition(shell, out var map, out var position))
             return;
 
         EntityUid grid;
 
-        switch (args[1])
+        switch (kind)
         {
             case KindCracker:
                 grid = _factory.BuildCracker(map, position + CrackerOffset);
@@ -60,14 +105,109 @@ public sealed partial class WFCrackerCommand : LocalizedEntityCommands
                 grid = _factory.BuildTransport(map, position + TransportOffset);
                 break;
             default:
-                shell.WriteError(Loc.GetString("cmd-wfcracker-unknown-kind", ("kind", args[1])));
+                shell.WriteError(Loc.GetString("cmd-wfcracker-unknown-kind", ("kind", kind)));
                 return;
         }
 
         shell.WriteLine(Loc.GetString("cmd-wfcracker-spawned",
-            ("kind", args[1]),
+            ("kind", kind),
             ("grid", EntityManager.ToPrettyString(grid).ToString()),
             ("map", map.ToString())));
+    }
+
+    /// <summary>Forces the hull's crack stage, the one escape hatch from a cut that cannot otherwise be called off.</summary>
+    private void ExecuteState(IConsoleShell shell, string name)
+    {
+        if (!TryGetCracker(shell, out var cracker))
+            return;
+
+        if (!Enum.TryParse<WFCrackState>(name, true, out var state))
+        {
+            shell.WriteError(Loc.GetString("cmd-wfcracker-unknown-state", ("state", name)));
+            return;
+        }
+
+        _crackers.SetState(cracker, state);
+        Report(shell, "cmd-wfcracker-state-set", cracker.Owner, state);
+    }
+
+    /// <summary>Finishes either the running cut or both anchors' drills at once.</summary>
+    private void ExecuteComplete(IConsoleShell shell, string target)
+    {
+        if (!TryGetCracker(shell, out var cracker))
+            return;
+
+        switch (target)
+        {
+            case TargetCrack:
+                _crackers.CompleteCrack(cracker);
+                shell.WriteLine(Loc.GetString("cmd-wfcracker-completed",
+                    ("grid", EntityManager.ToPrettyString(cracker.Owner).ToString())));
+                return;
+
+            case TargetDrill:
+                if (!TryGetPair(cracker, out var a, out var b))
+                {
+                    shell.WriteError(Loc.GetString("cmd-wfcracker-no-cracker"));
+                    return;
+                }
+
+                _anchors.CompleteDrill(a);
+                _anchors.CompleteDrill(b);
+                shell.WriteLine(Loc.GetString("cmd-wfcracker-drilled",
+                    ("grid", EntityManager.ToPrettyString(cracker.Owner).ToString())));
+                return;
+
+            default:
+                Reject(shell);
+                return;
+        }
+    }
+
+    /// <summary>Switches both of the hull's anchors off, bypassing the cancellable attempt a later feature may veto.</summary>
+    private void ExecuteDisconnect(IConsoleShell shell)
+    {
+        if (!TryGetCracker(shell, out var cracker))
+            return;
+
+        if (!TryGetPair(cracker, out var a, out var b))
+        {
+            shell.WriteError(Loc.GetString("cmd-wfcracker-no-cracker"));
+            return;
+        }
+
+        _anchors.ForceSwitchOff(a);
+        _anchors.ForceSwitchOff(b);
+
+        shell.WriteLine(Loc.GetString("cmd-wfcracker-disconnected",
+            ("grid", EntityManager.ToPrettyString(cracker.Owner).ToString())));
+    }
+
+    /// <summary>Drops the hull down the planet's z-stack the same way an expired grace timer would.</summary>
+    private void ExecuteFall(IConsoleShell shell)
+    {
+        if (!TryGetCracker(shell, out var cracker))
+            return;
+
+        _crackers.Fall(cracker);
+
+        // Fall sets the stage itself, so the reply is the stage line rather than a message of its own.
+        Report(shell, "cmd-wfcracker-state-set", cracker.Owner, cracker.Comp.State);
+    }
+
+    /// <summary>The usage refusal, shared by a bad subcommand, a bad arity and a bad completion target.</summary>
+    private void Reject(IConsoleShell shell)
+    {
+        shell.WriteError(Loc.GetString("cmd-wfcracker-invalid-args"));
+        shell.WriteLine(Help);
+    }
+
+    /// <summary>Writes one grid-and-stage reply.</summary>
+    private void Report(IConsoleShell shell, string key, EntityUid grid, WFCrackState state)
+    {
+        shell.WriteLine(Loc.GetString(key,
+            ("grid", EntityManager.ToPrettyString(grid).ToString()),
+            ("state", state.ToString())));
     }
 
     /// <summary>Resolves the map and world position the calling player is standing at.</summary>
@@ -95,6 +235,60 @@ public sealed partial class WFCrackerCommand : LocalizedEntityCommands
         return true;
     }
 
+    /// <summary>
+    /// The cracker hull the caller is standing on.
+    /// A server console has no body and so no grid, so it falls back to the only cracker in the world - which is what a
+    /// headless run or a test has. Two or more is ambiguous and is refused rather than guessed at.
+    /// </summary>
+    private bool TryGetCracker(IConsoleShell shell, out Entity<WFPlanetCrackerComponent> cracker)
+    {
+        cracker = default;
+
+        if (shell.Player?.AttachedEntity is { Valid: true } player
+            && EntityManager.GetComponent<TransformComponent>(player).GridUid is { } grid
+            && EntityManager.TryGetComponent<WFPlanetCrackerComponent>(grid, out var standing))
+        {
+            cracker = (grid, standing);
+            return true;
+        }
+
+        if (shell.Player is null)
+        {
+            var count = 0;
+            var query = EntityManager.AllEntityQueryEnumerator<WFPlanetCrackerComponent>();
+
+            while (query.MoveNext(out var uid, out var comp))
+            {
+                count++;
+
+                if (count > 1)
+                    break;
+
+                cracker = (uid, comp);
+            }
+
+            if (count == 1)
+                return true;
+
+            cracker = default;
+        }
+
+        shell.WriteError(Loc.GetString("cmd-wfcracker-no-cracker"));
+        return false;
+    }
+
+    /// <summary>The pair the anchor subcommands act on: the targeted one if there is one, otherwise the owned one.</summary>
+    private bool TryGetPair(
+        Entity<WFPlanetCrackerComponent> cracker,
+        out Entity<WFGravityAnchorComponent> a,
+        out Entity<WFGravityAnchorComponent> b)
+    {
+        if (_crackers.TryGetTargetedPair(cracker, out a, out b))
+            return true;
+
+        return _crackers.TryGetOwnedPair(cracker, out a, out b, false);
+    }
+
     /// <inheritdoc/>
     public override CompletionResult GetCompletion(IConsoleShell shell, string[] args)
     {
@@ -103,9 +297,19 @@ public sealed partial class WFCrackerCommand : LocalizedEntityCommands
             case 1:
                 return CompletionResult.FromHintOptions(Subcommands, Loc.GetString("cmd-wfcracker-hint-sub"));
             case 2:
-                return args[0] == SubSpawn
-                    ? CompletionResult.FromHintOptions(Kinds, Loc.GetString("cmd-wfcracker-hint-kind"))
-                    : CompletionResult.Empty;
+                switch (args[0])
+                {
+                    case SubSpawn:
+                        return CompletionResult.FromHintOptions(Kinds, Loc.GetString("cmd-wfcracker-hint-kind"));
+                    case SubState:
+                        return CompletionResult.FromHintOptions(
+                            Enum.GetNames<WFCrackState>(),
+                            Loc.GetString("cmd-wfcracker-hint-state"));
+                    case SubComplete:
+                        return CompletionResult.FromHintOptions(Targets, Loc.GetString("cmd-wfcracker-hint-target"));
+                    default:
+                        return CompletionResult.Empty;
+                }
             default:
                 return CompletionResult.Empty;
         }

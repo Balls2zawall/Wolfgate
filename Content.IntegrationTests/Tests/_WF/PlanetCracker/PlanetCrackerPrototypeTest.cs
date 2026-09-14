@@ -2,12 +2,16 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
+using System.Reflection;
 using Content.Client.Gravity;
 using Content.IntegrationTests.Pair;
 using Content.Server.Construction.Components;
 using Content.Shared.Cargo.Components;
+using Content.Shared.Computer;
 using Content.Shared._WF.PlanetCracker.Cracker;
 using Content.Shared.Repairable;
+using Content.Shared.UserInterface;
+using Content.Shared.Wires;
 using Robust.Client.GameObjects;
 using Robust.Client.Graphics;
 using Robust.Client.ResourceManagement;
@@ -16,6 +20,8 @@ using Robust.Shared.GameObjects;
 using Robust.Shared.Map;
 using Robust.Shared.Map.Components;
 using Robust.Shared.Maths;
+using Robust.Shared.Prototypes;
+using Robust.Shared.Reflection;
 using Robust.Shared.Utility;
 
 namespace Content.IntegrationTests.Tests._WF.PlanetCracker;
@@ -53,6 +59,18 @@ public sealed class PlanetCrackerPrototypeTest
 
     private const string Projector = "WFGravityProjector";
     private const string Centrifuge = "WFCentrifuge";
+    private const string CrackConsole = "WFCrackConsole";
+
+    /// <summary>The sprite layer key every computer screen visualiser drives.</summary>
+    private const string ScreenLayer = "computerLayerScreen";
+
+    /// <summary>The console's own screen RSI, as the prototype names it.</summary>
+    private const string ScreenRsi = "/Textures/_WF/PlanetCracker/Structures/crack_console.rsi";
+
+    /// <summary>UserInterfaceComponent.Interfaces, which the engine keeps internal.</summary>
+    private static readonly FieldInfo InterfacesField = typeof(UserInterfaceComponent)
+        .GetField("Interfaces", BindingFlags.Instance | BindingFlags.NonPublic)!;
+
     private const string Crate = "WFAnchorCrate";
     private const string CrateReplacement = "WFAnchorCrateReplacement";
     private const string HullTile = "FloorSteel";
@@ -161,6 +179,157 @@ public sealed class PlanetCrackerPrototypeTest
                     "The centrifuge does not map the gravity generator's Base layer.");
                 Assert.That(sprites.LayerMapTryGet((uid, sprite), GravityGeneratorVisualLayers.Core, out _, false), Is.True,
                     "The centrifuge does not map the gravity generator's Core layer, which the client looks up unconditionally.");
+            }
+        });
+
+        await pair.CleanReturnAsync();
+    }
+
+    /// <summary>
+    /// A child `visuals` mapping REPLACES its parent's wholesale instead of merging into it, so the crack console has to
+    /// re-declare BaseComputer's two visualiser keys beside its own screen key. Trim either and the powered screen and
+    /// the maintenance panel silently stop reacting, with no error anywhere. Three keys is the whole assertion.
+    /// </summary>
+    [Test]
+    public async Task CrackConsoleKeepsInheritedVisualizerKeys()
+    {
+        // Read from the CLIENT's prototypes: the server registers GenericVisualizer as ignored
+        // (ServerComponentFactory.cs:15), so the composed server-side prototype never carries the component.
+        await using var pair = await PoolManager.GetServerClient();
+        var client = pair.Client;
+        var protoMan = client.ResolveDependency<IPrototypeManager>();
+
+        await client.WaitAssertion(() =>
+        {
+            var console = protoMan.Index<EntityPrototype>(CrackConsole);
+
+            Assert.That(console.TryGetComponent<GenericVisualizerComponent>(out var visualizer,
+                    client.ResolveDependency<IComponentFactory>()), Is.True,
+                "The crack console has no GenericVisualizer at all; it lost even the inherited one.");
+
+            var keys = visualizer!.Visuals.Keys.Select(key => key.ToString()).ToList();
+
+            using (Assert.EnterMultipleScope())
+            {
+                Assert.That(keys, Does.Contain(nameof(ComputerVisuals.Powered)),
+                    "The re-declared ComputerVisuals.Powered block is gone, so the screen no longer blanks when unpowered.");
+                Assert.That(keys, Does.Contain(nameof(WiresVisuals.MaintenancePanelState)),
+                    "The re-declared WiresVisuals.MaintenancePanelState block is gone, so the maintenance panel no longer shows.");
+                Assert.That(keys, Does.Contain(nameof(WFCrackConsoleVisuals.Screen)),
+                    "The console's own screen key is missing.");
+                Assert.That(keys, Has.Count.EqualTo(3),
+                    $"Expected exactly the three visualiser keys; got {string.Join(", ", keys)}.");
+            }
+
+            // The Powered block must still drive the screen layer specifically: an entry that no longer names
+            // computerLayerScreen would pass a key count while leaving the screen lit on a dead console.
+            Assert.That(visualizer.Visuals.First(entry => entry.Key.ToString() == nameof(ComputerVisuals.Powered)).Value.Keys,
+                Does.Contain(ScreenLayer),
+                "The inherited Powered block no longer drives the screen layer.");
+        });
+
+        await pair.CleanReturnAsync();
+    }
+
+    /// <summary>
+    /// An ActivatableUI is only as good as the window behind it: the interface block names its BoundUserInterface as a
+    /// bare string, so a renamed or moved class is a runtime miss on the client with nothing to catch it at load.
+    /// </summary>
+    [Test]
+    public async Task EveryActivatableUiResolvesItsInterface()
+    {
+        // The client is the side that constructs a BoundUserInterface at all.
+        await using var pair = await PoolManager.GetServerClient();
+        var client = pair.Client;
+        var protoMan = client.ResolveDependency<IPrototypeManager>();
+        var compFactory = client.ResolveDependency<IComponentFactory>();
+        var reflection = client.ResolveDependency<IReflectionManager>();
+
+        await client.WaitAssertion(() =>
+        {
+            var checkedAny = false;
+
+            using (Assert.EnterMultipleScope())
+            {
+                foreach (var id in Prototypes)
+                {
+                    var proto = protoMan.Index<EntityPrototype>(id);
+
+                    if (!proto.TryGetComponent<ActivatableUIComponent>(out var activatable, compFactory))
+                        continue;
+
+                    Assert.That(activatable.Key, Is.Not.Null, $"{id} has an ActivatableUI with no key.");
+                    Assert.That(proto.TryGetComponent<UserInterfaceComponent>(out var ui, compFactory), Is.True,
+                        $"{id} has an ActivatableUI but no UserInterface block to open.");
+
+                    // The interface map is internal to the engine component, so the composed prototype is read through
+                    // the same field the engine itself resolves the client type from.
+                    var interfaces = (Dictionary<Enum, InterfaceData>) InterfacesField.GetValue(ui)!;
+
+                    Assert.That(interfaces.ContainsKey(activatable.Key!), Is.True,
+                        $"{id}'s ActivatableUI key {activatable.Key} has no matching UserInterface entry.");
+
+                    foreach (var (key, data) in interfaces)
+                    {
+                        checkedAny = true;
+
+                        Assert.That(reflection.TryLooseGetType(data.ClientType, out var type), Is.True,
+                            $"{id}'s {key} interface names {data.ClientType}, which no client type resolves to.");
+                        Assert.That(typeof(BoundUserInterface).IsAssignableFrom(type), Is.True,
+                            $"{id}'s {key} interface names {data.ClientType}, which is not a BoundUserInterface.");
+                        Assert.That(type!.GetConstructor(new[] { typeof(EntityUid), typeof(Enum) }), Is.Not.Null,
+                            $"{data.ClientType} has no (EntityUid, Enum) constructor for the engine to call.");
+                    }
+                }
+
+                Assert.That(checkedAny, Is.True, "No planet cracker prototype carries an ActivatableUI at all.");
+            }
+        });
+
+        await pair.CleanReturnAsync();
+    }
+
+    /// <summary>
+    /// The screen visualiser names its states as bare strings and EverySpriteStateExists only walks Sprite layers, so
+    /// nothing else would notice a state the console's RSI does not have.
+    /// </summary>
+    [Test]
+    public async Task CrackConsoleScreenStatesExist()
+    {
+        await using var pair = await PoolManager.GetServerClient();
+        var client = pair.Client;
+        var protoMan = client.ResolveDependency<IPrototypeManager>();
+        var cache = client.ResolveDependency<IResourceCache>();
+
+        await client.WaitAssertion(() =>
+        {
+            var console = protoMan.Index<EntityPrototype>(CrackConsole);
+
+            Assert.That(console.TryGetComponent<GenericVisualizerComponent>(out var visualizer,
+                    client.ResolveDependency<IComponentFactory>()), Is.True,
+                "The crack console has no GenericVisualizer.");
+
+            var screen = visualizer!.Visuals
+                .First(entry => entry.Key.ToString() == nameof(WFCrackConsoleVisuals.Screen)).Value;
+
+            Assert.That(screen.ContainsKey(ScreenLayer), Is.True,
+                "The screen visualiser does not drive the screen layer.");
+
+            var rsi = cache.GetResource<RSIResource>(new ResPath(ScreenRsi)).RSI;
+
+            using (Assert.EnterMultipleScope())
+            {
+                foreach (var face in Enum.GetNames<WFCrackConsoleScreen>())
+                {
+                    Assert.That(screen[ScreenLayer].ContainsKey(face), Is.True,
+                        $"The screen visualiser has no entry for the {face} face.");
+
+                    var state = screen[ScreenLayer][face].State;
+
+                    Assert.That(state, Is.Not.Null, $"The {face} face names no RSI state.");
+                    Assert.That(rsi.TryGetState(state!, out _), Is.True,
+                        $"The {face} face names state '{state}', which crack_console.rsi does not have.");
+                }
             }
         });
 

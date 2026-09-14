@@ -43,6 +43,8 @@
     windowTitle: wf-centrifuge-window-title
     idlePower: 200
     activePower: 12000
+    charge: 0                # MANDATORY: PowerChargeComponent.Charge defaults to 1, so without this a spawned
+                             # hull starts at full spin and the 240 s cold start below never happens.
     chargeRate: 0.00417      # 240 s cold to full, design section 5. A hull built by `wfcracker spawn cracker` is
                              # therefore about four real minutes from gravity, not instant; that wait is the rate,
                              # not a fault. Integration tests raise this rate rather than tick through it.
@@ -89,7 +91,9 @@
   - type: UserInterface
     interfaces:
       enum.PowerChargeUiKey.Key:
-        type: PowerChargeBoundUserInterface
+        # Same key and the same SwitchChargingMachineMessage; only the window changes, so it can host the
+        # rotor dial fed from the networked WFCentrifuge fields. No server change and no new UI key.
+        type: WFCentrifugeBoundUserInterface
 
 - type: entity
   id: WFGravityProjector

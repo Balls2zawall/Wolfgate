@@ -4,8 +4,17 @@
   id: WFSurfaceAsclepiu
   planetType: PlanetAsclepiu
   ground: WFAsclepiuSurface
-  airLayers: 2
-  cloudLayer: true
+  # No cloud layer on a crackable world, and a third air layer in its place.
+  # ScalingViewport.RenderZLevels breaks its downward walk at the first CEZCloudLayerComponent
+  # (ScalingViewport.CEZLevels.cs:185-190) and the cloud's own pass then paints an opaque full-screen
+  # deck at :377, so from orbit the crack site was invisible and WFCrackCircleOverlay never got a pass
+  # to draw into. Dropping the cloud is the whole fix and costs no code.
+  # airLayers goes 2 -> 3 in the same edit because cloudComponents was never only a cloud: it carried
+  # the same MapLight and inherent Gravity as airComponents (see cloudComponents below), so it was a
+  # third gravity-bearing air layer. Raising airLayers keeps the stack five maps deep with orbit still
+  # at depth 4, which preserves every fall duration and touchdown number keyed to that shape.
+  airLayers: 3
+  cloudLayer: false
   orbitRange: 2000
   buildAtRoundStart: true
   # Stamped on every member map at MapInit with removeExisting true, and onto every transit map.
@@ -30,6 +39,7 @@
   - type: Gravity
     enabled: true
     inherent: true
+  # Left in place for planets that still want a deck; WFSurfaceAsclepiu no longer asks for one.
   cloudComponents:
   - type: CEZCloudLayer
   - type: MapLight
