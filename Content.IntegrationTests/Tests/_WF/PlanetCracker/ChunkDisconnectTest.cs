@@ -14,6 +14,7 @@ using Content.Shared._CE.ZLevels.Core.Components;
 using Content.Shared._WF.PlanetCracker.Anchors;
 using Content.Shared._WF.PlanetCracker.Chunk;
 using Content.Shared._WF.PlanetCracker.Cracker;
+using Content.Shared._WF.PlanetCracker.Fissures;
 using Content.Shared._WF.PlanetCracker.Planets;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Localization;
@@ -962,6 +963,11 @@ public sealed class ChunkDisconnectTest
         var entMan = server.EntMan;
 
         var site = await BuildDisconnecting(pair);
+        // F8's extraction surge leaves acid-blooded Xenos standing on the rim band. The landing crushes them, their
+        // blood's PryTileReaction deconstructs the tiles under them, and TileSystem.DeconstructTile deletes every
+        // decal on a deconstructed tile: a random 0-2 of the 60 rim decals. That is upstream acid behaviour on top of
+        // F8's random placement, not the F7 cleanup this test pins, so the site threats go before the wreck comes down.
+        await ClearSiteThreats(pair, site);
         var chunk = await ArmLanding(pair, FastCleanup);
 
         var centre = Vector2.Zero;
@@ -1300,6 +1306,29 @@ public sealed class ChunkDisconnectTest
     /// SoftenCrash is mandatory for anything that lands; the delay is the difference between a wreck that outlives the
     /// landing assertions and one that has to be gone before the test ends.
     /// </summary>
+    /// <summary>Deletes every F8 site threat the anchors are still tracking, so a landing crushes nothing.</summary>
+    private static async Task ClearSiteThreats(TestPair pair, CrackerSite site)
+    {
+        var server = pair.Server;
+        var entMan = server.EntMan;
+
+        await server.WaitPost(() =>
+        {
+            foreach (var anchor in site.Anchors)
+            {
+                if (!entMan.TryGetComponent(anchor, out WFFissureSpawnerComponent? spawner))
+                    continue;
+
+                foreach (var mob in spawner.Live)
+                    entMan.DeleteEntity(mob);
+
+                spawner.Live.Clear();
+            }
+        });
+
+        await server.WaitRunTicks(1);
+    }
+
     private static async Task<EntityUid> ArmLanding(TestPair pair, TimeSpan cleanupDelay)
     {
         var server = pair.Server;

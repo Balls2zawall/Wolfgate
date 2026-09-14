@@ -63,6 +63,12 @@ public sealed class FissurePrototypeTest
     /// <summary>The crackable world whose faction table the fissures roll from.</summary>
     private const string Surface = "WFSurfaceAsclepiu";
 
+    /// <summary>The utility query the stamped threats score the anchor with; a ProtoId rather than a literal for RA0033.</summary>
+    private static readonly ProtoId<UtilityQueryPrototype> TargetQuery = "WFFissureTargets";
+
+    /// <summary>The compound every stamped threat is re-rooted onto; a ProtoId rather than a literal for RA0033.</summary>
+    private static readonly ProtoId<HTNCompoundPrototype> ThreatCompound = "WFFissureThreatCompound";
+
     /// <summary>
     /// A decal prototype names its state as a bare SpriteSpecifier and DecalOverlay only ever draws frame zero, so a
     /// renamed or mistyped state is a silently missing fissure and nothing else in the tree would notice.
@@ -183,9 +189,9 @@ public sealed class FissurePrototypeTest
         {
             using (Assert.EnterMultipleScope())
             {
-                Assert.That(protoMan.HasIndex<UtilityQueryPrototype>("WFFissureTargets"), Is.True,
+                Assert.That(protoMan.HasIndex(TargetQuery), Is.True,
                     "WFFissureTargets is not a utility query, so the threats have nothing to pick the anchor with.");
-                Assert.That(protoMan.HasIndex<HTNCompoundPrototype>("WFFissureThreatCompound"), Is.True,
+                Assert.That(protoMan.HasIndex(ThreatCompound), Is.True,
                     "WFFissureThreatCompound is not an HTN compound, so every stamped mob's root task dangles.");
             }
         });
