@@ -1,6 +1,7 @@
 using Content.Shared._DV.Planet;
 using Content.Shared._FarHorizons.StarSystem.Prototypes;
 using Content.Shared._WF.PlanetCracker.Survey;
+using Content.Shared.Salvage.Expeditions;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Utility;
 
@@ -55,6 +56,14 @@ public sealed partial class WFPlanetSurfacePrototype : IPrototype
     /// <summary>The deep-vein table this world rolls every vein from; null means no deep veins and no rating.</summary>
     [DataField]
     public ProtoId<WFVeinTablePrototype>? Veins;
+
+    /// <summary>The salvage faction fissure mobs are rolled from on a sanctioned world; null means no fissure mobs.</summary>
+    [DataField]
+    public ProtoId<SalvageFactionPrototype>? Faction;
+
+    /// <summary>The nastier table an unsanctioned crack rolls from; falls back to Faction when unset.</summary>
+    [DataField]
+    public ProtoId<SalvageFactionPrototype>? UnsanctionedFaction;
 
     /// <summary>
     /// Fixes the ground biome seed so a planet's terrain AND its deep veins are identical every round; null keeps the
