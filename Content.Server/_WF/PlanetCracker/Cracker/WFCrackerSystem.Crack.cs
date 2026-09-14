@@ -521,14 +521,18 @@ public sealed partial class WFCrackerSystem
         ent.Comp.GroundRumbleStream = _audio.Stop(ent.Comp.GroundRumbleStream);
     }
 
-    /// <summary>Puts both targeted anchors' rings back to a full idle circle, before the target is dropped.</summary>
+    /// <summary>
+    /// Puts the targeted anchors' rings back to a full idle circle, before the target is dropped.
+    /// Each half is resolved on its own rather than through the pair: the abort this runs from is usually caused by
+    /// ONE anchor dying, and demanding an intact pair would leave the survivor stuck at its mid-cut arc for good.
+    /// </summary>
     private void ResetCrackProgress(Entity<WFPlanetCrackerComponent> ent)
     {
-        if (!TryGetTargetedPair(ent, out var a, out var b))
-            return;
+        if (TryGetAnchor(ent.Comp.AnchorA, out var a))
+            _anchors.SetCrackProgress(a, 1f);
 
-        _anchors.SetCrackProgress(a, 1f);
-        _anchors.SetCrackProgress(b, 1f);
+        if (TryGetAnchor(ent.Comp.AnchorB, out var b))
+            _anchors.SetCrackProgress(b, 1f);
     }
 
     /// <summary>Stops the fall alarm loop.</summary>

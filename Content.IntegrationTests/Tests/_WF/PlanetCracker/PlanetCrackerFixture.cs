@@ -7,13 +7,16 @@ using Content.Server._WF.PlanetCracker.Anchors;
 using Content.Server._WF.PlanetCracker.Cracker;
 using Content.Server._WF.PlanetCracker.Planets;
 using Content.Server._WF.PlanetCracker.Testing;
+using Content.Server.Parallax;
 using Content.Server.Power.Components;
 using Content.Shared._CE.ZLevels.Core.Components;
 using Content.Shared._WF.CCVar;
 using Content.Shared._WF.PlanetCracker.Anchors;
+using Content.Shared._WF.PlanetCracker.Chunk;
 using Content.Shared._WF.PlanetCracker.Cracker;
 using Content.Shared._WF.PlanetCracker.Cracker.BUI;
 using Content.Shared._WF.PlanetCracker.Planets;
+using Content.Shared.Parallax.Biomes;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Map;
 using Robust.Shared.Map.Components;
@@ -36,6 +39,9 @@ public static class PlanetCrackerFixture
 
     /// <summary>The deployable gravity anchor.</summary>
     public const string AnchorProto = "WFGravityAnchor";
+
+    /// <summary>The sector body every owned stack hangs off; the only thing the cracked flag can live on.</summary>
+    public const string PlanetBodyProto = "PlanetEntity";
 
     /// <summary>Deck plating, used for both hull decks and hand-laid ground.</summary>
     public const string FloorTile = "FloorSteel";
@@ -66,6 +72,37 @@ public static class PlanetCrackerFixture
 
         await server.WaitRunTicks(1);
         return layers;
+    }
+
+    /// <summary>
+    /// Builds an Asclepiu stack the way the round does: a sector body on its own map, which owns the network.
+    /// BuildStandalone passes no body, so both of the extraction's planet resolution paths come back empty and the
+    /// cracked flag silently goes nowhere; anything that cares about the flag has to come through here.
+    /// </summary>
+    public static async Task<(List<EntityUid> Layers, EntityUid Body, EntityUid BodyMap)> BuildOwnedStack(TestPair pair)
+    {
+        var server = pair.Server;
+        var entMan = server.EntMan;
+        var networks = server.System<WFPlanetNetworkSystem>();
+        var map = await pair.CreateTestMap();
+        var layers = new List<EntityUid>();
+        var body = EntityUid.Invalid;
+
+        await server.WaitPost(() =>
+        {
+            body = entMan.SpawnEntity(PlanetBodyProto, new MapCoordinates(Vector2.Zero, map.MapId));
+
+            var sector = entMan.EnsureComponent<WFSectorPlanetComponent>(body);
+            sector.Surface = SurfaceProto;
+
+            Assert.That(networks.TryBuildNetwork((body, sector), out var network), Is.True,
+                "The sector body's planet network failed to build.");
+
+            layers.AddRange(entMan.GetComponent<WFPlanetNetworkComponent>(network).Layers);
+        });
+
+        await server.WaitRunTicks(1);
+        return (layers, body, map.MapUid);
     }
 
     /// <summary>
@@ -112,6 +149,30 @@ public static class PlanetCrackerFixture
         });
 
         await server.WaitRunTicks(5);
+    }
+
+    /// <summary>
+    /// Tears a whole site down: the stack through its network, then the sector body's own map.
+    /// The older Teardown(pair, site.Layers) call sites keep working untouched; they simply leave the sector map to
+    /// the pool, exactly as PlanetNetworkTest's sector fixture already does.
+    /// </summary>
+    public static async Task Teardown(TestPair pair, CrackerSite site)
+    {
+        var server = pair.Server;
+        var entMan = server.EntMan;
+
+        await Teardown(pair, site.Layers);
+
+        if (site.PlanetMap == EntityUid.Invalid)
+            return;
+
+        await server.WaitPost(() =>
+        {
+            if (entMan.EntityExists(site.PlanetMap))
+                entMan.DeleteEntity(site.PlanetMap);
+        });
+
+        await server.WaitRunTicks(1);
     }
 
     /// <summary>Every entity parented straight to a grid; machine parts live inside their machine, not here.</summary>
@@ -243,9 +304,12 @@ public static class PlanetCrackerFixture
 
         await EnableFeature(pair);
 
-        var site = new CrackerSite { Layers = await BuildStandalone(pair) };
+        var stack = await BuildOwnedStack(pair);
+        var site = new CrackerSite { Layers = stack.Layers, Planet = stack.Body, PlanetMap = stack.BodyMap };
 
-        await LayTiles(pair, site.Ground, new Vector2i(-8, -8), new Vector2i(32, 8));
+        // Wide enough that a radius-10 cut circle plus its rim ring is hand-laid deck rather than biome terrain, which
+        // is what makes the extraction's tile counts deterministic instead of seed-dependent.
+        await LayTiles(pair, site.Ground, new Vector2i(-16, -16), new Vector2i(32, 16));
 
         var orbitMap = MapId.Nullspace;
 
@@ -343,6 +407,168 @@ public static class PlanetCrackerFixture
         await AlignHull(pair, site, offset ?? Vector2.Zero);
         await Energise(pair, site.Cracker);
         return site;
+    }
+
+    /// <summary>
+    /// Widens the test hull's berth. The factory shrinks it to 12x12 at Distance 8 because the hull itself is tiny
+    /// (WFTestGridFactory), and no faithfully sized disc fits in that, so any extraction test has to grow it first.
+    /// </summary>
+    public static async Task EnlargeBerth(TestPair pair, CrackerSite site, Vector2i size, float distance)
+    {
+        var server = pair.Server;
+        var entMan = server.EntMan;
+
+        await server.WaitPost(() =>
+        {
+            var cracker = entMan.GetComponent<WFPlanetCrackerComponent>(site.Cracker);
+
+            Assert.That(entMan.TryGetEntity(cracker.Berth, out var berth), Is.True,
+                "Precondition: the hull resolved its berth marker at map init.");
+
+            var marker = entMan.GetComponent<WFChunkBerthComponent>(berth!.Value);
+            marker.Size = size;
+            marker.Distance = distance;
+            entMan.Dirty(berth.Value, marker);
+        });
+
+        // UpdateBerthPose runs off the cracker sweep, which is 1 Hz while nothing is cutting.
+        await server.WaitRunTicks(pair.SecondsToTicks(2f));
+    }
+
+    /// <summary>
+    /// A hull that could cut a disc free right now: a berth big enough to hold one, a drilled pair 16 tiles apart
+    /// (radius 10, inside the anchors' 16..40 band) and the hull flown onto the circle with a full rotor.
+    /// </summary>
+    public static async Task<CrackerSite> BuildReadyToExtract(TestPair pair)
+    {
+        var site = await BuildCrackerInOrbit(pair);
+
+        await EnlargeBerth(pair, site, new Vector2i(24, 24), 20f);
+        await DeployPair(pair, site, 0f, 16f, true);
+        await AlignHull(pair, site, Vector2.Zero);
+        await Energise(pair, site.Cracker);
+
+        return site;
+    }
+
+    /// <summary>
+    /// Finishes the cut through the same call the timer's expiry makes, which is what raises the extraction hook.
+    /// The shipped cut is eight minutes at this pair distance, so no test can tick one out.
+    /// </summary>
+    public static async Task CompleteCut(TestPair pair, CrackerSite site)
+    {
+        var server = pair.Server;
+        var entMan = server.EntMan;
+        var crackers = server.System<WFCrackerSystem>();
+
+        await server.WaitPost(() =>
+            crackers.CompleteCrack((site.Cracker, entMan.GetComponent<WFPlanetCrackerComponent>(site.Cracker))));
+
+        await server.WaitRunTicks(pair.SecondsToTicks(1f));
+    }
+
+    /// <summary>Builds a site, begins its cut and completes it, so the disc is already hanging in the berth.</summary>
+    public static async Task<CrackerSite> BuildExtracted(TestPair pair)
+    {
+        var site = await BuildReadyToExtract(pair);
+
+        await BeginCut(pair, site);
+        await CompleteCut(pair, site);
+
+        return site;
+    }
+
+    /// <summary>The one chunk grid in the world, or Invalid; extraction tests only ever cut one.</summary>
+    public static EntityUid FindChunk(IEntityManager entMan)
+    {
+        var query = entMan.AllEntityQueryEnumerator<WFPlanetChunkComponent>();
+
+        while (query.MoveNext(out var uid, out _))
+        {
+            return uid;
+        }
+
+        return EntityUid.Invalid;
+    }
+
+    /// <summary>
+    /// Every tile index whose CENTRE falls inside the cut circle, which is the extraction's own membership test and
+    /// therefore the only correct definition of "the disc" for an assertion.
+    /// </summary>
+    public static List<Vector2i> DiscIndices(IEntityManager entMan, EntityUid ground, Vector2 centre, float radius)
+    {
+        return IndicesInBand(entMan, ground, centre, null, radius);
+    }
+
+    /// <summary>The ring of indices whose tile centre falls in (radius, radius + 1]; the decals' own ground.</summary>
+    public static List<Vector2i> RimIndices(IEntityManager entMan, EntityUid ground, Vector2 centre, float radius)
+    {
+        return IndicesInBand(entMan, ground, centre, radius, radius + 1f);
+    }
+
+    /// <summary>What the ground grid currently holds at every disc index, for the hole assertions.</summary>
+    public static List<(Vector2i Index, Tile Tile)> HoleTiles(IEntityManager entMan, EntityUid ground, Vector2 centre, float radius)
+    {
+        var maps = entMan.System<SharedMapSystem>();
+        var grid = entMan.GetComponent<MapGridComponent>(ground);
+        var tiles = new List<(Vector2i, Tile)>();
+
+        foreach (var index in DiscIndices(entMan, ground, centre, radius))
+        {
+            tiles.Add((index, maps.GetTileRef(ground, grid, index).Tile));
+        }
+
+        return tiles;
+    }
+
+    /// <summary>How many of these indices the biome has pinned against regeneration.</summary>
+    public static int PinnedCount(TestPair pair, EntityUid ground, IEnumerable<Vector2i> indices)
+    {
+        var entMan = pair.Server.EntMan;
+        var biomes = pair.Server.System<BiomeSystem>();
+        var biome = new Entity<BiomeComponent>(ground, entMan.GetComponent<BiomeComponent>(ground));
+        var pinned = 0;
+
+        foreach (var index in indices)
+        {
+            if (biomes.WfIsPinned(biome, index))
+                pinned++;
+        }
+
+        return pinned;
+    }
+
+    /// <summary>
+    /// Indices whose tile centre sits in the half-open ring (inner, outer], walked over the outer box.
+    /// A null inner means no lower bound at all, which is not the same as zero: the tile sitting exactly on the circle
+    /// centre is inside the disc and a zero bound would silently drop it.
+    /// </summary>
+    private static List<Vector2i> IndicesInBand(IEntityManager entMan, EntityUid ground, Vector2 centre, float? inner, float outer)
+    {
+        var half = entMan.GetComponent<MapGridComponent>(ground).TileSizeHalfVector;
+        var innerSq = inner is { } value ? value * value : -1f;
+        var outerSq = outer * outer;
+        var found = new List<Vector2i>();
+
+        var span = outer + 2f;
+        var minX = (int)MathF.Floor(centre.X - span);
+        var maxX = (int)MathF.Ceiling(centre.X + span);
+        var minY = (int)MathF.Floor(centre.Y - span);
+        var maxY = (int)MathF.Ceiling(centre.Y + span);
+
+        for (var x = minX; x <= maxX; x++)
+        for (var y = minY; y <= maxY; y++)
+        {
+            var index = new Vector2i(x, y);
+            var distanceSq = ((Vector2)index + half - centre).LengthSquared();
+
+            if (distanceSq <= innerSq || distanceSq > outerSq)
+                continue;
+
+            found.Add(index);
+        }
+
+        return found;
     }
 
     /// <summary>Targets the hull's pair and begins the cut, failing loudly on either refusal.</summary>
@@ -484,6 +710,12 @@ public sealed class CrackerSite
 
     /// <summary>The vacuum orbit layer the hull parks on.</summary>
     public EntityUid Orbit => Layers[^1];
+
+    /// <summary>The sector body that owns the stack; where the cracked flag lands.</summary>
+    public EntityUid Planet;
+
+    /// <summary>The throwaway sector map the body was spawned on, torn down with the site.</summary>
+    public EntityUid PlanetMap;
 
     /// <summary>The cracker hull grid.</summary>
     public EntityUid Cracker;

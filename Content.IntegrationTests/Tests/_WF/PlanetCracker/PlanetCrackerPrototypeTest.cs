@@ -8,6 +8,7 @@ using Content.IntegrationTests.Pair;
 using Content.Server.Construction.Components;
 using Content.Shared.Cargo.Components;
 using Content.Shared.Computer;
+using Content.Shared.Decals;
 using Content.Shared._WF.PlanetCracker.Cracker;
 using Content.Shared.Repairable;
 using Content.Shared.UserInterface;
@@ -47,7 +48,19 @@ public sealed class PlanetCrackerPrototypeTest
         "WFChunkBerthMarker",
         "WFCentrifugeCircuitboard",
         "WFGravityProjectorCircuitboard",
+        "WFEffectChunkBurst",
+        "WFCrackSkyBeam",
     };
+
+    /// <summary>The rim ring's two decals, which F5 stamps by hand rather than through a tile prototype.</summary>
+    private static readonly string[] RimDecals =
+    {
+        "WFCrackRimStraight",
+        "WFCrackRimCurve",
+    };
+
+    /// <summary>The rim ring's own RSI, as both decal prototypes name it.</summary>
+    private const string RimRsi = "/Textures/_WF/PlanetCracker/Decals/crack_rim.rsi";
 
     /// <summary>The prototypes that carry a Repairable block design D9's welder loop has to work on.</summary>
     private static readonly string[] Repairables =
@@ -329,6 +342,43 @@ public sealed class PlanetCrackerPrototypeTest
                     Assert.That(state, Is.Not.Null, $"The {face} face names no RSI state.");
                     Assert.That(rsi.TryGetState(state!, out _), Is.True,
                         $"The {face} face names state '{state}', which crack_console.rsi does not have.");
+                }
+            }
+        });
+
+        await pair.CleanReturnAsync();
+    }
+
+    /// <summary>
+    /// The rim ring is decals on ordinary pinned ground rather than a tile prototype, so a renamed or mistyped state
+    /// here is a silently missing ring on every cut circle and nothing else would notice: a decal prototype names its
+    /// state as a bare SpriteSpecifier and the overlay only ever draws frame zero.
+    /// </summary>
+    [Test]
+    public async Task CrackRimDecalsResolve()
+    {
+        await using var pair = await PoolManager.GetServerClient();
+        var client = pair.Client;
+        var protoMan = client.ResolveDependency<IPrototypeManager>();
+        var cache = client.ResolveDependency<IResourceCache>();
+
+        await client.WaitAssertion(() =>
+        {
+            var rsi = cache.GetResource<RSIResource>(new ResPath(RimRsi)).RSI;
+
+            using (Assert.EnterMultipleScope())
+            {
+                foreach (var id in RimDecals)
+                {
+                    Assert.That(protoMan.TryIndex<DecalPrototype>(id, out var decal), Is.True,
+                        $"{id} is not a decal prototype at all.");
+                    Assert.That(decal!.Sprite, Is.InstanceOf<SpriteSpecifier.Rsi>(),
+                        $"{id} does not name an RSI state, so the ring has nothing to draw.");
+
+                    var state = ((SpriteSpecifier.Rsi)decal.Sprite).RsiState;
+
+                    Assert.That(rsi.TryGetState(state, out _), Is.True,
+                        $"{id} names state '{state}', which crack_rim.rsi does not have.");
                 }
             }
         });

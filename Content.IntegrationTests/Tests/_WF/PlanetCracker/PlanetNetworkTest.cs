@@ -37,6 +37,9 @@ public sealed class PlanetNetworkTest
     private const string Surface = "WFSurfaceAsclepiu";
     private const string PlanetBody = "PlanetEntity";
 
+    /// <summary>WFSurfaceAsclepiu's orbitComponents ambient light, dim enough to read as vacuum but not as black.</summary>
+    private static readonly Color OrbitAmbient = Color.FromHex("#2a3340");
+
     /// <summary>The surface mixture from WFAsclepiuSurface, re-applied after MapInit.</summary>
     private const float GroundTemperature = 288.15f;
 
@@ -107,8 +110,12 @@ public sealed class PlanetNetworkTest
 
                 Assert.That(entMan.HasComponent<MapGridComponent>(stack.Orbit), Is.False,
                     "A mapgrid on the orbit layer disables arriving hulls and blocks climbs.");
-                Assert.That(entMan.HasComponent<MapLightComponent>(stack.Orbit), Is.False,
-                    "Orbit is dark; only grid lights belong there.");
+                // The build RemComps the inherited map light and then re-adds this one from orbitComponents. With none
+                // at all the engine falls back to sRGB black, which leaves a cut chunk and every parked hull unlit (F5).
+                Assert.That(entMan.TryGetComponent(stack.Orbit, out MapLightComponent? orbitLight), Is.True,
+                    "Orbit has no map light at all, so everything parked there renders pitch black.");
+                Assert.That(orbitLight!.AmbientLightColor, Is.EqualTo(OrbitAmbient),
+                    "Orbit's ambient light is not the dim one the surface prototype asks for.");
                 Assert.That(entMan.HasComponent<WFOrbitLayerComponent>(stack.Orbit), Is.True,
                     "The top layer is not marked as orbit.");
             }

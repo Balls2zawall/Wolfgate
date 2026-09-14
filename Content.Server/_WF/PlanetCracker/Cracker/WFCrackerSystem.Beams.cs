@@ -95,11 +95,21 @@ public sealed partial class WFCrackerSystem
                 continue;
             }
 
-            // Another hull's anchor is that hull's own sweep to reconcile, never this one's.
-            if (!TryGetOwner(anchor, out var owner) || owner.Owner != ent.Owner)
+            // This hull's own targets keep their beam; everything else below is a candidate for deletion.
+            if (firing && (anchor == a || anchor == b))
                 continue;
 
-            if (firing && (anchor == a || anchor == b))
+            // An anchor whose hull no longer resolves belongs to nobody's sweep, so leaving it here would light its
+            // pillar for the rest of the round: a deleted or gibbed hull is exactly what makes TryGetOwner fail while
+            // the anchor itself lives on as a separate entity.
+            if (!TryGetOwner(anchor, out var owner))
+            {
+                _staleBeams.Add(anchor);
+                continue;
+            }
+
+            // Another hull's anchor is that hull's own sweep to reconcile, never this one's.
+            if (owner.Owner != ent.Owner)
                 continue;
 
             _staleBeams.Add(anchor);

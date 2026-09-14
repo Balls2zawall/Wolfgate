@@ -182,7 +182,12 @@ public sealed partial class WFPlanetChunkSystem
         // indices stay pixel-perfect over the hole for F6 and F7.
         var target = groundWorldPos + (berth.Position - centre);
 
-        WarnOnObstruction(cracker, chunkEnt, berth.MapId, target);
+        // Built here rather than inside the advisory warning, because step 11's Smimsh reads the same set and anything
+        // missing from it is CrushGrid'd - starting with the hull that just cut the chunk.
+        _ignored.Clear();
+        _shuttle.GetAllDockedShuttles(cracker.Owner, _ignored);
+
+        WarnOnObstruction(cracker, chunkEnt, berth.MapId, target, _ignored);
 
         var groundDepth = TryComp<CEZMapComponent>(groundMap, out var groundZ) ? groundZ.Depth : 0;
         var orbitDepth = TryComp<CEZMapComponent>(orbitMap, out var orbitZ) ? orbitZ.Depth : 0;
@@ -276,6 +281,16 @@ public sealed partial class WFPlanetChunkSystem
             if (!_holeIndices.Contains(index))
                 continue;
 
+            // An in-circle tile the biome never generated is copied as Tile.Empty, and AddToSnapGridCell refuses an
+            // empty destination. Checked BEFORE the unanchor, because the unanchor cannot be taken back: an anchored
+            // rider would otherwise end up detached but still Static, with a gravity anchor's state change swallowed
+            // by the ride set and its pair left claimed.
+            if (xform.Anchored && _map.GetTileRef(chunk.Owner, chunk.Comp, index).Tile.IsEmpty)
+            {
+                Log.Error($"Chunk tile {index} is empty, so anchored {ToPrettyString(uid)} could not ride up; it was left anchored on the ground map.");
+                continue;
+            }
+
             // An anchor's own unanchor/re-anchor would dissolve its pair and abort the cut; suppress its handler for
             // both halves of the move.
             var isAnchor = HasComp<WFGravityAnchorComponent>(uid);
@@ -293,6 +308,10 @@ public sealed partial class WFPlanetChunkSystem
                 if (!_transform.AnchorEntity((uid, xform), (chunk.Owner, chunk.Comp), index))
                 {
                     Log.Error($"Could not anchor {ToPrettyString(uid)} onto chunk tile {index}; it was left on the ground map.");
+
+                    // Back where it came from, still inside the ride suppression: the unanchor above already happened
+                    // and leaving the rider detached but Static is worse than an unmoved anchor.
+                    _transform.AnchorEntity((uid, xform), (groundMap, groundGrid), index);
 
                     if (isAnchor)
                         _anchors.EndChunkRide(uid);
@@ -373,22 +392,23 @@ public sealed partial class WFPlanetChunkSystem
             Log.Warning($"{refused} of {_rimIndices.Count} rim decals were refused on {ToPrettyString(groundMap)}; the ring is incomplete where the ground is space.");
     }
 
-    /// <summary>Advisory clearance check over the berth: the extraction proceeds either way, but it says what it hit.</summary>
+    /// <summary>
+    /// Advisory clearance check over the berth: the extraction proceeds either way, but it says what it hit.
+    /// The ignore set is handed in rather than built here, so the caller owns the set Smimsh later depends on.
+    /// </summary>
     private void WarnOnObstruction(
         Entity<WFPlanetCrackerComponent> cracker,
         Entity<MapGridComponent> chunk,
         MapId berthMap,
-        Vector2 target)
+        Vector2 target,
+        IReadOnlySet<EntityUid> ignored)
     {
-        _ignored.Clear();
-        _shuttle.GetAllDockedShuttles(cracker.Owner, _ignored);
-
         _found.Clear();
         _mapManager.FindGridsIntersecting(berthMap, chunk.Comp.LocalAABB.Translated(target), ref _found, approx: false, includeMap: false);
 
         foreach (var found in _found)
         {
-            if (found.Owner == chunk.Owner || _ignored.Contains(found.Owner))
+            if (found.Owner == chunk.Owner || ignored.Contains(found.Owner))
                 continue;
 
             Log.Warning($"{ToPrettyString(found.Owner)} is inside {ToPrettyString(cracker.Owner)}'s chunk berth at extraction.");
@@ -402,8 +422,6 @@ public sealed partial class WFPlanetChunkSystem
     /// </summary>
     private void ParkChunk(Entity<MapGridComponent> chunk)
     {
-        RemComp<GridAtmosphereComponent>(chunk.Owner);
-
         var gravity = EnsureComp<GravityComponent>(chunk.Owner);
         gravity.Inherent = true;
         gravity.Enabled = true;
@@ -423,6 +441,11 @@ public sealed partial class WFPlanetChunkSystem
         _shuttle.Disable(chunk.Owner, force: true);
         EnsureComp<PreventGridAnchorChangesComponent>(chunk.Owner);
         EnsureComp<ForceAnchorComponent>(chunk.Owner);
+
+        // AFTER the disable, not before it: Disable pins the rotation, SetFixedRotation resets the body's mass data,
+        // and AutomaticAtmosSystem hands any grid past seven tiles of mass a fresh GridAtmosphere on that very event.
+        // Removing it any earlier in the parking order just gets it handed straight back (design D3).
+        RemComp<GridAtmosphereComponent>(chunk.Owner);
 
         if (!TryComp<PhysicsComponent>(chunk.Owner, out var body) || body.BodyType != BodyType.Static)
             Log.Error($"{ToPrettyString(chunk.Owner)} is not a static body after parking; it will drift out of the berth.");

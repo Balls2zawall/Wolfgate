@@ -62,6 +62,9 @@ public sealed class WFSiteDiagram : WFDiagramControl
     /// <summary>Beam lines from every firing projector to the cut centre.</summary>
     private ValueList<Vector2> _beamLines;
 
+    /// <summary>Scratch for the hull's four projected corners, reused so Draw allocates nothing.</summary>
+    private readonly Vector2[] _hullCorners = new Vector2[4];
+
     private Ring _circleRing;
     private Ring _toleranceRing;
 
@@ -208,13 +211,13 @@ public sealed class WFSiteDiagram : WFDiagramControl
             return Project(HullWorld(state, local));
         }
 
-        Span<Vector2> corners =
-        [
-            Hull(aabb.BottomLeft),
-            Hull(aabb.BottomRight),
-            Hull(aabb.TopRight),
-            Hull(aabb.TopLeft),
-        ];
+        // A reused array, not a collection expression and not a stackalloc: `[a, b, c, d]` lowers to an InlineArray4
+        // helper with a byref span accessor, and localloc is unverifiable, so both fail the client sandbox (SandboxTest).
+        var corners = _hullCorners;
+        corners[0] = Hull(aabb.BottomLeft);
+        corners[1] = Hull(aabb.BottomRight);
+        corners[2] = Hull(aabb.TopRight);
+        corners[3] = Hull(aabb.TopLeft);
 
         // Project is a uniform scale plus a flip, so the nearest edge in control pixels is the nearest edge in world.
         var berth = Project(state.BerthCentre);

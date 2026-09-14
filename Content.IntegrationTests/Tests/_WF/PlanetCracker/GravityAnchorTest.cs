@@ -13,6 +13,7 @@ using Content.Server.Destructible.Thresholds.Triggers;
 using Content.Shared._CE.ZLevels.Core.Components;
 using Content.Shared._WF.CCVar;
 using Content.Shared._WF.PlanetCracker.Anchors;
+using Content.Shared._WF.PlanetCracker.Chunk;
 using Content.Shared._WF.PlanetCracker.Cracker;
 using Content.Shared._WF.PlanetCracker.Planets;
 using Content.Shared.Construction.Components;
@@ -1172,6 +1173,15 @@ public sealed class WFAnchorTestEventSystem : EntitySystem
     /// <summary>Every hull pushed into a fall since the last Clear; the F5 chunk hook.</summary>
     public readonly List<WFCrackerFallingEvent> Falling = new();
 
+    /// <summary>Every disc cut free since the last Clear; the F6 hook.</summary>
+    public readonly List<WFChunkExtractedEvent> ChunksExtracted = new();
+
+    /// <summary>Every chunk pushed into transit since the last Clear; the F7 hook.</summary>
+    public readonly List<WFChunkDroppedEvent> ChunksDropped = new();
+
+    /// <summary>Every planet flagged cracked since the last Clear; the F9 hook.</summary>
+    public readonly List<WFPlanetCrackedEvent> PlanetsCracked = new();
+
     /// <summary>While true, every switch-off attempt is refused, exactly as a later feature's own veto would.</summary>
     public bool VetoSwitchOff;
 
@@ -1195,6 +1205,12 @@ public sealed class WFAnchorTestEventSystem : EntitySystem
         SubscribeLocalEvent<WFCrackStateChangedEvent>((ref WFCrackStateChangedEvent ev) => StateChanges.Add(ev));
         SubscribeLocalEvent<WFCrackCompletedEvent>((ref WFCrackCompletedEvent ev) => CracksCompleted.Add(ev));
         SubscribeLocalEvent<WFCrackerFallingEvent>((ref WFCrackerFallingEvent ev) => Falling.Add(ev));
+
+        // F5's three are the same shape again, and the bus locks its subscriptions once the server has started, so a
+        // second recorder system competing for these broadcasts is not an option.
+        SubscribeLocalEvent<WFChunkExtractedEvent>((ref WFChunkExtractedEvent ev) => ChunksExtracted.Add(ev));
+        SubscribeLocalEvent<WFChunkDroppedEvent>((ref WFChunkDroppedEvent ev) => ChunksDropped.Add(ev));
+        SubscribeLocalEvent<WFPlanetCrackedEvent>((ref WFPlanetCrackedEvent ev) => PlanetsCracked.Add(ev));
     }
 
     /// <summary>Forgets everything recorded so far and lifts the veto.</summary>
@@ -1211,6 +1227,9 @@ public sealed class WFAnchorTestEventSystem : EntitySystem
         StateChanges.Clear();
         CracksCompleted.Clear();
         Falling.Clear();
+        ChunksExtracted.Clear();
+        ChunksDropped.Clear();
+        PlanetsCracked.Clear();
         VetoSwitchOff = false;
     }
 
