@@ -1,5 +1,6 @@
 using Content.Shared._DV.Planet;
 using Content.Shared._FarHorizons.StarSystem.Prototypes;
+using Content.Shared._WF.PlanetCracker.Survey;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Utility;
 
@@ -46,6 +47,22 @@ public sealed partial class WFPlanetSurfacePrototype : IPrototype
     /// <summary>Whether the network is built eagerly when the sector body spawns at round start.</summary>
     [DataField]
     public bool BuildAtRoundStart;
+
+    /// <summary>Whether cracking this world is legal; F9 announces the unsanctioned case, F2 only stores and displays it.</summary>
+    [DataField]
+    public bool Sanctioned = true;
+
+    /// <summary>The deep-vein table this world rolls every vein from; null means no deep veins and no rating.</summary>
+    [DataField]
+    public ProtoId<WFVeinTablePrototype>? Veins;
+
+    /// <summary>
+    /// Fixes the ground biome seed so a planet's terrain AND its deep veins are identical every round; null keeps the
+    /// engine's random seed. PlanetSystem.SpawnPlanet passes no seed, so EnsurePlanet rolls _random.Next()
+    /// (Content.Server/Parallax/BiomeSystem.PlanetSetup.cs:33) and the world re-rolls on every server start.
+    /// </summary>
+    [DataField]
+    public int? Seed;
 
     /// <summary>Components stamped on every member map by the z-network registry, transit maps included.</summary>
     [DataField]

@@ -27,4 +27,13 @@ public sealed partial class WFSectorPlanetComponent : Component
     /// </summary>
     [DataField, AutoNetworkedField]
     public bool Cracked;
+
+    /// <summary>
+    /// Whether cracking this world is legal, mirrored off the surface prototype by WFPlanetRegistrySystem.ApplySurface
+    /// so a console reads it without indexing a prototype. It lives here rather than on WFPlanetNetworkComponent
+    /// because that one is server-only, [UnsavedComponent] and destroyed by DeleteNetwork while the body lives on
+    /// (WFPlanetNetworkSystem.cs:252-263).
+    /// </summary>
+    [DataField, AutoNetworkedField]
+    public bool Sanctioned = true;
 }
