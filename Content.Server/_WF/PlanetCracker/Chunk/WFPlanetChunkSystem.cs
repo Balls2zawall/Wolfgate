@@ -62,6 +62,8 @@ public sealed partial class WFPlanetChunkSystem : EntitySystem
         // WFGravityAnchorSystem, and TileChangedEvent on a CEZMapComponent map is already CESharedZLevelsSystem's.
         SubscribeLocalEvent<WFCrackCompletedEvent>(OnCrackCompleted);
         SubscribeLocalEvent<WFCrackerFallingEvent>(OnCrackerFalling);
+
+        InitializeDisconnect();
     }
 
     /// <summary>The cut finished: everything that has to be true before a disc may be lifted, then the extraction.</summary>
@@ -129,12 +131,19 @@ public sealed partial class WFPlanetChunkSystem : EntitySystem
         _nextSweep = _timing.CurTime + TimeSpan.FromSeconds(1);
 
         _dropBuffer.Clear();
+        _cleanupBuffer.Clear();
 
         var query = EntityQueryEnumerator<WFPlanetChunkComponent>();
         while (query.MoveNext(out var uid, out var comp))
         {
             if (comp.Dropped)
+            {
+                UpdateDropped((uid, comp));
                 continue;
+            }
+
+            // Still in the berth: the chunk's own release beats, for the people standing on it.
+            UpdateEvacuating((uid, comp));
 
             // ExtractedAt is paused with its map, so a paused berth cannot burn the whole grace at once.
             if (_timing.CurTime < comp.ExtractedAt + comp.WatchdogGrace)
@@ -152,7 +161,15 @@ public sealed partial class WFPlanetChunkSystem : EntitySystem
 
         foreach (var chunk in _dropBuffer)
         {
+            // Design D24, "with the evacuation alarm": the orphan wording, which carries no countdown.
+            StartEvacuation(chunk, "wf-chunk-evac-orphan", 0);
             DropChunk(chunk);
+        }
+
+        // Drained after the enumeration because the cleanup deletes its grid synchronously.
+        foreach (var chunk in _cleanupBuffer)
+        {
+            Cleanup(chunk);
         }
     }
 
@@ -211,6 +228,26 @@ public sealed partial class WFPlanetChunkSystem : EntitySystem
         var faller = EnsureComp<CEZGridFallerComponent>(ent.Owner);
         faller.Velocity = SharedWFCrackerSystem.FallSeedVelocity;
         faller.GravityTime = _timing.CurTime;
+
+        // The engine's own central blast, suppressed. CEZLevelsSystem.Gravity.cs:426-430 queues it through the
+        // EntityUid overload, which resolves the epicentre as the grid's OWN coordinates (ExplosionSystem.cs:295-320),
+        // and TryExtract set this grid's origin to the GROUND grid's origin so the tile indices would match
+        // (Extraction.cs:141-142) - so on a real biome planet it detonates hundreds of tiles from the crater. Zero
+        // makes it a no-op through the totalIntensity <= 0 early return at ExplosionSystem.cs:374.
+        // No replacement blast is queued at the crater either: QueueExplosion merges a same-prototype explosion within
+        // MaxCombineDistance (1f for Default) of a still-queued one by ADDING TotalIntensity and discarding the
+        // incoming slope and maxTileIntensity (ExplosionSystem.cs:386-400), and the per-tile crash blasts stay queued
+        // for many seconds under the processing throttle (ExplosionSystem.Processing.cs:95-107), so a second blast at
+        // the crater would simply be absorbed - arithmetically identical to raising CrashTileIntensity.
+        faller.CrashIntensityPerTile = 0f;
+        faller.CrashTileIntensity = ent.Comp.CrashTileIntensity;
+        faller.CrashTileMaxIntensity = ent.Comp.CrashTileMaxIntensity;
+
+        // Snapshotted before the grid moves; the chunk is dynamic for the whole fall, so the pose is re-asserted once
+        // at landing rather than trusted to survive it.
+        var (dropPos, dropRot) = _transform.GetWorldPositionRotation(ent.Owner);
+        ent.Comp.DropWorldPos = dropPos;
+        ent.Comp.DropWorldRot = dropRot;
 
         if (!TryComp<MapGridComponent>(ent.Owner, out var grid))
         {
