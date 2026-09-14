@@ -31,10 +31,19 @@ public sealed partial class WFCrackCircleOverlaySystem : EntitySystem
         _overlay.RemoveOverlay<WFCrackCircleOverlay>();
     }
 
-    /// <summary>A new state can move a pair, re-radius it or recolour it, so the cached ring goes.</summary>
+    /// <summary>
+    /// A new state can move a pair, re-radius it or recolour it, so that pair's cached ring goes. Only that pair's:
+    /// CrackProgress now dirties an anchor roughly every seven seconds per cutting pair, and the blanket clear would
+    /// rebuild every ring on screen for a value the cache does not even hold. Safe because GetRing re-checks centre
+    /// and radius drift itself (WFCrackCircleOverlay.cs:145-150) and colour is never cached.
+    /// </summary>
     private void OnState(Entity<WFGravityAnchorComponent> ent, ref AfterAutoHandleStateEvent args)
     {
-        _circles.Invalidate();
+        _circles.Invalidate(ent.Owner);
+
+        // The ring is cached against the lower-uid half, which may be the partner rather than the anchor that dirtied.
+        if (ent.Comp.Partner is { } netPartner && TryGetEntity(netPartner, out var partner))
+            _circles.Invalidate(partner.Value);
     }
 
     /// <summary>An anchor leaving the client's view takes its cached ring with it.</summary>

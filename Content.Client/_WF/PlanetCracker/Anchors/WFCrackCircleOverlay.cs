@@ -2,6 +2,7 @@ using System.Numerics;
 using Content.Client._WF.Stylesheets;
 using Content.Shared._WF.CCVar;
 using Content.Shared._WF.PlanetCracker.Anchors;
+using Content.Shared._WF.PlanetCracker.Chunk;
 using Robust.Client.Graphics;
 using Robust.Shared.Collections;
 using Robust.Shared.Configuration;
@@ -101,6 +102,11 @@ public sealed partial class WFCrackCircleOverlay : Overlay
             if (!_entityManager.TryGetComponent<WFGravityAnchorComponent>(partner, out var otherComp))
                 continue;
 
+            // Once the anchors ride up on an extracted chunk the pair is still intact, so the ring would keep drawing
+            // itself around them on the ORBIT layer. The hole's permanent mark on the ground is the rim decal ring.
+            if (OnChunk(xform) || OnChunk(otherXform))
+                continue;
+
             var a = _transform.GetWorldPosition(xform);
             var b = _transform.GetWorldPosition(otherXform);
             var centre = (a + b) / 2f;
@@ -114,8 +120,14 @@ public sealed partial class WFCrackCircleOverlay : Overlay
             // this wrong draws the chord and the marks a visibly different shade from their own ring.
             var linear = Color.FromSrgb(colour);
 
+            // The ring grows with the cut, from the worse-informed half of the pair. Progress is read live off the
+            // components and the cache stays keyed on centre and radius only, so a growing ring rebuilds nothing.
             var ring = GetRing(uid, centre, radius);
-            handle.DrawPrimitives(DrawPrimitiveTopology.LineStrip, ring.Vertices.Span, colour);
+            var span = ring.Vertices.Span;
+            var progress = Math.Clamp(MathF.Min(comp.CrackProgress, otherComp.CrackProgress), 0f, 1f);
+            var drawn = progress >= 1f ? span.Length : Math.Max(2, (int) (span.Length * progress));
+
+            handle.DrawPrimitives(DrawPrimitiveTopology.LineStrip, span[..drawn], colour);
 
             handle.DrawLine(a, b, linear.WithAlpha(ChordAlpha));
             handle.DrawCircle(a, AnchorMarkRadius, linear, false);
@@ -164,8 +176,17 @@ public sealed partial class WFCrackCircleOverlay : Overlay
         return ring;
     }
 
-    /// <summary>Ring colour from the worse of the two halves, taken from the active skin rather than a literal.</summary>
-    private static Color ColourFor(WolfgateSkin skin, WFGravityAnchorComponent a, WFGravityAnchorComponent b)
+    /// <summary>True once an anchor is standing on an extracted chunk grid rather than on the planet.</summary>
+    private bool OnChunk(TransformComponent xform)
+    {
+        return xform.GridUid is { } grid && _entityManager.HasComponent<WFPlanetChunkComponent>(grid);
+    }
+
+    /// <summary>
+    /// Ring colour from the worse of the two halves, taken from the active skin rather than a literal. Internal so the
+    /// beam overlay tints from exactly this function instead of a second copy that could drift.
+    /// </summary>
+    internal static Color ColourFor(WolfgateSkin skin, WFGravityAnchorComponent a, WFGravityAnchorComponent b)
     {
         if (a.State == WFAnchorState.Broken || b.State == WFAnchorState.Broken || a.Damaged || b.Damaged)
             return skin.Danger;

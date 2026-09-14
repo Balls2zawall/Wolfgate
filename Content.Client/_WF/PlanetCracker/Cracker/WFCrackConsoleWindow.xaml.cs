@@ -147,7 +147,7 @@ public sealed partial class WFCrackConsoleWindow : FancyWindow
         (WFCrackFailure.ProjectorBroken, "wf-crack-console-fail-projector-broken"),
     };
 
-    /// <summary>One locale key per <see cref="WFCrackBlocker"/> flag; all eleven, so the hover names the real fault.</summary>
+    /// <summary>One locale key per <see cref="WFCrackBlocker"/> flag; all twelve, so the hover names the real fault.</summary>
     private static readonly (WFCrackBlocker Flag, string Key)[] BlockerKeys =
     {
         (WFCrackBlocker.WrongState, "wf-crack-console-blocker-wrong-state"),
@@ -161,6 +161,7 @@ public sealed partial class WFCrackConsoleWindow : FancyWindow
         (WFCrackBlocker.ProjectorsShort, "wf-crack-console-blocker-projectors-short"),
         (WFCrackBlocker.ProjectorsUnpowered, "wf-crack-console-blocker-projectors-unpowered"),
         (WFCrackBlocker.ProjectorsBroken, "wf-crack-console-blocker-projectors-broken"),
+        (WFCrackBlocker.PlanetCracked, "wf-crack-console-blocker-planet-cracked"),
     };
 
     /// <summary>Locale key naming one stage.</summary>
