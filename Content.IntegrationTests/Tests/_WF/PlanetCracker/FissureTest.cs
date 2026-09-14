@@ -13,6 +13,7 @@ using Content.Shared._WF.PlanetCracker.Anchors;
 using Content.Shared._WF.PlanetCracker.Chunk;
 using Content.Shared._WF.PlanetCracker.Fissures;
 using Content.Shared.Decals;
+using Content.Shared.Mobs.Components;
 using Content.Shared.NPC.Components;
 using Content.Shared.Parallax.Biomes;
 using Content.Shared.Salvage.Expeditions;
@@ -40,8 +41,9 @@ public sealed class FissureTest
     /// A faction that cannot roll a surprise. The shipped Xenos table has a group whose only entry is
     /// `NFMobXenoDrone amount: 0 maxAmount: 2` (Resources/Prototypes/Procedural/salvage_factions.yml:17-21), which
     /// EntitySpawnEntry.GetAmount resolves to random.Next(0, 2) and therefore rolls NOTHING about half the time it is
-    /// drawn, and another whose only entity (WeaponTurretXeno) carries no HTNComponent and so never joins Live. One
-    /// group, one entry, one fixed amount makes every exact-count assertion below deterministic.
+    /// drawn, and another whose only entity (WeaponTurretXeno) is a structure with no MobStateComponent and so is never
+    /// stamped and never joins Live. One group, one entry, one fixed amount makes every exact-count assertion below
+    /// deterministic.
     /// It lives here and NOT in Resources on purpose: Content.Shared/Salvage/SharedSalvageSystem.cs:102 picks an
     /// expedition's faction with GetMod, which enumerates EVERY salvageFaction prototype, so a shipped test faction
     /// would quietly pollute real expedition generation for the whole round.
@@ -608,8 +610,9 @@ public sealed class FissureTest
     /// <summary>
     /// Every mob that climbs out is a SITE threat, not just another hostile: it is re-rooted onto the fissure compound
     /// and the anchor is written into its faction exceptions, which are the two halves the targeting needs.
-    /// Asserted over Live rather than SpawnedTotal because an entry with no HTNComponent (WeaponTurretXeno,
-    /// salvage_factions.yml:22-25) increments the latter without ever joining the former.
+    /// Asserted over Live rather than SpawnedTotal because an entry that is not a mob (WeaponTurretXeno,
+    /// salvage_factions.yml:22-25 - it has an HTNComponent but no MobStateComponent, so the stamp deliberately leaves
+    /// its TurretCompound alone) increments the latter without ever joining the former.
     /// There is deliberately NO "the anchor takes damage" test here. NPCSystem.CheckPlayerDistancesAndPauseNPCs
     /// (Content.Server/NPC/Systems/NPCSystem.cs:174-230) sleeps every HTN NPC with no live player within
     /// npc.player_pause_distance, measured with EntityCoordinates.TryDistance, which fails across maps - and a headless
@@ -645,6 +648,8 @@ public sealed class FissureTest
                 {
                     Assert.That(entMan.TryGetComponent(mob, out HTNComponent? htn), Is.True,
                         "An entity with no HTN reached Live, which only stamped threats may.");
+                    Assert.That(entMan.HasComponent<MobStateComponent>(mob), Is.True,
+                        "A non-mob reached Live; only a real mob may be re-rooted onto the fissure compound.");
                     Assert.That(htn!.RootTask.Task, Is.EqualTo(ThreatCompound),
                         "A fissure threat kept its stock root task, so it never goes for the anchor.");
 

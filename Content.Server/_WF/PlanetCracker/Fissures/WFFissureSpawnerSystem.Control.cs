@@ -21,6 +21,12 @@ public sealed partial class WFFissureSpawnerSystem
             return false;
         }
 
+        // The sweep's own stopping condition (WFFissureSpawnerSystem.cs Update). Without it an admin ring past the
+        // count would push RingsDone beyond RingCount, which silently ends the scheduled spread for the rest of the
+        // drill and keeps growing the forced radius past the intended eight tiles.
+        if (ent.Comp.RingsDone >= ent.Comp.RingCount)
+            return false;
+
         ent.Comp.NextRing = _timing.CurTime + RingInterval(ent.Comp, anchor);
         SpreadRing(ent, anchor);
         ent.Comp.RingsDone++;

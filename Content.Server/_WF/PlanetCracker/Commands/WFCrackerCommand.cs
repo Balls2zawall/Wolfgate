@@ -75,6 +75,9 @@ public sealed partial class WFCrackerCommand : LocalizedEntityCommands
 
     private static readonly string[] Targets = { TargetCrack, TargetDrill };
 
+    /// <summary>`begin` accepts drill and nothing else, so its completion must not offer crack.</summary>
+    private static readonly string[] BeginTargets = { TargetDrill };
+
     private static readonly string[] FissureTargets = { TargetRing, TargetSurge };
 
     /// <summary>Offset from the caller to the cracker hull, so it does not land on their head.</summary>
@@ -659,7 +662,9 @@ public sealed partial class WFCrackerCommand : LocalizedEntityCommands
                             Enum.GetNames<WFCrackState>(),
                             Loc.GetString("cmd-wfcracker-hint-state"));
                     case SubBegin:
-                        return CompletionResult.FromHintOptions(Targets, Loc.GetString("cmd-wfcracker-hint-target"));
+                        return CompletionResult.FromHintOptions(
+                            BeginTargets,
+                            Loc.GetString("cmd-wfcracker-hint-begin"));
                     case SubComplete:
                         return CompletionResult.FromHintOptions(Targets, Loc.GetString("cmd-wfcracker-hint-target"));
                     case SubFissure:

@@ -1302,11 +1302,11 @@ public sealed class ChunkDisconnectTest
     }
 
     /// <summary>
-    /// Finds the extracted chunk, softens its crash and sets a cleanup delay the test can actually wait on.
-    /// SoftenCrash is mandatory for anything that lands; the delay is the difference between a wreck that outlives the
-    /// landing assertions and one that has to be gone before the test ends.
+    /// Deletes every F8 site threat the anchors put on the ground, so a landing crushes nothing.
+    /// Walks Spawned rather than Live: Live holds only the STAMPED mobs, and a faction entry that is not a mob -
+    /// WeaponTurretXeno out of the shipped Xenos table - is tracked in Spawned alone and would otherwise be left
+    /// standing on the rim band the landing comes down on.
     /// </summary>
-    /// <summary>Deletes every F8 site threat the anchors are still tracking, so a landing crushes nothing.</summary>
     private static async Task ClearSiteThreats(TestPair pair, CrackerSite site)
     {
         var server = pair.Server;
@@ -1319,9 +1319,13 @@ public sealed class ChunkDisconnectTest
                 if (!entMan.TryGetComponent(anchor, out WFFissureSpawnerComponent? spawner))
                     continue;
 
-                foreach (var mob in spawner.Live)
-                    entMan.DeleteEntity(mob);
+                foreach (var threat in spawner.Spawned)
+                {
+                    if (entMan.EntityExists(threat))
+                        entMan.DeleteEntity(threat);
+                }
 
+                spawner.Spawned.Clear();
                 spawner.Live.Clear();
             }
         });
@@ -1329,6 +1333,11 @@ public sealed class ChunkDisconnectTest
         await server.WaitRunTicks(1);
     }
 
+    /// <summary>
+    /// Finds the extracted chunk, softens its crash and sets a cleanup delay the test can actually wait on.
+    /// SoftenCrash is mandatory for anything that lands; the delay is the difference between a wreck that outlives the
+    /// landing assertions and one that has to be gone before the test ends.
+    /// </summary>
     private static async Task<EntityUid> ArmLanding(TestPair pair, TimeSpan cleanupDelay)
     {
         var server = pair.Server;

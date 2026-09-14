@@ -2,6 +2,7 @@ using System.Numerics;
 using Content.Server.Ghost.Roles.Components;
 using Content.Server.NPC.HTN;
 using Content.Shared._WF.PlanetCracker.Fissures;
+using Content.Shared.Mobs.Components;
 using Content.Shared.Salvage.Expeditions;
 using Content.Shared.Storage;
 using Robust.Shared.Map;
@@ -87,6 +88,13 @@ public sealed partial class WFFissureSpawnerSystem
 
         var coords = new EntityCoordinates(ground.Owner, (Vector2)index + ground.Comp.TileSizeHalfVector);
 
+        // WHAT WAS ALREADY STANDING HERE, taken BEFORE the spawn. Without it the stamp pass below cannot tell the
+        // entity this call created from one that was already on the tile, and re-roots any passing HTN NPC - including
+        // the partner anchor's own threats, because at the shipped numbers both fifth rings reach radius 8.0 and a pair
+        // sixteen tiles apart shares its midpoint tiles.
+        _preSpawnBuffer.Clear();
+        _lookup.GetEntitiesInRange(coords, 1.0f, _preSpawnBuffer, LookupFlags.Uncontained);
+
         // The SpawnSalvageMissionJob.cs:525-530 sequence. The ghost-role strip is mandatory: several faction entries
         // ship GhostRole blocks and would otherwise flood the ghost-role panel every ring.
         var uid = EntityManager.CreateEntityUninitialized(proto, coords);
@@ -104,7 +112,22 @@ public sealed partial class WFFissureSpawnerSystem
 
         foreach (var candidate in _lookupBuffer)
         {
-            if (!TryComp<HTNComponent>(candidate, out var htn) || ent.Comp.Live.Contains(candidate))
+            // Only what this call put here, and only once. The consumed RandomSpawner marker is still in the lookup for
+            // the rest of the tick, so a terminating candidate is skipped rather than recorded as a live threat.
+            if (_preSpawnBuffer.Contains(candidate) ||
+                TerminatingOrDeleted(candidate) ||
+                ent.Comp.Spawned.Contains(candidate))
+            {
+                continue;
+            }
+
+            ent.Comp.Spawned.Add(candidate);
+
+            // MOBS ONLY. WeaponTurretXeno (salvage_factions.yml:22-25) DOES carry an HTNComponent, rooted on
+            // TurretCompound (Resources/Prototypes/Entities/Objects/Weapons/Guns/Turrets/turrets_ballistic.yml:109-111),
+            // so an HTN test alone would re-root a gun turret onto a compound whose every branch is melee or idle and
+            // silently disable it. MobStateComponent is the same predicate TargetIsAliveOrNACon distinguishes on.
+            if (!HasComp<MobStateComponent>(candidate) || !TryComp<HTNComponent>(candidate, out var htn))
                 continue;
 
             StampThreat(ent, candidate, htn, anchor);
@@ -115,16 +138,27 @@ public sealed partial class WFFissureSpawnerSystem
 
     /// <summary>
     /// Makes one spawned mob a site threat: the anchor-first HTN root, the faction exception against the anchor and the
-    /// emerge effect and sound. An entry with no HTN (WeaponTurretXeno, salvage_factions.yml:22-25) is left unstamped -
-    /// it still spawns and is still hostile to players, it just never joins <see cref="WFFissureSpawnerComponent.Live"/>.
+    /// emerge effect and sound. A faction entry that is not a mob is left unstamped - WeaponTurretXeno
+    /// (salvage_factions.yml:22-25) carries an HTNComponent but no MobStateComponent, so it keeps TurretCompound and
+    /// goes on shooting; it still counts toward <see cref="WFFissureSpawnerComponent.SpawnedTotal"/> and is tracked in
+    /// <see cref="WFFissureSpawnerComponent.Spawned"/>, it just never joins <see cref="WFFissureSpawnerComponent.Live"/>.
     /// </summary>
     private void StampThreat(Entity<WFFissureSpawnerComponent> ent, EntityUid mob, HTNComponent htn, EntityUid anchor)
     {
         htn.RootTask = new HTNCompoundTask { Task = ThreatCompound };
 
-        // Force an immediate replan rather than waiting out whatever the stock root had already queued.
-        htn.Plan = null;
-        htn.PlanAccumulator = 0f;
+        // Force an immediate replan THROUGH HTNSystem rather than by nulling Plan by hand: a live plan's current
+        // operator has to be shut down or an IHtnConditionalShutdown such as MoveToOperator never unregisters its
+        // steering (HTNSystem.cs:430/:441, the SetHTNEnabled sequence at :169-178). A mob spawned this tick has no plan
+        // yet, so this is the defensive half of the stamp.
+        if (htn.Plan is { } plan)
+        {
+            _htn.ShutdownTask(plan.CurrentOperator, htn.Blackboard, HTNOperatorStatus.Failed);
+            _htn.ShutdownPlan(htn);
+            htn.Plan = null;
+        }
+
+        _htn.Replan(htn);
 
         // Half one of the aggro: the anchor joins FactionExceptionComponent.Hostiles, which GetNearbyHostiles unions in
         // unfiltered by range. Half two is WFFissureTargets' TargetIsAliveOrNACon; either half alone is inert.

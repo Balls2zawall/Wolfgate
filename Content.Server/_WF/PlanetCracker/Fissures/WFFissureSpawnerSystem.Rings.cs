@@ -32,6 +32,9 @@ public sealed partial class WFFissureSpawnerSystem
     /// <summary>Lookup result of the stamp-by-lookup pass; cleared before every spawn.</summary>
     private readonly HashSet<EntityUid> _lookupBuffer = new();
 
+    /// <summary>The same lookup taken BEFORE a spawn, so only what that spawn created is stamped.</summary>
+    private readonly HashSet<EntityUid> _preSpawnBuffer = new();
+
     /// <summary>Spreads one ring: picks its tiles, pins them, grows the older decals and stamps the new ones.</summary>
     private void SpreadRing(Entity<WFFissureSpawnerComponent> ent, WFGravityAnchorComponent anchor)
     {

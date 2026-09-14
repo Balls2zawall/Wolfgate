@@ -3,6 +3,7 @@ using Content.Server._WF.PlanetCracker.Chunk;
 using Content.Server._WF.PlanetCracker.Cracker;
 using Content.Server._WF.PlanetCracker.Planets;
 using Content.Server.Decals;
+using Content.Server.NPC.HTN;
 using Content.Server.Parallax;
 using Content.Shared._WF.PlanetCracker.Anchors;
 using Content.Shared._WF.PlanetCracker.Cracker;
@@ -29,6 +30,7 @@ public sealed partial class WFFissureSpawnerSystem : EntitySystem
     [Dependency] private BiomeSystem _biome = default!;
     [Dependency] private DecalSystem _decals = default!;
     [Dependency] private EntityLookupSystem _lookup = default!;
+    [Dependency] private HTNSystem _htn = default!;
     [Dependency] private IGameTiming _timing = default!;
     [Dependency] private IPrototypeManager _proto = default!;
     [Dependency] private IRobustRandom _random = default!;
@@ -38,6 +40,7 @@ public sealed partial class WFFissureSpawnerSystem : EntitySystem
     [Dependency] private SharedTransformSystem _transform = default!;
     [Dependency] private WFCrackerSystem _crackers = default!;
     [Dependency] private WFGravityAnchorSystem _anchors = default!;
+    [Dependency] private WFPlanetChunkSystem _chunks = default!;
 
     /// <summary>Next tick of the 1 Hz ring sweep.</summary>
     private TimeSpan _nextSweep;

@@ -24,11 +24,11 @@ public sealed partial class WFFissureSpawnerComponent : Component
     public TimeSpan NextRing;
 
     /// <summary>Whether a drill is running and rings are being spread.</summary>
-    [DataField]
+    [ViewVariables]
     public bool Armed;
 
     /// <summary>How many rings this anchor has already spread.</summary>
-    [DataField]
+    [ViewVariables]
     public int RingsDone;
 
     /// <summary>How many rings one full drill spreads.</summary>
@@ -72,7 +72,7 @@ public sealed partial class WFFissureSpawnerComponent : Component
     public int Cap = 15;
 
     /// <summary>How many mobs this anchor has spawned in total; only ever counts up, and only on an actual spawn.</summary>
-    [DataField]
+    [ViewVariables]
     public int SpawnedTotal;
 
     /// <summary>How many threats the extraction surge spawns.</summary>
@@ -80,7 +80,7 @@ public sealed partial class WFFissureSpawnerComponent : Component
     public int SurgeMobs = 6;
 
     /// <summary>How many threats the extraction surge has already spawned.</summary>
-    [DataField]
+    [ViewVariables]
     public int SurgeSpawned;
 
     /// <summary>
@@ -94,12 +94,16 @@ public sealed partial class WFFissureSpawnerComponent : Component
     [DataField]
     public int MobRollRetries = 5;
 
-    /// <summary>The planet ground layer this anchor is drilling into, resolved at arm.</summary>
-    [DataField]
+    /// <summary>
+    /// The planet ground layer this anchor is drilling into, resolved at arm.
+    /// Runtime only, never a DataField: a raw EntityUid does not survive a map save and reload, and the same is true of
+    /// every other live field below (the WFPlanetChunkComponent.RimDecals/DropStream precedent).
+    /// </summary>
+    [ViewVariables]
     public EntityUid? Ground;
 
     /// <summary>The anchor's world position, cached at arm, that the rings are built around.</summary>
-    [DataField]
+    [ViewVariables]
     public Vector2 Centre;
 
     /// <summary>The salvage faction mobs are rolled from, resolved from the world's surface prototype; null spawns nothing.</summary>
@@ -114,19 +118,29 @@ public sealed partial class WFFissureSpawnerComponent : Component
     /// Every fissure decal this anchor has stamped. Parallel to <see cref="DecalStages"/> (same index is the same
     /// decal) so the ring promoter can raise a decal one growth stage instead of stamping a second decal on the tile.
     /// </summary>
-    [DataField]
+    [ViewVariables]
     public List<uint> Decals = new();
 
     /// <summary>Growth stage 1-4 of each entry in <see cref="Decals"/>, at the same index.</summary>
-    [DataField]
+    [ViewVariables]
     public List<byte> DecalStages = new();
 
     /// <summary>Every tile index this anchor has opened a fissure on.</summary>
-    [DataField]
+    [ViewVariables]
     public List<Vector2i> Fissures = new();
 
-    /// <summary>The threats this anchor has spawned and stamped; entities with no HTN never land here.</summary>
-    [DataField]
+    /// <summary>
+    /// Every entity this anchor's fissures put on the ground, stamped or not. <see cref="Live"/> is the stamped
+    /// subset, so anything that is not a mob - WeaponTurretXeno, salvage_factions.yml:22-25 - is tracked only here.
+    /// </summary>
+    [ViewVariables]
+    public List<EntityUid> Spawned = new();
+
+    /// <summary>
+    /// The threats this anchor has spawned and STAMPED as site threats. Only a mob joins it: an entry with no
+    /// MobStateComponent is left on its own root task and stays in <see cref="Spawned"/> alone.
+    /// </summary>
+    [ViewVariables]
     public List<EntityUid> Live = new();
 
     /// <summary>The one-shot effect played on a tile as its fissure opens.</summary>

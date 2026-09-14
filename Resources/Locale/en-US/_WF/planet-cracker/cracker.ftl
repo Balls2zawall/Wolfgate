@@ -110,6 +110,7 @@ cmd-wfcracker-hint-sub = <spawn|state|begin|complete|fissure|disconnect|rearm|re
 cmd-wfcracker-hint-kind = <cracker|transport>
 cmd-wfcracker-hint-state = <crack stage>
 cmd-wfcracker-hint-target = <crack|drill>
+cmd-wfcracker-hint-begin = <drill>
 cmd-wfcracker-hint-fissure = <ring | surge>
 cmd-wfcracker-rearmed = Re-armed both anchors of { $grid }.
 cmd-wfcracker-released = Forced { $grid } to release its chunk.

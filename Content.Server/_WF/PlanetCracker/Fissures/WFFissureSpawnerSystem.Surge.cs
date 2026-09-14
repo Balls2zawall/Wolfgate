@@ -27,6 +27,24 @@ public sealed partial class WFFissureSpawnerSystem
             return;
         }
 
+        // AND EVERY OTHER PRECONDITION OF THE CUT. F8 runs BEFORE WFPlanetChunkSystem, which refuses the disc on three
+        // further conditions after the ground guard (WFPlanetChunkSystem.cs:78-103): the hull already holds a chunk, the
+        // planet is already cracked, or the berth will not resolve. WFCrackerSystem.CompleteCrack has no once-only guard
+        // of its own, so without replicating them a refused raise would still pin rim tiles, stamp permanent stage-4
+        // decals and put hostile mobs on the ground - and would do it all again on the next raise. ForceSurge is
+        // deliberately exempt: it is an admin verb.
+        if (!TryComp<WFPlanetCrackerComponent>(args.Cracker, out var crackerComp))
+            return;
+
+        var cracker = new Entity<WFPlanetCrackerComponent>(args.Cracker, crackerComp);
+
+        if (_chunks.TryGetChunk(cracker, out _) ||
+            _crackers.IsPlanetCracked(cracker) ||
+            !_crackers.TryGetBerthCentre(cracker, out _))
+        {
+            return;
+        }
+
         var ground = new Entity<MapGridComponent>(args.GroundMap, mapGrid);
 
         Surge(args.AnchorA, ground, biome, args.CentreXY, args.Radius);
