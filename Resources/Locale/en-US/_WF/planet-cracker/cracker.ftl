@@ -25,6 +25,8 @@ wf-crack-console-crack-remaining = Cut remaining: { $time }
 wf-crack-console-crack-paused = CUT SUSPENDED — anchor damaged
 wf-crack-console-grace = HULL LOSS IN { $time }
 wf-crack-console-grace-nominal = Hold nominal.
+wf-crack-console-disconnect = DISCONNECT ARMED — { $time }
+wf-crack-console-evac = CHUNK RELEASE IN { $time }
 wf-crack-console-btn-target = TARGET PAIR
 wf-crack-console-btn-untarget = CLEAR TARGET
 wf-crack-console-btn-begin = BEGIN CRACK
@@ -77,6 +79,15 @@ wf-crack-console-load = Load { $mass } / { $capacity }
 wf-crack-console-abort = Spinning down: { $seconds } s
 wf-crack-console-abort-to = Returning to { $state }
 
+## Disconnect protocol (F7)
+wf-crack-announce-sender = Crack control
+wf-crack-disconnect-armed = First anchor switched off. Switch the second off within { $seconds } seconds or the first re-arms.
+wf-crack-disconnect-warning = Disconnect window closing: { $seconds } seconds.
+wf-crack-disconnect-lapsed = The disconnect window lapsed. The first anchor has re-armed.
+wf-crack-disconnect-committed = Disconnect confirmed. Chunk release in { $seconds } seconds — clear the chunk.
+wf-crack-evac-warning = Chunk release in { $seconds } seconds.
+wf-crack-released = The chunk is away. Gravity lock released.
+
 ## Centrifuge dial
 wf-centrifuge-spin = Spin { $percent }%
 wf-centrifuge-load = Load { $mass } / { $capacity }
@@ -84,8 +95,8 @@ wf-centrifuge-at-full = AT FULL
 
 ## wfcracker command
 cmd-wfcracker-desc = Spawn the code-built planet cracker test grids.
-cmd-wfcracker-help = Usage: { $command } spawn <cracker | transport> | { $command } state <stage> | { $command } complete <crack | drill> | { $command } disconnect | { $command } fall | { $command } extract | { $command } drop
-cmd-wfcracker-invalid-args = Expected: spawn <cracker | transport>, state <stage>, complete <crack | drill>, disconnect or fall.
+cmd-wfcracker-help = Usage: { $command } spawn <cracker | transport> | { $command } state <stage> | { $command } complete <crack | drill> | { $command } disconnect | { $command } rearm | { $command } release | { $command } fall | { $command } extract | { $command } drop
+cmd-wfcracker-invalid-args = Expected: spawn <cracker | transport>, state <stage>, complete <crack | drill>, disconnect, rearm, release, fall, extract or drop.
 cmd-wfcracker-unknown-kind = No test grid named "{ $kind }". Try cracker or transport.
 cmd-wfcracker-no-map = Attach to an entity on a map first.
 cmd-wfcracker-spawned = Built { $kind } as { $grid } on map { $map }.
@@ -95,7 +106,9 @@ cmd-wfcracker-completed = Forced the cut on { $grid } to finish.
 cmd-wfcracker-disconnected = Switched off both anchors of { $grid }.
 cmd-wfcracker-drilled = Finished drilling both anchors of { $grid }.
 cmd-wfcracker-no-cracker = Stand on a grid that has a planet cracker first.
-cmd-wfcracker-hint-sub = <spawn|state|complete|disconnect|fall|extract|drop>
+cmd-wfcracker-hint-sub = <spawn|state|complete|disconnect|rearm|release|fall|extract|drop>
 cmd-wfcracker-hint-kind = <cracker|transport>
 cmd-wfcracker-hint-state = <crack stage>
 cmd-wfcracker-hint-target = <crack|drill>
+cmd-wfcracker-rearmed = Re-armed both anchors of { $grid }.
+cmd-wfcracker-released = Forced { $grid } to release its chunk.
