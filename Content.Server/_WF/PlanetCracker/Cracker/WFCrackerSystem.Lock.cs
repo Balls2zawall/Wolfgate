@@ -152,12 +152,22 @@ public sealed partial class WFCrackerSystem
                 blockers |= WFCrackBlocker.ProjectorsUnpowered;
         }
 
+        // Deliberately outside the owned-pair branch: a planet that has already been cut refuses whatever state the
+        // anchors are in, and the flag lives on the sector body so it outlives the z-network.
+        if (IsPlanetCracked(ent))
+            blockers |= WFCrackBlocker.PlanetCracked;
+
         return blockers;
     }
 
     /// <summary>The locale key for the first blocker worth naming, so a refusal popup says what is actually wrong.</summary>
     public static string GetBlockerReason(WFCrackBlocker blockers)
     {
+        // First of all of them: it is the only permanent fault in the list, so naming anything else would send the
+        // crew off to fix something that cannot help.
+        if ((blockers & WFCrackBlocker.PlanetCracked) != 0)
+            return "wf-crack-console-blocker-planet-cracked";
+
         if ((blockers & WFCrackBlocker.InGridNetwork) != 0)
             return "wf-crack-console-refuse-network";
 

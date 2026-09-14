@@ -1,6 +1,7 @@
 using System.Linq;
 using System.Numerics;
 using Content.Server._WF.PlanetCracker.Anchors;
+using Content.Server._WF.PlanetCracker.Chunk;
 using Content.Server._WF.PlanetCracker.Cracker;
 using Content.Server._WF.PlanetCracker.Testing;
 using Content.Server.Administration;
@@ -24,6 +25,7 @@ public sealed partial class WFCrackerCommand : LocalizedEntityCommands
     [Dependency] private SharedTransformSystem _transform = default!;
     [Dependency] private WFCrackerSystem _crackers = default!;
     [Dependency] private WFGravityAnchorSystem _anchors = default!;
+    [Dependency] private WFPlanetChunkSystem _chunks = default!;
     [Dependency] private WFTestGridFactory _factory = default!;
 
     private const string SubSpawn = "spawn";
@@ -31,6 +33,8 @@ public sealed partial class WFCrackerCommand : LocalizedEntityCommands
     private const string SubComplete = "complete";
     private const string SubDisconnect = "disconnect";
     private const string SubFall = "fall";
+    private const string SubExtract = "extract";
+    private const string SubDrop = "drop";
 
     private const string KindCracker = "cracker";
     private const string KindTransport = "transport";
@@ -39,7 +43,7 @@ public sealed partial class WFCrackerCommand : LocalizedEntityCommands
     private const string TargetDrill = "drill";
 
     private static readonly string[] Subcommands =
-        { SubSpawn, SubState, SubComplete, SubDisconnect, SubFall };
+        { SubSpawn, SubState, SubComplete, SubDisconnect, SubFall, SubExtract, SubDrop };
 
     private static readonly string[] Kinds = { KindCracker, KindTransport };
 
@@ -81,6 +85,12 @@ public sealed partial class WFCrackerCommand : LocalizedEntityCommands
                 return;
             case SubFall when args.Length == 1:
                 ExecuteFall(shell);
+                return;
+            case SubExtract when args.Length == 1:
+                ExecuteExtract(shell);
+                return;
+            case SubDrop when args.Length == 1:
+                ExecuteDrop(shell);
                 return;
             default:
                 Reject(shell);
@@ -193,6 +203,58 @@ public sealed partial class WFCrackerCommand : LocalizedEntityCommands
 
         // Fall sets the stage itself, so the reply is the stage line rather than a message of its own.
         Report(shell, "cmd-wfcracker-state-set", cracker.Owner, cracker.Comp.State);
+    }
+
+    /// <summary>
+    /// Cuts the chunk out by hand.
+    /// Deliberately not `complete crack`: this is the escape hatch for a hull forced into Cracked with `wfcracker
+    /// state`, which never raised the extraction hook at all.
+    /// </summary>
+    private void ExecuteExtract(IConsoleShell shell)
+    {
+        if (!TryGetCracker(shell, out var cracker))
+            return;
+
+        if (!_crackers.TryGetTargetedPair(cracker, out var a, out var b))
+        {
+            shell.WriteError(Loc.GetString("cmd-wfcracker-extract-failed", ("reason", "no targeted anchor pair")));
+            return;
+        }
+
+        if (!_crackers.TryGetCircle(a.Owner, b.Owner, out var centre, out var radius))
+        {
+            shell.WriteError(Loc.GetString("cmd-wfcracker-extract-failed", ("reason", "the pair has no cut circle")));
+            return;
+        }
+
+        var groundMap = EntityManager.GetComponent<TransformComponent>(a.Owner).MapUid ?? EntityUid.Invalid;
+
+        if (!_chunks.TryExtract(cracker, a.Owner, b.Owner, centre, radius, groundMap, out var chunk))
+        {
+            shell.WriteError(Loc.GetString("cmd-wfcracker-extract-failed", ("reason", "see the server log")));
+            return;
+        }
+
+        shell.WriteLine(Loc.GetString("cmd-wfcracker-extracted",
+            ("grid", EntityManager.ToPrettyString(chunk).ToString())));
+    }
+
+    /// <summary>Pushes the hull's chunk into transit the same way the watchdog would.</summary>
+    private void ExecuteDrop(IConsoleShell shell)
+    {
+        if (!TryGetCracker(shell, out var cracker))
+            return;
+
+        if (!_chunks.TryGetChunk(cracker, out var chunk))
+        {
+            shell.WriteError(Loc.GetString("cmd-wfcracker-no-chunk"));
+            return;
+        }
+
+        _chunks.DropChunk(chunk);
+
+        shell.WriteLine(Loc.GetString("cmd-wfcracker-dropped",
+            ("grid", EntityManager.ToPrettyString(chunk.Owner).ToString())));
     }
 
     /// <summary>The usage refusal, shared by a bad subcommand, a bad arity and a bad completion target.</summary>

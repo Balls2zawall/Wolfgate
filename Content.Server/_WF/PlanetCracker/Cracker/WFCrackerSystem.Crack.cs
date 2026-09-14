@@ -5,7 +5,9 @@ using Content.Shared._WF.PlanetCracker.Anchors;
 using Content.Shared._WF.PlanetCracker.Cracker;
 using Content.Shared.Gravity;
 using Robust.Shared.Audio;
+using Robust.Shared.Map;
 using Robust.Shared.Map.Components;
+using Robust.Shared.Player;
 
 namespace Content.Server._WF.PlanetCracker.Cracker;
 
@@ -15,9 +17,6 @@ namespace Content.Server._WF.PlanetCracker.Cracker;
 /// </summary>
 public sealed partial class WFCrackerSystem
 {
-    /// <summary>Initial downward speed of a crack fall, in levels per second; above the transit exit band of 0.1.</summary>
-    private const float FallSeedVelocity = 0.3f;
-
     /// <summary>How often the grid shake is re-triggered while the cut runs; the engine shake itself lasts about 2 s.</summary>
     private static readonly TimeSpan ShakeInterval = TimeSpan.FromSeconds(2);
 
@@ -108,6 +107,8 @@ public sealed partial class WFCrackerSystem
 
         ReconcileProjectors(ent);
         UpdateShake(ent);
+        ReconcileBeams(ent);
+        UpdateSiteEffects(ent);
     }
 
     /// <summary>Arms the crack timer from the pair distance and the hull's part multiplier, and starts the rumble.</summary>
@@ -142,7 +143,14 @@ public sealed partial class WFCrackerSystem
 
         ReconcileProjectors(ent);
 
+        // The ring starts empty and grows: the value lives on the anchors, which are the only crack entities a surface
+        // viewer has in PVS at all.
+        _anchors.SetCrackProgress(a, 0f);
+        _anchors.SetCrackProgress(b, 0f);
+
         ent.Comp.RumbleStream = _audio.PlayPvs(ent.Comp.RumbleSound, ent.Owner, AudioParams.Default.WithLoop(true))?.Entity;
+
+        StartGroundRumble(ent, a, b);
     }
 
     /// <summary>
@@ -205,6 +213,16 @@ public sealed partial class WFCrackerSystem
         if (_timing.CurTime < ent.Comp.CrackEnd)
         {
             ent.Comp.CrackRemaining = ent.Comp.CrackEnd - _timing.CurTime;
+
+            // The ring grows off the same remainder the console reads, so the two can never disagree.
+            if (ent.Comp.CrackDuration > TimeSpan.Zero && TryGetTargetedPair(ent, out var a, out var b))
+            {
+                var progress = 1f - (float)(ent.Comp.CrackRemaining / ent.Comp.CrackDuration);
+
+                _anchors.SetCrackProgress(a, progress);
+                _anchors.SetCrackProgress(b, progress);
+            }
+
             return;
         }
 
@@ -226,6 +244,11 @@ public sealed partial class WFCrackerSystem
 
         SetState(ent, WFCrackState.Cracked);
         StopRumble(ent);
+        StopGroundRumble(ent);
+
+        // A finished cut is a full circle, exactly: the endpoints of the progress value always land.
+        _anchors.SetCrackProgress(a, 1f);
+        _anchors.SetCrackProgress(b, 1f);
 
         var ev = new WFCrackCompletedEvent(ent.Owner, a.Owner, b.Owner, centre, radius, groundMap);
         RaiseLocalEvent(ref ev);
@@ -313,6 +336,9 @@ public sealed partial class WFCrackerSystem
     {
         var pending = ent.Comp.PendingAbort ?? WFCrackState.Surveying;
 
+        // Before ClearTarget, which is the last moment the anchors are still findable through the hull.
+        ResetCrackProgress(ent);
+
         ReleaseLock(ent);
         ClearTarget(ent);
 
@@ -328,6 +354,7 @@ public sealed partial class WFCrackerSystem
         Dirty(ent);
 
         StopRumble(ent);
+        StopGroundRumble(ent);
         StopKlaxon(ent);
 
         SetState(ent, pending);
@@ -363,7 +390,7 @@ public sealed partial class WFCrackerSystem
         _zLevels.WfInvalidateGravgenCapacity();
 
         var faller = EnsureComp<CEZGridFallerComponent>(ent.Owner);
-        faller.Velocity = FallSeedVelocity;
+        faller.Velocity = SharedWFCrackerSystem.FallSeedVelocity;
         faller.GravityTime = _timing.CurTime;
 
         if (!TryComp<MapGridComponent>(ent.Owner, out var grid))
@@ -384,6 +411,7 @@ public sealed partial class WFCrackerSystem
         RaiseLocalEvent(ref ev);
 
         StopRumble(ent);
+        StopGroundRumble(ent);
         StopKlaxon(ent);
         ent.Comp.GraceRunning = false;
         ent.Comp.FallStream = _audio.PlayPvs(ent.Comp.FallSound, ent.Owner, AudioParams.Default.WithLoop(true))?.Entity;
@@ -457,6 +485,50 @@ public sealed partial class WFCrackerSystem
     private void StopRumble(Entity<WFPlanetCrackerComponent> ent)
     {
         ent.Comp.RumbleStream = _audio.Stop(ent.Comp.RumbleStream);
+    }
+
+    /// <summary>
+    /// Starts the ground-side rumble at the cut circle.
+    /// The hull's own loop reaches orbit but the client zeroes an audio source's gain across maps, so the site needs a
+    /// source of its own or the whole surface is silent while a planet is being cut in half.
+    /// </summary>
+    private void StartGroundRumble(
+        Entity<WFPlanetCrackerComponent> ent,
+        Entity<WFGravityAnchorComponent> a,
+        Entity<WFGravityAnchorComponent> b)
+    {
+        StopGroundRumble(ent);
+
+        if (!TryGetCircle(a.Owner, b.Owner, out var centre, out _))
+            return;
+
+        var xform = Transform(a.Owner);
+
+        if (xform.MapUid is not { } groundMap)
+            return;
+
+        ent.Comp.GroundRumbleStream = _audio.PlayStatic(
+            ent.Comp.GroundRumbleSound,
+            Filter.Empty().AddInMap(xform.MapID, EntityManager),
+            new EntityCoordinates(groundMap, centre),
+            false,
+            AudioParams.Default.WithLoop(true).WithMaxDistance(40f))?.Entity;
+    }
+
+    /// <summary>Stops the ground-side rumble loop.</summary>
+    private void StopGroundRumble(Entity<WFPlanetCrackerComponent> ent)
+    {
+        ent.Comp.GroundRumbleStream = _audio.Stop(ent.Comp.GroundRumbleStream);
+    }
+
+    /// <summary>Puts both targeted anchors' rings back to a full idle circle, before the target is dropped.</summary>
+    private void ResetCrackProgress(Entity<WFPlanetCrackerComponent> ent)
+    {
+        if (!TryGetTargetedPair(ent, out var a, out var b))
+            return;
+
+        _anchors.SetCrackProgress(a, 1f);
+        _anchors.SetCrackProgress(b, 1f);
     }
 
     /// <summary>Stops the fall alarm loop.</summary>

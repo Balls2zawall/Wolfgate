@@ -110,6 +110,11 @@ public sealed partial class WFGravityAnchorSystem : SharedWFGravityAnchorSystem
     /// <summary>The one anchor/unanchor handler: covers the wrench, explosions and grid destruction alike.</summary>
     private void OnAnchorStateChanged(Entity<WFGravityAnchorComponent> ent, ref AnchorStateChangedEvent args)
     {
+        // F5 moves a deployed anchor onto the chunk grid, which is an unanchor and a re-anchor: dissolving the pair here
+        // would abort the cut 30 s after a successful extraction, and re-anchoring can never satisfy TryGetPlanetGround.
+        if (IsRidingChunk(ent.Owner))
+            return;
+
         if (!args.Anchored)
         {
             RemComp<CEPvsOverrideComponent>(ent.Owner);
