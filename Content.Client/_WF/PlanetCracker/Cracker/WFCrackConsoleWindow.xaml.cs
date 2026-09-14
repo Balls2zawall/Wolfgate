@@ -59,11 +59,12 @@ public sealed partial class WFCrackConsoleWindow : FancyWindow
         HeaderCrack.Text = CrackText(state);
         HeaderCrack.FontColorOverride = state.CrackPaused ? skin.Caution : skin.Text;
 
-        GraceLabel.Text = state.GraceRunning
-            ? Loc.GetString("wf-crack-console-grace", ("time", Format(state.GraceRemaining)))
-            : Loc.GetString("wf-crack-console-grace-nominal");
-
-        GraceLabel.FontColorOverride = state.GraceRunning ? skin.Danger : skin.TextMuted;
+        // One label, three countdowns, most urgent first: the evacuation outranks the pairing window, which outranks
+        // the hull-loss grace. Only the last of the three ever reads nominal.
+        GraceLabel.Text = GraceText(state);
+        GraceLabel.FontColorOverride = state.EvacRunning || state.DisconnectArmed || state.GraceRunning
+            ? skin.Danger
+            : skin.TextMuted;
 
         FailureLabel.Text = FailureText(state);
         FailureLabel.FontColorOverride = state.Failing == WFCrackFailure.None ? skin.TextMuted : skin.Danger;
@@ -74,6 +75,20 @@ public sealed partial class WFCrackConsoleWindow : FancyWindow
 
         // A greyed BEGIN CRACK has to say why, one line per flag, or the crew has nothing to act on.
         BeginButton.ToolTip = BlockerText(state);
+    }
+
+    /// <summary>The timeline countdown line: the evacuation, else the armed disconnect window, else the grace.</summary>
+    private static string GraceText(WFCrackConsoleState state)
+    {
+        if (state.EvacRunning)
+            return Loc.GetString("wf-crack-console-evac", ("time", Format(state.EvacRemaining)));
+
+        if (state.DisconnectArmed)
+            return Loc.GetString("wf-crack-console-disconnect", ("time", Format(state.DisconnectRemaining)));
+
+        return state.GraceRunning
+            ? Loc.GetString("wf-crack-console-grace", ("time", Format(state.GraceRemaining)))
+            : Loc.GetString("wf-crack-console-grace-nominal");
     }
 
     /// <summary>The cut readout: remaining time, the spin-down when one is running, or the alignment offset.</summary>

@@ -177,6 +177,13 @@ public sealed partial class WFCrackConsoleSystem : EntitySystem
         state.GraceRemaining = comp.GraceRunning ? Remaining(comp.GraceEnd) : TimeSpan.Zero;
         state.AbortRemaining = comp.PendingAbort is null ? TimeSpan.Zero : Remaining(comp.AbortEnd);
 
+        // Same convention as the timers above: the two disconnect countdowns are derived from their deadlines, not
+        // from a banked field, so a console pushed between two sweeps still counts down smoothly.
+        state.DisconnectArmed = comp.DisconnectArmed;
+        state.DisconnectRemaining = comp.DisconnectArmed ? Remaining(comp.DisconnectEnd) : TimeSpan.Zero;
+        state.EvacRunning = comp.EvacRunning;
+        state.EvacRemaining = comp.EvacRunning ? Remaining(comp.EvacEnd) : TimeSpan.Zero;
+
         // The owned pair is what the target button would act on. Not locked-only: a pair still drilling is what the
         // diagram should be drawing, and the button's own preconditions are the blocker flags below.
         var owned = _crackers.TryGetOwnedPair(cracker, out var ownedA, out var ownedB, false);
