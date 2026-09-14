@@ -1,10 +1,10 @@
 # Planet Cracking — design, revision 3
 
-**Status:** proposal organised into features, decisions D1–D25 taken (§7). Nothing implemented. Branch `clanker/planet-cracker-design-a8c500`.
+**Status:** decisions D1–D25 taken (§7). F0, F1+F3, F4, F5, F2, F7 and F6 are built — see **§10 As built** for what shipped and where it differs from §4. F8 and F9 are in progress. Branch `clanker/planet-cracker-design-a8c500`.
 
 Revision 3 resolves the proofread issues (chunk berth, cut radius, mining numbers, no abort after begin, chunk watchdog, grace hysteresis) and corrects F0: the sector already has planets (Far Horizons star system) and a planet-surface prototype pipeline (DeltaV, used by Monolith's desert world), so F0 is the glue between them and the z-level stack, not planets from scratch.
 
-§0 is what the codebase already gives us (verified, paths inline). §1 glossary, §2 the corrected player loop, §3 the state machine, §4 the features F0–F9, §5 numbers, §6 pointer to the asset requirements, §7 decisions taken, §8 remaining questions, §9 testing.
+§0 is what the codebase already gives us (verified, paths inline). §1 glossary, §2 the corrected player loop, §3 the state machine, §4 the features F0–F9, §5 numbers, §6 pointer to the asset requirements, §7 decisions taken, §8 remaining questions, §9 testing, §10 as built.
 
 ---
 
@@ -116,6 +116,8 @@ depth 1   air layer            empty map
 depth 0   GROUND LAYER         DeltaV planet prototype surface (CEZGroundLayerComponent)  <- anchors, fissures, hole
 ```
 
+As built there is no cloud layer on a crackable world — three air layers in its place, so the stack is still five deep with orbit at depth 4. See §10 F4.
+
 **What F0 builds.**
 
 - `PlanetSurfaceComponent` on a sector `PlanetEntity`, set from a new field on the planet type (`surface: DesertWorld` style, pointing at a `planet` prototype plus optional hand-made grid). On first approach (or at round start for sanctioned planets) it builds the network: `PlanetSystem.SpawnPlanet` for the ground layer, empty maps for the air layers, a new orbit map with space atmosphere on top, all added with `TryAddMapsIntoNetwork`. F2's deep vein spawner is one more marker layer.
@@ -123,14 +125,7 @@ depth 0   GROUND LAYER         DeltaV planet prototype surface (CEZGroundLayerCo
 - **The orbit mechanic.** Today a grid on any non-ground layer falls unless a gravgen holds it. The orbit layer gets `CEZOrbitLayerComponent` and `UpdateGridGravity` skips grids parked there the same way it skips the ground layer. Sitting in orbit costs nothing. Descending is the existing `DescendZ` pilot action, which already requires a working gravgen; ascending back ends in `TryExitTransit` onto the orbit layer. The cracker's fall is therefore explicit: `Falling` pushes the grids into downward transit with `TryEnterTransit` and zeroes the centrifuge's capacity. During `Cracking` and `Cracked` the centrifuge does no physical work; it is the fiction that justifies the grace timer.
 - A round-scoped planet registry (name, sector entity, network entity, flags) that F2's survey console reads. Planets that never get a surface stay as they are.
 
-**As built (2026-09-13, details in `F0_IMPLEMENTATION_PLAN.md`).** Names differ from the text above:
-- `wfPlanetSurface` prototype (`WFPlanetSurfacePrototype`, keyed by `planetType`) describes a planet's whole stack; `WFSurfaceAsclepiu` binds Asclepiu to the DeltaV `planet` prototype `WFAsclepiuSurface` (biome `WFBiomeAsclepiu`: Grasslands continents, Monolith ocean, snow poles; eight ore marker layers, no mob layers).
-- `WFPlanetRegistrySystem` registers each spawned Far Horizons planet (`WFSectorPlanetComponent`) from a one-line hook in `StarSystemMapSystem`; `WFPlanetNetworkSystem` builds ground + 2 air + cloud + orbit maps into one CE network at round start; `WFPlanetNetworkComponent` on the network entity records it.
-- Every layer carries `WFPlanetLayerComponent`; the orbit map carries `WFOrbitLayerComponent { Planet, Range, Network }`, space atmosphere, no map grid, no map light, an `FTLDestination` and a `WFOrbitBeacon`.
-- Orbit gravity exemption: two marked lines in `CEZLevelsSystem.Gravity.cs`. FTL gate: two marked lines in `SharedShuttleSystem.CanFTLTo` calling `WfAllowFTL` (refuses jumps from transit maps and from non-orbit planet layers; enter orbit only within `Range` of the sector planet). "Enter orbit" is the orbit map in the console's destination list; "Leave orbit" is the sector planet's existing beacon.
-- CVar `wf.planet_networks` (default false; on in `development.toml`). Admin command `wfplanet list|build|delete|spawn|system|tp`. The dev sandbox preset has no star system, so use `wfplanet system SystemKyphrus` or `wfplanet spawn WFSurfaceAsclepiu`.
-- Tests: `Content.IntegrationTests/Tests/_WF/PlanetCracker/PlanetNetworkTest.cs` (eight tests).
-- Known limits (plan OPEN RISKS): biome chunks unload under a parked hull when no viewer is near (a landing feature must reserve tiles); no fauna on Asclepiu until a z-eye marker guard exists; `MapAbove` links only resolve through the network dictionary.
+**As built.** §10 F0, with the details in `F0_IMPLEMENTATION_PLAN.md`. Tests: `Content.IntegrationTests/Tests/_WF/PlanetCracker/PlanetNetworkTest.cs`.
 
 ### F1 — The cracker vessel
 
@@ -328,3 +323,130 @@ None open as of revision 3.
 
 - Headless integration tests per the Wolfgate convention: a fixture that builds a ground layer, two air layers and an orbit layer, spawns a cracker grid with a berth marker, centrifuge and projectors, places two anchors on the ground, and drives the state machine directly (no UI). Cover: orbit layer exempts grids from falling; descent still needs a gravgen; pairing refuses out-of-band distances; drill timer; berth alignment refusal outside 8 tiles and the snap on begin; grace timer hysteresis, reset and expiry; fall pushes both grids into transit; extraction tile count includes both anchors and leaves the hole; once-per-round refusal; anchor damage pause and abort; disconnect pairing window; chunk drop lands on the hole's footprint; watchdog drop when the cracker is deleted.
 - Admin verbs under the Wolfgate admin tab: set crack state, complete drill, complete crack, force disconnect, mark planet cracked, give a sector planet a surface network at the admin's request.
+
+---
+
+## 10. As built
+
+Build order actually run: F0 → F1+F3 → F4 → F5 → F2 → F7 → F6. F8 is in flight and F9 is planned. Every new file is under `Content.Shared/_WF/PlanetCracker`, `Content.Server/_WF/PlanetCracker`, `Content.Client/_WF/PlanetCracker`, `Resources/Prototypes/_WF/PlanetCracker` and `Resources/Locale/en-US/_WF/planet-cracker`. Three admin commands cover the whole family — `wfplanet`, `wfcracker`, `wfsurvey` (names in `Content.Shared/_WF/Administration/WolfgateAdminCommands.cs`). The master switch is the CVar `wf.planet_networks` (`Content.Shared/_WF/CCVar/PlanetCrackerCVars.cs`), default false, set true in `Resources/ConfigPresets/Build/development.toml`.
+
+**Upstream edits, whole family.** Six marked lines in four files; everything else goes through `_WF` partials of upstream classes, which cost no upstream line.
+
+| Marked site | Call | For |
+|---|---|---|
+| `Content.Server/_CE/ZLevels/Core/CEZLevelsSystem.Gravity.cs:93` | `WfIsOrbitLayer` | grids parked on an orbit layer never fall (F0) |
+| `CEZLevelsSystem.Gravity.cs:453`, `:610` | `GetWFVirtualMass` | crated anchors count against pooled lift, and the readout agrees (D11, F1+F3) |
+| `Content.Shared/Shuttles/Systems/SharedShuttleSystem.cs:52` (`CanFTLTo`) | `WfAllowFTL` | orbit is the only FTL door in or out of a planet network (F0) |
+| `Content.Server/_FarHorizons/StarSystem/StarSystemMapSystem.cs:66` | `WfPlanetSpawned` | registers sector bodies that have a Wolfgate surface (F0) |
+| `Content.Client/Shuttles/UI/ShuttleNavControl.xaml.cs:621` | `DrawWfBerth` | berth ghost on the radar (D20, F4) |
+
+The `_WF` partials those calls land in: `Planets/CEZLevelsSystem.Wolfgate.cs`, `Planets/StarSystemMapSystem.Wolfgate.cs`, `Planets/SharedShuttleSystem.Wolfgate.cs` (shared), `Cracker/CEZLevelsSystem.WFVirtualMass.cs`, `Cracker/CEZLevelsSystem.WFGravityCache.cs`, `Cracker/GravityGeneratorSystem.WFCentrifuge.cs`, `Chunk/BiomeSystem.WFChunkPin.cs`, `Chunk/CEZLevelsSystem.WFChunkMove.cs`, and `Content.Client/_WF/PlanetCracker/Cracker/ShuttleNavControl.Wolfgate.cs`.
+
+**Naming.** Everything the feature sections name without a prefix shipped with `WF`: `WFPlanetCrackerComponent`, `WFChunkBerthComponent`, `WFGravityAnchorComponent`, `WFPlanetChunkComponent`, `WFDeepVeinComponent`, `WFCrackMinerComponent`, `WFFissureSpawnerComponent`, `WFCrackBeamComponent`. `CrackablePlanetComponent` (§4 F2) was never built: `Sanctioned`, `Cracked` and the vein table live on `WFSectorPlanetComponent` (the sector body, so they survive a network rebuild) and on `WFPlanetSurfacePrototype`.
+
+**No real map anywhere.** There is no shipyard vessel, no cargo product, and no prototype from this family is placed on any map in `Resources/Maps`. The two hulls are code-built by `WFTestGridFactory` (`Content.Server/_WF/PlanetCracker/Testing/`): a 15×15 cracker (shuttle console, `WFCrackConsole`, gyroscope, `MachineFTLDrive`, `WFCentrifuge`, two `WFGravityProjector`, a `WFChunkBerthMarker` shrunk to 12×12 at distance 8, airlock, two `WFAnchorCrate`, four thrusters) and a 7×9 transport (shuttle console, `WFTransportGravgen`, airlock, one `WFAnchorCrate`, four thrusters). Every machine on both is switched to `!NeedsPower` because there is no cabling. They stand in until the user's real maps exist; every mass, capacity and `maxHandledMass` number keyed to them is a placeholder.
+
+### F0 — planet networks, orbit layer, FTL gate
+
+`WFPlanetSurfacePrototype` (`- type: wfPlanetSurface`, keyed by `planetType`) describes a whole stack; `WFSurfaceAsclepiu` binds the Asclepiu sector body to the DeltaV `planet` prototype `WFAsclepiuSurface` (biome `WFBiomeAsclepiu`). `WFPlanetRegistrySystem` registers each spawned Far Horizons body as `WFSectorPlanetComponent`; `WFPlanetNetworkSystem` builds the maps into one CE network and records it with `WFPlanetNetworkComponent`. Every layer carries `WFPlanetLayerComponent`; the orbit map also carries `WFOrbitLayerComponent { Planet, Range, Network }`, space atmosphere, an `FTLDestination` and a `WFOrbitBeacon` entity. *Enter orbit* is the orbit map in the shuttle console's destination list, named `<planet> orbit` with the beacon `<planet> orbital insertion`; *leave orbit* is the sector planet's own existing beacon. Admin: `wfplanet list | build <planet> | delete <planet> | spawn <surface id> | system <starSystem id> | tp <planet>`.
+
+Deviations and limits:
+
+- The dev sandbox preset has no star system, so nothing is registered until `wfplanet system SystemKyphrus` or `wfplanet spawn WFSurfaceAsclepiu` is run. The round-start path only runs on a Mono preset.
+- Asclepiu ships ore marker layers and **no mob marker layers**: marker-spawned entities are never unloaded and a CE z-eye seeds markers under any orbiting hull, so fauna would accumulate for the round. The z-eye guard the plan specifies was not written; F8 declined it too.
+- `MapAbove` is never back-wired, so it is null on every planet-network layer and traversal works only through the network dictionary.
+- `WFOrbitBeacon` leaks to every shuttle console in the sector (`GetBeacons` is a global unfiltered query), and the outbound gate strands a hull whose gravgen dies while it is on a non-orbit layer — the console then lists no destinations, silently. `wfplanet tp` is the escape hatch.
+- Registration matches a body by float-equal position against `SharedStarSystemMapSystem`'s own expression, with a name fallback.
+
+### F1+F3 — hull skeleton and gravity anchors
+
+F1 shipped as skeleton only — components, prototypes and the two code-built hulls above, no BUI and no vessel. F3 shipped whole: `WFGravityAnchorComponent` + `WFGravityAnchorSystem` (`.Pairing`, `.Control`, `.ChunkRide`), `WFAnchorCrateComponent`/`WFAnchorCrateSystem`, `WFAnchorState`, the client `WFCrackCircleOverlay` and `WFCrackCircleOverlaySystem`, and `WFCrackerOwnershipSystem` binding crated anchors to the hull that bought them. Numbers match §5 in code: band 16–40 tiles (`MinDistance`/`MaxDistance`), cut radius `d/2 + 2` (`CutPadding`, D21), 5 min drill (`DrillDuration`), 50% damage threshold. D11 is enforced rather than warned: `WFAnchorCapacitySystem` writes a `WFGridAnchorLoadComponent.VirtualMass` that the CE pooled-lift check reads, so a second crated anchor takes the test transport over its gravgen rating and it drops. Prototypes: `anchors.yml`, `machines.yml` (`WFCentrifuge`, `WFGravityProjector`, `WFTransportGravgen`), `consoles.yml` (`WFChunkBerthMarker`), `boards.yml`.
+
+Deviations and limits:
+
+- D16 asked for a take-off *warning*; the as-built rule drops the shuttle, with a one-second popup as the only notice. The 31.5/6/40 numbers are tuned to the 63-tile test transport and must be re-derived against a real map.
+- Dragging a 450-mass anchor feels exactly like dragging a chair — `PullerComponent`'s speed modifier is a flat 0.95 regardless of mass, and no mass-scaled modifier was added.
+- The projector's 64×64 art overhangs its inherited 1×1 fixture (an even-sided AABB cannot align to the snap grid); mappers must leave ≥ 2 tiles between projectors. The crack miner has the same problem for the same reason.
+- The berth marker parents `MarkerBase`, so it is invisible and unclickable to ordinary players and routinely outside PVS. Its examine line only reads with markers toggled on.
+- `WFGravityAnchorComponent.BreakDamage` is a hand-maintained mirror of the prototype's Breakage trigger; a test asserts they match.
+- Deployed anchors get `CEPvsOverrideComponent`, which is a global override — every client replicates every deployed anchor.
+
+### F4 — crack control: console, projectors, centrifuge, fall
+
+`WFCrackerSystem` (`.StateMachine`, `.Lock`, `.Crack`, `.Beams`) owns the whole state machine of §3 on `WFPlanetCrackerComponent`; `WFCrackState`, `WFCrackFailure` and `WFCrackBlocker` (`WFCrackFlags.cs`) are the vocabulary, `WFCrackStateChangedEvent` and `WFCrackCompletedEvent`/`WFCrackerFallingEvent` the hooks. `WFCentrifugeSystem` applies the D25 hysteresis server-side (0.98 on, 0.95 off) because `PowerChargeComponent` has none; `WFGravityProjectorSystem` carries the D12 part multiplier. `WFCrackConsoleSystem` builds `WFCrackConsoleState`; the client draws it entirely in code — `WFDiagramControl`, `WFSiteDiagram`, `WFCentrifugeDial`, `WFProjectorPanel`, `WFCrackTimeline`, in `WFCrackConsoleWindow` and `WFCentrifugeWindow` (D13). Berth alignment, the 8-tile tolerance and the snap on *begin crack* are in `WFCrackerSystem.Lock.cs`; the berth ghost on the radar is `ShuttleNavControl.Wolfgate.cs`. Admin: `wfcracker state <stage>`, `wfcracker complete <crack|drill>`, `wfcracker fall`.
+
+Deviations and limits:
+
+- **The cloud layer was dropped from crackable planet stacks** (`planets.yml`: `cloudLayer: false`, `airLayers: 3`). `ScalingViewport.RenderZLevels` breaks its downward walk at the first `CEZCloudLayerComponent` and the cloud pass paints an opaque deck, so from orbit the crack site was invisible and the circle overlay never got a pass. The air layer count goes 2 → 3 in the same edit to keep the stack five maps deep with orbit at depth 4, so every fall duration stays as designed. The cost is four extra render passes on every orbiting client. `cloudComponents` is left in the prototype for planets that still want a deck.
+- The site is still not reliably visible from orbit: the downward walk gates on a single grid resolved at the screen's bottom-left corner, so a pilot in a sealed control room sees nothing below. The console diagram is the authoritative readout; the z-view is decoration.
+- The part multiplier is the **mean** of both projectors. §5 quotes only uniform-tier endpoints, so the mean is an invention that reproduces the stated 5.6–20 min range; "worse of the two" would change the formula and its test together.
+- `PowerChargeSystem` still zeroes the centrifuge's charge on any non-wrench unanchor (explosion, grid split). During `Cracking` that silently arms the grace timer with a falling dial as the only cue. Not fixed.
+- The snap is refused outright when the hull is in a CE grid network of two or more grids (`WFCrackBlocker.InGridNetwork`), because `CEZGridSyncSystem` would revert or propagate the move. A link formed mid-tick is not covered.
+- ASSET_REQUIREMENTS asks for a centrifuge spin loop pitch-shifted in code; `SharedAudioSystem` exposes no `SetPitch`, so the rotor dial is the only speed cue.
+- D23 holds: there is no abort message and no abort button. `wfcracker state` is the only escape hatch from a stuck precondition chain, which is why it is a shipped command rather than a debug aid.
+
+### F5 — extraction, chunk, hole, beams
+
+`WFPlanetChunkSystem.Extraction.cs` copies the whole `Tile` struct of every disc tile onto a new grid, moves every rider onto it, stamps the hole, and parks the grid in the berth; `BiomeSystem.WFChunkPin.cs` is the only legal writer into `BiomeComponent` and pins the hole and rim tiles so the biome never regenerates over them. `CEZLevelsSystem.WFChunkMove.cs` moves the chunk between maps keeping world XY and rotation. `WFChunkExtractedEvent` and `WFPlanetCrackedEvent` are the hooks; `WFPlanetChunkSystem.Effects.cs` plays the shake, boom and `WFEffectChunkBurst`. Beams are D4 as designed: `WFCrackBeamComponent` on each projector with a networked target, drawn by the client `WFCrackBeamOverlay`, with `WFCrackSkyBeam` standing at each anchor for surface viewers who are not looking up. Admin: `wfcracker extract`.
+
+Deviations and limits:
+
+- There is **no crack-hole tile and no rim tile prototype**. The hole is `Tile.Empty` and the rim is two decals (`WFCrackRimStraight`, `WFCrackRimCurve`) on pinned biome ground. `Tiles/crack_hole.rsi` and `Decals/crack_ring.rsi` ship referenced by nothing — either a later feature claims them or they should be deleted.
+- **Decals only ever draw frame zero**, so the rim decals are rotated per decal through `TryAddDecal`'s `rotation` argument (`snapCardinals: false`, `defaultSnap: false`) instead of through directional RSI states. `crack_rim.rsi` is authored `directions: 4` and three quarters of the sheet is unreachable; the meta is deliberately left alone because changing `directions` without re-cutting the PNGs fails RSI validation. F8's fissure decals take the same code-rotated approach.
+- A rim tile that is still space-like after the reserve gets no decal, so a circle cut beside a chasm ships with a visibly broken ring.
+- A grid parked inside the cut circle (a landed transport) is deliberately left behind, over empty tiles, neither falling nor landing; including grids would drag dock joints and CE networks with them.
+- `MapLight` was added to `orbitComponents` for the chunk's sake, which lights every hull parked on any crackable planet's orbit layer.
+- Extraction is a tick spike: roughly 1520 broadphase queries per `TileChangedEvent` on a radius-22 cut, three events in consecutive ticks, plus CE connector re-floods.
+- Anchors pin their 3×3 footprints and nothing releases those reservations, so two squares inside the hole stay in `ModifiedTiles` after the disc lifts.
+- F5 left `Cracked → Disconnecting → Released` unwritten and the hull force-anchored after extraction; that is F7's.
+
+### F2 — survey console, surveyor, deep veins
+
+`WFDeepVeinComponent` veins come from a `WFDeepVeins` biome marker layer on `WFAsclepiuSurface`, rolled from `WFVeinTablePrototype` (`WFVeinTableAsclepiu`); `WFSurveyorComponent`/`WFSurveyorSystem` is the handheld pulse, `WFSurveyedComponent` the per-player reveal, and the client draws revealed veins through `WFDeepVeinOverlay` and `WFDeepVeinVisualsSystem`. `WFSectorSurveyConsoleComponent` + `WFSurveyConsoleSystem` feed `WFSurveyConsoleState` to `WFSurveyConsoleWindow`, one `WFSurveyPlanetRow` per star-system body with distance, sanctioned/unsanctioned, cracked/intact, the vein rating band (`WFVeinRatingBandsPrototype`, `WFVeinRating`) and the destination name. Admin: `wfsurvey list | veins [radius] | reveal [radius]`.
+
+Deviations and limits:
+
+- **The console does not set an FTL target.** §4 F2 says selecting a planet targets it on the shuttle console; as built the window sends no message at all — selection is a client-local highlight and the row just names the destination for the pilot to find. The console's own hint line says to ping or rebuild the shuttle console's map, because `MapScreen` only rebuilds its destination tree on a ping.
+- **Vein count is a density, not §5's `2 + floor(d/8)`.** A biome marker layer places by uniform area density, so veins in a circle scale with r². Tuned as shipped (radius 12, `maxCount` 93, size 128) a small circle can contain zero veins and a large one many more than seven. Either §5 is restated as a density or extraction tops the chunk up; unresolved.
+- Ore marker layers with an `entityMask` are silent no-ops where the template plants no rock, so the ocean portion of `WFBiomeAsclepiu` produces no ore at all.
+- `WFSurfaceAsclepiu` fixes a biome seed (`seed: 20260913`) so the same world yields the same veins — which also freezes its terrain. Adding or removing **any** marker layer re-rolls every other layer's placement.
+- The reveal is client-side visibility with `Ore` and `TotalYield` networked, so it is readable by a modified client.
+- D18's outpost survey console is a mapping job that was not done: `WFSectorSurveyConsole` is placed on no map.
+- `surveyor.rsi`'s `scanning` state ships unused, and `deep_vein.rsi` is filed under `Decals/` but consumed as an entity sprite. The surveyor's ping reuses `/Audio/Machines/sonar-ping.ogg`, which ASSET_REQUIREMENTS does not list.
+
+### F7 — disconnect protocol, evacuation, chunk fall, scar
+
+`WFCrackerSystem.Disconnect.cs` runs the 60 s pairing window (`DisconnectWindow`) and the 60 s evacuation (`EvacDuration`, re-issued every 15 s), `WFPlanetChunkSystem.Disconnect.cs` drops the chunk into downward transit and cleans the wreck up 10 s after impact, and `WFCrackScarSystem`/`WFCrackScarComponent` keep the crater from being healed by a later `ReserveTiles` sweep. `WFCrackerReleasingEvent` and `WFChunkDroppedEvent`/`WFChunkLandedEvent` are the hooks. Admin: `wfcracker disconnect`, `wfcracker rearm`, `wfcracker release`, `wfcracker drop`.
+
+Deviations and limits:
+
+- The crash is **per-tile blasts only** — `CrashIntensityPerTile` is zeroed on every drop path and no central blast replaces it, so the chunk crash is deliberately quieter than an ordinary CE grid crash. The merged footprint is about twice the disc's area, and tile breakage inside it makes the rim decal ring probabilistic in production.
+- The wreck is deleted on **all three** drop paths, including the F4 hull-fall and the D24 watchdog, so a hull that simply falls loses its chunk permanently. No design section says this.
+- Entering `Disconnecting` permanently disarms the grace timer: a centrifuge or projector fault during the 60 s evacuation no longer drops the hull. A deliberate reading of §3 that §3 does not state either way.
+- Only minded mobs, borgs and occupied mind containers are restored off a dropped chunk. Loose mobs, items, crates and **mined ore left on the chunk are deleted with it**, with no warning.
+- A player restored onto the wreck's empty crater tile may be treated as standing over nothing and fall again.
+- `WFCrackScarComponent` lives on the ground grid, so `wfplanet delete`/rebuild loses every scar while the body stays flagged `Cracked` — the crater reverts to intact terrain with no way to re-cut it. There is no back-fill for a chunk cut before F7 and no admin command to add or clear a scar.
+- `Released → Idle` is gated on a settle timer plus a force-anchor check, so a hull force-anchored by a mapper sticks in `Released` forever. Logged once, deliberately.
+- The pairing countdown is visible only on the crack console and in three popups near the anchors; the anchor examine line was not added because that subscription is already claimed.
+
+### F6 — chunk mining
+
+`WFCrackMinerComponent` + `WFCrackMinerSystem` (`.Placement`) is a machine wrenched onto a chunk tile over a deep vein; it refuses to run anywhere else, converts `Remaining` into ore at the vein's `Rate` (150/min, D22) in batches of 25 while its internal cell holds out (D15), and `WFCrackMinerState` drives the sprite. Prototypes `WFCrackMiner` and `WFCrackMinerEmpty` in `mining.yml`, board `WFCrackMinerCircuitboard`. Admin: `wfcracker veins` lists every seam on the hull's chunk with what is left and whether a miner sits on it, `wfcracker mine` plants a `WFCrackMiner` on the first free live seam.
+
+Deviations and limits:
+
+- **The miner has no off state.** `crack_miner.rsi` ships `idle`/`mining`/`exhausted`/`broken` only, so `WFCrackMinerState` has no `Off` member and idle doubles as off. `ASSET_REQUIREMENTS.md:26` says otherwise and is stale.
+- **The cell blacklist is server-only in effect.** `BatterySelfRechargerComponent` is declared only in `Content.Server`, so the client drops the name from the blacklist and *predicts* a successful insert of a self-recharging cell, corrected a tick later by server state. The server refusal and the `wf-crack-miner-cell-rejected` popup are what the player actually gets. Fixing the mispredict would mean tagging upstream `powercells.yml`; accepted as cosmetic.
+- The miner is `bodyType: Dynamic` and `anchored: false`, so an unanchored one can be shoved around by explosions and thrown crates, and one built from a machine frame arrives anchored without ever raising the placement gate — it looks installed and silently never runs.
+- **There is no way to buy a crack miner**, nowhere to recharge a cell on the hull, and no cargo product for either. Where miners and cells come from is an open mapping/economy job.
+- `WFDeepVeinComponent` is `[UnsavedComponent]`: a partly mined chunk does not survive a map save/load.
+- F5's ride-up is an upper bound on vein count — a vein whose destination chunk tile is empty is left on the ground with an error log.
+- `Remaining` is deliberately not networked, so the vein is never dirtied by mining; the examine line is the readout.
+
+### F8 — site threats: fissures
+
+In progress; see `F8_IMPLEMENTATION_PLAN.md`.
+
+### F9 — sanction notices
+
+In progress; see `F9_IMPLEMENTATION_PLAN.md`.
