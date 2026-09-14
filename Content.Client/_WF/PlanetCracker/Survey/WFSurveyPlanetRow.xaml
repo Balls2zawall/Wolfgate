@@ -1,27 +1,13 @@
 <PanelContainer xmlns="https://spacestation14.io"
                 HorizontalExpand="True">
-    <!-- No PanelOverride here: the row builds its StyleBoxFlat from the active skin so no colour is ever a literal. -->
-    <BoxContainer Orientation="Vertical" HorizontalExpand="True" Margin="6 4">
-        <BoxContainer Orientation="Horizontal" HorizontalExpand="True">
-            <Label Name="NameLabel"
-                   StyleClasses="LabelKeyText"
-                   HorizontalExpand="True" />
-            <Label Name="DistanceLabel"
-                   StyleClasses="LabelSubText"
-                   HorizontalAlignment="Right" />
-        </BoxContainer>
-        <BoxContainer Orientation="Horizontal" HorizontalExpand="True" Margin="0 2 0 0">
-            <Label Name="StatusSanctioned"
-                   StyleClasses="LabelSubText"
-                   Margin="0 0 8 0" />
-            <Label Name="StatusCracked"
-                   StyleClasses="LabelSubText"
-                   Margin="0 0 8 0" />
-            <Label Name="StatusVeins"
-                   StyleClasses="LabelSubText" />
-        </BoxContainer>
-        <Label Name="BeaconLabel"
-               StyleClasses="LabelSubText"
-               Margin="0 2 0 0" />
+    <!-- No PanelOverride here: the row builds its StyleBoxFlat from the active skin so no colour is ever a literal.
+         The five cells are one line and their widths are set from WFSurveyPlanetRow.ApplyColumns, which the window's
+         header row calls with its own five labels, so the two can never drift apart. -->
+    <BoxContainer Orientation="Horizontal" HorizontalExpand="True" Margin="6 3">
+        <Label Name="NameLabel" StyleClasses="LabelKeyText" />
+        <Label Name="DistanceLabel" StyleClasses="LabelSubText" />
+        <Label Name="StatusLabel" StyleClasses="LabelSubText" />
+        <Label Name="CrackLabel" StyleClasses="LabelSubText" />
+        <Label Name="VeinsLabel" StyleClasses="LabelSubText" />
     </BoxContainer>
 </PanelContainer>

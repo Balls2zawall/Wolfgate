@@ -1,3 +1,4 @@
+using Content.Client.Power.PowerCharge;
 using Content.Shared.Power;
 using Robust.Client.UserInterface;
 
@@ -5,7 +6,7 @@ namespace Content.Client._WF.PlanetCracker.Cracker;
 
 /// <summary>
 /// Stands in for PowerChargeBoundUserInterface on the gravitic centrifuge: the same UI key and the same
-/// <see cref="SwitchChargingMachineMessage"/>, so no server change and no new key, but it hosts the rotor dial window
+/// <see cref="SwitchChargingMachineMessage"/>, so no server change and no new key, but it hosts the rotor window
 /// instead of the stock charge window.
 /// </summary>
 public sealed class WFCentrifugeBoundUserInterface : BoundUserInterface
@@ -28,11 +29,15 @@ public sealed class WFCentrifugeBoundUserInterface : BoundUserInterface
     {
         base.Open();
 
-        if (!EntMan.TryGetComponent(Owner, out Content.Client.Power.PowerCharge.PowerChargeComponent? charge))
-            return;
+        // The window is created whether or not PowerChargeComponent has reached the client yet: bailing out here left
+        // the interface open with nothing on screen and no retry. The component only supplies the title, and the XAML
+        // already carries a locale one.
+        var title = EntMan.TryGetComponent(Owner, out PowerChargeComponent? charge)
+            ? Loc.GetString(charge.WindowTitle)
+            : null;
 
         _window = this.CreateWindow<WFCentrifugeWindow>();
-        _window.SetOwner(this, Loc.GetString(charge.WindowTitle));
+        _window.SetOwner(this, title);
     }
 
     /// <inheritdoc/>

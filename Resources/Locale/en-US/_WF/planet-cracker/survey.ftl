@@ -4,6 +4,14 @@ wf-survey-console-system = { $system }
 wf-survey-console-hint = Ping or rebuild the shuttle console's map to refresh the destination tree.
 wf-survey-console-count = { $count } bodies
 wf-survey-console-empty = No bodies found in this system.
+wf-survey-detail-none = Select a body to read its FTL destination.
+
+## Survey table columns. Each has a fixed cell width in WFSurveyPlanetRow, so keep these short.
+wf-survey-col-body = BODY
+wf-survey-col-distance = DISTANCE
+wf-survey-col-status = STATUS
+wf-survey-col-crack = CRACK
+wf-survey-col-veins = VEINS
 
 ## Survey rows
 wf-survey-row-distance = { $distance } tiles

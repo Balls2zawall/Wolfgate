@@ -11,47 +11,112 @@ using RowData = Content.Shared._WF.PlanetCracker.Survey.BUI.WFSurveyPlanetRow;
 namespace Content.Client._WF.PlanetCracker.Survey;
 
 /// <summary>
-/// One star-system body on the survey console: name, distance, the sanctioned/cracked/vein strip and the destination
-/// line naming the body's own FTL beacon. The row carries no button and sends nothing anywhere - clicking it only
-/// moves the window's client-local highlight.
+/// One star-system body on the survey console, as one line of a table: name, distance, legal status, crack state and
+/// vein rating. The row carries no button and sends nothing anywhere - clicking it only moves the window's
+/// client-local highlight, which is what the detail line at the foot of the window reads.
+/// The row is built empty and refilled through <see cref="SetData"/> so the window can keep its rows across the
+/// once-a-second state push instead of rebuilding every control each time.
 /// </summary>
 [GenerateTypedNameReferences]
 public sealed partial class WFSurveyPlanetRow : PanelContainer
 {
+    /// <summary>Width of the distance cell, in unscaled pixels.</summary>
+    public const float DistanceWidth = 88f;
+
+    /// <summary>Width of the sanctioned cell; sized for the longest of its strings, "no crackable ground".</summary>
+    public const float StatusWidth = 128f;
+
+    /// <summary>Width of the cracked cell.</summary>
+    public const float CrackWidth = 64f;
+
+    /// <summary>Width of the vein rating cell.</summary>
+    public const float VeinsWidth = 76f;
+
+    /// <summary>Smallest the name cell is allowed to get before the window itself has to grow.</summary>
+    public const float NameMinWidth = 120f;
+
+    /// <summary>Gap between two cells, in unscaled pixels.</summary>
+    public const float CellGap = 8f;
+
+    /// <summary>Distance from the row's own left edge to the first cell: the panel border plus the cell margin.</summary>
+    public const float RowInset = 8f;
+
+    /// <summary>The row's own panel box, rebuilt from the skin so selection can swap its background.</summary>
+    private readonly StyleBoxFlat _panel = new();
+
+    /// <summary>Background of an unselected row, from the last skin <see cref="SetData"/> was given.</summary>
+    private Color _idleBackground;
+
+    /// <summary>Background of the selected row, from the last skin <see cref="SetData"/> was given.</summary>
+    private Color _selectedBackground;
+
+    /// <summary>Whether the row is currently drawn selected, so a data refresh keeps the highlight.</summary>
+    private bool _selected;
+
     /// <summary>Raised when the crew clicks a row that resolves to a real body, for the client-local highlight only.</summary>
     public event Action<NetEntity>? OnClicked;
 
-    /// <summary>The row's own panel box, rebuilt from the skin so selection can swap its background.</summary>
-    private readonly StyleBoxFlat _panel;
-
-    /// <summary>Background of an unselected row.</summary>
-    private readonly Color _idleBackground;
-
-    /// <summary>Background of the selected row.</summary>
-    private readonly Color _selectedBackground;
-
     /// <summary>The body this row points at, or null when the star-system entry has no registered body.</summary>
-    public NetEntity? Planet { get; }
+    public NetEntity? Planet { get; private set; }
 
-    public WFSurveyPlanetRow(RowData data, WolfgateSkin skin)
+    /// <summary>The name last shown, for the window's detail line.</summary>
+    public string BodyName { get; private set; } = string.Empty;
+
+    /// <summary>The FTL destination line last shown, for the window's detail line.</summary>
+    public string BeaconLine { get; private set; } = string.Empty;
+
+    public WFSurveyPlanetRow()
     {
         RobustXamlLoader.Load(this);
-
-        Planet = data.Planet;
-        _idleBackground = skin.Glass;
-        _selectedBackground = skin.Selection;
-
-        _panel = new StyleBoxFlat
-        {
-            BackgroundColor = _idleBackground,
-            BorderColor = skin.Edge,
-            BorderThickness = new Thickness(2),
-        };
 
         PanelOverride = _panel;
 
         // Clicks have to reach the row itself; the stock PanelContainer ignores them.
         MouseFilter = MouseFilterMode.Pass;
+
+        ApplyColumns(NameLabel, DistanceLabel, StatusLabel, CrackLabel, VeinsLabel);
+    }
+
+    /// <summary>
+    /// Gives five labels the table's column widths, alignment and gaps.
+    /// The window's header row runs this over its own five labels, which is the only reason the header and the rows
+    /// line up: there is one set of widths and both callers take it from here.
+    /// </summary>
+    public static void ApplyColumns(Label name, Label distance, Label status, Label crack, Label veins)
+    {
+        // The name cell absorbs every spare pixel and clips instead of forcing the window wider. ClipText makes a
+        // Label measure as zero wide, so MinWidth is what keeps a row from collapsing the column to nothing.
+        name.ClipText = true;
+        name.HorizontalExpand = true;
+        name.MinWidth = NameMinWidth;
+
+        Column(distance, DistanceWidth, Label.AlignMode.Right);
+        Column(status, StatusWidth, Label.AlignMode.Left);
+        Column(crack, CrackWidth, Label.AlignMode.Left);
+        Column(veins, VeinsWidth, Label.AlignMode.Left);
+    }
+
+    /// <summary>One fixed-width cell: clipped so an over-long string can never run into the next column.</summary>
+    private static void Column(Label label, float width, Label.AlignMode align)
+    {
+        label.ClipText = true;
+        label.SetWidth = width;
+        label.Align = align;
+        label.Margin = new Thickness(CellGap, 0f, 0f, 0f);
+    }
+
+    /// <summary>Refills the row from one state row. Called on every push, on a row that may already be on screen.</summary>
+    public void SetData(RowData data, WolfgateSkin skin)
+    {
+        Planet = data.Planet;
+        BodyName = data.Name;
+
+        _idleBackground = skin.Glass;
+        _selectedBackground = skin.Selection;
+
+        _panel.BackgroundColor = _selected ? _selectedBackground : _idleBackground;
+        _panel.BorderColor = skin.Edge;
+        _panel.BorderThickness = new Thickness(2);
 
         NameLabel.Text = data.Name;
         NameLabel.FontColorOverride = data.HasSurface ? skin.Text : skin.AccentDim;
@@ -64,34 +129,34 @@ public sealed partial class WFSurveyPlanetRow : PanelContainer
         // A body with no surface prototype has no crackable ground at all, so it says that instead of a legal status.
         if (!data.HasSurface)
         {
-            StatusSanctioned.Text = Loc.GetString("wf-survey-row-no-surface");
-            StatusSanctioned.FontColorOverride = skin.AccentDim;
+            StatusLabel.Text = Loc.GetString("wf-survey-row-no-surface");
+            StatusLabel.FontColorOverride = skin.AccentDim;
         }
         else
         {
-            StatusSanctioned.Text = Loc.GetString(data.Sanctioned
+            StatusLabel.Text = Loc.GetString(data.Sanctioned
                 ? "wf-survey-row-sanctioned"
                 : "wf-survey-row-unsanctioned");
-            StatusSanctioned.FontColorOverride = data.Sanctioned ? skin.Good : skin.Caution;
+            StatusLabel.FontColorOverride = data.Sanctioned ? skin.Good : skin.Caution;
         }
 
-        StatusCracked.Text = Loc.GetString(data.Cracked ? "wf-survey-row-cracked" : "wf-survey-row-intact");
-        StatusCracked.FontColorOverride = data.Cracked ? skin.Danger : skin.TextMuted;
+        CrackLabel.Text = Loc.GetString(data.Cracked ? "wf-survey-row-cracked" : "wf-survey-row-intact");
+        CrackLabel.FontColorOverride = data.Cracked ? skin.Danger : skin.TextMuted;
 
-        StatusVeins.Text = data.VeinsKnown
+        VeinsLabel.Text = data.VeinsKnown
             ? Loc.GetString(RatingKey(data.Veins))
             : Loc.GetString("wf-survey-rating-unknown");
-        StatusVeins.FontColorOverride = data.VeinsKnown ? skin.Accent : skin.TextDisabled;
+        VeinsLabel.FontColorOverride = data.VeinsKnown ? skin.Accent : skin.TextDisabled;
 
-        BeaconLabel.Text = data.HasBeacon
+        BeaconLine = data.HasBeacon
             ? Loc.GetString("wf-survey-row-beacon", ("beacon", data.Beacon))
             : Loc.GetString("wf-survey-row-beacon-none");
-        BeaconLabel.FontColorOverride = data.HasBeacon ? skin.Accent : skin.TextDisabled;
     }
 
     /// <summary>Swaps the row's background between the skin's idle and selection colours.</summary>
     public void SetSelected(bool selected)
     {
+        _selected = selected;
         _panel.BackgroundColor = selected ? _selectedBackground : _idleBackground;
     }
 

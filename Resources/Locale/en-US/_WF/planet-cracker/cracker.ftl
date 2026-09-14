@@ -1,5 +1,20 @@
 ## Machines
 wf-centrifuge-window-title = Gravitic centrifuge
+
+# The centrifuge's own machine window. The dial's wf-centrifuge-spin and wf-centrifuge-load stay for the crack
+# console, which still draws them by hand; this window shows the same numbers in Labels instead.
+wf-centrifuge-window-spin = Rotor spin:
+wf-centrifuge-window-load = Gravity load:
+wf-centrifuge-window-spin-value = { $percent }%
+wf-centrifuge-window-load-value = { $mass } / { $capacity }
+wf-centrifuge-window-load-none = No rated capacity
+wf-centrifuge-window-rotor-full = ROTOR AT FULL
+wf-centrifuge-window-rotor-spinning = SPINNING UP
+wf-centrifuge-window-rotor-stopped = ROTOR STOPPED
+wf-centrifuge-window-rotor-hint-full = The rotor will hold a cut.
+wf-centrifuge-window-rotor-hint-spinning = A cut needs full spin before it will hold.
+wf-centrifuge-window-rotor-hint-stopped = Switch the machine on to spin the rotor up.
+
 wf-projector-upgrade-crack-time = crack time
 wf-projector-examine-multiplier = Rated at { $percent }% of stock crack time.
 wf-projector-examine-broken = The emitter housing is cracked.

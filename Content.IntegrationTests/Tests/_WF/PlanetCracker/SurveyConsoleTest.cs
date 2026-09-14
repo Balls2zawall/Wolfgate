@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
 using System.Reflection;
+using Content.Client._WF.Stylesheets;
 using Content.IntegrationTests.Pair;
 using Content.Server._FarHorizons.StarSystem;
 using Content.Server._WF.PlanetCracker.Planets;
@@ -18,6 +19,8 @@ using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Prototypes;
 using static Content.IntegrationTests.Tests._WF.PlanetCracker.PlanetCrackerFixture;
+using ClientSurveyRow = Content.Client._WF.PlanetCracker.Survey.WFSurveyPlanetRow;
+using ClientSurveyWindow = Content.Client._WF.PlanetCracker.Survey.WFSurveyConsoleWindow;
 
 namespace Content.IntegrationTests.Tests._WF.PlanetCracker;
 
@@ -405,6 +408,134 @@ public sealed class SurveyConsoleTest
 
         await TeardownSector(pair);
         await pair.CleanReturnAsync();
+    }
+
+    /// <summary>
+    /// The window itself, driven headlessly: construction, three pushes of a state that grows, shrinks and empties,
+    /// and a Measure/Arrange pass after each. A real DrawingHandleScreen cannot be obtained in a pooled pair, so this
+    /// asserts on layout and on the row list instead.
+    /// What it pins: the rows are REUSED rather than rebuilt - the server pushes once a second, so a window that drops
+    /// every control per push reallocates the list sixty times a minute and throws the scroll position away - and the
+    /// window never widens past its own SetSize no matter how long a body name is, which is what a clipped, fixed-width
+    /// name column buys.
+    /// </summary>
+    [Test]
+    public async Task WindowTakesEveryStateShapeWithoutThrowing()
+    {
+        await using var pair = await PoolManager.GetServerClient();
+
+        await pair.Client.WaitPost(() =>
+        {
+            var window = new ClientSurveyWindow();
+
+            Assert.DoesNotThrow(() => window.UpdateState(SyntheticState(3)),
+                "The window should take a three-row state without throwing.");
+
+            Layout(window);
+
+            var rows = window.Rows.ToList();
+
+            Assert.That(rows, Has.Count.EqualTo(3), "The window drew a different number of rows than the state had.");
+
+            // Same identities again: the controls must be the same objects, not fresh ones.
+            window.UpdateState(SyntheticState(3));
+            Layout(window);
+
+            Assert.That(window.Rows.ToList(), Is.EqualTo(rows), "A second push of the same shape rebuilt every row control.");
+
+            window.UpdateState(SyntheticState(1));
+            Layout(window);
+
+            Assert.That(window.Rows, Has.Count.EqualTo(1), "The window kept rows the state no longer carries.");
+
+            Assert.DoesNotThrow(() => window.UpdateState(new WFSurveyConsoleState()),
+                "The window should take an empty state without throwing.");
+
+            Layout(window);
+
+            Assert.That(window.Rows, Is.Empty, "An empty state left rows on the window.");
+
+            window.Dispose();
+        });
+
+        await pair.CleanReturnAsync();
+    }
+
+    /// <summary>
+    /// A body name far longer than its column may not widen the row: the name cell clips, so the row's desired width
+    /// is the fixed columns plus the name column's floor whatever the string is. Without the clip a long entity name
+    /// pushes the table off the side of the window, which is the whole reason the column has a fixed width.
+    /// </summary>
+    [Test]
+    public async Task LongBodyNameDoesNotWidenTheRow()
+    {
+        await using var pair = await PoolManager.GetServerClient();
+
+        await pair.Client.WaitPost(() =>
+        {
+            var skin = WolfgateSkins.Futurist;
+            var unbounded = new Vector2(float.PositiveInfinity, float.PositiveInfinity);
+
+            // The window is only here for the width its own XAML asks for, so the ceiling cannot drift from it.
+            var window = new ClientSurveyWindow();
+            var shortRow = new ClientSurveyRow();
+            var longRow = new ClientSurveyRow();
+
+            shortRow.SetData(SyntheticState(1).Planets[0], skin);
+            longRow.SetData(SyntheticState(1, new string('M', 400)).Planets[0], skin);
+
+            shortRow.Measure(unbounded);
+            longRow.Measure(unbounded);
+
+            using (Assert.EnterMultipleScope())
+            {
+                Assert.That(longRow.DesiredSize.X, Is.EqualTo(shortRow.DesiredSize.X).Within(0.01f),
+                    "A four-hundred character body name changed the row's width; the name cell is not clipping.");
+                Assert.That(longRow.DesiredSize.X, Is.LessThanOrEqualTo(window.MinSize.X),
+                    "The fixed columns alone are already wider than the window's own minimum width.");
+            }
+
+            window.Dispose();
+            shortRow.Dispose();
+            longRow.Dispose();
+        });
+
+        await pair.CleanReturnAsync();
+    }
+
+    /// <summary>One Measure/Arrange pass at the window's own size, which is what a real open would do.</summary>
+    private static void Layout(ClientSurveyWindow window)
+    {
+        Assert.DoesNotThrow(() =>
+        {
+            window.Measure(window.SetSize);
+            window.Arrange(new UIBox2(Vector2.Zero, window.SetSize));
+        }, "Laying the survey window out should not throw.");
+    }
+
+    /// <summary>A state with the shapes the window has to survive: no surface, no distance, no beacon, no rating.</summary>
+    private static WFSurveyConsoleState SyntheticState(int count, string? firstName = null)
+    {
+        var state = new WFSurveyConsoleState { SystemName = System, ConsolePositionKnown = true };
+
+        for (var i = 0; i < count; i++)
+        {
+            state.Planets.Add(new WFSurveyPlanetRow(
+                new NetEntity(100 + i),
+                i == 0 && firstName != null ? firstName : $"Body {i}",
+                $"Beacon {i}",
+                i % 2 == 0,
+                new Vector2(i, i),
+                i * 40f,
+                i % 3 != 0,
+                i % 2 == 0,
+                i % 2 == 0,
+                i % 4 == 0,
+                WFVeinRating.Rich,
+                i % 2 == 0));
+        }
+
+        return state;
     }
 
     /// <summary>

@@ -14,6 +14,7 @@ using Content.Shared._WF.PlanetCracker.Cracker.BUI;
 using Content.Shared.Damage;
 using Content.Shared.Damage.Prototypes;
 using Content.Shared.FixedPoint;
+using Content.Shared.Power;
 using Content.Shared.Power.EntitySystems;
 using Content.Shared.Repairable;
 using Robust.Shared;
@@ -181,6 +182,80 @@ public sealed class CrackConsoleTest
         });
 
         await pair.CleanReturnAsync();
+    }
+
+    /// <summary>
+    /// The centrifuge's own machine window, driven headlessly through every readout shape it has to survive: running,
+    /// switched off, and overloaded past its rated capacity. A real DrawingHandleScreen cannot be obtained in a pooled
+    /// pair, so this drives construction, both state paths and a Measure/Arrange pass instead.
+    /// The dial is measured on its own in the same breath. Control's MeasureOverride returns zero for a leaf, so a
+    /// custom-drawn control with no MeasureOverride of its own is invisible in any parent that does not pin it with a
+    /// MinSize - which is exactly what this window's bottom slot is.
+    /// </summary>
+    [Test]
+    public async Task CentrifugeWindowAndDialSurviveEveryReadout()
+    {
+        await using var pair = await PoolManager.GetServerClient(new PoolSettings { Connected = true });
+
+        await pair.Client.WaitPost(() =>
+        {
+            var window = new WFCentrifugeWindow();
+            var size = window.SetSize;
+
+            Assert.DoesNotThrow(() =>
+            {
+                Push(window, size, true, PowerChargePowerStatus.Charging, 45, 0.62f, false, 900f, 2000f);
+                Push(window, size, false, PowerChargePowerStatus.Off, -1, 0f, false, 0f, 0f);
+                Push(window, size, true, PowerChargePowerStatus.FullyCharged, -1, 1f, true, 2100f, 2000f);
+
+                // No rated capacity at all: the load bar has to divide by nothing without throwing.
+                Push(window, size, true, PowerChargePowerStatus.Discharging, 5, 0.4f, false, 300f, 0f);
+            }, "The centrifuge window should take every state and readout shape without throwing.");
+
+            var unbounded = new Vector2(float.PositiveInfinity, float.PositiveInfinity);
+
+            var dial = new WFCentrifugeDial();
+            var bare = new WFCentrifugeDial { ShowReadouts = false };
+
+            dial.Measure(unbounded);
+            bare.Measure(unbounded);
+
+            using (Assert.EnterMultipleScope())
+            {
+                Assert.That(dial.DependenciesInjected, Is.True,
+                    "WFCentrifugeDial never had IoCManager.InjectDependencies called on it.");
+                Assert.That(dial.DesiredSize.X, Is.GreaterThan(0f),
+                    "The dial measures as zero wide, so it vanishes in any parent that does not pin its size.");
+                Assert.That(dial.DesiredSize.Y, Is.GreaterThan(0f),
+                    "The dial measures as zero tall, so it vanishes in any parent that does not pin its size.");
+                Assert.That(bare.DesiredSize.Y, Is.LessThan(dial.DesiredSize.Y),
+                    "A dial with its readouts switched off still asks for room to draw them.");
+            }
+
+            window.Dispose();
+            dial.Dispose();
+            bare.Dispose();
+        });
+
+        await pair.CleanReturnAsync();
+    }
+
+    /// <summary>One power state plus one spin and load reading, then a layout pass at the window's own size.</summary>
+    private static void Push(
+        WFCentrifugeWindow window,
+        Vector2 size,
+        bool on,
+        PowerChargePowerStatus status,
+        short eta,
+        float spin,
+        bool atFull,
+        float load,
+        float capacity)
+    {
+        window.UpdateState(new PowerChargeState(on, 128, status, 1000, 2000, eta));
+        window.UpdateReadout(spin, atFull, load, capacity);
+        window.Measure(size);
+        window.Arrange(new UIBox2(Vector2.Zero, size));
     }
 
     /// <summary>
