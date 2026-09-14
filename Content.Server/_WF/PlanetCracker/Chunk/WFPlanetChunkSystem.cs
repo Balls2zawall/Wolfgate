@@ -258,6 +258,12 @@ public sealed partial class WFPlanetChunkSystem : EntitySystem
             // It returns false without logging when the map is not a z-map or is already a transit map.
             Log.Error($"{ToPrettyString(ent.Owner)} could not be pushed into transit for its chunk drop.");
         }
+        else
+        {
+            // Recorded because Dropped is set either way: a chunk that never left its berth is still parked on a map
+            // that is not a transit map, which is exactly what UpdateDropped reads as a landing.
+            ent.Comp.EnteredTransit = true;
+        }
 
         ent.Comp.Dropped = true;
         Dirty(ent);

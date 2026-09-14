@@ -1182,6 +1182,15 @@ public sealed class WFAnchorTestEventSystem : EntitySystem
     /// <summary>Every planet flagged cracked since the last Clear; the F9 hook.</summary>
     public readonly List<WFPlanetCrackedEvent> PlanetsCracked = new();
 
+    /// <summary>Every switched-off anchor put back to Locked since the last Clear; the F7 lapsed-window edge.</summary>
+    public readonly List<WFAnchorReArmedEvent> ReArmed = new();
+
+    /// <summary>Every hull whose evacuation ran out since the last Clear; the F7 release hook.</summary>
+    public readonly List<WFCrackerReleasingEvent> Releasing = new();
+
+    /// <summary>Every chunk that settled on the ground layer since the last Clear; the F7 landing hook.</summary>
+    public readonly List<WFChunkLandedEvent> ChunksLanded = new();
+
     /// <summary>While true, every switch-off attempt is refused, exactly as a later feature's own veto would.</summary>
     public bool VetoSwitchOff;
 
@@ -1211,6 +1220,12 @@ public sealed class WFAnchorTestEventSystem : EntitySystem
         SubscribeLocalEvent<WFChunkExtractedEvent>((ref WFChunkExtractedEvent ev) => ChunksExtracted.Add(ev));
         SubscribeLocalEvent<WFChunkDroppedEvent>((ref WFChunkDroppedEvent ev) => ChunksDropped.Add(ev));
         SubscribeLocalEvent<WFPlanetCrackedEvent>((ref WFPlanetCrackedEvent ev) => PlanetsCracked.Add(ev));
+
+        // F7's three, on the same recorder for the same reason: the bus locks its subscriptions once the server has
+        // started, so a second system competing for these broadcasts is not an option.
+        SubscribeLocalEvent<WFAnchorReArmedEvent>((ref WFAnchorReArmedEvent ev) => ReArmed.Add(ev));
+        SubscribeLocalEvent<WFCrackerReleasingEvent>((ref WFCrackerReleasingEvent ev) => Releasing.Add(ev));
+        SubscribeLocalEvent<WFChunkLandedEvent>((ref WFChunkLandedEvent ev) => ChunksLanded.Add(ev));
     }
 
     /// <summary>Forgets everything recorded so far and lifts the veto.</summary>
@@ -1230,6 +1245,9 @@ public sealed class WFAnchorTestEventSystem : EntitySystem
         ChunksExtracted.Clear();
         ChunksDropped.Clear();
         PlanetsCracked.Clear();
+        ReArmed.Clear();
+        Releasing.Clear();
+        ChunksLanded.Clear();
         VetoSwitchOff = false;
     }
 

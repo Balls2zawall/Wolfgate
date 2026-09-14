@@ -562,6 +562,58 @@ public static class PlanetCrackerFixture
         return site;
     }
 
+    /// <summary>
+    /// A hull whose disc is cut free and whose two anchors have both been switched off in the same tick, which is the
+    /// whole disconnect: the first switch-off arms the 60 s pairing window and the second commits it.
+    /// ForceSwitchOff is used rather than the verb because it skips the cancellable attempt entirely, which is exactly
+    /// the `wfcracker disconnect` path the protocol has to work through.
+    /// </summary>
+    public static async Task<CrackerSite> BuildDisconnecting(TestPair pair)
+    {
+        var server = pair.Server;
+        var entMan = server.EntMan;
+        var anchors = server.System<WFGravityAnchorSystem>();
+        var site = await BuildExtracted(pair);
+
+        await server.WaitPost(() =>
+        {
+            foreach (var anchor in site.Anchors)
+            {
+                anchors.ForceSwitchOff((anchor, entMan.GetComponent<WFGravityAnchorComponent>(anchor)));
+            }
+        });
+
+        await server.WaitRunTicks(pair.SecondsToTicks(1f));
+
+        await server.WaitAssertion(() =>
+            Assert.That(entMan.GetComponent<WFPlanetCrackerComponent>(site.Cracker).State,
+                Is.EqualTo(WFCrackState.Disconnecting),
+                "Precondition: both anchors switched off in one tick commits the disconnect."));
+
+        return site;
+    }
+
+    /// <summary>
+    /// Zeroes the chunk's per-tile crash intensity, and is MANDATORY for every test that lets a chunk land.
+    /// At the production defaults (CrashTileIntensity 4, CrashTileMaxIntensity 2) the crash footprint is roughly twice
+    /// the disc's area - QueueExplosion merges same-prototype blasts within one tile by ADDING TotalIntensity while
+    /// MaxTileIntensity caps the per-tile output - so rim tiles are inside it. The Default prototype's TileBreakChance
+    /// interpolates to about 0.1 per tile at intensity 2 (tileBreakChance [0, 0.5, 1] over tileBreakIntensity
+    /// [0, 10, 30], linear at ExplosionPrototype.cs:126-139) and DecalSystem.OnTileChanged deletes any decal on a tile
+    /// that becomes space (DecalSystem.cs:165-177), so rim tiles and rim decals are probabilistic under a live crash.
+    /// Zero suppresses the per-tile blasts entirely through the totalIntensity &lt;= 0 early return
+    /// (ExplosionSystem.cs:374), which is what makes a landing deterministic enough to assert against.
+    /// Must be called BEFORE the drop: DropChunk copies the value onto CEZGridFallerComponent.
+    /// </summary>
+    public static async Task SoftenCrash(TestPair pair, EntityUid chunk)
+    {
+        var server = pair.Server;
+        var entMan = server.EntMan;
+
+        await server.WaitPost(() => entMan.GetComponent<WFPlanetChunkComponent>(chunk).CrashTileIntensity = 0f);
+        await server.WaitRunTicks(1);
+    }
+
     /// <summary>The one chunk grid in the world, or Invalid; extraction tests only ever cut one.</summary>
     public static EntityUid FindChunk(IEntityManager entMan)
     {

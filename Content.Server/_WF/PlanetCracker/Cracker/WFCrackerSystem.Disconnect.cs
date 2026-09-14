@@ -145,6 +145,29 @@ public sealed partial class WFCrackerSystem
         PopupOnGrid(chunk, "wf-crack-disconnect-lapsed");
     }
 
+    /// <summary>
+    /// Cuts an evacuation the hull is no longer running; called unconditionally from the sweep beside
+    /// UpdateDisconnectWindow, and for the same reason. ReleaseNow and EnterReleased both guard on Disconnecting and
+    /// UpdateEvacuation is only ever reached from the sweep's Disconnecting arm, so an admin `wfcracker state` or
+    /// `wfcracker fall` out of Disconnecting would otherwise strand EvacRunning true with the looping alarm playing for
+    /// the rest of the round - PlayGlobal parents its audio in nullspace and skips TimedDespawn while looping, so it
+    /// does not even die with the grid. Idempotent: the two release paths clear EvacRunning themselves.
+    /// </summary>
+    private void UpdateStrandedEvacuation(Entity<WFPlanetCrackerComponent> ent)
+    {
+        if (!ent.Comp.EvacRunning || ent.Comp.State == WFCrackState.Disconnecting)
+            return;
+
+        // EvacEnd is zeroed too: a hull put back into Disconnecting later would otherwise be released on its first
+        // sweep against a deadline that expired while it was somewhere else.
+        ent.Comp.EvacRunning = false;
+        ent.Comp.EvacBeat = 0;
+        ent.Comp.EvacEnd = TimeSpan.Zero;
+        ent.Comp.EvacNextLoop = TimeSpan.Zero;
+        StopHullAlarm(ent);
+        Dirty(ent);
+    }
+
     /// <summary>Clears the pairing window, optionally putting the anchor it was holding back to Locked.</summary>
     private void DisarmWindow(Entity<WFPlanetCrackerComponent> ent, bool reArm)
     {

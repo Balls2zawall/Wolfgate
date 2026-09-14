@@ -81,6 +81,10 @@ public sealed partial class WFCrackerSystem
         // has left Cracked at all.
         UpdateDisconnectWindow(ent);
 
+        // The same shape for the evacuation: the chain's Disconnecting arm is the only thing that ticks it, so a hull
+        // pulled out of Disconnecting by anything else has to have its alarm cut from outside the chain.
+        UpdateStrandedEvacuation(ent);
+
         if (ent.Comp.PendingAbort is not null)
         {
             // The grace timer is suspended for the whole spin-down: the crew is not being asked to hold anything.

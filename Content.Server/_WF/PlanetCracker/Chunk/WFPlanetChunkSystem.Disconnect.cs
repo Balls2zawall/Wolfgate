@@ -134,6 +134,11 @@ public sealed partial class WFPlanetChunkSystem
         if (!ent.Comp.Evacuating)
             return;
 
+        // The 60 s pre-drop window is the one the re-issue was written for: without this the alarm would play once on
+        // the Disconnecting edge and not again until the chunk was already falling, which is where UpdateDropped picks
+        // the cadence back up.
+        ReissueAlarm(ent);
+
         if (ent.Comp.Cracker is not { } net
             || !TryGetEntity(net, out var cracker)
             || !TryComp<WFPlanetCrackerComponent>(cracker, out var comp)
@@ -170,11 +175,22 @@ public sealed partial class WFPlanetChunkSystem
     /// </summary>
     private void UpdateDropped(Entity<WFPlanetChunkComponent> ent)
     {
-        if (ent.Comp.Evacuating && _timing.CurTime >= ent.Comp.EvacNextLoop)
+        // TryEnterTransit refuses a non-CE map, a map that is already transit, an empty convoy and a stack with no gap
+        // either way (CEZLevelsSystem.Transit.cs:407-433), and DropChunk sets Dropped regardless. Such a chunk is still
+        // parked in its berth, so the landing test below would call it landed on this very sweep and the cleanup would
+        // delete the grid 10 s later. It is a parked chunk and not a wreck: cut both loops once and leave it alone.
+        if (!ent.Comp.EnteredTransit)
         {
-            StartAlarm(ent);
-            ent.Comp.EvacNextLoop = _timing.CurTime + EvacReissue;
+            if (ent.Comp.Evacuating || ent.Comp.DropStream is not null)
+            {
+                ent.Comp.DropStream = _audio.Stop(ent.Comp.DropStream);
+                StopEvacuation(ent);
+            }
+
+            return;
         }
+
+        ReissueAlarm(ent);
 
         if (!ent.Comp.Landed)
         {
@@ -246,6 +262,19 @@ public sealed partial class WFPlanetChunkSystem
         // Driven off the ground-grid scar, so it still works now the chunk component is gone.
         if (ground is { } groundMap)
             _scars.ReStamp(groundMap);
+    }
+
+    /// <summary>
+    /// Replays the alarm loop once its cadence is up, for both halves of the evacuation: PlayGlobal freezes its
+    /// recipient set at play time, so anyone boarding between two issues would otherwise hear nothing at all.
+    /// </summary>
+    private void ReissueAlarm(Entity<WFPlanetChunkComponent> ent)
+    {
+        if (!ent.Comp.Evacuating || _timing.CurTime < ent.Comp.EvacNextLoop)
+            return;
+
+        StartAlarm(ent);
+        ent.Comp.EvacNextLoop = _timing.CurTime + EvacReissue;
     }
 
     /// <summary>(Re)starts the looping alarm on everyone currently aboard the chunk.</summary>

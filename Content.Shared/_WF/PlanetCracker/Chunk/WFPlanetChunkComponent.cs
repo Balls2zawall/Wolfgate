@@ -41,6 +41,14 @@ public sealed partial class WFPlanetChunkComponent : Component
     public bool Dropped;
 
     /// <summary>
+    /// True only when the drop's TryEnterTransit actually took: <see cref="Dropped"/> is set either way, and the
+    /// landing test is "my map is no longer a transit map", which a chunk still sitting in its berth passes on the very
+    /// first sweep. Without this a failed push would be read as a landing and the grid deleted after CleanupDelay.
+    /// </summary>
+    [DataField]
+    public bool EnteredTransit;
+
+    /// <summary>
     /// When the chunk was cut. Paused with its map, because a plain TimeSpan would burn the whole watchdog grace the
     /// instant a paused map unpaused and drop the chunk out from under a perfectly healthy hull.
     /// </summary>
