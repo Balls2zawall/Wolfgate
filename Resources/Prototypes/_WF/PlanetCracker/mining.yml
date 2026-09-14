@@ -10,15 +10,22 @@
   # and cleanup immunity and nothing else), so the miner runs on an internal cell per design D15.
   # (b) The Transform and Physics overrides below are load-bearing, not tidiness: BaseStructure sets
   # anchored: true (Resources/Prototypes/Entities/Structures/base_structure.yml:9-10) and bodyType: Static
-  # (:14-15), and BaseMachineIndestructible overrides only noRot (base_structuremachines.yml:7-9). Left
-  # inherited, the miner would spawn already anchored - skipping the AnchorAttemptEvent gate entirely -
-  # and, once unwrenched, would be immovable forever, because PullingSystem refuses a static body
-  # (Content.Shared/Movement/Pulling/Systems/PullingSystem.cs:384-387) and nothing in the engine flips
-  # BodyType on anchor or unanchor. Design PLANET_CRACKER_DESIGN.md:222 requires that the miner be
-  # unwrenched and moved to the next vein, so it takes the same stance WFGravityAnchor does
-  # (anchors.yml:47-51). The hard MachineMask/MachineLayer fixture inherited from BaseMachineIndestructible
-  # is untouched, so AnchorableSystem.TileFree still keeps two miners off one tile (it tests CanCollide
-  # and Hard, never BodyType).
+  # (:14-15), and BaseMachineIndestructible overrides only noRot (base_structuremachines.yml:7-9).
+  # `anchored: false` is the half that changes gate behaviour: left inherited, every mapped, admin-spawned
+  # and `wfcracker mine`-spawned miner would arrive already anchored and skip the AnchorAttemptEvent gate
+  # entirely. `bodyType: Dynamic` is narrower than plan decision E-N records. The engine DOES drive
+  # BodyType off the anchor state - AnchorEntity forces Static
+  # (RobustToolbox/Robust.Shared/GameObjects/Systems/SharedTransformSystem.Component.cs:88) and Unanchor
+  # forces Dynamic (:152, the setPhysics branch AnchorableSystem's unwrench path takes) - so an unwrenched
+  # miner is pullable whatever this line says, and PullingSystem's static refusal
+  # (Content.Shared/Movement/Pulling/Systems/PullingSystem.cs:384-387) never bites it. What the override
+  # actually buys is the miner that has NEVER been anchored: spawned or mapped with `anchored: false`, it
+  # would otherwise sit at the inherited Static with no anchor transition to fix it, and would be
+  # undraggable until someone wrenched it down and back up. Design PLANET_CRACKER_DESIGN.md:222 requires
+  # that the miner be unwrenched and moved to the next vein, so it takes the same stance WFGravityAnchor
+  # does (anchors.yml:47-51). The hard MachineMask/MachineLayer fixture inherited from
+  # BaseMachineIndestructible is untouched, so AnchorableSystem.TileFree still keeps two miners off one
+  # tile (it tests CanCollide and Hard, never BodyType).
   # (c) The cell slot is declared inline rather than by multi-parenting PowerCellSlotHighItem, because
   # ItemSlots ensures its own ContainerSlot at ComponentInit (ItemSlotsSystem.Oninitialize calls
   # EnsureContainer per slot, Content.Shared/Containers/ItemSlot/ItemSlotsSystem.cs:84-91) so no
@@ -81,6 +88,17 @@
           # and PowerCellAntique at 40 J/s (:274-277), so either one can never empty. Raising the draw
           # above 12 is not an option - it would put a PowerCellHigh under ninety seconds - so the refusal
           # lives on the slot. ItemSlotsSystem.CanInsertWhitelist honours Blacklist (ItemSlotsSystem.cs:345-351).
+          # SERVER-ONLY IN EFFECT, deliberately. BatterySelfRechargerComponent is declared only in
+          # Content.Server (Content.Server/Power/Components/BatterySelfRechargerComponent.cs:9), and the
+          # client calls IgnoreMissingComponents (Content.Client/Entry/EntryPoint.cs:100), so
+          # EntityWhitelistSystem.StringsToRegs drops the name silently there
+          # (Content.Shared/Whitelist/EntityWhitelistSystem.cs:197-209 - only the Unknown branch logs) and
+          # the client's copy of this blacklist is empty. The shared, predicted ItemSlots insert therefore
+          # PREDICTS a successful insert of a self-recharging cell and is corrected by server state a tick
+          # later; the server refusal and the wf-crack-miner-cell-rejected popup are what the player ends
+          # up with. Making it predict correctly would mean tagging PowerCellMicroreactor and
+          # PowerCellAntique, i.e. editing upstream powercells.yml, which E-A forbids. Accepted as a
+          # cosmetic mispredict.
           - BatterySelfRecharger
         whitelistFailPopup: wf-crack-miner-cell-rejected
   # The wrench is safe regardless of the slot: AnchorableSystem subscribes InteractUsingEvent before
@@ -145,5 +163,6 @@
           - PowerCellSmall
         blacklist:
           components:
+          # Server-only in effect, same as the parent's copy - see the note there.
           - BatterySelfRecharger
         whitelistFailPopup: wf-crack-miner-cell-rejected

@@ -106,11 +106,17 @@ public sealed partial class WFCrackMinerSystem
     {
         // Detaching means the entity is being sent to null-space as part of its own deletion, and spawning ore out of a
         // terminating machine is the same call already made for ComponentShutdown - the buffer is deliberately lost.
-        // The in-content precedent for testing the flag is ArtifactAnchorTriggerSystem. Note that this is NOT what
-        // happens when the chunk grid is deleted: EntityManager flags the whole subtree Terminating before detaching,
-        // and DetachEntityInternal's anchored branch is gated on the GRID being at most MapInitialized, so a grid delete
-        // raises no anchor event here at all.
-        if (args.Detaching)
+        // The in-content precedent for testing the flag is ArtifactAnchorTriggerSystem.
+        //
+        // The flag alone is NOT enough, and the termination test beside it is not belt and braces. DetachEntityInternal
+        // only raises the detaching form of this event while the GRID is at most MapInitialized
+        // (RobustToolbox/Robust.Shared/GameObjects/Systems/SharedTransformSystem.Component.cs:1598-1606). When the grid
+        // itself is being deleted, EntityManager has already flagged the whole subtree Terminating, that branch is
+        // skipped with _anchored still true, and the SetCoordinates at :1610 unanchors through Unanchor (:143-168) -
+        // which builds a PLAIN AnchorStateChangedEvent with Detaching false. So a grid delete does reach this handler,
+        // and flushing there spawns ore onto a terminating parent and Log.Errors out of SetCoordinates (:506). Pinned by
+        // CrackMinerTest.MinesAtTheVeinRate and four others, all of which end mid-batch.
+        if (args.Detaching || TerminatingOrDeleted(ent.Owner))
             return;
 
         if (args.Anchored)

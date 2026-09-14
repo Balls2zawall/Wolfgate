@@ -96,7 +96,7 @@ wf-centrifuge-at-full = AT FULL
 ## wfcracker command
 cmd-wfcracker-desc = Spawn the code-built planet cracker test grids.
 cmd-wfcracker-help = Usage: { $command } spawn <cracker | transport> | { $command } state <stage> | { $command } complete <crack | drill> | { $command } disconnect | { $command } rearm | { $command } release | { $command } fall | { $command } extract | { $command } drop | { $command } veins | { $command } mine
-cmd-wfcracker-invalid-args = Expected: spawn <cracker | transport>, state <stage>, complete <crack | drill>, disconnect, rearm, release, fall, extract or drop.
+cmd-wfcracker-invalid-args = Expected: spawn <cracker | transport>, state <stage>, complete <crack | drill>, disconnect, rearm, release, fall, extract, drop, veins or mine.
 cmd-wfcracker-unknown-kind = No test grid named "{ $kind }". Try cracker or transport.
 cmd-wfcracker-no-map = Attach to an entity on a map first.
 cmd-wfcracker-spawned = Built { $kind } as { $grid } on map { $map }.

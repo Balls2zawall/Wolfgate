@@ -60,6 +60,10 @@ public sealed class PlanetCrackerPrototypeTest
         "WFEffectChunkBurst",
         "WFCrackSkyBeam",
         "WFSurveyor",
+        // Both miners are safely spawnable on the FloorSteel test grid, unlike WFDeepVein: nothing on a crack miner
+        // deletes itself at MapInit, and an unanchored miner off a chunk simply never leaves Idle.
+        "WFCrackMiner",
+        "WFCrackMinerEmpty",
     };
 
     /// <summary>The rim ring's two decals, which F5 stamps by hand rather than through a tile prototype.</summary>

@@ -9,6 +9,7 @@ using Content.Server._WF.PlanetCracker.Planets;
 using Content.Server._WF.PlanetCracker.Testing;
 using Content.Server.Parallax;
 using Content.Server.Power.Components;
+using Content.Server.Power.EntitySystems;
 using Content.Shared._CE.ZLevels.Core.Components;
 using Content.Shared._WF.CCVar;
 using Content.Shared._WF.PlanetCracker.Anchors;
@@ -16,13 +17,17 @@ using Content.Shared._WF.PlanetCracker.Chunk;
 using Content.Shared._WF.PlanetCracker.Cracker;
 using Content.Shared._WF.PlanetCracker.Cracker.BUI;
 using Content.Shared._WF.PlanetCracker.Planets;
+using Content.Shared._WF.PlanetCracker.Survey;
+using Content.Shared.Containers.ItemSlots;
 using Content.Shared.Parallax.Biomes;
 using Content.Shared.Parallax.Biomes.Markers;
+using Content.Shared.Stacks;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Map;
 using Robust.Shared.Map.Components;
 using Robust.Shared.Maths;
 using Robust.Shared.Prototypes;
+using Robust.Shared.Timing;
 
 namespace Content.IntegrationTests.Tests._WF.PlanetCracker;
 
@@ -49,6 +54,21 @@ public static class PlanetCrackerFixture
 
     /// <summary>What <see cref="AttachViewer"/> attaches the session to; a mob, never a ghost.</summary>
     public const string ViewerProto = "MobHuman";
+
+    /// <summary>The crack miner as it ships, which map-inits with a free full <see cref="CellProto"/> in its bay.</summary>
+    public const string MinerProto = "WFCrackMiner";
+
+    /// <summary>The cell-less crack miner; every cell-behaviour test uses this one and seats its own cell.</summary>
+    public const string MinerEmptyProto = "WFCrackMinerEmpty";
+
+    /// <summary>The cell <see cref="SeatCell"/> seats by default, and the one the shipped miner starts with.</summary>
+    public const string CellProto = "PowerCellHigh";
+
+    /// <summary>The test vein CrackMinerTest declares; a WFDeepVein whose whitelist admits the fixture's deck plating.</summary>
+    public const string VeinProto = "WFCrackMinerTestVein";
+
+    /// <summary>The miner's cell slot id, as mining.yml declares it.</summary>
+    public const string CellSlot = "cell_slot";
 
     /// <summary>Turns the feature on for this pair; TestPair reverts the change when the pair is returned.</summary>
     public static async Task EnableFeature(TestPair pair)
@@ -591,6 +611,126 @@ public static class PlanetCrackerFixture
                 "Precondition: both anchors switched off in one tick commits the disconnect."));
 
         return site;
+    }
+
+    /// <summary>
+    /// A crack site with one live deep vein anchored on the ground and the ground grid wearing a FAKE chunk marker, so
+    /// F6's behaviour can be driven without going anywhere near F5's extraction. Returns the site and the vein.
+    /// Two traps are worth spelling out, because both are silent.
+    /// (a) WFDeepVeinSystem.OnMapInit QueueDels any vein whose tile is not in its own AllowedTiles, and the whole
+    /// fixture lays FloorSteel, which the shipped default { FloorPlanetGrass, FloorPlanetDirt } excludes. That is what
+    /// <see cref="VeinProto"/> exists for - a child of WFDeepVein whose whitelist is the deck plating - and it is also
+    /// why the site is built on BuildCrackerInOrbit: the vein stamps itself from the ground layer's
+    /// WFPlanetLayer -> WFPlanetNetwork -> WFSurfaceAsclepiu chain, whose `veins: WFVeinTableAsclepiu` is the only
+    /// thing standing between a hand-spawned vein and a second self-delete.
+    /// (b) The chunk marker is a fake on the planet's OWN ground grid, which keeps the F6 tests independent of F5. The
+    /// hour-long WatchdogGrace is what stops WFPlanetChunkSystem's 1 Hz sweep from reading that grid as an orphaned
+    /// chunk and calling DropChunk on the planet itself.
+    /// </summary>
+    public static async Task<(CrackerSite Site, EntityUid Vein)> BuildMinerSite(TestPair pair, Vector2i? tile = null)
+    {
+        var server = pair.Server;
+        var entMan = server.EntMan;
+        var timing = server.ResolveDependency<IGameTiming>();
+        var transform = server.System<SharedTransformSystem>();
+
+        var site = await BuildCrackerInOrbit(pair);
+        var index = tile ?? new Vector2i(4, 4);
+
+        await LayTiles(pair, site.Ground, index - new Vector2i(2, 2), index + new Vector2i(2, 2));
+
+        var vein = EntityUid.Invalid;
+
+        // The DeployPair recipe verbatim: spawn on the tile centre, one tick for the spawn to initialise, anchor inside
+        // a WaitPost, two ticks for the snap-grid write and the physics settle.
+        await server.WaitPost(() => vein = entMan.SpawnEntity(VeinProto,
+            new EntityCoordinates(site.Ground, new Vector2(index.X + 0.5f, index.Y + 0.5f))));
+
+        await server.WaitRunTicks(1);
+
+        await server.WaitPost(() =>
+        {
+            if (entMan.EntityExists(vein) && !entMan.GetComponent<TransformComponent>(vein).Anchored)
+                transform.AnchorEntity(vein);
+        });
+
+        await server.WaitRunTicks(2);
+
+        await server.WaitPost(() =>
+        {
+            var chunk = entMan.EnsureComponent<WFPlanetChunkComponent>(site.Ground);
+
+            chunk.WatchdogGrace = TimeSpan.FromHours(1);
+            chunk.ExtractedAt = timing.CurTime;
+            entMan.Dirty(site.Ground, chunk);
+        });
+
+        await server.WaitRunTicks(1);
+
+        await server.WaitAssertion(() =>
+        {
+            using (Assert.EnterMultipleScope())
+            {
+                Assert.That(entMan.EntityExists(vein), Is.True,
+                    "The test vein deleted itself; its whitelist no longer admits the fixture's deck plating.");
+                Assert.That(entMan.GetComponent<TransformComponent>(vein).Anchored, Is.True,
+                    "The test vein is not anchored, so no tile-index lookup would ever find it.");
+                Assert.That(entMan.GetComponent<WFDeepVeinComponent>(vein).Remaining, Is.GreaterThan(0),
+                    "The test vein was never stamped, so there is nothing for a miner to cut.");
+            }
+        });
+
+        return (site, vein);
+    }
+
+    /// <summary>
+    /// Puts a cell of a known charge in a miner's bay and hands it back.
+    /// The eject and the assertion are both mandatory. WFCrackMiner declares `startingItem: PowerCellHigh`, which
+    /// ItemSlotsSystem spawns and inserts on MapInit (ItemSlotsSystem.cs:68-80), so an insert into an occupied slot
+    /// returns false (CanInsert, :325-326) and a test that ignored the result would go on mining off the free full
+    /// 1080 J cell it never meant to use. SetCharge rather than a field write because BatteryComponent is
+    /// [Access(typeof(SharedBatterySystem))]; read the charge back with PowerCellSystem.TryGetBatteryFromSlot.
+    /// </summary>
+    public static async Task<EntityUid> SeatCell(TestPair pair, EntityUid miner, float charge, string cell = CellProto)
+    {
+        var server = pair.Server;
+        var entMan = server.EntMan;
+        var batteries = server.System<BatterySystem>();
+        var slots = server.System<ItemSlotsSystem>();
+        var seated = EntityUid.Invalid;
+
+        // Tolerates an empty slot: WFCrackMinerEmpty has nothing to throw out.
+        await server.WaitPost(() => slots.TryEject(miner, CellSlot, null, out _));
+        await server.WaitRunTicks(1);
+
+        await server.WaitAssertion(() =>
+        {
+            seated = entMan.SpawnEntity(cell, entMan.GetComponent<TransformComponent>(miner).Coordinates);
+
+            Assert.That(slots.TryInsert(miner, CellSlot, seated, null), Is.True,
+                $"The miner refused {cell}; a silent refusal must never masquerade as a seated cell.");
+
+            batteries.SetCharge(seated, charge);
+        });
+
+        await server.WaitRunTicks(1);
+        return seated;
+    }
+
+    /// <summary>Every unit of one ore entity lying loose on a grid, stack counts summed.</summary>
+    public static int OreOnGrid(IEntityManager entMan, EntityUid grid, string oreEntity)
+    {
+        var total = 0;
+
+        foreach (var uid in Children(entMan, grid))
+        {
+            if (entMan.GetComponent<MetaDataComponent>(uid).EntityPrototype?.ID != oreEntity)
+                continue;
+
+            total += entMan.TryGetComponent(uid, out StackComponent? stack) ? stack.Count : 1;
+        }
+
+        return total;
     }
 
     /// <summary>

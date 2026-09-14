@@ -28,7 +28,6 @@ public sealed partial class WFCrackMinerSystem : EntitySystem
     [Dependency] private SharedAppearanceSystem _appearance = default!;
     [Dependency] private SharedMapSystem _map = default!;
     [Dependency] private SharedPopupSystem _popup = default!;
-    [Dependency] private SharedTransformSystem _transform = default!;
     [Dependency] private SharedWFSurveySystem _survey = default!;
     [Dependency] private StackSystem _stack = default!;
 
