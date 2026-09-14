@@ -1,0 +1,44 @@
+<controls:FancyWindow xmlns="https://spacestation14.io"
+                      xmlns:controls="clr-namespace:Content.Client.UserInterface.Controls"
+                      Title="{Loc 'wf-survey-console-title'}"
+                      MinSize="520 440"
+                      SetSize="620 540">
+    <BoxContainer Orientation="Vertical" Margin="6">
+        <!-- System name and the ping reminder. MapScreen only rebuilds the destination tree in PingMap. -->
+        <PanelContainer StyleClasses="AngleRect" Margin="0 0 0 4">
+            <BoxContainer Orientation="Vertical" Margin="8 6">
+                <Label Name="HeaderSystem" StyleClasses="LabelHeading" />
+                <Label Name="HeaderHint"
+                       Text="{Loc 'wf-survey-console-hint'}"
+                       StyleClasses="LabelSecondaryColor LabelSubText" />
+            </BoxContainer>
+        </PanelContainer>
+
+        <ScrollContainer Name="PlanetScroll"
+                         HorizontalExpand="True"
+                         VerticalExpand="True"
+                         HScrollEnabled="False">
+            <BoxContainer Name="Planets"
+                          Orientation="Vertical"
+                          HorizontalExpand="True"
+                          SeparationOverride="2">
+                <!-- Planet rows get added here by code. -->
+            </BoxContainer>
+        </ScrollContainer>
+
+        <Label Name="EmptyLabel"
+               Text="{Loc 'wf-survey-console-empty'}"
+               StyleClasses="LabelSubText"
+               Visible="False"
+               VerticalExpand="True"
+               HorizontalAlignment="Center"
+               VerticalAlignment="Center" />
+
+        <BoxContainer Orientation="Horizontal" Margin="0 4 0 0">
+            <Label Name="PlanetCount"
+                   StyleClasses="LabelSubText"
+                   HorizontalExpand="True"
+                   HorizontalAlignment="Right" />
+        </BoxContainer>
+    </BoxContainer>
+</controls:FancyWindow>
