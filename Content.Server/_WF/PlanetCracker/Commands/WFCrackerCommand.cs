@@ -3,14 +3,19 @@ using System.Numerics;
 using Content.Server._WF.PlanetCracker.Anchors;
 using Content.Server._WF.PlanetCracker.Chunk;
 using Content.Server._WF.PlanetCracker.Cracker;
+using Content.Server._WF.PlanetCracker.Mining;
 using Content.Server._WF.PlanetCracker.Testing;
 using Content.Server.Administration;
 using Content.Shared._WF.Administration;
 using Content.Shared._WF.PlanetCracker.Anchors;
+using Content.Shared._WF.PlanetCracker.Chunk;
 using Content.Shared._WF.PlanetCracker.Cracker;
+using Content.Shared._WF.PlanetCracker.Mining;
+using Content.Shared._WF.PlanetCracker.Survey;
 using Content.Shared.Administration;
 using Robust.Shared.Console;
 using Robust.Shared.Map;
+using Robust.Shared.Map.Components;
 
 namespace Content.Server._WF.PlanetCracker.Commands;
 
@@ -22,8 +27,11 @@ namespace Content.Server._WF.PlanetCracker.Commands;
 [AdminCommand(AdminFlags.Spawn | AdminFlags.Mapping)]
 public sealed partial class WFCrackerCommand : LocalizedEntityCommands
 {
+    [Dependency] private SharedMapSystem _map = default!;
     [Dependency] private SharedTransformSystem _transform = default!;
+    [Dependency] private SharedWFSurveySystem _survey = default!;
     [Dependency] private WFCrackerSystem _crackers = default!;
+    [Dependency] private WFCrackMinerSystem _miners = default!;
     [Dependency] private WFGravityAnchorSystem _anchors = default!;
     [Dependency] private WFPlanetChunkSystem _chunks = default!;
     [Dependency] private WFTestGridFactory _factory = default!;
@@ -37,6 +45,11 @@ public sealed partial class WFCrackerCommand : LocalizedEntityCommands
     private const string SubFall = "fall";
     private const string SubExtract = "extract";
     private const string SubDrop = "drop";
+    private const string SubVeins = "veins";
+    private const string SubMine = "mine";
+
+    /// <summary>The miner the `mine` subcommand plants, the cell-carrying one rather than the Empty variant.</summary>
+    private const string MinerProto = "WFCrackMiner";
 
     private const string KindCracker = "cracker";
     private const string KindTransport = "transport";
@@ -46,7 +59,8 @@ public sealed partial class WFCrackerCommand : LocalizedEntityCommands
 
     private static readonly string[] Subcommands =
     {
-        SubSpawn, SubState, SubComplete, SubDisconnect, SubReArm, SubRelease, SubFall, SubExtract, SubDrop,
+        SubSpawn, SubState, SubComplete, SubDisconnect, SubReArm, SubRelease, SubFall, SubExtract, SubDrop, SubVeins,
+        SubMine,
     };
 
     private static readonly string[] Kinds = { KindCracker, KindTransport };
@@ -101,6 +115,12 @@ public sealed partial class WFCrackerCommand : LocalizedEntityCommands
                 return;
             case SubDrop when args.Length == 1:
                 ExecuteDrop(shell);
+                return;
+            case SubVeins when args.Length == 1:
+                ExecuteVeins(shell);
+                return;
+            case SubMine when args.Length == 1:
+                ExecuteMine(shell);
                 return;
             default:
                 Reject(shell);
@@ -301,6 +321,129 @@ public sealed partial class WFCrackerCommand : LocalizedEntityCommands
 
         shell.WriteLine(Loc.GetString("cmd-wfcracker-dropped",
             ("grid", EntityManager.ToPrettyString(chunk.Owner).ToString())));
+    }
+
+    /// <summary>Lists every seam the hull's chunk carries, what is left in it and whether a miner is already on it.</summary>
+    private void ExecuteVeins(IConsoleShell shell)
+    {
+        if (!TryGetChunkGrid(shell, out var grid))
+            return;
+
+        var veins = CollectVeins(grid);
+
+        if (veins.Count == 0)
+        {
+            shell.WriteLine(Loc.GetString("cmd-wfcracker-veins-none"));
+            return;
+        }
+
+        shell.WriteLine(Loc.GetString("cmd-wfcracker-veins-header",
+            ("count", veins.Count),
+            ("grid", EntityManager.ToPrettyString(grid.Owner).ToString())));
+
+        foreach (var (vein, idx) in veins)
+        {
+            shell.WriteLine(Loc.GetString("cmd-wfcracker-veins-row",
+                ("vein", EntityManager.ToPrettyString(vein.Owner).ToString()),
+                ("ore", _survey.GetOreName(vein.Comp.Ore)),
+                ("remaining", vein.Comp.Remaining),
+                ("total", vein.Comp.TotalYield),
+                ("miner", TileHasMiner(grid, idx).ToString())));
+        }
+    }
+
+    /// <summary>Plants an anchored crack miner on the hull's first free live seam.</summary>
+    private void ExecuteMine(IConsoleShell shell)
+    {
+        if (!TryGetChunkGrid(shell, out var grid))
+            return;
+
+        foreach (var (candidate, idx) in CollectVeins(grid))
+        {
+            if (candidate.Comp.Remaining <= 0 || TileHasMiner(grid, idx))
+                continue;
+
+            // Re-resolved through the miner's own lookup rather than reported off the child walk, so the line the
+            // command prints names exactly the vein the machine will read on its first tick.
+            if (!_miners.TryGetVeinAt(grid, idx, out var vein))
+                continue;
+
+            var coords = _map.GridTileToLocal(grid.Owner, grid.Comp, idx);
+            var miner = EntityManager.SpawnAtPosition(MinerProto, coords);
+
+            // The prototype spawns UNANCHORED (Transform anchored: false), so this is doing real work rather than
+            // re-asserting a stance the spawn already had.
+            _transform.AnchorEntity(
+                (miner, EntityManager.GetComponent<TransformComponent>(miner)),
+                grid,
+                idx);
+
+            shell.WriteLine(Loc.GetString("cmd-wfcracker-mine-placed",
+                ("miner", EntityManager.ToPrettyString(miner).ToString()),
+                ("vein", EntityManager.ToPrettyString(vein.Owner).ToString()),
+                ("ore", _survey.GetOreName(vein.Comp.Ore)),
+                ("remaining", vein.Comp.Remaining)));
+
+            return;
+        }
+
+        shell.WriteError(Loc.GetString("cmd-wfcracker-mine-no-vein"));
+    }
+
+    /// <summary>The hull's chunk as a grid, which both mining subcommands need before they can look at anything.</summary>
+    private bool TryGetChunkGrid(IConsoleShell shell, out Entity<MapGridComponent> grid)
+    {
+        grid = default;
+
+        if (!TryGetCracker(shell, out var cracker))
+            return false;
+
+        if (!_chunks.TryGetChunk(cracker, out var chunk))
+        {
+            shell.WriteError(Loc.GetString("cmd-wfcracker-no-chunk"));
+            return false;
+        }
+
+        if (!EntityManager.TryGetComponent<MapGridComponent>(chunk.Owner, out var mapGrid))
+        {
+            shell.WriteError(Loc.GetString("cmd-wfcracker-no-chunk"));
+            return false;
+        }
+
+        grid = (chunk.Owner, mapGrid);
+        return true;
+    }
+
+    /// <summary>Every deep vein parented to a chunk grid, each with the tile index its snap cell sits at.</summary>
+    private List<(Entity<WFDeepVeinComponent> Vein, Vector2i Index)> CollectVeins(Entity<MapGridComponent> grid)
+    {
+        var veins = new List<(Entity<WFDeepVeinComponent>, Vector2i)>();
+        var children = EntityManager.GetComponent<TransformComponent>(grid.Owner).ChildEnumerator;
+
+        while (children.MoveNext(out var child))
+        {
+            if (!EntityManager.TryGetComponent<WFDeepVeinComponent>(child, out var vein))
+                continue;
+
+            var xform = EntityManager.GetComponent<TransformComponent>(child);
+            veins.Add(((child, vein), _map.TileIndicesFor(grid.Owner, grid.Comp, xform.Coordinates)));
+        }
+
+        return veins;
+    }
+
+    /// <summary>Whether a crack miner already occupies a tile's snap cell, the same cell the vein lives in.</summary>
+    private bool TileHasMiner(Entity<MapGridComponent> grid, Vector2i idx)
+    {
+        var enumerator = _map.GetAnchoredEntitiesEnumerator(grid.Owner, grid.Comp, idx);
+
+        while (enumerator.MoveNext(out var other))
+        {
+            if (EntityManager.HasComponent<WFCrackMinerComponent>(other.Value))
+                return true;
+        }
+
+        return false;
     }
 
     /// <summary>The usage refusal, shared by a bad subcommand, a bad arity and a bad completion target.</summary>
