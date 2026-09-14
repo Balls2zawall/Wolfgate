@@ -147,7 +147,23 @@ There is no separate "enter orbit" verb. The orbit layer is an ordinary FTL dest
 
 ## 10. Fissures (F8)
 
-Not shipped yet — `F8_IMPLEMENTATION_PLAN.md` is in progress. Nothing should spread from a drilling anchor and no mobs should crawl out. If you see fissure decals or spawns, F8 has landed since this file was written; check the plan before reporting anything.
+**Do.** Stay on the surface near the drilling anchors (NPCs sleep with no player within 32 tiles on the same map). Watch the ground around each anchor for the whole drill. Examine an anchor.
+
+**See.** The moment a drill starts, a ring of 2–4 fissure decals appears about two tiles out with a burst and a crack sound, and 2–4 creatures climb out (Xenos on Asclepiu) and go for the anchor, then for you. Four more rings follow, each 1.5 tiles further out, at 20/40/60/80 % of the drill; earlier rings widen a stage each time. Never more than 15 creatures per anchor over the whole drill. Examine says how many fresh fissures surround the anchor. A locked anchor is quiet. On an unsanctioned world everything is ×1.5 and the table is Argocytes; Asclepiu ships sanctioned, so flip `sanctioned: false` on `WFSurfaceAsclepiu` in `planets.yml` to see it.
+
+**Also see.** When the crack completes (step 11), a last surge of 6 creatures per anchor (9 unsanctioned) climbs out of the crack rim just before the disc lifts. They stay on the ground; none ride up.
+
+**Report.** Rings that keep spreading after the anchor locks or after a pair is dissolved. Creatures ignoring the anchor when you are not around it. A creature carried into orbit on the chunk. More than 15 spawns from one anchor. Fissure decals vanishing on chunk reload (they are pinned). Fissures or creatures appearing from `wfcracker complete drill` (that path never arms the spawner; only `wfcracker begin drill` or a real drill does).
+
+**Shortcuts.** `wfcracker begin drill` starts both drills for real; `wfcracker fissure ring` forces the next ring; `wfcracker fissure surge` forces the extraction surge.
+
+## 10b. Unsanctioned notices (F9)
+
+**Do.** Flip `sanctioned: false` on `WFSurfaceAsclepiu` in `planets.yml` (or leave it true to check the silent path), then begin the crack (step 11).
+
+**See.** The moment the crack begins, everyone on the server gets a red "TSF Sector Watch" announcement with the attention sound naming your hull and the planet. When the chunk lifts, a second, silent one says the crack is complete. Abort (anchor break) and begin again: the first notice repeats; the second never repeats. Nothing happens on a sanctioned world. `wf.planet_cracker.announce false` silences both.
+
+**Report.** A notice on a sanctioned world, a missing notice on an unsanctioned one, a second extraction notice, or a notice with a raw `{ $planet }` in it.
 
 ## 11. The crack console
 

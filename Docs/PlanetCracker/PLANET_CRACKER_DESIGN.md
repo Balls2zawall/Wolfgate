@@ -445,8 +445,25 @@ Deviations and limits:
 
 ### F8 — site threats: fissures
 
-In progress; see `F8_IMPLEMENTATION_PLAN.md`.
+`WFFissureSpawnerComponent` rides on every `WFGravityAnchor`; `WFFissureSpawnerSystem` (`.Rings`, `.Mobs`, `.Surge`, `.Control`) arms it when a real drill starts and disarms on lock, break, destroy, switch-off or pair dissolve. Five rings spread at 0/20/40/60/80 % of the drill (radius 2 then +1.5 per ring): each ring picks 2–4 free tiles on its band, pins them against biome regeneration, stamps `WFFissure1..4` decals (promoted a stage per ring), plays a burst (`WFEffectFissureBurst`) and rolls 2–4 mobs from the surface's `faction` table (`planets.yml`: Asclepiu uses `Xenos`, unsanctioned `Argocytes`, both chosen because their ground mobs carry NavSmash and can chew an anchor). Unsanctioned worlds multiply fissures and mobs by 1.5. A cumulative cap of 15 mobs per anchor. At extraction a surge of 6 (9 unsanctioned) crawls out of the crack rim band per anchor, ordered before `WFPlanetChunkSystem` so it lands on ground that is about to be cut, and only when the cut will actually go ahead (no chunk held, planet not already cracked, berth resolvable). Every spawned mob with a `MobState` is re-rooted onto `WFFissureThreatCompound` (target the anchor via `WFFissureTargets`, then melee, then idle) and aggroed against the anchor; pre-existing bystanders and turret entries are left alone. Anchors answer examine with their fissure count. Admin: `wfcracker begin drill` starts both drills for real, `wfcracker fissure ring | surge` forces a ring or the surge.
+
+Deviations and limits:
+
+- **Threats are only a threat with players nearby.** `NPCSystem` pauses every HTN mob with no player within 32 tiles on the *same map*, so an anchor left drilling with the crew in orbit is never attacked. The design's "the anchors need defending" holds only while someone stays on the surface.
+- **The 3×3 anchor is outside NPC melee range** from its own tile edge, so the only damage path is the NavSmash obstacle branch of pathfinding. Factions without NavSmash (Cultists, Mercenaries, Explorers, Punks, most Silicons) and flying Carps cannot hurt an anchor at all; keep them off `wfPlanetSurface.faction`.
+- **Fissure mobs are never cleaned up.** They are not biome-loaded entities, so unloading a chunk leaves them and can drop the ground from under them. The per-anchor cap and the surge budget are the only bounds for the round.
+- **Pinned fissure tiles never unpin** (`BiomeSystem.WFChunkPin` has no unpin), so each site permanently stops regeneration and marker generation on up to ~30 tiles per anchor.
+- **Fissure decals inside the cut circle are destroyed at extraction** with the tiles; D19's "persist for the round" holds only outside the disc.
+- **Acid-blooded threats erase decals.** Xeno blood carries `PryTileReaction`; a Xeno crushed by the landing chunk deconstructs the tiles under it and `TileSystem.DeconstructTile` deletes every decal there, rim and fissure alike. Accepted as upstream behaviour; the F7 wreck test deletes the surge threats before landing for that reason.
+- **One upstream edit** (`// WOLFGATE`): `GibbingSystem.FlingDroppedEntity` skips bodiless giblets. Landing grids gib crushed mobs, and gibbed organs drop solution entities with no physics; without the guard every landing logged hundreds of resolve errors.
+- `fissure.rsi` declares four directions but decals draw frame 0 only; rotation comes from the stamping angle (same as the crack rim). A static `ProtoId<>` of a server-only prototype kind in a test class fails the YAML linter (it validates the test assembly on the client instance too); use a `const string`.
 
 ### F9 — sanction notices
 
-In progress; see `F9_IMPLEMENTATION_PLAN.md`.
+`WFCrackSanctionSystem` listens to the crack state machine and to `WFPlanetCrackedEvent`. When a hull enters `Cracking` above a body whose `WFSectorPlanetComponent.Sanctioned` is false, it sends one global announcement from "TSF Sector Watch" naming the ship and the planet with the attention sound; a second, silent notice goes out when the chunk lifts. `WFCrackNoticeComponent` on the body latches each notice: the crack notice re-arms when the hull drops back to `AnchorsLocked` (an abort-then-retry announces again, on purpose), the extraction notice is permanent for the round. CVar `wf.planet_cracker.announce` (server-only, default true) silences both. Locale in `sanction.ftl`. Nothing responds automatically (D7); `WFPlanetCrackedEvent` remains the necromorph hook and F9 adds nothing to it.
+
+Deviations and limits:
+
+- **The notice is global, not per sector.** `ChatSystem` can filter announcements, but nothing in the fork can build an "everyone in this sector" filter, so every player hears it.
+- **No shipped planet is unsanctioned.** Asclepiu ships `sanctioned: true`, so the notices never fire on the dev map until a surface flips the flag or the survey rework adds unsanctioned worlds; the tests use their own unsanctioned surface.
+- Richer unsanctioned vein tables and marker veins from the original F9 list are not built; the vein table is per surface (F2) and can simply be pointed at a richer table.
