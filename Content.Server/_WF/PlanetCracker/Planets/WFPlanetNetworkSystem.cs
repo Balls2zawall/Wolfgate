@@ -9,6 +9,7 @@ using Content.Shared._CE.ZLevels.Core.Components;
 using Content.Shared._WF.CCVar;
 using Content.Shared._WF.PlanetCracker.Planets;
 using Content.Shared.Atmos;
+using Content.Shared.Parallax.Biomes;
 using Robust.Server.GameObjects;
 using Robust.Shared.Configuration;
 using Robust.Shared.EntitySerialization.Systems;
@@ -120,6 +121,12 @@ public sealed partial class WFPlanetNetworkSystem : EntitySystem
 
         // Every map stays uninitialised until InitializeZNetwork, so the network registry lands on all of them at once.
         var ground = _planet.SpawnPlanet(surface.Ground, runMapInit: false);
+
+        // Fix the biome seed before any chunk or marker chunk can load, so a planet's terrain and its deep veins are
+        // identical every round. EnsurePlanet rolls _random.Next() when SpawnPlanet passes no seed
+        // (Content.Server/Parallax/BiomeSystem.PlanetSetup.cs:33).
+        if (surface.Seed is { } biomeSeed && TryComp<BiomeComponent>(ground, out var groundBiome))
+            _biome.SetSeed(ground, groundBiome, biomeSeed);
 
         if (surface.GroundGrid is { } gridPath)
         {

@@ -91,12 +91,27 @@ public sealed partial class WFPlanetRegistrySystem : EntitySystem
         if (!_surfaces.TryGetValue(entry.Planet, out var surface))
             return;
 
-        var comp = AddComp<WFSectorPlanetComponent>(planetEntity);
-        comp.Surface = surface.ID;
-        Dirty(planetEntity, comp);
+        var body = ApplySurface(planetEntity, surface);
 
         if (surface.BuildAtRoundStart)
-            _networks.TryBuildNetwork((planetEntity, comp), out _);
+            _networks.TryBuildNetwork(body, out _);
+    }
+
+    /// <summary>
+    /// Mirrors a surface definition onto a sector body. This is the single writer of Surface and Sanctioned in
+    /// production code, so a console never has to index the prototype to learn whether cracking the world is legal;
+    /// the one test-side writer (PlanetNetworkTest.BuildForSectorBody) is converted to it by F2's test stage.
+    /// </summary>
+    /// <param name="body">The sector body to stamp.</param>
+    /// <param name="surface">The surface definition to mirror.</param>
+    public Entity<WFSectorPlanetComponent> ApplySurface(EntityUid body, WFPlanetSurfacePrototype surface)
+    {
+        var comp = EnsureComp<WFSectorPlanetComponent>(body);
+        comp.Surface = surface.ID;
+        comp.Sanctioned = surface.Sanctioned;
+        Dirty(body, comp);
+
+        return (body, comp);
     }
 
     /// <summary>Every registered sector body this round.</summary>
