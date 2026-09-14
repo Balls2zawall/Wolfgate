@@ -1,0 +1,43 @@
+# The handheld surveyor and its pulse effect. There is NO mark beacon prototype in F2: every sector body
+# already ships `- type: FTLBeacon` (Resources/Prototypes/_FarHorizons/Entities/Objects/StarSystem/star_system.yml:20)
+# and is renamed to the planet's name at spawn, so the destination the console points at already exists.
+
+- type: entity
+  id: WFSurveyor
+  parent: BaseItem
+  name: handheld surveyor
+  description: Pulses the ground and paints back whatever is dense enough to be worth cracking for.
+  components:
+  - type: Sprite
+    sprite: _WF/PlanetCracker/Objects/surveyor.rsi
+    state: icon
+  - type: Item
+  - type: UseDelay
+    delay: 8
+  - type: WFSurveyor
+  # Do NOT add ItemToggle: ItemToggleSystem.OnUseInHand sets args.Handled unconditionally when onUse is true
+  # (Content.Shared/Item/ItemToggle/ItemToggleSystem.cs:63) and would silently eat the scan.
+  # Do NOT add `sprite:` under `- type: Item`: with no RsiPath the client falls back to the entity's own
+  # BaseRSI and picks up surveyor.rsi's inhand-left/inhand-right automatically (Content.Client/Items/Systems/ItemSystem.cs:53-103).
+  # Do NOT add `- type: Appearance` or a GenericVisualizer: F2 ships no scanning face and no WFSurveyorVisuals
+  # enum exists to key one on (plan D-N). surveyor.rsi's `scanning` state is deliberately unused this pass.
+
+# The one-shot ground pulse. survey_pulse.rsi is 96x96 with a single state `pulse` of 6 frames at 0.08 s,
+# so the lifetime is EXACTLY 0.48.
+- type: entity
+  id: WFEffectSurveyPulse
+  name: survey pulse
+  categories: [ HideSpawnMenu ]
+  components:
+  - type: TimedDespawn
+    lifetime: 0.48
+  - type: Sprite
+    sprite: _WF/PlanetCracker/Effects/survey_pulse.rsi
+    drawdepth: Effects
+    noRot: true
+    layers:
+    - state: pulse
+      shader: unshaded
+  - type: Tag
+    tags:
+    - HideContextMenu

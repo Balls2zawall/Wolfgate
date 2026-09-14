@@ -24,3 +24,7 @@
   - OreSilver
   - OrePlasma
   - OreUranium
+  # Adding or removing ANY marker layer re-rolls every other layer's placement: the marker seed mixes in a per-layer
+  # index taken from dictionary enumeration order (BiomeSystem.MarkerProcessor.cs:30-34,:49), and the backing set is a
+  # HashSet (BiomeComponent.cs:77-78), so this list's written order is not preserved as data and cannot be relied on.
+  - WFDeepVeins

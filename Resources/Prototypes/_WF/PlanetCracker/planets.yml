@@ -17,6 +17,11 @@
   cloudLayer: false
   orbitRange: 2000
   buildAtRoundStart: true
+  sanctioned: true
+  veins: WFVeinTableAsclepiu
+  # Fixes the ground biome seed so the same planet yields the same terrain and the same deep veins every round.
+  # Without it PlanetSystem.SpawnPlanet passes no seed and EnsurePlanet rolls _random.Next() (BiomeSystem.PlanetSetup.cs:33).
+  seed: 20260913
   # Stamped on every member map at MapInit with removeExisting true, and onto every transit map.
   # Only the atmosphere belongs here: anything else would clobber what the ground layer already has,
   # and moving the atmosphere out would make every transit gap vacuum.
