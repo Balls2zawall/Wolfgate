@@ -40,7 +40,7 @@ public sealed partial class WFDeepVeinComponent : Component
     [DataField, AutoNetworkedField]
     public Vector2 YieldRange = WFVeinTablePrototype.DefaultYieldRange;
 
-    /// <summary>Units per extraction tick, copied from the table. F6's; unused by F2.</summary>
+    /// <summary>Ore units per minute this vein gives up, copied from the table. Read by F6's crack miner.</summary>
     [DataField]
     public float Rate = 150f;
 

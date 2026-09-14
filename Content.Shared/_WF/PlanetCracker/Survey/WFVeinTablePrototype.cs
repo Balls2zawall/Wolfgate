@@ -33,7 +33,7 @@ public sealed partial class WFVeinTablePrototype : IPrototype
     [DataField]
     public float UnsanctionedMultiplier = 2f;
 
-    /// <summary>Units per extraction tick F6 reads off a vein; carried here so one document tunes a world. Unused by F2.</summary>
+    /// <summary>Ore units per minute a crack miner pulls out of a vein; carried here so one document tunes a world.</summary>
     [DataField]
     public float Rate = 150f;
 }
