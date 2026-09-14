@@ -21,6 +21,9 @@ public sealed partial class WFCrackerSystem : SharedWFCrackerSystem
 
         // The state machine's six broadcast anchor subscriptions; a partial class may only carry one Initialize.
         InitializeStateMachine();
+
+        // The disconnect protocol's three broadcast subscriptions, for the same reason.
+        InitializeDisconnect();
     }
 
     /// <summary>A freshly loaded hull starts idle and looks for the berth marker its mapper placed on it.</summary>

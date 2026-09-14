@@ -32,6 +32,8 @@ public sealed partial class WFCrackerCommand : LocalizedEntityCommands
     private const string SubState = "state";
     private const string SubComplete = "complete";
     private const string SubDisconnect = "disconnect";
+    private const string SubReArm = "rearm";
+    private const string SubRelease = "release";
     private const string SubFall = "fall";
     private const string SubExtract = "extract";
     private const string SubDrop = "drop";
@@ -43,7 +45,9 @@ public sealed partial class WFCrackerCommand : LocalizedEntityCommands
     private const string TargetDrill = "drill";
 
     private static readonly string[] Subcommands =
-        { SubSpawn, SubState, SubComplete, SubDisconnect, SubFall, SubExtract, SubDrop };
+    {
+        SubSpawn, SubState, SubComplete, SubDisconnect, SubReArm, SubRelease, SubFall, SubExtract, SubDrop,
+    };
 
     private static readonly string[] Kinds = { KindCracker, KindTransport };
 
@@ -82,6 +86,12 @@ public sealed partial class WFCrackerCommand : LocalizedEntityCommands
                 return;
             case SubDisconnect when args.Length == 1:
                 ExecuteDisconnect(shell);
+                return;
+            case SubReArm when args.Length == 1:
+                ExecuteReArm(shell);
+                return;
+            case SubRelease when args.Length == 1:
+                ExecuteRelease(shell);
                 return;
             case SubFall when args.Length == 1:
                 ExecuteFall(shell);
@@ -190,6 +200,42 @@ public sealed partial class WFCrackerCommand : LocalizedEntityCommands
         _anchors.ForceSwitchOff(b);
 
         shell.WriteLine(Loc.GetString("cmd-wfcracker-disconnected",
+            ("grid", EntityManager.ToPrettyString(cracker.Owner).ToString())));
+    }
+
+    /// <summary>
+    /// Puts both anchors back to Locked and drops any armed pairing window with them.
+    /// Off has no player-facing exit at all, so this is the only way back from a half-finished disconnect by hand.
+    /// </summary>
+    private void ExecuteReArm(IConsoleShell shell)
+    {
+        if (!TryGetCracker(shell, out var cracker))
+            return;
+
+        if (!TryGetPair(cracker, out var a, out var b))
+        {
+            shell.WriteError(Loc.GetString("cmd-wfcracker-no-cracker"));
+            return;
+        }
+
+        // Both halves are re-armed whichever one is off; ReArm is a no-op on an anchor that is not Off.
+        _anchors.ReArm(a);
+        _anchors.ReArm(b);
+        _crackers.ReArmWindow(cracker);
+
+        shell.WriteLine(Loc.GetString("cmd-wfcracker-rearmed",
+            ("grid", EntityManager.ToPrettyString(cracker.Owner).ToString())));
+    }
+
+    /// <summary>Lets the chunk go now rather than waiting the evacuation out.</summary>
+    private void ExecuteRelease(IConsoleShell shell)
+    {
+        if (!TryGetCracker(shell, out var cracker))
+            return;
+
+        _crackers.ReleaseNow(cracker);
+
+        shell.WriteLine(Loc.GetString("cmd-wfcracker-released",
             ("grid", EntityManager.ToPrettyString(cracker.Owner).ToString())));
     }
 

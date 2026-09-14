@@ -41,4 +41,25 @@ public sealed partial class WFGravityAnchorSystem
         RaiseLocalEvent(ref ev);
         return true;
     }
+
+    /// <summary>
+    /// Puts a switched-off anchor back to Locked; the only exit from Off other than the pair dissolving.
+    /// A lapsed disconnect pairing window and the admin command are the only callers: there is no player-facing re-arm.
+    /// </summary>
+    public bool ReArm(Entity<WFGravityAnchorComponent> ent)
+    {
+        if (ent.Comp.State != WFAnchorState.Off)
+            return false;
+
+        // Locked without a partner is not a state the pairing code can recover from, and Demote would have taken this
+        // anchor out of Off already had the pair gone.
+        if (ent.Comp.Partner is null)
+            return false;
+
+        SetState(ent, WFAnchorState.Locked);
+
+        var ev = new WFAnchorReArmedEvent(ent.Owner);
+        RaiseLocalEvent(ref ev);
+        return true;
+    }
 }

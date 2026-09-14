@@ -103,7 +103,13 @@ public sealed partial class WFGravityAnchorSystem : SharedWFGravityAnchorSystem
         if (args.Cancelled || !IsArmed(ent.Comp.State))
             return;
 
-        _popup.PopupEntity(Loc.GetString("wf-anchor-locked-unwrench"), ent.Owner, args.User);
+        // An Off anchor is still drilled in but has nothing left to switch off, so it gets its own wording rather than
+        // being told to do something it cannot: there is no player-facing re-arm either.
+        _popup.PopupEntity(
+            Loc.GetString(ent.Comp.State == WFAnchorState.Off ? "wf-anchor-off-unwrench" : "wf-anchor-locked-unwrench"),
+            ent.Owner,
+            args.User);
+
         args.Cancel();
     }
 

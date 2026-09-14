@@ -43,7 +43,7 @@ public sealed partial class WFCrackerSystem
         var query = EntityQueryEnumerator<WFPlanetCrackerComponent>();
         while (query.MoveNext(out var uid, out var comp))
         {
-            fast |= comp.State == WFCrackState.Cracking;
+            fast |= comp.State is WFCrackState.Cracking or WFCrackState.Disconnecting || comp.DisconnectArmed;
             _sweepBuffer.Add((uid, comp));
         }
 
@@ -76,6 +76,11 @@ public sealed partial class WFCrackerSystem
         if (ent.Comp.State is WFCrackState.AnchorsPlaced or WFCrackState.AnchorsLocked)
             ReconcilePair(ent);
 
+        // Unconditional, and deliberately ahead of the chain below: an armed pairing window has to be runnable down
+        // even from a state the chain's Cracked arm would never reach, and its first act is to drop itself if the hull
+        // has left Cracked at all.
+        UpdateDisconnectWindow(ent);
+
         if (ent.Comp.PendingAbort is not null)
         {
             // The grace timer is suspended for the whole spin-down: the crew is not being asked to hold anything.
@@ -101,6 +106,16 @@ public sealed partial class WFCrackerSystem
         else if (ent.Comp.State == WFCrackState.Falling)
         {
             UpdateFall(ent);
+        }
+        // These two sit after the ungated PendingAbort arm above, which is only safe because EnterDisconnecting clears
+        // PendingAbort and OnSwitchedOff refuses while it is set; nothing else in the tree writes that field.
+        else if (ent.Comp.State == WFCrackState.Disconnecting)
+        {
+            UpdateEvacuation(ent);
+        }
+        else if (ent.Comp.State == WFCrackState.Released)
+        {
+            UpdateRelease(ent);
         }
 
         ent.Comp.Blockers = ComputeBlockers(ent);
