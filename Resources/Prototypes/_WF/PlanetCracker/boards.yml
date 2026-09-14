@@ -31,3 +31,19 @@
       Manipulator: 2
     stackRequirements:
       Plasteel: 5
+
+- type: entity
+  id: WFCrackMinerCircuitboard
+  parent: BaseMachineCircuitboard
+  name: crack miner machine board
+  description: A machine printed circuit board for a crack miner.
+  components:
+  - type: Sprite
+    state: engineering
+  - type: MachineBoard
+    prototype: WFCrackMiner
+    requirements:
+      Manipulator: 2
+      Capacitor: 1
+    stackRequirements:
+      Plasteel: 5
