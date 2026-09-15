@@ -35,6 +35,14 @@ public sealed partial class WFLiftLostComponent : Component
     /// <summary>When the pull-up callout may sound again; it is the one that repeats.</summary>
     [DataField]
     public TimeSpan NextPullUp;
+
+    /// <summary>The caution alarm, looped to everyone aboard for the whole emergency. Server-side.</summary>
+    [DataField]
+    public EntityUid? Alarm;
+
+    /// <summary>When the alarm loop is re-cut, so somebody who boarded mid-fall is inside its filter too.</summary>
+    [DataField]
+    public TimeSpan NextAlarmLoop;
 }
 
 /// <summary>The PA callouts of a descent, in the order a falling hull passes through them.</summary>

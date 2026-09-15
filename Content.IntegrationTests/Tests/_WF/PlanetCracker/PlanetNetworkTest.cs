@@ -379,6 +379,68 @@ public sealed class PlanetNetworkTest
         await pair.CleanReturnAsync();
     }
 
+    /// <summary>
+    /// The destination-side check is not enough. CanFTLTo is only consulted by the console branches that pick a
+    /// destination out of a list; the beacon and free-FTL branches go straight to FTLToCoordinates, which documents
+    /// itself as taking no checks, and a landed hull left the planet through one of them on the live server. So the
+    /// refusal is asserted at the point every FTL start funnels through instead - and our own orbit hop, which starts
+    /// from orbit or the sector map, still has to get through it.
+    /// </summary>
+    [Test]
+    public async Task NoFTLStartsFromInsideAnAtmosphere()
+    {
+        await using var pair = await PoolManager.GetServerClient();
+        var server = pair.Server;
+        var entMan = server.EntMan;
+        var shuttles = server.System<ShuttleSystem>();
+
+        await EnableFeature(pair);
+        var sector = await BuildForSectorBody(pair);
+        var ship = await SpawnShip(pair, sector.SectorMap);
+
+        var sectorMapId = entMan.GetComponent<MapComponent>(sector.SectorMap).MapId;
+
+        await server.WaitPost(() => shuttles.TryAddFTLDestination(sectorMapId, true, false, false, out _));
+
+        foreach (var (layer, what) in new[]
+                 {
+                     (sector.Stack.Ground, "the surface"),
+                     (sector.Stack.Air, "an air layer"),
+                 })
+        {
+            await MoveTo(pair, ship, layer, Vector2.Zero);
+
+            await server.WaitAssertion(() =>
+            {
+                var shuttle = entMan.GetComponent<ShuttleComponent>(ship);
+
+                shuttles.FTLToCoordinates(ship, shuttle, new EntityCoordinates(sector.SectorMap, Vector2.Zero), Angle.Zero);
+
+                Assert.That(entMan.HasComponent<FTLComponent>(ship), Is.False,
+                    $"A hull on {what} started an FTL jump straight off the planet.");
+            });
+        }
+
+        await MoveTo(pair, ship, sector.Stack.Orbit, Vector2.Zero);
+
+        await server.WaitAssertion(() =>
+        {
+            var shuttle = entMan.GetComponent<ShuttleComponent>(ship);
+
+            shuttles.FTLToCoordinates(ship, shuttle, new EntityCoordinates(sector.SectorMap, Vector2.Zero), Angle.Zero);
+
+            Assert.That(entMan.HasComponent<FTLComponent>(ship), Is.True,
+                "The gate ate the one departure that must work: leaving orbit for the sector map.");
+        });
+
+        // The hull is mid-jump and the teardown below takes the maps out from under it.
+        await server.WaitPost(() => entMan.DeleteEntity(ship));
+        await server.WaitRunTicks(1);
+
+        await Teardown(pair, sector.Stack.Network);
+        await pair.CleanReturnAsync();
+    }
+
     /// <summary>Tearing a network down takes every layer with it and clears the sector body's record of it.</summary>
     [Test]
     public async Task DeleteNetworkRemovesEveryLayer()

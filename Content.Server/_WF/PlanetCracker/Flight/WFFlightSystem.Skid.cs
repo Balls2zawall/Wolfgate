@@ -31,6 +31,19 @@ public sealed partial class WFFlightSystem
     /// <summary>Accumulated damage at which a leading-edge tile is torn off the hull.</summary>
     public const float SkidTileThreshold = 40f;
 
+    /// <summary>
+    /// Damage every tile of the hull takes at touchdown, at the speed a free fall would have arrived at. Under
+    /// <see cref="SkidTileThreshold"/> on its own: a hard landing rattles the whole hull but tears nothing off it.
+    /// </summary>
+    public const float ImpactTileDamage = 12f;
+
+    /// <summary>
+    /// Extra damage the leading-edge tiles take at touchdown when the hull came in with planar speed. With the
+    /// hull-wide share this passes <see cref="SkidTileThreshold"/> on a fast hard landing and not on a gentle one, so
+    /// the expected price of arriving badly is the machinery along the nose.
+    /// </summary>
+    public const float ImpactEdgeDamage = 45f;
+
     /// <summary>How wide the leading edge is, in tiles of projection behind the foremost one.</summary>
     private const float SkidEdgeDepth = 1.5f;
 
@@ -93,6 +106,36 @@ public sealed partial class WFFlightSystem
     }
 
     /// <summary>
+    /// A touchdown the hull walks away from: the thud, the scrape, and the tiles it pays for arriving at the speed it
+    /// did. <paramref name="severity"/> is the touchdown speed over the speed a free fall would have brought it in at,
+    /// so a hull that nearly held itself up barely marks the deck and one that nearly crashed loses its nose.
+    /// </summary>
+    public void HardLanding(Entity<MapGridComponent> grid, float severity)
+    {
+        BeginSkid(grid.Owner);
+
+        if (!TryComp<WFSkidComponent>(grid.Owner, out var skid))
+            return;
+
+        severity = Math.Clamp(severity, 0f, 1f);
+
+        // The whole hull takes the landing; nothing comes off from this alone.
+        BiteTiles(grid, skid, ImpactTileDamage * severity, null);
+
+        if (!TryComp<PhysicsComponent>(grid.Owner, out var body))
+            return;
+
+        var velocity = body.LinearVelocity;
+        var speed = velocity.Length();
+
+        // Straight down onto its own footprint has no leading edge to concentrate the impact on.
+        if (speed <= SkidStopSpeed)
+            return;
+
+        BiteTiles(grid, skid, ImpactEdgeDamage * severity, velocity / speed);
+    }
+
+    /// <summary>
     /// Damages the tiles actually taking the impact - the ones furthest along the direction of travel - and tears off
     /// the ones that have had enough. Measured by projection rather than by a bounding edge so a hull sliding in
     /// corner-first loses its corner, which is what it is leading with.
@@ -105,8 +148,30 @@ public sealed partial class WFFlightSystem
         float speed,
         float elapsed)
     {
+        var lost = BiteTiles(grid, skid, SkidTileDamageRate * speed * elapsed, heading);
+
+        if (lost == 0)
+            return;
+
+        var cost = SkidTileSpeedCost * lost;
+
+        _physics.SetLinearVelocity(grid.Owner,
+            speed <= cost ? Vector2.Zero : heading * (speed - cost),
+            body: body);
+    }
+
+    /// <summary>
+    /// Puts damage on a hull's own tiles and tears off the ones that have had enough, leaving a small silent blast
+    /// where each one was. With a world heading only the leading edge is touched; without one the whole footprint is,
+    /// which is what an impact straight down does. Returns how many tiles went.
+    /// </summary>
+    private int BiteTiles(Entity<MapGridComponent> grid, WFSkidComponent skid, float damage, Vector2? heading)
+    {
+        if (damage <= 0f)
+            return 0;
+
         // The hull's own frame: the footprint is indexed in it, and the hull may be sliding sideways or spinning.
-        var local = (-_transform.GetWorldRotation(grid.Owner)).RotateVec(heading);
+        var local = heading is { } world ? (-_transform.GetWorldRotation(grid.Owner)).RotateVec(world) : Vector2.Zero;
 
         _skidEdge.Clear();
         var best = float.MinValue;
@@ -115,25 +180,18 @@ public sealed partial class WFFlightSystem
         while (tiles.MoveNext(out var tileRef))
         {
             var indices = tileRef.Value.GridIndices;
-            var projection = Vector2.Dot(new Vector2(indices.X + 0.5f, indices.Y + 0.5f), local);
 
-            if (projection > best)
-                best = projection;
+            if (heading is not null)
+                best = MathF.Max(best, Projection(indices, local));
 
             _skidEdge.Add(indices);
         }
 
-        if (_skidEdge.Count == 0)
-            return;
-
-        var damage = SkidTileDamageRate * speed * elapsed;
         var lost = 0;
 
         foreach (var indices in _skidEdge)
         {
-            var projection = Vector2.Dot(new Vector2(indices.X + 0.5f, indices.Y + 0.5f), local);
-
-            if (projection < best - SkidEdgeDepth)
+            if (heading is not null && Projection(indices, local) < best - SkidEdgeDepth)
                 continue;
 
             var total = skid.TileDamage.GetValueOrDefault(indices) + damage;
@@ -160,14 +218,13 @@ public sealed partial class WFFlightSystem
                 silent: true);
         }
 
-        if (lost == 0)
-            return;
+        return lost;
+    }
 
-        var cost = SkidTileSpeedCost * lost;
-
-        _physics.SetLinearVelocity(grid.Owner,
-            speed <= cost ? Vector2.Zero : heading * (speed - cost),
-            body: body);
+    /// <summary>How far along the direction of travel a tile sits; the leading edge is the highest of these.</summary>
+    private static float Projection(Vector2i indices, Vector2 heading)
+    {
+        return Vector2.Dot(new Vector2(indices.X + 0.5f, indices.Y + 0.5f), heading);
     }
 
     /// <summary>Stops the scrape and lets the hull be an ordinary grid again.</summary>

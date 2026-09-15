@@ -99,6 +99,10 @@ public sealed class CrashAudioTest
             {
                 Assert.That(crashed, Is.True,
                     "The hull never reached the ground layer, so no crash was measured at all.");
+                // A free fall arrives above the hard-landing threshold, so this really is the crash path; without the
+                // bang there would be nothing here to keep a budget on (FlightTest.FreeFallCrashes...).
+                Assert.That(bangs, Is.GreaterThanOrEqualTo(1),
+                    "A hull that fell a whole gap onto terrain made no bang at all, so it never crashed.");
                 Assert.That(bangs, Is.LessThanOrEqualTo(ExplosionBudget),
                     $"One hull crash played {bangs} explosion clips. Every hull tile queues its own crater and each " +
                     $"blast that sounds costs two OpenAL sources on every client that can hear it, which is what killed " +

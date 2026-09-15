@@ -1,5 +1,7 @@
 using System.Numerics;
 using Content.Server.Shuttles.Components;
+using Content.Shared._CE.ZLevels.Core.Components;
+using Content.Shared._WF.PlanetCracker.Planets;
 using Content.Shared.Shuttles.Components;
 using Robust.Shared.Map;
 using Robust.Shared.Map.Components;
@@ -13,6 +15,24 @@ public sealed partial class ShuttleSystem
 
     /// <summary>Transit time of an orbital insertion; it must exceed nothing, the arrival phase is carved out of it.</summary>
     public const float WfOrbitTravelTime = 5f;
+
+    /// <summary>
+    /// The hard gate on leaving a planet: you climb to orbit first, and you never jump out of mid-transit. Every FTL
+    /// start funnels through <see cref="TrySetupFTL"/> or <see cref="FTLToDock"/>, so both ask this rather than trust
+    /// the destination-side checks - <see cref="SharedShuttleSystem.CanFTLTo"/>'s WfAllowFTL only ever covered the
+    /// paths that consult a destination list, and the console's beacon and free-FTL branches do not.
+    /// Our own <see cref="WfFTLToLayer"/> starts from orbit or from the sector map, so it passes.
+    /// </summary>
+    public bool WfRefusesFtlDeparture(EntityUid shuttleUid)
+    {
+        if (Transform(shuttleUid).MapUid is not { } mapUid)
+            return false;
+
+        if (HasComp<CEZTransitMapComponent>(mapUid))
+            return true;
+
+        return HasComp<WFPlanetLayerComponent>(mapUid) && !HasComp<WFOrbitLayerComponent>(mapUid);
+    }
 
     /// <summary>
     /// Moves a hull onto another map through the ordinary FTL transit with no drive, no beacon and no range check.

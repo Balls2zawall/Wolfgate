@@ -36,11 +36,20 @@ public sealed partial class CEZLevelsSystem
     public const float WFPartialLiftRatio = 0.5f;
 
     /// <summary>
-    /// Touchdown speed (levels/second) under which a lift-lost hull lands hard and skids instead of exploding. Sits
-    /// well above <see cref="CEZGridFallerComponent.GridCrashVelocity"/> (0.35) - anything CE would already have let
-    /// land walks away regardless - and under CE's 1.2 terminal velocity, so a full-length plummet still crashes.
+    /// Fraction of the speed a free fall actually arrives at, at or above which a touchdown is a crash rather than a
+    /// hard landing. Measured against <see cref="WfGetFreeFallSpeed(CEZGridFallerComponent)"/> and never against CE's
+    /// 1.2 terminal velocity: a plummet is stopped and restarted at every layer boundary, so it only ever reaches
+    /// about 0.47 levels/s and the old fixed 0.8 threshold made every free fall in the game a hard landing. A free
+    /// fall lands at the reference itself; the partial-lift band lands at roughly sqrt(1 - r) of it, 0.74 at the 0.5
+    /// floor, so the fraction sits above that and the whole band survives its own landing.
     /// </summary>
-    public const float WFHardLandingSpeed = 0.8f;
+    public const float WFHardLandingFraction = 0.8f;
+
+    /// <summary>Step the reference free fall is integrated at; CE's own fall runs on the server tick.</summary>
+    private const float WFFreeFallStep = 1f / 60f;
+
+    /// <summary>Longest reference fall that is integrated, in seconds, so an unreachable gap cannot hang the loop.</summary>
+    private const float WFFreeFallCeiling = 600f;
 
     /// <summary>How often a pilot leaning on the descend key out of orbit is told where the button is.</summary>
     private static readonly TimeSpan WFOrbitRefusalCooldown = TimeSpan.FromSeconds(4);
@@ -51,6 +60,8 @@ public sealed partial class CEZLevelsSystem
     private readonly Dictionary<EntityUid, TimeSpan> _wfNextOrbitRefusal = new();
 
     private readonly List<EntityUid> _wfPloughed = new();
+
+    private readonly Dictionary<(float Gravity, float Terminal), float> _wfFreeFallSpeeds = new();
 
     /// <summary>
     /// Surface gravity of the planet a grid is flying over, or false when it is not over one at all. A transit map
@@ -229,18 +240,77 @@ public sealed partial class CEZLevelsSystem
     }
 
     /// <summary>
-    /// Whether a touchdown is a hard landing rather than a crash: a lift-lost hull that hit the ground under
-    /// <see cref="WFHardLandingSpeed"/> keeps its hull and its planar speed and grinds to a halt instead.
+    /// The speed (levels/second) a hull that fell one whole gap under its own weight actually touches down at. CE
+    /// zeroes the fall speed at every layer boundary, so this - not GridTerminalVelocity, which the taper only ever
+    /// approaches - is the fastest a plummet ever arrives, and it is what both the hard-landing test and the fall's
+    /// own rumble are scaled against. Cached: it is the same answer for every hull over a given world.
+    /// </summary>
+    public float WfGetFreeFallSpeed(CEZGridFallerComponent faller)
+    {
+        return WfGetFreeFallSpeed(faller.GridGravity, faller.GridTerminalVelocity);
+    }
+
+    /// <inheritdoc cref="WfGetFreeFallSpeed(CEZGridFallerComponent)"/>
+    public float WfGetFreeFallSpeed(float gravity, float terminal)
+    {
+        if (gravity <= 0f || terminal <= 0f)
+            return 0f;
+
+        var key = (gravity, terminal);
+
+        if (_wfFreeFallSpeeds.TryGetValue(key, out var cached))
+            return cached;
+
+        // The integrator the fall itself uses, over the one level a transit gap is worth.
+        var velocity = 0f;
+        var fallen = 0f;
+
+        for (var elapsed = 0f; fallen < 1f && elapsed < WFFreeFallCeiling; elapsed += WFFreeFallStep)
+        {
+            velocity = ApproachTerminal(velocity, gravity, terminal, WFFreeFallStep);
+            fallen += velocity * WFFreeFallStep;
+        }
+
+        _wfFreeFallSpeeds[key] = velocity;
+        return velocity;
+    }
+
+    /// <summary>
+    /// Whether a touchdown is a hard landing rather than a crash, and what a hard landing costs. A lift-lost hull that
+    /// arrived under <see cref="WFHardLandingFraction"/> of the speed a free fall would have brought it in at keeps
+    /// its hull: it pays in tiles, scaled by how fast it did arrive, and grinds the rest of its speed off.
     /// The chunk drop never reaches this - a dropped chunk is nobody's lift-lost hull - so F7 keeps its own crash.
     /// </summary>
     public bool WfTryHardLanding(Entity<MapGridComponent, CEZGridFallerComponent> ent, float impact)
     {
-        if (!HasComp<WFLiftLostComponent>(ent.Owner) || impact >= WFHardLandingSpeed)
+        if (!HasComp<WFLiftLostComponent>(ent.Owner))
             return false;
 
-        _wfFlight.BeginSkid(ent.Owner);
+        var reference = WfGetFreeFallSpeed(ent.Comp2);
+
+        if (reference <= 0f || impact >= reference * WFHardLandingFraction)
+            return false;
+
+        _wfFlight.HardLanding((ent.Owner, ent.Comp1), impact / reference);
         WfRefreshOrbitParking(ent.Owner, Transform(ent.Owner).MapUid);
         return true;
+    }
+
+    /// <summary>
+    /// A crash that still had somewhere to go. CE's blast leaves the hull on the tile it detonated over; one that came
+    /// in with real planar speed carries on through the wreck it just made instead of stopping dead. Lift-lost hulls
+    /// only, so the F7 chunk drop's straight-down crash is untouched.
+    /// </summary>
+    public void WfSkidAfterCrash(EntityUid grid)
+    {
+        if (TerminatingOrDeleted(grid) || !_mapGridQuery.HasComp(grid) || !HasComp<WFLiftLostComponent>(grid))
+            return;
+
+        if (!_physQuery.TryComp(grid, out var body) || body.LinearVelocity.Length() <= WFFlightSystem.SkidRamSpeed)
+            return;
+
+        // No thud: the crash was the noise this landing made, and one crash is one bang (CrashGrid).
+        _wfFlight.BeginSkid(grid, thud: false);
     }
 
     /// <summary>Re-arms a grid's ordinary z-gravity after it has been taken off an orbit layer by hand.</summary>

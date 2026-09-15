@@ -6,6 +6,12 @@ tone so the alarms can be told apart by ear long before real voice lines exist.
 Falls back to copying /Audio/Announcements/attention.ogg under every name if ffmpeg
 is not on PATH.
 
+The two flight ambience loops are not generated at all: a synthesised tone makes a
+poor continuous bed, so each is copied from a real loop the tree already ships.
+
+Nothing is ever overwritten - a name that already exists is left alone, because by
+then it is the maintainer's own recording.
+
 Usage: python Tools/_WF/PlanetCracker/gen_flight_placeholders.py
 Writes into Resources/Audio/_WF/PlanetCracker/Flight/
 """
@@ -31,6 +37,27 @@ TONES = {
     "skid": ("anoisesrc=color=pink:duration=2.0:amplitude=0.4", 2.0),
 }
 
+# name -> the shipped loop it stands in for. Copied verbatim, so the stand-in keeps the
+# source file's own licence; see the Flight attributions.yml.
+BORROWED = {
+    "atmo_wind": os.path.join(ROOT, "Resources", "Audio", "Effects", "Weather", "wind_2_1.ogg"),
+    "fall_rumble": os.path.join(ROOT, "Resources", "Audio", "Effects", "space_wind.ogg"),
+}
+
+
+def borrow():
+    """Copies the ambience loops in, skipping any that already exist."""
+    for name, source in BORROWED.items():
+        path = os.path.join(OUT_DIR, name + ".ogg")
+        if os.path.exists(path):
+            print("kept", name + ".ogg")  # a real recording is already in place; never overwrite it
+            continue
+        if not os.path.exists(source):
+            print("missing source for", name + ".ogg", "-", source)
+            continue
+        shutil.copyfile(source, path)
+        print("borrowed", name + ".ogg", "from", os.path.relpath(source, ROOT))
+
 
 def have_ffmpeg():
     try:
@@ -42,6 +69,7 @@ def have_ffmpeg():
 
 def main():
     os.makedirs(OUT_DIR, exist_ok=True)
+    borrow()
 
     if not have_ffmpeg():
         if not os.path.exists(FALLBACK):

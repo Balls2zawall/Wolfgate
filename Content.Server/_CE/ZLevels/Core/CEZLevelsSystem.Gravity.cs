@@ -411,6 +411,8 @@ public sealed partial class CEZLevelsSystem
                 continue;
 
             CrashGrid((landedUid, landedGrid, landedFaller));
+
+            WfSkidAfterCrash(landedUid); // WOLFGATE: a crash with planar speed left ploughs on instead of stopping dead (F10).
         }
     }
 

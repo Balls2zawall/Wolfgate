@@ -12,6 +12,7 @@ using Content.Shared._WF.PlanetCracker.Flight;
 using Content.Shared._WF.ShipPa;
 using Content.Shared.Interaction;
 using Content.Shared.Power.EntitySystems;
+using Robust.Shared.Audio.Components;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Map;
 using Robust.Shared.Map.Components;
@@ -38,6 +39,12 @@ public sealed class FlightTest
 
     /// <summary>The stock thruster the kit converts.</summary>
     private const string PlainThruster = "DebugThruster";
+
+    /// <summary>The wind loop, as the audio entity reports it.</summary>
+    private const string WindClip = "/Audio/_WF/PlanetCracker/Flight/atmo_wind.ogg";
+
+    /// <summary>The fall rumble, as the audio entity reports it.</summary>
+    private const string RumbleClip = "/Audio/_WF/PlanetCracker/Flight/fall_rumble.ogg";
 
     /// <summary>The tiny cracker's hull mass: 225 tiles at TileDensityMultiplier 0.5.</summary>
     private const float CrackerHullMass = 112.5f;
@@ -267,11 +274,14 @@ public sealed class FlightTest
     }
 
     /// <summary>
-    /// A slow touchdown out of lift lost is a hard landing: the hull survives, keeps its planar speed and skids. A
-    /// fast one is still CE's crash.
+    /// The landing decision is relative to the speed a free fall actually arrives at. CE zeroes the fall speed at
+    /// every layer boundary, so a plummet tops out near 0.47 levels/s and never approaches the 1.2 terminal velocity:
+    /// the old fixed 0.8 levels/s threshold called every free fall in the game a hard landing, which is exactly what
+    /// the playtest saw. A free fall is a crash, a partial-lift sink lands under the threshold, and landing at all
+    /// costs the hull damage.
     /// </summary>
     [Test]
-    public async Task SlowTouchdownSkidsAndFastOneCrashes()
+    public async Task FreeFallCrashesAndAPartialLiftSinkHardLands()
     {
         await using var pair = await PoolManager.GetServerClient();
         var server = pair.Server;
@@ -289,12 +299,37 @@ public sealed class FlightTest
         await MapInitHull(pair, hull);
 
         // The landing decision is taken purely on the state and the touchdown speed, so both are set by hand rather
-        // than flown: a real plummet lands at terminal velocity every time and would only ever test one branch.
+        // than flown: flying each branch for real is four gaps of ticks for one boolean.
         await server.WaitPost(() =>
         {
             entMan.EnsureComponent<CEZGridFallerComponent>(hull);
             var lost = entMan.EnsureComponent<WFLiftLostComponent>(hull);
             lost.Ratio = 0.2f;
+        });
+
+        var freeFall = 0f;
+        var sink = 0f;
+
+        await server.WaitAssertion(() =>
+        {
+            var faller = entMan.GetComponent<CEZGridFallerComponent>(hull);
+
+            freeFall = zLevels.WfGetFreeFallSpeed(faller);
+
+            // The bottom of the partial-lift band comes down at (1 - r) of gravity through the same one-level gap.
+            sink = zLevels.WfGetFreeFallSpeed(
+                faller.GridGravity * (1f - CEZLevelsSystem.WFPartialLiftRatio),
+                faller.GridTerminalVelocity);
+
+            using (Assert.EnterMultipleScope())
+            {
+                Assert.That(freeFall, Is.GreaterThan(faller.GridCrashVelocity),
+                    "A free fall does not even reach CE's own crash velocity, so nothing would ever crash.");
+                Assert.That(freeFall, Is.LessThan(faller.GridTerminalVelocity),
+                    "One gap is nowhere near long enough to reach CE's terminal velocity; the reference is wrong.");
+                Assert.That(sink, Is.LessThan(freeFall * CEZLevelsSystem.WFHardLandingFraction),
+                    $"A half-lifted sink arrives at {sink} against a {freeFall} free fall, which the threshold calls a crash.");
+            }
         });
 
         await server.WaitAssertion(() =>
@@ -304,21 +339,202 @@ public sealed class FlightTest
 
             using (Assert.EnterMultipleScope())
             {
-                Assert.That(zLevels.WfTryHardLanding((hull, grid, faller), CEZLevelsSystem.WFHardLandingSpeed + 0.1f),
-                    Is.False, "A touchdown above the hard-landing speed was not left to the crash path.");
-                Assert.That(zLevels.WfTryHardLanding((hull, grid, faller), CEZLevelsSystem.WFHardLandingSpeed - 0.1f),
-                    Is.True, "A touchdown under the hard-landing speed did not become a hard landing.");
+                Assert.That(zLevels.WfTryHardLanding((hull, grid, faller), freeFall), Is.False,
+                    "A hull that fell the whole way down still walked away from it.");
+                Assert.That(zLevels.WfTryHardLanding((hull, grid, faller), sink), Is.True,
+                    "A partial-lift sink was blown apart instead of landing hard.");
             }
         });
 
         await server.WaitAssertion(() =>
         {
+            var damage = entMan.GetComponent<WFSkidComponent>(hull).TileDamage;
+
             using (Assert.EnterMultipleScope())
             {
                 Assert.That(entMan.EntityExists(hull), Is.True, "The hard-landed hull was destroyed.");
-                Assert.That(entMan.HasComponent<WFSkidComponent>(hull), Is.True, "The hard-landed hull is not skidding.");
                 Assert.That(entMan.HasComponent<WFLiftLostComponent>(hull), Is.False,
                     "A hull that is on the ground is still in lift lost.");
+                Assert.That(damage, Is.Not.Empty, "The hard landing cost the hull nothing at all.");
+                Assert.That(damage.Values, Is.All.LessThan(WFFlightSystem.SkidTileThreshold),
+                    "A hull that came straight down with no speed on lost tiles to the impact alone.");
+            }
+        });
+
+        await Teardown(pair, layers);
+        await pair.CleanReturnAsync();
+    }
+
+    /// <summary>
+    /// A hard landing with planar speed puts the impact into the leading edge and then keeps going, which is what a
+    /// hull coming out of the sky is supposed to look like: it grinds its nose off and slides, it does not stop dead.
+    /// </summary>
+    [Test]
+    public async Task HardLandingWithSpeedTearsTheLeadingEdgeAndSlides()
+    {
+        await using var pair = await PoolManager.GetServerClient();
+        var server = pair.Server;
+        var entMan = server.EntMan;
+        var maps = server.System<SharedMapSystem>();
+        var physics = server.System<SharedPhysicsSystem>();
+        var zLevels = server.System<CEZLevelsSystem>();
+
+        await EnableFeature(pair);
+        var layers = await BuildStandalone(pair);
+        var ground = layers[0];
+        var groundMapId = await MapIdOf(pair, ground);
+
+        await LayTiles(pair, ground, new Vector2i(-24, -24), new Vector2i(48, 48));
+
+        var hull = await BuildCracker(pair, groundMapId);
+        await MapInitHull(pair, hull);
+
+        var before = 0;
+
+        await server.WaitPost(() =>
+        {
+            entMan.EnsureComponent<CEZGridFallerComponent>(hull);
+            entMan.EnsureComponent<WFLiftLostComponent>(hull).Ratio = 0.6f;
+
+            physics.SetLinearVelocity(hull, new Vector2(WFFlightSystem.SkidRamSpeed + 4f, 0f));
+            before = TileCount(entMan, maps, hull);
+        });
+
+        await server.WaitAssertion(() =>
+        {
+            var grid = entMan.GetComponent<MapGridComponent>(hull);
+            var faller = entMan.GetComponent<CEZGridFallerComponent>(hull);
+            var impact = zLevels.WfGetFreeFallSpeed(faller) * (CEZLevelsSystem.WFHardLandingFraction - 0.05f);
+
+            Assert.That(zLevels.WfTryHardLanding((hull, grid, faller), impact), Is.True,
+                "A touchdown just under the threshold was not a hard landing.");
+        });
+
+        await server.WaitAssertion(() =>
+        {
+            var after = TileCount(entMan, maps, hull);
+            var speed = entMan.GetComponent<Robust.Shared.Physics.Components.PhysicsComponent>(hull)
+                .LinearVelocity.Length();
+
+            using (Assert.EnterMultipleScope())
+            {
+                Assert.That(entMan.HasComponent<WFSkidComponent>(hull), Is.True, "The hard-landed hull is not skidding.");
+                Assert.That(after, Is.LessThan(before),
+                    "A hull that came in fast and sideways kept every tile of its leading edge.");
+                Assert.That(after, Is.GreaterThan(before / 2),
+                    $"The impact took {before - after} of {before} tiles; a hard landing is not supposed to be a crash.");
+                Assert.That(speed, Is.GreaterThan(WFFlightSystem.SkidStopSpeed),
+                    "The hull stopped dead where it landed instead of sliding out.");
+            }
+        });
+
+        await Teardown(pair, layers);
+        await pair.CleanReturnAsync();
+    }
+
+    /// <summary>
+    /// Flying inside an atmosphere makes noise: one looping wind stream aboard every hull below orbit, a second stream
+    /// of airframe rumble once the lift goes, the lift-lost caution alarm looping under the callouts for the whole
+    /// emergency, and nothing at all left playing once the hull is down.
+    /// </summary>
+    [Test]
+    public async Task AtmosphereLoopsWindAndAFallAddsRumble()
+    {
+        await using var pair = await PoolManager.GetServerClient();
+        var server = pair.Server;
+        var entMan = server.EntMan;
+
+        await EnableFeature(pair);
+        var layers = await BuildStandalone(pair);
+        var ground = layers[0];
+        var lowAir = layers[1];
+        var lowAirMapId = await MapIdOf(pair, lowAir);
+
+        await LayTiles(pair, ground, new Vector2i(-24, -24), new Vector2i(48, 48));
+
+        var hull = await BuildCracker(pair, lowAirMapId);
+        await MapInitHull(pair, hull);
+
+        // Three thrusters is a ratio of 1.2, so the hull holds its layer and the wind is the only thing playing.
+        var thrusters = await AddLandingThrusters(pair, hull, 3);
+
+        // The ambience sweep is 1 Hz.
+        await server.WaitRunTicks(pair.SecondsToTicks(3f));
+
+        await server.WaitAssertion(() =>
+        {
+            var ambience = entMan.GetComponent<WFFlightAmbienceComponent>(hull);
+
+            using (Assert.EnterMultipleScope())
+            {
+                Assert.That(ambience.Wind, Is.Not.Null, "A hull on an air layer is flying in silence.");
+                Assert.That(Streams(entMan, WindClip), Is.EqualTo(1),
+                    "A hull on an air layer is not running exactly one wind stream.");
+                Assert.That(ambience.Rumble, Is.Null, "A hull that is not falling is rumbling anyway.");
+            }
+        });
+
+        await server.WaitPost(() =>
+        {
+            foreach (var thruster in thrusters)
+            {
+                entMan.DeleteEntity(thruster);
+            }
+        });
+
+        // The fall gate sweeps at 2 Hz, the ambience behind it at 1 Hz, and the gap itself is only about four seconds
+        // of fall, so the state is sampled all the way down rather than at one guessed moment.
+        var alarm = EntityUid.Invalid;
+        var rumbled = false;
+        var wind = 0;
+
+        for (var i = 0; i < 120 && !await OnGround(pair, hull, ground); i++)
+        {
+            await server.WaitRunTicks(pair.SecondsToTicks(0.25f));
+
+            await server.WaitPost(() =>
+            {
+                if (!entMan.TryGetComponent<WFFlightAmbienceComponent>(hull, out var ambience)
+                    || !entMan.TryGetComponent<WFLiftLostComponent>(hull, out var lost))
+                {
+                    return;
+                }
+
+                if (ambience.Rumble is null || lost.Alarm is not { } loop)
+                    return;
+
+                var streams = Streams(entMan, WindClip);
+
+                rumbled = true;
+                alarm = loop;
+
+                if (streams > wind)
+                    wind = streams;
+            });
+        }
+
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(rumbled, Is.True,
+                "A falling hull never carried both the airframe rumble and a looping lift-lost alarm.");
+            Assert.That(wind, Is.LessThanOrEqualTo(2),
+                $"The falling hull stacked up {wind} wind streams; a re-cut loop must replace the old one, not join it.");
+        }
+
+        // A landing is not instant: the skid has to stop and the ambience sweep has to come round again.
+        await server.WaitRunTicks(pair.SecondsToTicks(3f));
+
+        await server.WaitAssertion(() =>
+        {
+            using (Assert.EnterMultipleScope())
+            {
+                Assert.That(entMan.GetComponent<TransformComponent>(hull).MapUid, Is.EqualTo(ground),
+                    "The hull never reached the ground, so nothing about the landing was measured.");
+                Assert.That(entMan.HasComponent<WFFlightAmbienceComponent>(hull), Is.False,
+                    "A landed hull is still flying through wind.");
+                Assert.That(Streams(entMan, WindClip), Is.Zero, "The wind loop outlived the landing.");
+                Assert.That(Streams(entMan, RumbleClip), Is.Zero, "The fall rumble outlived the landing.");
+                Assert.That(entMan.EntityExists(alarm), Is.False, "The lift-lost alarm loop outlived the landing.");
             }
         });
 
@@ -463,5 +679,45 @@ public sealed class FlightTest
 
         await server.WaitPost(() => mapId = entMan.GetComponent<MapComponent>(layer).MapId);
         return mapId;
+    }
+
+    /// <summary>How many tiles a hull still has; the leading edge coming off is a drop in this.</summary>
+    private static int TileCount(IEntityManager entMan, SharedMapSystem maps, EntityUid grid)
+    {
+        var count = 0;
+        var tiles = maps.GetAllTilesEnumerator(grid, entMan.GetComponent<MapGridComponent>(grid));
+
+        while (tiles.MoveNext(out _))
+        {
+            count++;
+        }
+
+        return count;
+    }
+
+    /// <summary>How many audio entities are playing one clip right now; a leaked loop shows up as a second one.</summary>
+    private static int Streams(IEntityManager entMan, string clip)
+    {
+        var count = 0;
+        var query = entMan.EntityQueryEnumerator<AudioComponent>();
+
+        while (query.MoveNext(out _, out var audio))
+        {
+            if (audio.FileName == clip)
+                count++;
+        }
+
+        return count;
+    }
+
+    /// <summary>True once the hull has arrived on the ground layer, however it got there.</summary>
+    private static async Task<bool> OnGround(TestPair pair, EntityUid hull, EntityUid ground)
+    {
+        var server = pair.Server;
+        var entMan = server.EntMan;
+        var landed = false;
+
+        await server.WaitPost(() => landed = entMan.GetComponent<TransformComponent>(hull).MapUid == ground);
+        return landed;
     }
 }

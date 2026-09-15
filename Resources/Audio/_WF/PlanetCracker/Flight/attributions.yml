@@ -5,3 +5,15 @@
   license: "TODO"
   copyright: "TODO: attribution pending from the maintainer"
   source: "TODO"
+
+# The tree's own weather wind loop, kept as the permanent atmosphere airflow bed.
+- files: ["atmo_wind.ogg"]
+  license: CC-BY-SA-3.0
+  copyright: '"wind_2_1.ogg" by Citadel Station 13. Modified for looping.'
+  source: https://github.com/Citadel-Station-13/Citadel-Station-13-RP/tree/28e11dee540e61b6c42fa293c1e1da087c1c2b0a
+
+# Sourced by the maintainer (2026-09-14), converted to mono 44.1 kHz Vorbis on import.
+- files: ["fall_rumble.ogg"]
+  license: "TODO"
+  copyright: "TODO: attribution pending from the maintainer"
+  source: "TODO"
