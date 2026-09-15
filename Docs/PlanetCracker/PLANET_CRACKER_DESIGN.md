@@ -330,7 +330,7 @@ None open as of revision 3.
 
 Build order actually run: F0 → F1+F3 → F4 → F5 → F2 → F7 → F6. F8 is in flight and F9 is planned. Every new file is under `Content.Shared/_WF/PlanetCracker`, `Content.Server/_WF/PlanetCracker`, `Content.Client/_WF/PlanetCracker`, `Resources/Prototypes/_WF/PlanetCracker` and `Resources/Locale/en-US/_WF/planet-cracker`. Three admin commands cover the whole family — `wfplanet`, `wfcracker`, `wfsurvey` (names in `Content.Shared/_WF/Administration/WolfgateAdminCommands.cs`). The master switch is the CVar `wf.planet_networks` (`Content.Shared/_WF/CCVar/PlanetCrackerCVars.cs`), default false, set true in `Resources/ConfigPresets/Build/development.toml`.
 
-**Upstream edits, whole family.** Nine marked lines in six files; everything else goes through `_WF` partials of upstream classes, which cost no upstream line.
+**Upstream edits, whole family.** Every marked site is listed here; everything else goes through `_WF` partials of upstream classes, which cost no upstream line.
 
 | Marked site | Call | For |
 |---|---|---|
@@ -341,6 +341,11 @@ Build order actually run: F0 → F1+F3 → F4 → F5 → F2 → F7 → F6. F8 is
 | `Content.Client/Shuttles/UI/NavScreen.xaml.cs` (`SetConsole`) | `WfOrbitButton.SetConsole` | binds that button to the console (F0) |
 | `Content.Server/_FarHorizons/StarSystem/StarSystemMapSystem.cs:66` | `WfPlanetSpawned` | registers sector bodies that have a Wolfgate surface (F0) |
 | `Content.Client/Shuttles/UI/ShuttleNavControl.xaml.cs:621` | `DrawWfBerth` | berth ghost on the radar (D20, F4) |
+| `CEZLevelsSystem.Transit.cs` (`RefreshGridZPhysics`, `TryMoveGrid`) | `WfRefreshOrbitParking`, `WfRefusesLevelHop` | a grid on an orbit layer has no z-gravity and is never handed straight to the layer below (F0 fix) |
+| `CEZLevelsSystem.PilotControl.cs` (`UpdateTakeoffSpool`) | `WfIsColdOrbitDescent` | a downward pilot input from orbit is honoured without a gravgen: the hull enters transit and falls for real (F0 fix) |
+| `CEZLevelsSystem.Gravity.cs` (`CrashGrid`) and `Content.Server/Explosion/EntitySystems/ExplosionSystem.cs`, `.Processing.cs` | `QueuedExplosion.Silent` | a grid crash plays and shakes for one blast, not one per tile (F7 fix) |
+| `Content.Shared/Gibbing/Systems/GibbingSystem.cs` (`FlingDroppedEntity`) | physics guard | bodiless giblets are not flung (F8) |
+| `Resources/Prototypes/Entities/Objects/Weapons/Guns/Turrets/turrets_ballistic.yml` (`WeaponTurretXeno`) | parent swap | one ammo provider instead of two stacked (F8) |
 
 The `_WF` partials those calls land in: `Planets/CEZLevelsSystem.Wolfgate.cs`, `Planets/StarSystemMapSystem.Wolfgate.cs`, `Planets/SharedShuttleSystem.Wolfgate.cs` (shared), `Planets/ShuttleSystem.WFOrbit.cs`, `Cracker/CEZLevelsSystem.WFVirtualMass.cs`, `Cracker/CEZLevelsSystem.WFGravityCache.cs`, `Cracker/GravityGeneratorSystem.WFCentrifuge.cs`, `Chunk/BiomeSystem.WFChunkPin.cs`, `Chunk/CEZLevelsSystem.WFChunkMove.cs`, and `Content.Client/_WF/PlanetCracker/Cracker/ShuttleNavControl.Wolfgate.cs`.
 
@@ -366,6 +371,7 @@ Deviations and limits:
 - *Leave orbit* drops the hull at its own orbit XY, which is the body's frame, so a hull parked exactly over the body centre lands on the `WFOrbitBeacon` marker's twin on the sector map. The marker is `FTLSmashImmune`, so this is cosmetic.
 - A driveless hull arrives with the ordinary 10 s `FTLComponent` cooldown (`UpdateFTLArriving` falls back to 10 s with no drive to read), so the orbit button stays greyed for ten seconds after every hop.
 - Registration matches a body by float-equal position against `SharedStarSystemMapSystem`'s own expression, with a name fallback.
+- **Orbit parking had to be fixed twice.** The `WfIsOrbitLayer` exemption only gated the fall sweep. The shared z-physics integrator (`CESharedZLevelsSystem.Update`/`Movement`) has its own gravity: an orbit map is vacuum, so `ComputeGroundHeightInternal` returned -1, `TryMoveDown` fired every tick and `TryMoveGrid` handed the hull straight down one layer at a time with no transit map and no crash — a fresh arrival inside its 3 s grace reached the ground in one tick and landed inside whatever was there. The only thing that ever held a hull up was its origin happening to sit on one of its own tiles. Now a grid on an orbit layer has `VelocityGravity` off and its z state zeroed, `TryMoveGrid` refuses to hand it down, and a downward pilot input from orbit works without a gravgen: a cold hull enters transit and falls for real instead of being stranded. `OrbitArrivalTest` pins all three.
 
 ### F1+F3 — hull skeleton and gravity anchors
 
@@ -437,6 +443,7 @@ Deviations and limits:
 - `WFCrackScarComponent` lives on the ground grid, so `wfplanet delete`/rebuild loses every scar while the body stays flagged `Cracked` — the crater reverts to intact terrain with no way to re-cut it. There is no back-fill for a chunk cut before F7 and no admin command to add or clear a scar.
 - `Released → Idle` is gated on a settle timer plus a force-anchor check, so a hull force-anchored by a mapper sticks in `Released` forever. Logged once, deliberately.
 - The pairing countdown is visible only on the crack console and in three popups near the anchors; the anchor examine line was not added because that subscription is already claimed.
+- **A grid crash used to play one explosion per tile.** CE `CrashGrid` queues a blast per hull tile and every blast played two networked audio streams, so a 15×15 hull crash created 226 explosion clips at once, exhausted the client's OpenAL sources and, on a debug client, tripped an engine assert that killed the game. Now only the centre blast (or the first tile when a drop path has no centre blast) makes sound and shakes the camera; damage, craters and tile breakage are unchanged. `CrashAudioTest` pins the count. The ~110 explosion *visual* entities per crash remain.
 
 ### F6 — chunk mining
 

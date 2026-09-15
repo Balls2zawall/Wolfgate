@@ -107,7 +107,9 @@ There is no cabling on either hull: every powered machine is switched to `!Needs
 
 **See.** The hull spools and drops a layer at a time: orbit (depth 4) → three air layers → ground (depth 0). The altimeter on the console tracks it. On touchdown the thrusters disable.
 
-**Report.** F does nothing with the gravgen at full (descent needs a working gravgen — a dead one is a refusal, not a bug, but a *live* one that refuses is). The hull falling rather than descending under control. The ground failing to generate under you.
+**Report.** F does nothing with the gravgen at full. A hull leaving orbit on its own (you did not press F) — orbit is parking, nothing pulls on you there. A layer skipped on the way down, or a hull arriving on the ground without the transit maps and the crash. The ground failing to generate under you.
+
+**Cold descent.** F from orbit with the gravgen off or dead is allowed on purpose: the hull enters transit and falls for real through every layer, then crashes. Below orbit a dead gravgen refuses to descend, as before.
 
 **Note.** Biome chunks unload about 10 s after the last viewer leaves, and nothing reserves tiles under a landed hull. A transport parked with its crew back in orbit can lose the ground under it intermittently. Record it, but it is a known limit, not new.
 
