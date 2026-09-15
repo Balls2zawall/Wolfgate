@@ -25,8 +25,9 @@ using Robust.Shared.Prototypes;
 namespace Content.IntegrationTests.Tests._WF.PlanetCracker;
 
 /// <summary>
-/// A planet is a z-map network: a biome ground layer, fall-through air layers and a vacuum orbit layer that is the only
-/// FTL door in or out. These cover the build order, the per-layer fixups, the fall exemption and both halves of the FTL
+/// A planet is a z-map network: a biome ground layer, fall-through air layers and a vacuum orbit layer, which is the
+/// only FTL door OUT of a planet and never a door in - entering orbit is the shuttle console's own action, covered by
+/// OrbitEntryTest. These cover the build order, the per-layer fixups, the fall exemption and both halves of the FTL
 /// gate. A crackable world carries no cloud layer, because a cloud deck ends the client's downward z-walk and paints
 /// over everything below it, which hid the crack site from the one place the crew watches it from.
 /// </summary>
@@ -120,15 +121,10 @@ public sealed class PlanetNetworkTest
                     "The top layer is not marked as orbit.");
             }
 
-            Assert.That(entMan.TryGetComponent(stack.Orbit, out FTLDestinationComponent? destination), Is.True,
-                "The orbit layer is not an FTL destination.");
-
-            using (Assert.EnterMultipleScope())
-            {
-                Assert.That(destination!.Enabled, Is.True, "The orbit destination is disabled.");
-                Assert.That(destination.RequireCoordinateDisk, Is.False, "The orbit destination should not need a disk.");
-                Assert.That(destination.BeaconsOnly, Is.False, "Beacons-only orbit would deadlock on the single beacon.");
-            }
+            // Orbit is entered from the shuttle console's own button, which needs no FTL drive. Registering the layer
+            // as a destination would put it back behind GetFTLRange, which is exactly what the button replaces.
+            Assert.That(entMan.HasComponent<FTLDestinationComponent>(stack.Orbit), Is.False,
+                "The orbit layer is an FTL destination again; it is entered from the console's orbit button.");
         });
 
         await Teardown(pair, stack.Network);
@@ -294,9 +290,12 @@ public sealed class PlanetNetworkTest
         await pair.CleanReturnAsync();
     }
 
-    /// <summary>The inbound half of the gate: an orbit layer is only reachable from within range of its own sector body.</summary>
+    /// <summary>
+    /// The inbound half of the gate: an orbit layer is never an FTL destination at any range, because entering orbit is
+    /// the shuttle console's own action. OrbitEntryTest covers the range band that action enforces instead.
+    /// </summary>
     [Test]
-    public async Task OrbitIsReachableOnlyInRange()
+    public async Task OrbitIsNeverAnFTLDestination()
     {
         await using var pair = await PoolManager.GetServerClient();
         var server = pair.Server;
@@ -309,17 +308,26 @@ public sealed class PlanetNetworkTest
 
         var orbitMapId = entMan.GetComponent<MapComponent>(sector.Stack.Orbit).MapId;
 
+        // Parked close to the body, which is the one place the old inbound range gate used to let through.
         await MoveTo(pair, ship, sector.SectorMap, new Vector2(500f, 0f));
 
         await server.WaitAssertion(() =>
-            Assert.That(shuttles.CanFTLTo(ship, orbitMapId, EntityUid.Invalid), Is.True,
-                "A hull 500 from the sector body should be able to enter orbit."));
+        {
+            using (Assert.EnterMultipleScope())
+            {
+                Assert.That(entMan.HasComponent<FTLDestinationComponent>(sector.Stack.Orbit), Is.False,
+                    "The orbit layer is registered as an FTL destination.");
+                Assert.That(shuttles.CanFTLTo(ship, orbitMapId, EntityUid.Invalid), Is.False,
+                    "A hull beside the sector body must not be able to FTL into orbit.");
+            }
+        });
 
-        await MoveTo(pair, ship, sector.SectorMap, new Vector2(5000f, 0f));
+        // Even hand-registered, the shared gate has to keep refusing it.
+        await server.WaitPost(() => shuttles.TryAddFTLDestination(orbitMapId, true, false, false, out _));
 
         await server.WaitAssertion(() =>
             Assert.That(shuttles.CanFTLTo(ship, orbitMapId, EntityUid.Invalid), Is.False,
-                "A hull 5000 from the sector body is outside the 2000 orbit range."));
+                "WfAllowFTL let a hull jump into an orbit layer that was hand-registered as a destination."));
 
         await MoveTo(pair, ship, sector.Stack.Orbit, Vector2.Zero);
 

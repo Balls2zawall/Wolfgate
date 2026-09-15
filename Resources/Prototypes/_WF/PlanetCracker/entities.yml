@@ -1,12 +1,12 @@
-# Orbital insertion marker, spawned at the planet centre on every orbit layer.
+# Centre marker of an orbit layer, spawned at the planet centre. A warp point and a radar label only:
+# orbit is not an FTL destination, so this deliberately carries no FTLBeacon.
 
 - type: entity
   id: WFOrbitBeacon
-  name: Orbital insertion # Renamed at spawn
+  name: Orbital marker # Renamed at spawn
   categories: [ HideSpawnMenu ]
   components:
     - type: WarpPoint
     - type: FTLSmashImmune
-    - type: FTLBeacon
     - type: IFF
       color: '#7FFFD4'

@@ -93,11 +93,11 @@ public sealed partial class WFPlanetSurfacePrototype : IPrototype
     [DataField]
     public ComponentRegistry? OrbitComponents;
 
-    /// <summary>Name given to the orbit map entity; the shuttle console uses it as the destination heading.</summary>
+    /// <summary>Name given to the orbit map entity; the console's orbit button and the survey rows read it.</summary>
     [DataField]
     public LocId OrbitMapName = "wf-planet-orbit-map-name";
 
-    /// <summary>Name given to the orbit beacon entity.</summary>
+    /// <summary>Name given to the orbit layer's centre marker; a warp point and radar label, not an FTL beacon.</summary>
     [DataField]
-    public LocId OrbitBeaconName = "wf-planet-orbit-beacon-name";
+    public LocId OrbitMarkerName = "wf-planet-orbit-marker-name";
 }

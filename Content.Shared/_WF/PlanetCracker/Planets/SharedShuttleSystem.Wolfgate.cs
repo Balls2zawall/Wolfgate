@@ -5,38 +5,23 @@ namespace Content.Shared.Shuttles.Systems;
 
 public abstract partial class SharedShuttleSystem
 {
-    /// <summary>The orbit layer is the only FTL door in or out of a planet network, and only from within range of the sector planet.</summary>
+    /// <summary>
+    /// An orbit layer is never an FTL destination - entering orbit is the shuttle console's own action and needs no
+    /// drive - and a planet network is never left from a surface, air or cloud layer: you climb to orbit first.
+    /// </summary>
     protected bool WfAllowFTL(EntityUid shuttleUid, EntityUid targetMapUid)
     {
-        var shuttleXform = _xformQuery.GetComponent(shuttleUid);
-
-        // Outbound: never from mid-transit, and never off a surface, air or cloud layer - you climb to orbit first.
-        if (shuttleXform.MapUid is { } shuttleMapUid)
-        {
-            if (HasComp<CEZTransitMapComponent>(shuttleMapUid))
-                return false;
-
-            if (HasComp<WFPlanetLayerComponent>(shuttleMapUid) && !HasComp<WFOrbitLayerComponent>(shuttleMapUid))
-                return false;
-        }
-
-        // Inbound: an orbit layer is only reachable from within range of its own sector planet.
-        if (!TryComp<WFOrbitLayerComponent>(targetMapUid, out var orbit))
-            return true;
-
-        // A network with no sector body (a dev spawn) has nothing to measure against, so it stays open.
-        if (orbit.Planet is not { } netPlanet)
-            return true;
-
-        if (!TryGetEntity(netPlanet, out var planet))
+        // Inbound: the orbit layer is reached from the console's orbit button, which runs its own range check.
+        if (HasComp<WFOrbitLayerComponent>(targetMapUid))
             return false;
 
-        var planetXform = _xformQuery.GetComponent(planet.Value);
+        if (_xformQuery.GetComponent(shuttleUid).MapUid is not { } shuttleMapUid)
+            return true;
 
-        if (planetXform.MapUid != shuttleXform.MapUid)
+        // Outbound: never from mid-transit, and never off a surface, air or cloud layer.
+        if (HasComp<CEZTransitMapComponent>(shuttleMapUid))
             return false;
 
-        var delta = XformSystem.GetWorldPosition(planetXform) - XformSystem.GetWorldPosition(shuttleXform);
-        return delta.LengthSquared() <= orbit.Range * orbit.Range;
+        return !HasComp<WFPlanetLayerComponent>(shuttleMapUid) || HasComp<WFOrbitLayerComponent>(shuttleMapUid);
     }
 }

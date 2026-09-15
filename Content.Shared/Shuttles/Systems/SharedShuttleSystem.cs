@@ -49,7 +49,7 @@ public abstract partial class SharedShuttleSystem : EntitySystem
         if (shuttleMap == targetMap)
             return true;
 
-        if (!WfAllowFTL(shuttleUid, mapUid)) // WOLFGATE: orbit is the only FTL door in and out of a planet network, and only from within range.
+        if (!WfAllowFTL(shuttleUid, mapUid)) // WOLFGATE: you only FTL out of a planet network from orbit, and never FTL into an orbit layer.
             return false;
 
         if (!TryComp<FTLDestinationComponent>(mapUid, out var destination) || !destination.Enabled)

@@ -4,7 +4,6 @@ using Content.Server._DV.Planet;
 using Content.Server.Atmos.EntitySystems;
 using Content.Server.Parallax;
 using Content.Server.Shuttles.Events;
-using Content.Server.Shuttles.Systems;
 using Content.Shared._CE.ZLevels.Core.Components;
 using Content.Shared._WF.CCVar;
 using Content.Shared._WF.PlanetCracker.Planets;
@@ -33,11 +32,10 @@ public sealed partial class WFPlanetNetworkSystem : EntitySystem
     [Dependency] private MapSystem _map = default!;
     [Dependency] private MetaDataSystem _meta = default!;
     [Dependency] private PlanetSystem _planet = default!;
-    [Dependency] private ShuttleSystem _shuttle = default!;
     [Dependency] private TransformSystem _transform = default!;
 
-    /// <summary>Beacon spawned at the planet centre so the orbit layer gets a named entry in the console destination tree.</summary>
-    private const string OrbitBeaconProto = "WFOrbitBeacon";
+    /// <summary>Marker spawned at the planet centre so a hull in orbit can see where the body underneath it is.</summary>
+    private const string OrbitMarkerProto = "WFOrbitBeacon";
 
     private readonly List<(Vector2i Index, Tile Tile)> _reservedTiles = new();
 
@@ -106,8 +104,8 @@ public sealed partial class WFPlanetNetworkSystem : EntitySystem
     /// Builds a whole planet z-stack and returns its network entity, or null when the build failed.
     /// </summary>
     /// <param name="surface">The surface definition describing the stack.</param>
-    /// <param name="centre">Planet centre in the world frame; the orbit beacon and the FTL range gate both measure here.</param>
-    /// <param name="displayName">Name substituted into the map, network and beacon locale strings.</param>
+    /// <param name="centre">Planet centre in the world frame; the orbit marker and the console's range gate both measure here.</param>
+    /// <param name="displayName">Name substituted into the map, network and marker locale strings.</param>
     /// <param name="planetEntity">The sector body this network belongs to, if any.</param>
     public EntityUid? BuildNetwork(WFPlanetSurfacePrototype surface, Vector2 centre, string displayName, EntityUid? planetEntity)
     {
@@ -159,7 +157,7 @@ public sealed partial class WFPlanetNetworkSystem : EntitySystem
             layers.Add(cloud);
         }
 
-        var orbit = _map.CreateMap(out var orbitMapId, runMapInit: false);
+        var orbit = _map.CreateMap(out _, runMapInit: false);
         layers.Add(orbit);
 
         var network = _zLevels.CreateMapNetwork(surface.NetworkComponents);
@@ -231,11 +229,10 @@ public sealed partial class WFPlanetNetworkSystem : EntitySystem
 
         _meta.SetEntityName(orbit, Loc.GetString(surface.OrbitMapName, ("planet", displayName)));
 
-        if (!_shuttle.TryAddFTLDestination(orbitMapId, true, false, false, out _))
-            Log.Error($"Failed to make the orbit layer of \"{surface.ID}\" an FTL destination.");
-
-        var beacon = SpawnAtPosition(OrbitBeaconProto, new EntityCoordinates(orbit, centre));
-        _meta.SetEntityName(beacon, Loc.GetString(surface.OrbitBeaconName, ("planet", displayName)));
+        // Deliberately NOT an FTLDestination: orbit is entered from the shuttle console's own button, which needs no
+        // drive (WFOrbitEntrySystem). The marker below is a warp point and a radar label, never a jump target.
+        var orbitMarker = SpawnAtPosition(OrbitMarkerProto, new EntityCoordinates(orbit, centre));
+        _meta.SetEntityName(orbitMarker, Loc.GetString(surface.OrbitMarkerName, ("planet", displayName)));
 
         // A mapgrid on the orbit layer disables every arriving hull and blocks climbs into it.
         if (HasComp<MapGridComponent>(orbit))

@@ -1,11 +1,23 @@
-## Map and beacon names
+## Map and marker names
 wf-planet-orbit-map-name = { $planet } orbit
-wf-planet-orbit-beacon-name = { $planet } orbital insertion
+wf-planet-orbit-marker-name = { $planet } orbital marker
 wf-planet-network-name = { $planet } planet network
 wf-planet-asclepiu-surface = Asclepiu
 
 ## FTL
 wf-shuttle-console-in-transit = Cannot engage FTL while changing altitude.
+
+## Shuttle console orbit controls
+wf-shuttle-console-enter-orbit = Enter orbit: { $planet }
+wf-shuttle-console-leave-orbit = Leave orbit: { $planet }
+wf-shuttle-console-orbit-none = No planet in range
+wf-orbit-no-hull = This console is not aboard a flyable hull.
+wf-orbit-no-network = { $planet } has no orbit layer to drop into.
+wf-orbit-no-sector = This orbit layer has no sector body to return to.
+wf-orbit-not-in-sector = { $planet } is not in this system.
+wf-orbit-not-in-orbit = This hull is not in planet orbit.
+wf-orbit-out-of-range = Too far from { $planet } for orbital insertion.
+wf-orbit-refused = Orbital insertion refused.
 
 ## wfplanet command
 cmd-wfplanet-desc = Build, inspect and tear down Wolfgate planet networks.

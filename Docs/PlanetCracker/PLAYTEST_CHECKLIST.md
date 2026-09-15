@@ -69,21 +69,21 @@ There is no cabling on either hull: every powered machine is switched to `!Needs
 
 **Do.** Take the cracker's shuttle console and check the FTL destination list.
 
-**See.** Asclepiu's beacons: the body itself (named `Asclepiu`) and the orbit layer (`Asclepiu orbit`, beacon `Asclepiu orbital insertion`). If the map screen shows no destinations at all, **ping the map** — `MapScreen` only rebuilds its destination tree on a ping.
+**See.** Asclepiu's own beacon (named `Asclepiu`). The orbit layer is **not** in the list and must not be: it is not an FTL destination at all. If the map screen shows no destinations at all, **ping the map** — `MapScreen` only rebuilds its destination tree on a ping.
 
-**Report.** A destination list with no orbit entry after a ping; or the FTL button greyed with no popup (the FTL console rejects silently on almost every path, so a dead button is the symptom of a refused jump).
+**Report.** An `Asclepiu orbit` entry in the destination list (the layer was registered as a destination again). The FTL button greyed with no popup (the FTL console rejects silently on almost every path, so a dead button is the symptom of a refused jump).
 
 ## 5. Enter orbit
 
-There is no separate "enter orbit" verb. The orbit layer is an ordinary FTL destination, gated by `WfAllowFTL`: you may only jump **to** it from within `orbitRange` (2000) of its own sector body, and you may only jump **out of** a planet network from the orbit layer — never from a surface or air layer, never mid-transit.
+**Orbit is a button on the shuttle console, not an FTL jump.** You do not need an FTL drive and the orbit layer is not a destination. The nav screen's settings column carries an *Enter orbit: &lt;planet&gt;* button, which lights up when the hull is parked on the body's own sector map within `orbitRange` (2000) of it; in orbit the same button reads *Leave orbit: &lt;planet&gt;*. The hop runs the ordinary FTL transit internally — 5 s warm-up, 5 s in hyperspace, the usual sound and shake — so it arrives at the same world XY on the far layer, or at the FTL arrival's free spot when something is already parked there. `WfAllowFTL` still refuses every jump **out of** a planet network from a surface or air layer, and every jump mid-transit: you climb to orbit first.
 
-**Do.** FTL to `Asclepiu` first. Once you are parked near the body, FTL again to `Asclepiu orbit`.
+**Do.** FTL to `Asclepiu`. Once you are parked near the body, open the shuttle console's nav screen and press *Enter orbit: Asclepiu*.
 
-**See.** You arrive on a starless map with space atmosphere and a dim blue ambient light. The hull does **not** fall — the orbit layer is exempt from the CE gravity sweep. Looking down through the z-view you should see the air layers and eventually the ground.
+**See.** The button is enabled only within 2000 of the body, and greys out (`Busy`) once the hop starts. After the warm-up and transit you arrive on a starless map with space atmosphere and a dim blue ambient light. The hull does **not** fall — the orbit layer is exempt from the CE gravity sweep. Looking down through the z-view you should see the air layers and eventually the ground.
 
-**Report.** The hull starts falling on arrival (orbit exemption broken). `Asclepiu orbit` present in the list but the jump silently refused while you are parked beside the body (range gate wrong). Also report if you can FTL away while standing on the surface — the outbound gate should refuse that.
+**Report.** The button missing entirely while parked beside the body, or enabled from thousands of tiles away (the readout sweep or the range gate is wrong). A popup instead of a hop with the hull clearly in range. The hull starts falling on arrival (orbit exemption broken). Also report if you can FTL away while standing on the surface — the outbound gate should refuse that.
 
-**Leaving.** The sector body's own beacon is "leave orbit". If your gravgen dies while you are on a non-orbit layer you are stranded with a silently empty destination list; `wfplanet tp <planet>` is the escape hatch.
+**Leaving.** Press *Leave orbit* on the same console; you come back out beside the body on the sector map. The sector body's own FTL beacon still works as a second route in for a hull that has a drive. If your gravgen dies while you are on a non-orbit layer you are stranded — the console offers neither the orbit button nor a destination list; `wfplanet tp <planet>` is the escape hatch.
 
 ## 6. Survey the surface (optional, F2)
 
