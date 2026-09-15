@@ -1,4 +1,5 @@
 using Content.Server._WF.PlanetCracker.Anchors;
+using Content.Shared._WF.PlanetCracker.Chunk;
 using Content.Shared._WF.PlanetCracker.Survey;
 using Content.Shared.Popups;
 using Robust.Shared.Audio.Systems;
@@ -47,8 +48,9 @@ public sealed partial class WFSurveyorSystem : EntitySystem
         var xform = Transform(user);
 
         // The canonical ground-layer test, shared with the gravity anchors: deep veins only exist on a planet's depth 0
-        // biome grid, so a scan anywhere else has nothing to find and says so rather than reading empty.
-        if (!_anchors.TryGetPlanetGround(xform, out _))
+        // biome grid, so a scan anywhere else has nothing to find and says so rather than reading empty. The one other
+        // place is the disc cut out of that ground: its veins rode up anchored to the chunk, wherever it now hangs.
+        if (!_anchors.TryGetPlanetGround(xform, out _) && !(xform.GridUid is { } grid && HasComp<WFPlanetChunkComponent>(grid)))
         {
             _popup.PopupEntity(Loc.GetString("wf-surveyor-not-on-ground"), user, user);
             args.Handled = true;

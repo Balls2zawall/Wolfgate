@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Numerics;
 using Content.IntegrationTests.Pair;
 using Content.Server._WF.PlanetCracker.Survey;
+using Content.Shared._WF.PlanetCracker.Chunk;
 using Content.Shared._WF.PlanetCracker.Survey;
 using Content.Shared.Examine;
 using Content.Shared.Hands.EntitySystems;
@@ -162,6 +163,57 @@ public sealed class SurveyorTest
                 Assert.That(FindPulse(entMan), Is.EqualTo(EntityUid.Invalid),
                     "A refused scan still spawned its ground pulse.");
             }
+        });
+
+        await pair.CleanReturnAsync();
+    }
+
+    /// <summary>
+    /// The disc cut out of the ground keeps its veins, so the surveyor keeps working on it wherever it hangs: the scan
+    /// gate accepts a chunk grid as well as the ground layer. It used to refuse with "not on ground" in the berth.
+    /// The vein is planted on the ground before the cut and rides up with the disc, as a biome-spawned one does.
+    /// </summary>
+    [Test]
+    public async Task ScansTheExtractedChunk()
+    {
+        await using var pair = await PoolManager.GetServerClient();
+        var server = pair.Server;
+        var entMan = server.EntMan;
+
+        var site = await BuildReadyToExtract(pair);
+
+        // The ready site's pair sits at x 0 and 16 on the zero row, so the cut circle is centred on (8.5, 0.5).
+        var centre = new Vector2(8.5f, 0.5f);
+        await DeepVeinTest.LayTile(pair, site.Ground, new Vector2i(8, 0), DeepVeinTest.GrassTile);
+        var vein = await DeepVeinTest.SpawnVein(pair, site.Ground, centre);
+
+        await server.WaitAssertion(() =>
+            Assert.That(entMan.EntityExists(vein), Is.True, "Precondition: the vein survived its MapInit on the ground."));
+
+        await BeginCut(pair, site);
+        await CompleteCut(pair, site);
+
+        var chunk = EntityUid.Invalid;
+
+        await server.WaitAssertion(() =>
+        {
+            Assert.That(entMan.EntityExists(vein), Is.True, "Precondition: the vein survived the cut.");
+            chunk = entMan.GetComponent<TransformComponent>(vein).GridUid ?? EntityUid.Invalid;
+            Assert.That(entMan.HasComponent<WFPlanetChunkComponent>(chunk), Is.True,
+                "Precondition: the vein rode up onto the chunk.");
+        });
+
+        // The chunk is world-aligned at the ground's own indices, so ground XY is chunk-local XY.
+        var (user, surveyor) = await SpawnScanner(pair, chunk, centre + new Vector2(2f, 0f));
+
+        await Scan(pair, user, surveyor);
+
+        await server.WaitAssertion(() =>
+        {
+            Assert.That(entMan.TryGetComponent(user, out WFSurveyedComponent? surveyed), Is.True,
+                "The scan on the chunk was refused outright.");
+            Assert.That(surveyed!.Revealed, Does.Contain(entMan.GetNetEntity(vein)),
+                "The vein riding the chunk was not revealed.");
         });
 
         await pair.CleanReturnAsync();
