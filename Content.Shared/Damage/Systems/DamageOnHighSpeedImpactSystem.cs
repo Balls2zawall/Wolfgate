@@ -19,6 +19,23 @@ public sealed partial class DamageOnHighSpeedImpactSystem : EntitySystem
     [Dependency] private SharedColorFlashEffectSystem _color = default!;
     [Dependency] private SharedStunSystem _stun = default!;
 
+    // WOLFGATE: impact-sound budget per tick, see WfImpactSoundAllowed.
+    private const int WfImpactSoundsPerTick = 6;
+    private GameTick _wfSoundTick;
+    private int _wfSoundsThisTick;
+
+    /// <summary>WOLFGATE: allows at most a handful of impact thuds per tick; damage is never throttled, only the sound.</summary>
+    private bool WfImpactSoundAllowed()
+    {
+        if (_wfSoundTick != _gameTiming.CurTick)
+        {
+            _wfSoundTick = _gameTiming.CurTick;
+            _wfSoundsThisTick = 0;
+        }
+
+        return ++_wfSoundsThisTick <= WfImpactSoundsPerTick;
+    }
+
     public override void Initialize()
     {
         base.Initialize();
@@ -53,7 +70,8 @@ public sealed partial class DamageOnHighSpeedImpactSystem : EntitySystem
         _damageable.TryChangeDamage(uid, component.Damage * damageScale);
 
         if (_gameTiming.IsFirstTimePredicted)
-            _audio.PlayPvs(component.SoundHit, uid, AudioParams.Default.WithVariation(0.125f).WithVolume(-0.125f));
+            if (WfImpactSoundAllowed()) // WOLFGATE: a skidding hull throws every loose item aboard into a wall at once; cap the thuds per tick or the client runs out of audio sources.
+                _audio.PlayPvs(component.SoundHit, uid, AudioParams.Default.WithVariation(0.125f).WithVolume(-0.125f));
         _color.RaiseEffect(Color.Red, new List<EntityUid>() { uid }, Filter.Pvs(uid, entityManager: EntityManager));
     }
 
