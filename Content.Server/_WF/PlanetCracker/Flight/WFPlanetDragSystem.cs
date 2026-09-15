@@ -36,6 +36,10 @@ public sealed partial class WFPlanetDragSystem : EntitySystem
 
         while (query.MoveNext(out var uid, out _, out var body, out var xform))
         {
+            // A z-layer map is itself a grid: never drag the layer.
+            if (HasComp<MapComponent>(uid))
+                continue;
+
             if (!TryGetLimits(uid, xform, out var maxSpeed, out var damping))
             {
                 Release(uid, body);

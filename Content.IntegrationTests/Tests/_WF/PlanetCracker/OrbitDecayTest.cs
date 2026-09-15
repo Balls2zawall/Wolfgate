@@ -511,4 +511,40 @@ public sealed class OrbitDecayTest
 
         return EntityUid.Invalid;
     }
+
+    /// <summary>
+    /// Every z-layer map is itself a grid. None of the flight sweeps may mistake one for a hull: the orbit map is
+    /// not an orbiter to drop, and an air layer is not a hull in flight that plays wind to everyone on it.
+    /// </summary>
+    [Test]
+    public async Task LayerMapsAreNeverStampedAsHulls()
+    {
+        await using var pair = await PoolManager.GetServerClient();
+        var server = pair.Server;
+        var entMan = server.EntMan;
+
+        await EnableFeature(pair);
+        var layers = await BuildStandalone(pair);
+
+        await server.WaitRunTicks(pair.SecondsToTicks(StampWait));
+
+        await server.WaitAssertion(() =>
+        {
+            using (Assert.EnterMultipleScope())
+            {
+                foreach (var layer in layers)
+                {
+                    Assert.That(entMan.HasComponent<WFOrbitDecayComponent>(layer), Is.False,
+                        $"Layer map {entMan.ToPrettyString(layer)} was stamped as a decaying orbiter.");
+                    Assert.That(entMan.HasComponent<Content.Server._WF.PlanetCracker.Flight.WFFlightAmbienceComponent>(layer), Is.False,
+                        $"Layer map {entMan.ToPrettyString(layer)} was treated as a hull in flight.");
+                    Assert.That(entMan.HasComponent<Content.Server._WF.PlanetCracker.Flight.WFPlanetDragComponent>(layer), Is.False,
+                        $"Layer map {entMan.ToPrettyString(layer)} was given planet drag.");
+                }
+            }
+        });
+
+        await Teardown(pair, layers);
+        await pair.CleanReturnAsync();
+    }
 }

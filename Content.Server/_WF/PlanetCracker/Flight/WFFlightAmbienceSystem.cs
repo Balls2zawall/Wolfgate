@@ -89,6 +89,10 @@ public sealed partial class WFFlightAmbienceSystem : EntitySystem
         var grids = EntityQueryEnumerator<MapGridComponent>();
         while (grids.MoveNext(out var uid, out _))
         {
+            // A z-layer map is itself a grid; it is never a hull in flight, and must not sing to everyone on the layer.
+            if (HasComp<MapComponent>(uid))
+                continue;
+
             _scan.Add(uid);
         }
 

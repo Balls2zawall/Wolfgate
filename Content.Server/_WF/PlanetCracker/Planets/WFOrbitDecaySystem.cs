@@ -179,7 +179,8 @@ public sealed partial class WFOrbitDecaySystem : EntitySystem
 
         while (query.MoveNext(out var uid, out _, out var xform))
         {
-            if (xform.MapUid is not { } mapUid || !HasComp<WFOrbitLayerComponent>(mapUid))
+            // The orbit map is itself a grid with no thrusters; it is the layer, not an orbiter, and must never be dropped.
+            if (HasComp<MapComponent>(uid) || xform.MapUid is not { } mapUid || !HasComp<WFOrbitLayerComponent>(mapUid))
                 continue;
 
             _orbiters.Add(uid);
