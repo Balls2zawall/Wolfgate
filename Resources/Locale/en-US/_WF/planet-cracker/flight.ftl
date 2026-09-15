@@ -10,9 +10,10 @@ wf-flight-lift-warning = Landing thrusters rate { $ratio } of this hull's weight
 
 ## Confirm dialog
 wf-flight-confirm-title = Atmospheric entry
-wf-flight-confirm-descend = Descend anyway
+wf-flight-confirm-descend = Descend
 wf-flight-confirm-abort = Stay in orbit
-wf-flight-confirm-text = Landing thrusters rate [color=#ff3030]{ $ratio }[/color] of this hull's weight against { $planet }. Below 1.00 the hull sinks and cannot climb back out; below 0.50 it falls at full speed. Descend anyway?
+wf-flight-confirm-text = Lift ratio [color={ $colour }]{ $ratio }[/color] over { $planet }.
+    Under 1.00 the hull cannot climb back out. Under 0.50 it falls.
 
 ## Landing thruster conversion kit
 wf-landing-kit-wrong-target = The kit only fits an ordinary thruster.
