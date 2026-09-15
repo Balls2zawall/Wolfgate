@@ -812,7 +812,9 @@ public sealed class CrackerTestGridTest
 
             using (Assert.EnterMultipleScope())
             {
-                Assert.That(bound, Is.EqualTo(2), "BindAboard did not stamp both crates.");
+                // Crates bind the moment they land on the deck (EntParentChangedMessage), so the explicit sweep finds
+                // nothing left to stamp; what matters is that both crates end up owned, asserted below.
+                Assert.That(bound, Is.EqualTo(0), "BindAboard found crates the deck landing had not already bound.");
 
                 foreach (var crate in crates)
                 {
