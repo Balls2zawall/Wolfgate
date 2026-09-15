@@ -829,6 +829,71 @@ public sealed class CrackerTestGridTest
     }
 
     /// <summary>
+    /// The combined spawn the admin command and the shipyard purchase both end in: the transport arrives docked to the
+    /// cracker's airlock with its crate already stamped, so nobody has to spawn and fly it over.
+    /// Nothing in the test pair can fire ShipyardShuttlePurchaseEvent cheaply - it comes out of the shipyard console
+    /// against a mapped vessel, and no cracker vessel is mapped yet - so this exercises the routine both paths share,
+    /// WFCrackerOwnershipSystem.DockTransport.
+    /// </summary>
+    [Test]
+    public async Task CombinedSpawnArrivesDocked()
+    {
+        await using var pair = await PoolManager.GetServerClient();
+        var server = pair.Server;
+        var entMan = server.EntMan;
+        var factory = server.System<WFTestGridFactory>();
+
+        var map = await pair.CreateTestMap();
+        var cracker = EntityUid.Invalid;
+        var transport = EntityUid.Invalid;
+
+        await server.WaitPost(() =>
+        {
+            var built = factory.BuildCrackerWithTransport(map.MapId, Vector2.Zero);
+            cracker = built.Cracker;
+            transport = built.Transport;
+        });
+
+        await server.WaitRunTicks(pair.SecondsToTicks(1f));
+
+        await server.WaitAssertion(() =>
+        {
+            var crackerDocks = Docks(entMan, cracker);
+            var transportDocks = Docks(entMan, transport);
+
+            using (Assert.EnterMultipleScope())
+            {
+                Assert.That(crackerDocks, Has.Count.EqualTo(1), "The tiny cracker should carry one docking airlock.");
+                Assert.That(transportDocks, Has.Count.EqualTo(1), "The micro transport should carry one docking airlock.");
+
+                var crackerDock = entMan.GetComponent<DockingComponent>(crackerDocks[0]);
+
+                Assert.That(crackerDock.DockedWith, Is.EqualTo(transportDocks[0]),
+                    "The transport should have arrived docked to the cracker's airlock.");
+                Assert.That(entMan.GetComponent<DockingComponent>(transportDocks[0]).DockedWith, Is.EqualTo(crackerDocks[0]),
+                    "The transport's airlock should point back at the cracker's.");
+
+                var owner = entMan.GetNetEntity(cracker);
+                var crates = Children(entMan, transport)
+                    .Where(entMan.HasComponent<WFAnchorCrateComponent>)
+                    .ToList();
+
+                Assert.That(crates, Has.Count.EqualTo(1), "The transport should still carry its one anchor crate.");
+                Assert.That(entMan.GetComponent<WFAnchorCrateComponent>(crates[0]).Cracker, Is.EqualTo(owner),
+                    "The docked transport's crate should belong to the cracker it came with.");
+            }
+        });
+
+        await server.WaitPost(() =>
+        {
+            entMan.DeleteEntity(transport);
+            entMan.DeleteEntity(cracker);
+        });
+
+        await pair.CleanReturnAsync();
+    }
+
+    /// <summary>
     /// Every wfcracker subcommand the crack control added, run through the console host against a spawned hull.
     /// The arity is per subcommand rather than a blanket length check, so this pins both halves: the one-argument forms
     /// dispatch and move the hull, and a one-argument form handed a second argument is refused instead. Stands in for
@@ -985,5 +1050,11 @@ public sealed class CrackerTestGridTest
         await server.WaitRunTicks(pair.SecondsToTicks(1f));
 
         return uid;
+    }
+
+    /// <summary>The docking airlocks riding on one grid.</summary>
+    private static List<EntityUid> Docks(IEntityManager entMan, EntityUid grid)
+    {
+        return Children(entMan, grid).Where(entMan.HasComponent<DockingComponent>).ToList();
     }
 }

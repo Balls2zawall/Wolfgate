@@ -48,10 +48,10 @@ Both come from `wfcracker spawn`, which builds the grid at **your own position**
 
 **Do.** Stand somewhere clear (the sector map is fine) and run:
 
-- `wfcracker spawn cracker` — 15×15 steel hull at your position + (8, 8). Carries: shuttle console, `WFCrackConsole`, gyroscope, FTL drive, `WFCentrifuge`, two `WFGravityProjector` on the north edge, a `WFChunkBerthMarker` (berth shrunk to 12×12, 8 tiles out, so the berth centre is grid-local (7.5, 22.5) — off the hull's north edge), an airlock, two `WFAnchorCrate`, four thrusters.
+- `wfcracker spawn cracker` — 15×15 steel hull at your position + (8, 8), **with the transport built beside it and docked to its airlock** (a bought cracker arrives the same way, so the transport never has to be spawned separately; `wfcracker spawn transport` still builds a lone one). Carries: shuttle console, `WFCrackConsole`, gyroscope, FTL drive, `WFCentrifuge`, two `WFGravityProjector` on the north edge, a `WFChunkBerthMarker` (berth shrunk to 12×12, 8 tiles out, so the berth centre is grid-local (7.5, 22.5) — off the hull's north edge), an airlock, two `WFAnchorCrate`, four thrusters.
 - `wfcracker spawn transport` — 7×9 hull at your position + (8, −12). Carries: shuttle console, `WFTransportGravgen`, airlock, one `WFAnchorCrate`, four thrusters.
 
-**See.** `Built cracker as <grid> on map <n>.` Both hulls fly. The two crates on the cracker are bound to it — an anchor from another cracker's crate will not pair with this hull's.
+**See.** `Built cracker <grid> with transport <grid> docked, on map <n>.` Both hulls fly. The two crates on the cracker are bound to it — an anchor from another cracker's crate will not pair with this hull's.
 
 **Report.** `Attach to an entity on a map first.` means you ran it from the server console or as a detached ghost. There is **no collision check** on spawn, so also report an overlap with something already there — that is known, not a bug to chase.
 

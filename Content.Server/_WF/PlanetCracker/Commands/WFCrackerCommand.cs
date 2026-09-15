@@ -158,8 +158,14 @@ public sealed partial class WFCrackerCommand : LocalizedEntityCommands
         switch (kind)
         {
             case KindCracker:
-                grid = _factory.BuildCracker(map, position + CrackerOffset);
-                break;
+                // A cracker never arrives alone: the transport is built beside it and docked on, as a bought one is.
+                var pair = _factory.BuildCrackerWithTransport(map, position + CrackerOffset);
+
+                shell.WriteLine(Loc.GetString("cmd-wfcracker-spawned-with-transport",
+                    ("cracker", EntityManager.ToPrettyString(pair.Cracker).ToString()),
+                    ("transport", EntityManager.ToPrettyString(pair.Transport).ToString()),
+                    ("map", map.ToString())));
+                return;
             case KindTransport:
                 grid = _factory.BuildTransport(map, position + TransportOffset);
                 break;

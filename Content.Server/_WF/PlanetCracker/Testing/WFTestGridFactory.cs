@@ -29,6 +29,9 @@ public sealed partial class WFTestGridFactory : EntitySystem
     /// <summary>Width and height of the tiny cracker hull, in tiles.</summary>
     private const int CrackerSize = 15;
 
+    /// <summary>Where the transport is built relative to the cracker before it is docked on.</summary>
+    private static readonly Vector2 TransportPark = new(CrackerSize + 12f, 0f);
+
     /// <summary>Width of the micro anchor transport hull, in tiles.</summary>
     private const int TransportWidth = 7;
 
@@ -80,6 +83,21 @@ public sealed partial class WFTestGridFactory : EntitySystem
         _ownership.BindAboard(grid.Owner);
 
         return grid.Owner;
+    }
+
+    /// <summary>
+    /// Builds the tiny cracker with its anchor transport already docked to the port airlock, which is how a bought
+    /// cracker arrives; returns both grids.
+    /// </summary>
+    public (EntityUid Cracker, EntityUid Transport) BuildCrackerWithTransport(MapId map, Vector2 offset)
+    {
+        var cracker = BuildCracker(map, offset);
+        var transport = BuildTransport(map, offset + TransportPark);
+
+        // Same routine the shipyard purchase uses, so both paths dock and stamp ownership identically.
+        _ownership.DockTransport(cracker, transport);
+
+        return (cracker, transport);
     }
 
     /// <summary>Builds the micro anchor transport in code and returns its grid.</summary>

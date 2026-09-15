@@ -115,6 +115,7 @@ cmd-wfcracker-invalid-args = Expected: spawn <cracker | transport>, state <stage
 cmd-wfcracker-unknown-kind = No test grid named "{ $kind }". Try cracker or transport.
 cmd-wfcracker-no-map = Attach to an entity on a map first.
 cmd-wfcracker-spawned = Built { $kind } as { $grid } on map { $map }.
+cmd-wfcracker-spawned-with-transport = Built cracker { $cracker } with transport { $transport } docked, on map { $map }.
 cmd-wfcracker-state-set = Set { $grid } to { $state }.
 cmd-wfcracker-unknown-state = No crack stage named "{ $state }".
 cmd-wfcracker-completed = Forced the cut on { $grid } to finish.

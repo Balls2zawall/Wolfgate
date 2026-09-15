@@ -54,15 +54,27 @@ public sealed partial class WFCrackerOwnershipSystem : EntitySystem
         return true;
     }
 
-    /// <summary>A freshly bought cracker owns whatever anchors shipped aboard it.</summary>
+    /// <summary>A freshly bought cracker owns whatever anchors shipped aboard it, and gets its transport docked on.</summary>
     private void OnPurchased(ShipyardShuttlePurchaseEvent args)
     {
-        if (HasComp<WFPlanetCrackerComponent>(args.Shuttle))
-            BindAboard(args.Shuttle);
+        if (!TryComp<WFPlanetCrackerComponent>(args.Shuttle, out var cracker))
+            return;
+
+        BindAboard(args.Shuttle);
+        TrySpawnTransport((args.Shuttle, cracker));
     }
 
     /// <summary>Stamps every unowned anchor and crate resting on this cracker as belonging to it; returns how many were bound.</summary>
     public int BindAboard(EntityUid cracker)
+    {
+        return BindAboard(cracker, cracker);
+    }
+
+    /// <summary>
+    /// Stamps the unowned anchors and crates riding on <paramref name="grid"/> as the cracker's; returns how many were
+    /// bound. The grid is the cracker itself on a purchase, or a transport docked to it.
+    /// </summary>
+    public int BindAboard(EntityUid cracker, EntityUid grid)
     {
         var owner = GetNetEntity(cracker);
         var bound = 0;
@@ -70,7 +82,7 @@ public sealed partial class WFCrackerOwnershipSystem : EntitySystem
         var crates = EntityQueryEnumerator<WFAnchorCrateComponent, TransformComponent>();
         while (crates.MoveNext(out var uid, out var crate, out var xform))
         {
-            if (xform.GridUid != cracker || crate.Cracker is not null)
+            if (xform.GridUid != grid || crate.Cracker is not null)
                 continue;
 
             crate.Cracker = owner;
@@ -81,7 +93,7 @@ public sealed partial class WFCrackerOwnershipSystem : EntitySystem
         var anchors = EntityQueryEnumerator<WFGravityAnchorComponent, TransformComponent>();
         while (anchors.MoveNext(out var uid, out var anchor, out var xform))
         {
-            if (xform.GridUid != cracker || anchor.Cracker is not null)
+            if (xform.GridUid != grid || anchor.Cracker is not null)
                 continue;
 
             anchor.Cracker = owner;

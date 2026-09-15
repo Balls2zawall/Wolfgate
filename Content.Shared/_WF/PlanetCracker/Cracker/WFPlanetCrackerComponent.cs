@@ -2,6 +2,7 @@ using System.Numerics;
 using Robust.Shared.Audio;
 using Robust.Shared.GameStates;
 using Robust.Shared.Serialization.TypeSerializers.Implementations.Custom;
+using Robust.Shared.Utility;
 
 namespace Content.Shared._WF.PlanetCracker.Cracker;
 
@@ -12,6 +13,17 @@ public sealed partial class WFPlanetCrackerComponent : Component
     /// <summary>Current stage of the crack, per design section 3.</summary>
     [DataField, AutoNetworkedField]
     public WFCrackState State = WFCrackState.Idle;
+
+    /// <summary>
+    /// Grid file holding the anchor transport that ships with this hull; loaded and docked when the vessel is bought.
+    /// Null on the code-built test hull, which has no map file to load and builds its transport in code instead.
+    /// </summary>
+    [DataField]
+    public ResPath? TransportMap;
+
+    /// <summary>True once this hull's transport has been spawned, so a repeated purchase event cannot duplicate it.</summary>
+    [ViewVariables]
+    public bool TransportSpawned;
 
     /// <summary>The mapper-placed berth marker on this hull, resolved at map init.</summary>
     [DataField, AutoNetworkedField]
