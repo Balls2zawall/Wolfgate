@@ -18,7 +18,8 @@ namespace Content.Client._WF.PlanetCracker.Chunk;
 
 /// <summary>
 /// Draws one beam per firing gravity projector, from the projector's emitter to the anchor it is cutting with, with the
-/// far end projected onto the viewer's own layer when the anchor is several z-levels below (design D4).
+/// far end projected onto the viewer's own layer when the anchor is several z-levels below (design D4). On the surface
+/// the same beam is drawn from the anchor up to the mount's world XY, which the anchor carries for exactly that reason.
 /// </summary>
 public sealed partial class WFCrackBeamOverlay : Overlay
 {
@@ -176,31 +177,67 @@ public sealed partial class WFCrackBeamOverlay : Overlay
             var near = _transform.GetWorldPosition(xform)
                 + _transform.GetWorldRotation(xform).RotateVec(EmitterOffset);
 
-            var diff = far - near;
-            var length = diff.Length();
+            DrawBeam(handle, texture, near, far, width, ColourOf(skin, anchor));
+        }
 
-            if (length <= MinBeamLength)
+        // The surface half. The firing projector sits on the orbit map and is never in a surface viewer's PVS, so the
+        // anchor carries the mount's world XY itself (WFCrackBeamTargetComponent) and the beam is drawn climbing to
+        // it; every z-layer of a planet shares world XY, so that point is the hull overhead. Never double-draws the
+        // pass above: the anchors live on the surface map and the projectors do not.
+        var surface = _entityManager
+            .EntityQueryEnumerator<WFCrackBeamTargetComponent, WFGravityAnchorComponent, TransformComponent>();
+        while (surface.MoveNext(out var target, out var anchor, out var xform))
+        {
+            if (xform.MapID != args.MapId)
                 continue;
 
-            var partner = anchor.Partner is { } netPartner &&
-                          _entityManager.TryGetEntity(netPartner, out var partnerUid) &&
-                          _anchorQuery.TryComp(partnerUid, out var partnerComp)
-                ? partnerComp
-                : anchor;
-
-            // DrawTextureRect writes Modulate directly, which is linear, so this takes the CONVERTED skin colour.
-            var colour = Color.FromSrgb(WFCrackCircleOverlay.ColourFor(skin, anchor, partner));
-
-            // The rect is laid out ALONG X because the texture's line is horizontal, so the angle is the plain
-            // atan2 of the difference rather than ToWorldAngle: Angle.FromWorldVec adds the quarter turn that maps
-            // "rotation zero faces south", which is right for an entity's facing and a quarter turn wrong here.
-            var midPoint = near + diff / 2f;
-            var box = new Box2(-length / 2f, -width / 2f, length / 2f, width / 2f);
-            var rotated = new Box2Rotated(box.Translated(midPoint), new Angle(diff), midPoint);
-
-            handle.DrawTextureRect(texture, rotated, colour);
+            DrawBeam(
+                handle,
+                texture,
+                _transform.GetWorldPosition(xform),
+                target.ProjectorWorldPos,
+                width,
+                ColourOf(skin, anchor));
         }
 
         handle.SetTransform(Matrix3x2.Identity);
+    }
+
+    /// <summary>The pair's own ring colour, which both halves of a beam take; an unpaired anchor stands in for itself.</summary>
+    private Color ColourOf(WolfgateSkin skin, WFGravityAnchorComponent anchor)
+    {
+        var partner = anchor.Partner is { } netPartner &&
+                      _entityManager.TryGetEntity(netPartner, out var partnerUid) &&
+                      _anchorQuery.TryComp(partnerUid, out var partnerComp)
+            ? partnerComp
+            : anchor;
+
+        // DrawTextureRect writes Modulate directly, which is linear, so this takes the CONVERTED skin colour.
+        return Color.FromSrgb(WFCrackCircleOverlay.ColourFor(skin, anchor, partner));
+    }
+
+    /// <summary>One tinted line between two world points, or nothing at all if the two have collapsed together.</summary>
+    private static void DrawBeam(
+        DrawingHandleWorld handle,
+        Texture texture,
+        Vector2 near,
+        Vector2 far,
+        float width,
+        Color colour)
+    {
+        var diff = far - near;
+        var length = diff.Length();
+
+        if (length <= MinBeamLength)
+            return;
+
+        // The rect is laid out ALONG X because the texture's line is horizontal, so the angle is the plain
+        // atan2 of the difference rather than ToWorldAngle: Angle.FromWorldVec adds the quarter turn that maps
+        // "rotation zero faces south", which is right for an entity's facing and a quarter turn wrong here.
+        var midPoint = near + diff / 2f;
+        var box = new Box2(-length / 2f, -width / 2f, length / 2f, width / 2f);
+        var rotated = new Box2Rotated(box.Translated(midPoint), new Angle(diff), midPoint);
+
+        handle.DrawTextureRect(texture, rotated, colour);
     }
 }

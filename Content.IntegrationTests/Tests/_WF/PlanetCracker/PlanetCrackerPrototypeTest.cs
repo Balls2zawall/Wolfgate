@@ -61,7 +61,6 @@ public sealed class PlanetCrackerPrototypeTest
         "WFCentrifugeCircuitboard",
         "WFGravityProjectorCircuitboard",
         "WFEffectChunkBurst",
-        "WFCrackSkyBeam",
         "WFSurveyor",
         // Both miners are safely spawnable on the FloorSteel test grid, unlike WFDeepVein: nothing on a crack miner
         // deletes itself at MapInit, and an unanchored miner off a chunk simply never leaves Idle.

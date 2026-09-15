@@ -725,6 +725,8 @@ public sealed class CrackExtractionTest
         var server = pair.Server;
         var entMan = server.EntMan;
 
+        var transform = server.System<SharedTransformSystem>();
+
         var site = await BuildReadyToExtract(pair);
         await BeginCut(pair, site);
 
@@ -746,10 +748,16 @@ public sealed class CrackExtractionTest
                     Assert.That(targets, Does.Contain(beam!.Target), "A projector's beam is aimed at something that is not a targeted anchor.");
                 }
 
+                var mounts = site.Projectors.Select(mount => transform.GetWorldPosition(mount)).ToList();
+
                 foreach (var anchor in site.Anchors)
                 {
-                    Assert.That(SkyBeams(entMan, anchor), Has.Count.EqualTo(1),
-                        "A targeted anchor does not carry exactly one sky beam during the cut.");
+                    Assert.That(entMan.TryGetComponent(anchor, out WFCrackBeamTargetComponent? surface), Is.True,
+                        "A targeted anchor carries no surface beam target during the cut.");
+                    Assert.That(
+                        mounts.Any(mount => (mount - surface!.ProjectorWorldPos).Length() <= MountTolerance),
+                        Is.True,
+                        "A targeted anchor's surface beam names a point that is not one of the hull's mounts.");
                 }
             }
         });
@@ -769,7 +777,8 @@ public sealed class CrackExtractionTest
 
                 foreach (var anchor in site.Anchors)
                 {
-                    Assert.That(SkyBeams(entMan, anchor), Is.Empty, "A sky beam outlived the cut that spawned it.");
+                    Assert.That(entMan.HasComponent<WFCrackBeamTargetComponent>(anchor), Is.False,
+                        "A surface beam target outlived the cut that stamped it.");
                 }
             }
         });
@@ -947,26 +956,8 @@ public sealed class CrackExtractionTest
         return found;
     }
 
-    /// <summary>Every sky beam parented to one anchor.</summary>
-    private static List<EntityUid> SkyBeams(IEntityManager entMan, EntityUid anchor)
-    {
-        var found = new List<EntityUid>();
-        var query = entMan.AllEntityQueryEnumerator<TransformComponent>();
-
-        while (query.MoveNext(out var uid, out var xform))
-        {
-            if (xform.ParentUid != anchor)
-                continue;
-
-            if (entMan.GetComponent<MetaDataComponent>(uid).EntityPrototype?.ID == SkyBeam)
-                found.Add(uid);
-        }
-
-        return found;
-    }
-
-    /// <summary>The pillar of light the cut stands on each targeted anchor.</summary>
-    private const string SkyBeam = "WFCrackSkyBeam";
+    /// <summary>How far off a mount the anchor's copy of its position may sit, in tiles.</summary>
+    private const float MountTolerance = 0.5f;
 
     /// <summary>
     /// How far off a mount's facing may be, in radians. Generous on purpose: the assertion is that it turned to the

@@ -10,28 +10,29 @@ namespace Content.Server._WF.PlanetCracker.Cracker;
 
 /// <summary>
 /// The cutting beams and the site's own shaking, reconciled every sweep rather than written on edges. No subscriptions.
-/// A projector's beam is a networked target the client overlay draws; the surface half of the beam is a sprite child of
-/// the anchor, because look-up rendering draws exactly one map and no overlay can reach across layers.
+/// A projector's beam is a networked target the client overlay draws; the surface half of the beam is the same overlay
+/// reading the projector's world XY off the anchor, because the projector itself is never in a surface viewer's PVS.
 /// </summary>
 public sealed partial class WFCrackerSystem
 {
     [Dependency] private IPlayerManager _playerManager = default!;
     [Dependency] private SharedCameraRecoilSystem _recoil = default!;
 
-    /// <summary>The pillar of light standing on a targeted anchor while the cut runs.</summary>
-    private const string SkyBeamProto = "WFCrackSkyBeam";
+    /// <summary>How far a mount may drift, in tiles, before the anchor's copy of its position is resent.</summary>
+    private const float BeamMoveEpsilon = 0.05f;
 
-    /// <summary>One sky beam per targeted anchor; keyed on the anchor so a dead anchor's beam is still findable.</summary>
-    private readonly Dictionary<EntityUid, EntityUid> _skyBeams = new();
+    /// <summary>Anchors carrying a beam target this sweep; kept so a dead anchor's stamp is still findable.</summary>
+    private readonly HashSet<EntityUid> _beamAnchors = new();
 
     /// <summary>Next site camera kick per cutting hull; server-only bookkeeping.</summary>
     private readonly Dictionary<EntityUid, TimeSpan> _nextSiteKick = new();
 
-    /// <summary>Sky beam entries this pass decided to drop; collected first so the dictionary is not edited mid-walk.</summary>
+    /// <summary>Beam anchors this pass decided to drop; collected first so the set is not edited mid-walk.</summary>
     private readonly List<EntityUid> _staleBeams = new();
 
     /// <summary>
-    /// Points every projector at one half of the pair and stands a beam on each anchor, or takes both away.
+    /// Points every projector at one half of the pair and stamps the far end of the beam on each anchor, or takes both
+    /// away.
     /// Beams exist only while the cut is actually running: WFProjectorState is a display value the projector's own
     /// power and repair handlers overwrite, so it is never read as "this hull is holding a chunk".
     /// </summary>
@@ -42,6 +43,11 @@ public sealed partial class WFCrackerSystem
         var firing = cutting && targeted;
 
         GetProjectors(ent.Owner, _projectorBuffer);
+
+        // The mount each half's surface beam climbs to: the first one pointed at it, so the far end is stable from one
+        // sweep to the next.
+        Vector2? aMount = null;
+        Vector2? bMount = null;
 
         for (var i = 0; i < _projectorBuffer.Count; i++)
         {
@@ -55,10 +61,18 @@ public sealed partial class WFCrackerSystem
             }
 
             // The list is sorted by grid-local X, so the split is stable from one sweep to the next.
-            var anchor = (i & 1) == 0 ? a.Owner : b.Owner;
+            var first = (i & 1) == 0;
+            var anchor = first ? a.Owner : b.Owner;
             var target = GetNetEntity(anchor);
 
             AimAt(projector, anchor);
+
+            var mount = TransformSystem.GetWorldPosition(projector.Owner);
+
+            if (first)
+                aMount ??= mount;
+            else
+                bMount ??= mount;
 
             var beam = EnsureComp<WFCrackBeamComponent>(projector.Owner);
 
@@ -71,11 +85,14 @@ public sealed partial class WFCrackerSystem
 
         if (firing)
         {
-            EnsureSkyBeam(a.Owner);
-            EnsureSkyBeam(b.Owner);
+            if (aMount is { } aWorld)
+                EnsureBeamTarget(a.Owner, aWorld);
+
+            if (bMount is { } bWorld)
+                EnsureBeamTarget(b.Owner, bWorld);
         }
 
-        PruneSkyBeams(ent, firing, a.Owner, b.Owner);
+        PruneBeamTargets(ent, firing, a.Owner, b.Owner);
     }
 
     /// <summary>
@@ -111,21 +128,29 @@ public sealed partial class WFCrackerSystem
         TransformSystem.SetLocalRotation(projector.Owner, placed);
     }
 
-    /// <summary>Parents one sky beam to an anchor, whose own global PVS override is what replicates it to every layer.</summary>
-    private void EnsureSkyBeam(EntityUid anchor)
+    /// <summary>
+    /// Hands one anchor the world XY of the mount firing at it, which is all a surface viewer needs to draw the same
+    /// beam climbing to the hull. Resent only when the mount has actually moved: the sweep runs four times a second.
+    /// </summary>
+    private void EnsureBeamTarget(EntityUid anchor, Vector2 mount)
     {
-        if (_skyBeams.TryGetValue(anchor, out var existing) && !TerminatingOrDeleted(existing))
+        _beamAnchors.Add(anchor);
+
+        var target = EnsureComp<WFCrackBeamTargetComponent>(anchor);
+
+        if ((target.ProjectorWorldPos - mount).LengthSquared() <= BeamMoveEpsilon * BeamMoveEpsilon)
             return;
 
-        _skyBeams[anchor] = Spawn(SkyBeamProto, new EntityCoordinates(anchor, Vector2.Zero));
+        target.ProjectorWorldPos = mount;
+        Dirty(anchor, target);
     }
 
-    /// <summary>Deletes a sky beam whose anchor died, stopped being targeted or whose cut has ended.</summary>
-    private void PruneSkyBeams(Entity<WFPlanetCrackerComponent> ent, bool firing, EntityUid a, EntityUid b)
+    /// <summary>Unstamps an anchor that died, stopped being targeted or whose cut has ended.</summary>
+    private void PruneBeamTargets(Entity<WFPlanetCrackerComponent> ent, bool firing, EntityUid a, EntityUid b)
     {
         _staleBeams.Clear();
 
-        foreach (var (anchor, _) in _skyBeams)
+        foreach (var anchor in _beamAnchors)
         {
             if (TerminatingOrDeleted(anchor) || !HasComp<WFGravityAnchorComponent>(anchor))
             {
@@ -138,7 +163,7 @@ public sealed partial class WFCrackerSystem
                 continue;
 
             // An anchor whose hull no longer resolves belongs to nobody's sweep, so leaving it here would light its
-            // pillar for the rest of the round: a deleted or gibbed hull is exactly what makes TryGetOwner fail while
+            // beam for the rest of the round: a deleted or gibbed hull is exactly what makes TryGetOwner fail while
             // the anchor itself lives on as a separate entity.
             if (!TryGetOwner(anchor, out var owner))
             {
@@ -155,8 +180,10 @@ public sealed partial class WFCrackerSystem
 
         foreach (var anchor in _staleBeams)
         {
-            if (_skyBeams.Remove(anchor, out var beam))
-                QueueDel(beam);
+            _beamAnchors.Remove(anchor);
+
+            if (!TerminatingOrDeleted(anchor))
+                RemComp<WFCrackBeamTargetComponent>(anchor);
         }
     }
 
