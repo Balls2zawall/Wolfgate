@@ -247,6 +247,8 @@ A **hard landing** is what you get below 80 % of that - a partial-lift sink, or 
 
 **Report.** A chunk that is not directly above the hole; missing anchors or veins on it (a vein whose destination tile was never generated is left behind — known, but record how many you lost); a hole that heals back to terrain after you walk away and return (the pin failed); a rim ring with large gaps on ordinary flat ground.
 
+**See.** A one-tile lattice gangway runs from the berth marker straight out to the chunk, which hangs two tiles clear of the hull with its tiles lined up to the deck. Walk it; stepping off it in orbit is a fall to the planet.
+
 **Known and not a bug.** The chunk has **no atmosphere** (D3) — EVA from here on. A transport parked inside the circle is deliberately left behind on empty tiles. A visible tick spike at the moment of extraction is expected on a large circle.
 
 ## 14. Mine the chunk

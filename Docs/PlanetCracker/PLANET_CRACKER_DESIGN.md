@@ -453,6 +453,8 @@ Deviations and limits:
 
 ### F6 — chunk mining
 
+**Hang pose and gangway (playtest round 4).** The chunk hangs on the berth marker's line, pushed out until its near edge sits `WFPlanetChunkSystem.BerthClearance` (2) tiles past the hull's furthest extent along that line, whatever the radius; the marker's `Distance` is only a floor. It is turned about its own disc centre to the hull's heading so its tiles line up with the deck. `WFPlanetChunkSystem.Gangway.cs` then lays a one-tile `Lattice` catwalk on the hull from the marker's tile, over any tile the hull lacks, to one tile inside the disc, refusing whole (logged) if another grid sits on the line or the line never reaches the disc; the tiles are recorded on `WFPlanetChunkComponent.GangwayTiles` and lifted at drop. Because the hang pose is no longer the hole pose, `DropChunk` puts the chunk back to the ground's origin and heading before it enters transit. Orbit stays deadly off the catwalk: a mob that steps off it falls to the planet, by decision.
+
 `WFCrackMinerComponent` + `WFCrackMinerSystem` (`.Placement`) is a machine wrenched onto a chunk tile over a deep vein; it refuses to run anywhere else, converts `Remaining` into ore at the vein's `Rate` (150/min, D22) in batches of 25 while its internal cell holds out (D15), and `WFCrackMinerState` drives the sprite. Prototypes `WFCrackMiner` and `WFCrackMinerEmpty` in `mining.yml`, board `WFCrackMinerCircuitboard`. Admin: `wfcracker veins` lists every seam on the hull's chunk with what is left and whether a miner sits on it, `wfcracker mine` plants a `WFCrackMiner` on the first free live seam.
 
 Deviations and limits:
