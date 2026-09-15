@@ -46,7 +46,8 @@ public sealed partial class WFOrbitButton : BoxContainer
         _ui = _entMan.System<SharedUserInterfaceSystem>();
 
         Orientation = LayoutOrientation.Vertical;
-        Visible = false;
+        // Stays visible: Control.DoFrameUpdateRecursive skips hidden controls, so a container that hid itself here
+        // would never get the FrameUpdate that shows it again. The children hide instead; an empty box takes no space.
 
         _orbitButton = new Button
         {
@@ -87,11 +88,13 @@ public sealed partial class WFOrbitButton : BoxContainer
 
         if (!_entMan.TryGetComponent<WFConsoleOrbitTargetComponent>(_console, out var target))
         {
-            Visible = false;
+            _orbitButton.Visible = false;
+            _atmosphereButton.Visible = false;
+            _liftLabel.Visible = false;
             return;
         }
 
-        Visible = true;
+        _orbitButton.Visible = true;
         _orbitButton.Disabled = target.Busy || target.Planet == null;
 
         var planet = target.PlanetName;
