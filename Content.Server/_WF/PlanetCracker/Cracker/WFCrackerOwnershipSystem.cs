@@ -16,6 +16,42 @@ public sealed partial class WFCrackerOwnershipSystem : EntitySystem
 
         // ShipyardShuttlePurchaseEvent carries no [ByRefEvent] and both raise sites are broadcast, so match them exactly.
         SubscribeLocalEvent<ShipyardShuttlePurchaseEvent>(OnPurchased);
+        // Anything unowned that comes to rest on a cracker's deck becomes that cracker's: a crate bought from cargo
+        // and carried aboard, or an anchor brought up from another site. Owned ones keep their owner.
+        SubscribeLocalEvent<WFAnchorCrateComponent, EntParentChangedMessage>(OnCrateParentChanged);
+        SubscribeLocalEvent<WFGravityAnchorComponent, EntParentChangedMessage>(OnAnchorParentChanged);
+    }
+
+    /// <summary>Binds an unowned crate to the cracker whose deck it just landed on.</summary>
+    private void OnCrateParentChanged(Entity<WFAnchorCrateComponent> ent, ref EntParentChangedMessage args)
+    {
+        if (ent.Comp.Cracker is not null || !TryGetCrackerUnder(ent.Owner, out var cracker))
+            return;
+
+        ent.Comp.Cracker = GetNetEntity(cracker);
+        Dirty(ent);
+    }
+
+    /// <summary>Binds an unowned anchor to the cracker whose deck it just landed on.</summary>
+    private void OnAnchorParentChanged(Entity<WFGravityAnchorComponent> ent, ref EntParentChangedMessage args)
+    {
+        if (ent.Comp.Cracker is not null || !TryGetCrackerUnder(ent.Owner, out var cracker))
+            return;
+
+        ent.Comp.Cracker = GetNetEntity(cracker);
+        Dirty(ent);
+    }
+
+    /// <summary>The cracker hull this entity now rests on, if its grid is one.</summary>
+    private bool TryGetCrackerUnder(EntityUid uid, out EntityUid cracker)
+    {
+        cracker = EntityUid.Invalid;
+
+        if (Transform(uid).GridUid is not { } grid || !HasComp<WFPlanetCrackerComponent>(grid))
+            return false;
+
+        cracker = grid;
+        return true;
     }
 
     /// <summary>A freshly bought cracker owns whatever anchors shipped aboard it.</summary>

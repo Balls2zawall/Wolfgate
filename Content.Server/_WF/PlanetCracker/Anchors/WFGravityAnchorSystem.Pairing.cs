@@ -35,8 +35,10 @@ public sealed partial class WFGravityAnchorSystem
             if (otherXform.GridUid != grid)
                 continue;
 
-            // Both null is allowed, so hand-spawned dev anchors still pair.
-            if (other.Cracker != anchor.Comp.Cracker)
+            // Two owned anchors must share a cracker. An unowned anchor (a hand-spawned dev one, or one from the
+            // transport's own crate, which is never aboard the cracker to be bound) pairs with anything and adopts
+            // its partner's owner below, so the crack console still finds the pair.
+            if (other.Cracker != null && anchor.Comp.Cracker != null && other.Cracker != anchor.Comp.Cracker)
                 continue;
 
             var distance = (selfPos - _transform.GetWorldPosition(otherXform)).Length();
@@ -54,6 +56,10 @@ public sealed partial class WFGravityAnchorSystem
 
         anchor.Comp.Partner = GetNetEntity(partnerUid);
         bestComp.Partner = GetNetEntity(anchor.Owner);
+
+        var owner = anchor.Comp.Cracker ?? bestComp.Cracker;
+        anchor.Comp.Cracker = owner;
+        bestComp.Cracker = owner;
 
         SetState(anchor, WFAnchorState.Paired);
         SetState((partnerUid, bestComp), WFAnchorState.Paired);
