@@ -31,7 +31,6 @@ public sealed class WFCrackTimeline : WFDiagramControl
     };
 
     /// <summary>Width of one stage cell, in virtual pixels; fixed, so the strip never reflows under a long name.</summary>
-    private const float CellWidth = 66f;
 
     /// <summary>Gap between stage cells, in virtual pixels.</summary>
     private const float CellGap = 2f;
@@ -64,7 +63,7 @@ public sealed class WFCrackTimeline : WFDiagramControl
         var strip = new BoxContainer
         {
             Orientation = BoxContainer.LayoutOrientation.Horizontal,
-            HorizontalAlignment = HAlignment.Center,
+            HorizontalExpand = true,
         };
 
         for (var i = 0; i < Stages.Length; i++)
@@ -73,7 +72,8 @@ public sealed class WFCrackTimeline : WFDiagramControl
 
             var label = new Label
             {
-                Text = name,
+                // The short form: nine full names do not fit a window-wide strip at any sane width.
+                Text = Loc.GetString(StageKey(Stages[i]).Replace("-state-", "-stage-short-")),
                 Align = Label.AlignMode.Center,
                 ClipText = true,
                 HorizontalExpand = true,
@@ -92,7 +92,7 @@ public sealed class WFCrackTimeline : WFDiagramControl
             var cell = new PanelContainer
             {
                 PanelOverride = box,
-                SetWidth = CellWidth,
+                HorizontalExpand = true,
                 // The full name, because a long stage clips inside a fixed cell.
                 ToolTip = name,
                 Margin = new Thickness(0f, 0f, i == Stages.Length - 1 ? 0f : CellGap, 0f),

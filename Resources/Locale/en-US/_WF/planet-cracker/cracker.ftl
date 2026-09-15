@@ -57,6 +57,17 @@ wf-crack-console-state-disconnecting = Disconnecting
 wf-crack-console-state-released = Released
 wf-crack-console-state-falling = Falling
 
+## Stage strip cells; the full names above are the tooltips.
+wf-crack-console-stage-short-idle = Idle
+wf-crack-console-stage-short-surveying = Survey
+wf-crack-console-stage-short-anchors-placed = Placed
+wf-crack-console-stage-short-anchors-locked = Locked
+wf-crack-console-stage-short-cracking = Cracking
+wf-crack-console-stage-short-cracked = Cracked
+wf-crack-console-stage-short-disconnecting = Disconnect
+wf-crack-console-stage-short-released = Released
+wf-crack-console-stage-short-falling = Falling
+
 # One per WFCrackFailure flag: what the grace countdown is counting down for.
 wf-crack-console-fail-centrifuge = Centrifuge below full spin
 wf-crack-console-fail-projectors-short = Not enough gravity projectors

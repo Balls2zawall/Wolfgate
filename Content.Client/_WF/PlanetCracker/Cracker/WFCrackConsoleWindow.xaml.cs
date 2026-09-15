@@ -61,12 +61,15 @@ public sealed partial class WFCrackConsoleWindow : FancyWindow
 
         // One label, three countdowns, most urgent first: the evacuation outranks the pairing window, which outranks
         // the hull-loss grace. Only the last of the three ever reads nominal.
+        // Neither header line is shown while it only reads nominal: the strip's own countdown line already says so.
         GraceLabel.Text = GraceText(state);
+        GraceLabel.Visible = state.EvacRunning || state.DisconnectArmed || state.GraceRunning;
         GraceLabel.FontColorOverride = state.EvacRunning || state.DisconnectArmed || state.GraceRunning
             ? skin.Danger
             : skin.TextMuted;
 
         FailureLabel.Text = FailureText(state);
+        FailureLabel.Visible = state.Failing != WFCrackFailure.None;
         FailureLabel.FontColorOverride = state.Failing == WFCrackFailure.None ? skin.TextMuted : skin.Danger;
 
         TargetButton.Disabled = !state.CanTarget;

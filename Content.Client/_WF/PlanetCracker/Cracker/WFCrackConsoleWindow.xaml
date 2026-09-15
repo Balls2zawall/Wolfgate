@@ -16,10 +16,10 @@
 
         <!-- Site plan on the left, centrifuge dial and projector rows on the right. -->
         <BoxContainer Orientation="Horizontal" VerticalExpand="True">
-            <cracker:WFSiteDiagram Name="SiteView" HorizontalExpand="True" VerticalExpand="True" MinSize="280 280" />
+            <cracker:WFSiteDiagram Name="SiteView" HorizontalExpand="True" VerticalExpand="True" MinSize="280 280" RectClipContent="True" />
             <BoxContainer Orientation="Vertical" Margin="6 0 0 0" MinWidth="190">
-                <cracker:WFCentrifugeDial Name="CentrifugeView" MinSize="190 170" />
-                <cracker:WFProjectorPanel Name="ProjectorView" Margin="0 6 0 0" VerticalExpand="True" MinSize="190 80" />
+                <cracker:WFCentrifugeDial Name="CentrifugeView" MinSize="190 170" RectClipContent="True" />
+                <cracker:WFProjectorPanel Name="ProjectorView" Margin="0 6 0 0" VerticalExpand="True" MinSize="190 80" RectClipContent="True" />
             </BoxContainer>
         </BoxContainer>
 
