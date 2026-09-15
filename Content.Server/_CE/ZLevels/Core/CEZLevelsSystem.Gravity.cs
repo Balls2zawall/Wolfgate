@@ -405,6 +405,13 @@ public sealed partial class CEZLevelsSystem
     /// </summary>
     private void CrashGrid(Entity<MapGridComponent, CEZGridFallerComponent> ent)
     {
+        // WOLFGATE: one crash, one bang. Every tile still queues its own crater, but each queued explosion plays two
+        // networked audio streams, and a hull's worth of them exhausted the client's OpenAL sources and took the client
+        // down mid-crash. The central blast carries the sound where there is one; a dropped planet chunk zeroes it
+        // (WFPlanetChunkSystem.cs:242), so there the first tile carries it instead. Combining folds an audible blast
+        // into whatever it merges with (ExplosionSystem.cs), so exactly one bang survives either way.
+        var soundOnCentre = ent.Comp2.CrashIntensityPerTile > 0f;
+
         var tileCount = 0;
         var tiles = _map.GetAllTilesEnumerator(ent, ent.Comp1);
         while (tiles.MoveNext(out var tileRef))
@@ -417,7 +424,8 @@ public sealed partial class CEZLevelsSystem
                 ent.Comp2.CrashTileSlope,
                 ent.Comp2.CrashTileMaxIntensity,
                 cause: ent,
-                addLog: false);
+                addLog: false,
+                silent: soundOnCentre || tileCount > 1); // WOLFGATE
         }
 
         if (tileCount == 0)

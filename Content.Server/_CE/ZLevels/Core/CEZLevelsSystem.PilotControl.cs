@@ -186,8 +186,11 @@ public sealed partial class CEZLevelsSystem
             if (mapUid == null || !HasComp<CEZMapComponent>(mapUid))
                 continue;
 
+            // WOLFGATE: orbit holds a cold hull up forever, so a descent from it is allowed without lift (it falls).
+            var wfColdDrop = WfIsColdOrbitDescent(mapUid.Value, input);
+
             // No gravgen, dumbass.
-            if (!TryComp<GravityComponent>(gridUid, out var gravity) || !gravity.Enabled)
+            if (!wfColdDrop && (!TryComp<GravityComponent>(gridUid, out var gravity) || !gravity.Enabled))
                 continue;
 
             var down = input < 0f;

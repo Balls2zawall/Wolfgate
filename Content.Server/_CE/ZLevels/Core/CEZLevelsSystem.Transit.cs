@@ -89,6 +89,7 @@ public sealed partial class CEZLevelsSystem
         }
 
         EnsureComp<CEZPhysicsComponent>(grid);
+        WfRefreshOrbitParking(grid, mapUid); // WOLFGATE: a grid on a planet orbit layer holds its height instead of sinking.
 
         if (!HasComp<CEZGridFallerComponent>(grid))
         {
@@ -102,6 +103,9 @@ public sealed partial class CEZLevelsSystem
         Entity<CEZMapComponent, MapComponent> targetMap,
         int offset)
     {
+        if (WfRefusesLevelHop(grid)) // WOLFGATE: you leave orbit through transit, never by hopping a level.
+            return false;
+
         var movedGrids = CollectGridSet(grid);
         MoveGridSetToMap(movedGrids, targetMap.Owner, offset, targetMap.Comp1.Depth);
 
