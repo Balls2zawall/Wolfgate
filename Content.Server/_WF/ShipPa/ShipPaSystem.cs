@@ -1,3 +1,4 @@
+using System.Numerics;
 using Content.Server.Chat.Managers;
 using Content.Server.Chat.Systems;
 using Content.Shared._WF.ShipPa;
@@ -30,6 +31,13 @@ public sealed partial class ShipPaSystem : EntitySystem
     /// <summary>How sharply a stream falls off past <see cref="ReferenceDistance"/>.</summary>
     private const float RolloffFactor = 1.5f;
 
+    /// <summary>
+    /// Speakers one broadcast may run a copy on at once. A hull with no dedicated speakers carries its PA on every
+    /// air alarm aboard, and a capital ship has dozens; one copy each is dozens of OpenAL sources on every client
+    /// aboard, per callout, which is what emptied the client's source pool during a landing.
+    /// </summary>
+    public const int MaxSpeakerStreams = 8;
+
     /// <summary>How often expired broadcasts and queued speaker counts are cleaned up.</summary>
     private static readonly TimeSpan UpdateInterval = TimeSpan.FromSeconds(0.25);
 
@@ -40,6 +48,9 @@ public sealed partial class ShipPaSystem : EntitySystem
 
     /// <summary>Reused by <see cref="Broadcast"/> so a one-shot doesn't allocate.</summary>
     private readonly List<Entity<ShipPaSpeakerComponent>> _speakerBuffer = new();
+
+    /// <summary>Grid-local positions of the speakers <see cref="SelectCarriers"/> is spreading a broadcast over.</summary>
+    private readonly List<Vector2> _carrierPositions = new();
 
     private TimeSpan _nextUpdate;
     private int _nextBroadcastId = 1;
@@ -87,12 +98,10 @@ public sealed partial class ShipPaSystem : EntitySystem
         // Every copy goes out in the same tick, which is what keeps them in phase.
         _speakerBuffer.Clear();
         GatherSpeakers(grid, _speakerBuffer);
+        SelectCarriers(_speakerBuffer);
 
         foreach (var speaker in _speakerBuffer)
         {
-            if (!IsFunctional(speaker))
-                continue;
-
             var stream = _audio.PlayPvs(resolved, speaker.Owner, BuildParams(speaker, baseParams));
 
             if (stream == null)
@@ -316,6 +325,88 @@ public sealed partial class ShipPaSystem : EntitySystem
             if (into[i].Comp.Fallback)
                 into.RemoveAt(i);
         }
+    }
+
+    /// <summary>
+    /// Narrows a gathered speaker list down to the ones that will actually carry a stream: everything working while
+    /// the ship's PA is small, and past <see cref="MaxSpeakerStreams"/> a spread of that many picked furthest apart,
+    /// so a hull running on dozens of air alarms still covers itself without costing every client aboard a source per
+    /// alarm. Deterministic for a given set, so a running loop keeps its carriers instead of re-cutting them.
+    /// </summary>
+    private void SelectCarriers(List<Entity<ShipPaSpeakerComponent>> speakers)
+    {
+        for (var i = speakers.Count - 1; i >= 0; i--)
+        {
+            if (!IsFunctional(speakers[i]))
+                speakers.RemoveAt(i);
+        }
+
+        if (speakers.Count <= MaxSpeakerStreams)
+            return;
+
+        // They are all anchored to the one grid, so local space is the right space to spread over.
+        _carrierPositions.Clear();
+
+        foreach (var speaker in speakers)
+        {
+            _carrierPositions.Add(Transform(speaker.Owner).LocalPosition);
+        }
+
+        var seed = 0;
+
+        for (var i = 1; i < speakers.Count; i++)
+        {
+            if (Precedes(_carrierPositions[i], _carrierPositions[seed]))
+                seed = i;
+        }
+
+        SwapCarriers(speakers, 0, seed);
+
+        for (var chosen = 1; chosen < MaxSpeakerStreams; chosen++)
+        {
+            var best = chosen;
+            var bestDistance = -1f;
+
+            for (var i = chosen; i < speakers.Count; i++)
+            {
+                var distance = float.MaxValue;
+
+                for (var j = 0; j < chosen; j++)
+                {
+                    distance = Math.Min(distance, (_carrierPositions[i] - _carrierPositions[j]).LengthSquared());
+                }
+
+                if (distance < bestDistance)
+                    continue;
+
+                // The corner-most of a tie, so the same speakers win every time this is run on the same set.
+                if (distance > bestDistance || Precedes(_carrierPositions[i], _carrierPositions[best]))
+                {
+                    best = i;
+                    bestDistance = distance;
+                }
+            }
+
+            SwapCarriers(speakers, chosen, best);
+        }
+
+        speakers.RemoveRange(MaxSpeakerStreams, speakers.Count - MaxSpeakerStreams);
+        _carrierPositions.Clear();
+    }
+
+    private void SwapCarriers(List<Entity<ShipPaSpeakerComponent>> speakers, int a, int b)
+    {
+        if (a == b)
+            return;
+
+        (speakers[a], speakers[b]) = (speakers[b], speakers[a]);
+        (_carrierPositions[a], _carrierPositions[b]) = (_carrierPositions[b], _carrierPositions[a]);
+    }
+
+    /// <summary>Corner-most ordering, so a tie in the spread is broken the same way every time.</summary>
+    private static bool Precedes(Vector2 a, Vector2 b)
+    {
+        return a.X < b.X || (a.X == b.X && a.Y < b.Y);
     }
 
     /// <summary>
