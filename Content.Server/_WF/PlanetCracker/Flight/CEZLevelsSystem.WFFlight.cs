@@ -205,16 +205,20 @@ public sealed partial class CEZLevelsSystem
     }
 
     /// <summary>
-    /// True when a pilot's descend input out of orbit must be ignored. The atmosphere is entered from the shuttle
-    /// console's own button, which is the only place the lift warning and its confirm live; leaving the raw input
-    /// working would be a way around both.
+    /// True when a pilot's vertical input on an orbit layer must be dropped before anything reads it. The atmosphere
+    /// is entered from the shuttle console's own button, which is the only place the lift warning and its confirm
+    /// live, so the descend key is refused. The climb key is refused with it: nothing is above orbit, and CE's climb
+    /// falls back to the gap BELOW when it finds no gap above (TryEnterTransit's goDown), so from the top layer an
+    /// ascend input was a descent with no warning, no confirm and no popup - the one way a hull with lift still left
+    /// orbit on the keys. Refused where the input is collected, so no consumer of it can be the next way around.
     /// </summary>
-    private bool WfRefusesOrbitDescent(EntityUid mapUid, EntityUid grid, float input)
+    private bool WfRefusesOrbitInput(EntityUid grid, float input)
     {
-        if (input >= 0f || !WfIsOrbitLayer(mapUid))
+        if (input == 0f || Transform(grid).MapUid is not { } mapUid || !WfIsOrbitLayer(mapUid))
             return false;
 
-        if (_timing.CurTime >= _wfNextOrbitRefusal.GetValueOrDefault(grid))
+        // Only a descent has a button to be pointed at; a climb out of orbit is nowhere to go at all.
+        if (input < 0f && _timing.CurTime >= _wfNextOrbitRefusal.GetValueOrDefault(grid))
         {
             _wfNextOrbitRefusal[grid] = _timing.CurTime + WFOrbitRefusalCooldown;
 

@@ -568,12 +568,14 @@ Deviations and limits:
 |---|---|---|
 | `Grace` | `WFOrbitDecayComponent`, per grid | 60 s |
 | `SweepInterval` | `WFOrbitDecaySystem.cs` | 1 s |
-| `orbitMaxSpeed` / `orbitDamping` | `WFPlanetSurfacePrototype`, copied to `WFOrbitLayerComponent` | 3 m/s / 3 |
-| `airMaxSpeed` / `airDamping` | `WFPlanetSurfacePrototype`, copied to `WFPlanetLayerComponent` | 6 m/s / 1.5 |
+| `SettleDelay` | `WFOrbitDecaySystem.cs` | 10 s |
+| `orbitMaxSpeed` / `orbitDamping` | `WFPlanetSurfacePrototype`, copied to `WFOrbitLayerComponent` | 6 m/s / 3 |
+| `airMaxSpeed` / `airDamping` | `WFPlanetSurfacePrototype`, copied to `WFPlanetLayerComponent` | 12 m/s / 1.5 |
 | `LiftLostAllowance` | `WFPlanetDragSystem.cs` | 1.5x the layer's cap |
 
 Deviations and limits:
 
+- **An arrival is given ten seconds, and a stamp takes two sweeps.** An FTL hop lands with the shuttle's thrusters disabled and they come back on their own power event, so the first sweeps after an arrival read a powered ship as adrift — a vessel a crew had only just boarded was stamped and dropped on a countdown it never earned. `SettleDelay` runs from the sweep that first sees a grid on the layer (and is dropped the moment it leaves, so a return is a fresh arrival), and a stamp additionally needs the grid read as adrift on two sweeps running. Neither delays a genuine loss by more than a sweep once the hull has settled.
 - **The warning is announced by hand, not by `SetCode`.** `SetCode`'s own announcement takes only `$ship`, and the one thing the crew needs here is how many seconds they have, so the code is set with `announce: false` and the countdown line goes out through `ShipPaSystem.Announce` — exactly the shape F10's repeating pull-up callout uses. The prototype's own `announcement` is the countdown-free wording, for an admin who sets the code by hand.
 - **A ship that was on no code at all keeps the warning code after recovery.** `PriorCode` is null, and F10's restore has the same shape: there is nothing to hand back.
 - **A refused drop retries.** If `TryDropFromOrbit` says no — the hull is mid-FTL, or the stack has nowhere below it — the component stays with its deadline already past and the sweep tries again a second later. The code is handed back before the drop and put back up if the drop failed, so the PA never reads the warning out twice.

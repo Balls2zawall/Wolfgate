@@ -10,7 +10,9 @@ using Content.Server.Shuttles.Components;
 using Content.Shared._CE.ZLevels.Core.Components;
 using Content.Shared._WF.PlanetCracker.Flight;
 using Content.Shared._WF.ShipPa;
+using Content.Shared.Gravity;
 using Content.Shared.Interaction;
+using Content.Shared.Movement.Systems;
 using Content.Shared.Power.EntitySystems;
 using Robust.Shared.Audio.Components;
 using Robust.Shared.GameObjects;
@@ -672,6 +674,59 @@ public sealed class FlightTest
                 Assert.That(entMan.HasComponent<CEZTransitMapComponent>(entMan.GetComponent<TransformComponent>(hull).MapUid),
                     Is.True, "The confirmed descent did not put the hull into the gap below orbit.");
             }
+        });
+
+        await Teardown(pair, layers);
+        await pair.CleanReturnAsync();
+    }
+
+    /// <summary>
+    /// The refusal is about the layer, not about what holds the hull up. A hull with a working gravity generator
+    /// passes CE's own lift gate, which is what put the raw keys back in play: the descend key is ignored, and so is
+    /// the climb key, because nothing is above orbit and CE's climb falls back to the gap below when it finds no gap
+    /// above - a descent with no lift warning, no confirm and no popup.
+    /// </summary>
+    [Test]
+    public async Task GravgenHullRidesNeitherVerticalKeyOutOfOrbit()
+    {
+        await using var pair = await PoolManager.GetServerClient();
+        var server = pair.Server;
+        var entMan = server.EntMan;
+
+        await EnableFeature(pair);
+        var layers = await BuildStandalone(pair);
+        var orbit = layers[^1];
+        var orbitMapId = await MapIdOf(pair, orbit);
+
+        var hull = await BuildCracker(pair, orbitMapId);
+        await MapInitHull(pair, hull);
+
+        // A charged gravity generator's whole effect on the pilot gate is the grid's own gravity; Inherent pins it on
+        // the way a working generator holds it, with no charge-up to sit through.
+        await server.WaitPost(() =>
+        {
+            var gravity = entMan.EnsureComponent<GravityComponent>(hull);
+            gravity.Enabled = true;
+            gravity.Inherent = true;
+        });
+
+        var descending = await HoldVertical(pair, hull, ShuttleButtons.DescendZ);
+        await server.WaitRunTicks(pair.SecondsToTicks(5f));
+
+        await server.WaitAssertion(() =>
+        {
+            Assert.That(entMan.GetComponent<TransformComponent>(hull).MapUid, Is.EqualTo(orbit),
+                "A hull with a working gravgen rode the descend key out of orbit, past the confirm.");
+        });
+
+        await server.WaitPost(() => entMan.DeleteEntity(descending));
+        await HoldVertical(pair, hull, ShuttleButtons.AscendZ);
+        await server.WaitRunTicks(pair.SecondsToTicks(5f));
+
+        await server.WaitAssertion(() =>
+        {
+            Assert.That(entMan.GetComponent<TransformComponent>(hull).MapUid, Is.EqualTo(orbit),
+                "A hull with a working gravgen rode the climb key out of orbit; there is nothing above orbit to climb to.");
         });
 
         await Teardown(pair, layers);

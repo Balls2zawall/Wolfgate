@@ -97,7 +97,7 @@ There is no cabling on either hull: every powered machine is switched to `!Needs
 
 **Also do.** Spawn a bare grid or shoot a chunk off a hull in orbit and leave it alone; it should come down on its own inside the minute with nobody aboard. Then fly around in orbit and on the air layers.
 
-**See.** Flight over a planet is slow and heavy: about 3 m/s in orbit and 6 m/s on an air layer, with the thrusters clearly fighting the drag rather than beating it. That is deliberate — the surface streams in under you and a fast hull outruns its own terrain. Off the planet, the hull is its old self again the instant it leaves the layer.
+**See.** Flight over a planet is slow and heavy: about 6 m/s in orbit and 12 m/s on an air layer, with the thrusters clearly fighting the drag rather than beating it. That is deliberate — the surface streams in under you and a fast hull outruns its own terrain. Off the planet, the hull is its old self again the instant it leaves the layer.
 
 **Report.** A hull with a running thruster decaying anyway, or a dead hull that never does. The countdown restarting, or the PA line repeating every second. The ship's own code not coming back after a recovery. A landed wreck disappearing. The chunk in the berth being given a countdown. A hull that is still fast on a planet layer, or one that stays sluggish after leaving orbit.
 

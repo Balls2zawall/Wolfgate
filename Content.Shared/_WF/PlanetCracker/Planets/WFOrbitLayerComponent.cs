@@ -22,7 +22,7 @@ public sealed partial class WFOrbitLayerComponent : Component
 
     /// <summary>Speed cap (m/s) for a grid parked here; tighter than an air layer's, because orbit is where hulls sit.</summary>
     [DataField, AutoNetworkedField]
-    public float MaxSpeed = 3f;
+    public float MaxSpeed = 6f;
 
     /// <summary>Linear damping a grid on the orbit layer runs under.</summary>
     [DataField, AutoNetworkedField]

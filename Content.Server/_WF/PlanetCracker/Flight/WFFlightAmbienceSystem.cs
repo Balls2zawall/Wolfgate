@@ -33,7 +33,7 @@ public sealed partial class WFFlightAmbienceSystem : EntitySystem
     public const float WindMaxVolume = 1f;
 
     /// <summary>Planar speed (m/s) at which the wind is as loud and as high as it gets.</summary>
-    public const float WindMaxSpeed = 8f;
+    public const float WindMaxSpeed = 14f;
 
     /// <summary>Volume (dB) of the airframe rumble at the speed a free fall lands at.</summary>
     public const float RumbleMaxVolume = -3f;

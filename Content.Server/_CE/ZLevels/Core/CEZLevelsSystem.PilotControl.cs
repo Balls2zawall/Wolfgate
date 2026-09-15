@@ -110,6 +110,10 @@ public sealed partial class CEZLevelsSystem
             if (vertical == 0f)
                 continue;
 
+            // WOLFGATE: an orbit layer is left through the console's enter-atmosphere button, never on the keys (F10).
+            if (WfRefusesOrbitInput(grid, vertical))
+                continue;
+
             _pilotVerticalInput[grid] =
                 Math.Clamp(_pilotVerticalInput.GetValueOrDefault(grid) + vertical, -1f, 1f);
         }
@@ -184,10 +188,6 @@ public sealed partial class CEZLevelsSystem
             // Transit maps are already in the air. If you're landed on a transit map you have much, MUCH bigger problems.
             var mapUid = Transform(gridUid).MapUid;
             if (mapUid == null || !HasComp<CEZMapComponent>(mapUid))
-                continue;
-
-            // WOLFGATE: leaving orbit is the console's enter-atmosphere button, which is where the lift warning lives (F10).
-            if (WfRefusesOrbitDescent(mapUid.Value, gridUid, input))
                 continue;
 
             // No gravgen, dumbass.

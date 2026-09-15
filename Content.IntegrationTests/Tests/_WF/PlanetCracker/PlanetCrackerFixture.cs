@@ -987,7 +987,13 @@ public static class PlanetCrackerFixture
     /// nothing but the console's grid and the held buttons (CEZLevelsSystem.PilotControl.cs), so the input is written
     /// directly rather than driven through the console UI. Returns the pilot.
     /// </summary>
-    public static async Task<EntityUid> HoldDescend(TestPair pair, EntityUid hull)
+    public static Task<EntityUid> HoldDescend(TestPair pair, EntityUid hull)
+    {
+        return HoldVertical(pair, hull, ShuttleButtons.DescendZ);
+    }
+
+    /// <summary>Seats a pilot at the hull's own shuttle console holding one of the two vertical keys.</summary>
+    public static async Task<EntityUid> HoldVertical(TestPair pair, EntityUid hull, ShuttleButtons button)
     {
         var server = pair.Server;
         var entMan = server.EntMan;
@@ -1002,7 +1008,7 @@ public static class PlanetCrackerFixture
             pilot = entMan.SpawnEntity(ViewerProto, new EntityCoordinates(hull, new Vector2(2.5f, 3.5f)));
             var pilotComp = entMan.EnsureComponent<PilotComponent>(pilot);
             pilotComp.Console = console;
-            pilotComp.HeldButtons = ShuttleButtons.DescendZ;
+            pilotComp.HeldButtons = button;
         });
 
         await server.WaitRunTicks(1);

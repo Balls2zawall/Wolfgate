@@ -57,7 +57,7 @@ public sealed partial class WFPlanetSurfacePrototype : IPrototype
     /// Orbit is where the surface streams in under a hull, so it is the tightest cap in the stack.
     /// </summary>
     [DataField]
-    public float OrbitMaxSpeed = 3f;
+    public float OrbitMaxSpeed = 6f;
 
     /// <summary>Linear damping a grid on this world's orbit layer flies under; thrusters fight it rather than beat it.</summary>
     [DataField]
@@ -65,7 +65,7 @@ public sealed partial class WFPlanetSurfacePrototype : IPrototype
 
     /// <summary>Speed cap (m/s) for a grid on one of this world's air layers, stamped onto every layer marker.</summary>
     [DataField]
-    public float AirMaxSpeed = 6f;
+    public float AirMaxSpeed = 12f;
 
     /// <summary>Linear damping a grid flying one of this world's air layers runs under.</summary>
     [DataField]

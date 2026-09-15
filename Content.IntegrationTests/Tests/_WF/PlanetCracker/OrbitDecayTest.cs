@@ -35,6 +35,12 @@ public sealed class OrbitDecayTest
     private const float TestGrace = 1f;
 
     /// <summary>
+    /// Seconds a grid that should be stamped is given to be stamped in: the sweep gives a hull ten seconds of settle
+    /// from the moment it first appears on the layer, and then wants two sweeps running before it stamps anything.
+    /// </summary>
+    private const float StampWait = 13f;
+
+    /// <summary>
     /// A hull with one powered landing thruster keeps station. Its lift ratio is only 0.40 - far short of flying -
     /// which is the point: holding an orbit is not the same question as holding an altitude.
     /// </summary>
@@ -73,6 +79,62 @@ public sealed class OrbitDecayTest
     }
 
     /// <summary>
+    /// A hull that has only just arrived is not stamped, even though the sweep reads no running thruster on it. An
+    /// FTL hop lands with the shuttle's thrusters disabled and they come back on their own power event, so the sweeps
+    /// straight after an arrival are reading the hop rather than the ship - which is how a vessel a crew had only
+    /// just boarded went down the atmosphere with no warning anyone could act on.
+    /// </summary>
+    [Test]
+    public async Task FreshArrivalWithPoweredThrustersIsNotStamped()
+    {
+        await using var pair = await PoolManager.GetServerClient();
+        var server = pair.Server;
+        var entMan = server.EntMan;
+
+        await EnableFeature(pair);
+        var layers = await BuildStandalone(pair);
+        var orbit = layers[^1];
+        var orbitMap = await MapIdOf(pair, orbit);
+
+        var hull = await BuildCracker(pair, orbitMap);
+        await MapInitHull(pair, hull);
+        var thrusters = await AddLandingThrusters(pair, hull, 1);
+
+        // The arrival gap: powered thrusters that are off until their own next update.
+        await SetThrusters(pair, hull, false);
+        await server.WaitRunTicks(pair.SecondsToTicks(3f));
+
+        await server.WaitAssertion(() =>
+        {
+            using (Assert.EnterMultipleScope())
+            {
+                Assert.That(thrusters, Is.Not.Empty, "Precondition: the hull was given a landing thruster.");
+                Assert.That(entMan.HasComponent<WFOrbitDecayComponent>(hull), Is.False,
+                    "A hull was stamped as decaying inside its arrival settle.");
+                Assert.That(entMan.GetComponent<TransformComponent>(hull).MapUid, Is.EqualTo(orbit),
+                    "The hull left the orbit layer without being told to.");
+            }
+        });
+
+        await SetThrusters(pair, hull, true);
+        await server.WaitRunTicks(pair.SecondsToTicks(StampWait));
+
+        await server.WaitAssertion(() =>
+        {
+            using (Assert.EnterMultipleScope())
+            {
+                Assert.That(entMan.HasComponent<WFOrbitDecayComponent>(hull), Is.False,
+                    "The hull is decaying with its thrusters back and running.");
+                Assert.That(entMan.GetComponent<TransformComponent>(hull).MapUid, Is.EqualTo(orbit),
+                    "The hull fell out of orbit after its thrusters came back.");
+            }
+        });
+
+        await Teardown(pair, layers);
+        await pair.CleanReturnAsync();
+    }
+
+    /// <summary>
     /// The same hull with every thruster switched off is decaying: it takes the warning code, keeps its parking for
     /// the grace, and then goes down the F10 descent as a lift-lost hull rather than being deleted or stranded.
     /// </summary>
@@ -93,7 +155,7 @@ public sealed class OrbitDecayTest
         await AddLandingThrusters(pair, hull, 1);
 
         await SetThrusters(pair, hull, false);
-        await server.WaitRunTicks(pair.SecondsToTicks(2f));
+        await server.WaitRunTicks(pair.SecondsToTicks(StampWait));
 
         await server.WaitAssertion(() =>
         {
@@ -153,7 +215,7 @@ public sealed class OrbitDecayTest
         await server.WaitPost(() => alerts.SetCode(hull, PriorCode));
 
         await SetThrusters(pair, hull, false);
-        await server.WaitRunTicks(pair.SecondsToTicks(2f));
+        await server.WaitRunTicks(pair.SecondsToTicks(StampWait));
 
         await server.WaitAssertion(() =>
         {
@@ -204,7 +266,7 @@ public sealed class OrbitDecayTest
 
         var debris = await BuildDebris(pair, orbitMap, 3);
 
-        await server.WaitRunTicks(pair.SecondsToTicks(2f));
+        await server.WaitRunTicks(pair.SecondsToTicks(StampWait));
 
         await server.WaitAssertion(() =>
         {
@@ -346,7 +408,7 @@ public sealed class OrbitDecayTest
             comp.WatchdogGrace = TimeSpan.FromMinutes(5);
         });
 
-        await server.WaitRunTicks(pair.SecondsToTicks(3f));
+        await server.WaitRunTicks(pair.SecondsToTicks(StampWait));
 
         await server.WaitAssertion(() =>
         {

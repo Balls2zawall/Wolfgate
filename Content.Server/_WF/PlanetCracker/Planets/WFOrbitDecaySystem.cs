@@ -33,11 +33,30 @@ public sealed partial class WFOrbitDecaySystem : EntitySystem
     /// <summary>How often the orbit layers are swept; a minute of grace does not need a finer clock than the readout.</summary>
     private static readonly TimeSpan SweepInterval = TimeSpan.FromSeconds(1);
 
+    /// <summary>
+    /// Settle a hull is given from the moment it first appears on an orbit layer before it can be stamped. An FTL
+    /// arrival lands with its thrusters between updates - the hop itself disables them and they come back on their own
+    /// power event - so the first sweeps after an arrival read a powered ship as adrift and a vessel a crew had only
+    /// just boarded was dropped into the atmosphere on a minute's countdown it never earned.
+    /// </summary>
+    private static readonly TimeSpan SettleDelay = TimeSpan.FromSeconds(10);
+
     /// <summary>Grids parked on an orbit layer this sweep, collected before anything is added or dropped.</summary>
     private readonly List<EntityUid> _orbiters = new();
 
     /// <summary>Grids still carrying the component after having left the orbit layer by some other route.</summary>
     private readonly List<EntityUid> _stale = new();
+
+    /// <summary>When each grid on an orbit layer may first be stamped, from the sweep that first saw it there.</summary>
+    private readonly Dictionary<EntityUid, TimeSpan> _settleAt = new();
+
+    /// <summary>Settle stamps belonging to grids that are no longer on an orbit layer.</summary>
+    private readonly List<EntityUid> _settleStale = new();
+
+    /// <summary>Grids seen adrift on the previous sweep; a stamp takes two sweeps running, never one reading.</summary>
+    private readonly HashSet<EntityUid> _adriftLastSweep = new();
+
+    private readonly HashSet<EntityUid> _adriftThisSweep = new();
 
     /// <summary>Grids with a linear thruster actually running, rebuilt once per sweep rather than per grid.</summary>
     private readonly HashSet<EntityUid> _thrusting = new();
@@ -65,10 +84,16 @@ public sealed partial class WFOrbitDecaySystem : EntitySystem
         CollectThrusting();
         CollectOrbiters();
 
+        _adriftThisSweep.Clear();
+
         foreach (var grid in _orbiters)
         {
             if (TerminatingOrDeleted(grid))
                 continue;
+
+            // First sight of this grid on the layer starts its settle; an arrival is the one moment the thruster
+            // readings are not the ship's own.
+            _settleAt.TryAdd(grid, _timing.CurTime + SettleDelay);
 
             // A chunk that was stamped while it was still a bare grid loses the countdown here rather than carrying
             // it: the exemption is cleared, not merely skipped.
@@ -78,8 +103,20 @@ public sealed partial class WFOrbitDecaySystem : EntitySystem
                 continue;
             }
 
+            _adriftThisSweep.Add(grid);
+
+            if (_timing.CurTime < _settleAt.GetValueOrDefault(grid))
+                continue;
+
+            // Two sweeps running: one reading between a thruster's own updates is not a ship that has lost its engines.
+            if (!_adriftLastSweep.Contains(grid))
+                continue;
+
             Decay(grid);
         }
+
+        _adriftLastSweep.Clear();
+        _adriftLastSweep.UnionWith(_adriftThisSweep);
 
         // Entering the atmosphere clears the component on its way out, so what is left here is a grid that left orbit
         // some other way: the leave-orbit hop, an admin move, a tow.
@@ -96,6 +133,21 @@ public sealed partial class WFOrbitDecaySystem : EntitySystem
         foreach (var grid in _stale)
         {
             ClearDecay(grid);
+        }
+
+        // A settle is taken against the layer the grid is on, so it goes when the grid does; a hull that comes back
+        // has arrived again and is given its moment again.
+        _settleStale.Clear();
+
+        foreach (var (grid, _) in _settleAt)
+        {
+            if (TerminatingOrDeleted(grid) || Transform(grid).MapUid is not { } mapUid || !HasComp<WFOrbitLayerComponent>(mapUid))
+                _settleStale.Add(grid);
+        }
+
+        foreach (var grid in _settleStale)
+        {
+            _settleAt.Remove(grid);
         }
     }
 

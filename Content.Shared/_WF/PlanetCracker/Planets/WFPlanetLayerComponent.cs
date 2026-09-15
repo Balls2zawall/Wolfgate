@@ -25,7 +25,7 @@ public sealed partial class WFPlanetLayerComponent : Component
     /// that. <see cref="WFOrbitLayerComponent"/> carries its own, tighter pair for the orbit layer.
     /// </summary>
     [DataField, AutoNetworkedField]
-    public float MaxSpeed = 6f;
+    public float MaxSpeed = 12f;
 
     /// <summary>Linear damping a grid flying this layer runs under; thrusters still work, they fight it.</summary>
     [DataField, AutoNetworkedField]
