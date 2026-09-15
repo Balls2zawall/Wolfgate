@@ -256,16 +256,10 @@ public sealed partial class WFPlanetChunkSystem : EntitySystem
         // The gangway goes first: the chunk it led to is leaving.
         LiftGangway(ent);
 
-        // Back over the hole before the fall: the chunk hangs clear of the hull and turned to its heading, and a fall
-        // is straight down, so the hole pose - the ground's own origin and heading, which its tile indices were cut at -
-        // is put back here. Snapshotted too: the chunk is dynamic for the whole fall, so the pose is re-asserted once
-        // at landing rather than trusted to survive it.
-        if (TryGetEntity(ent.Comp.GroundMap, out var groundUid))
-        {
-            var (groundPos, groundRot) = _transform.GetWorldPositionRotation(groundUid.Value);
-            _transform.SetWorldPositionRotation(ent.Owner, groundPos, groundRot);
-        }
-
+        // The chunk falls from exactly where it hangs - clear of the hull, turned to its heading - and lands wherever
+        // that is, hole or not: where the rig carried it is where it comes down (playtest decision). Snapshotted
+        // before the grid moves; the chunk is dynamic for the whole fall, so the pose is re-asserted once at landing
+        // rather than trusted to survive it.
         var (dropPos, dropRot) = _transform.GetWorldPositionRotation(ent.Owner);
         ent.Comp.DropWorldPos = dropPos;
         ent.Comp.DropWorldRot = dropRot;
