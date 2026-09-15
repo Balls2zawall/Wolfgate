@@ -27,13 +27,13 @@ public sealed partial class WFFlightAmbienceSystem : EntitySystem
     [Dependency] private CEZLevelsSystem _zLevels = default!;
 
     /// <summary>Volume (dB) of the wind on a hull that is barely moving.</summary>
-    public const float WindMinVolume = -14f;
+    public const float WindMinVolume = -9f;
 
     /// <summary>Volume (dB) of the wind at <see cref="WindMaxSpeed"/> and above.</summary>
-    public const float WindMaxVolume = -2f;
+    public const float WindMaxVolume = 1f;
 
     /// <summary>Planar speed (m/s) at which the wind is as loud and as high as it gets.</summary>
-    public const float WindMaxSpeed = 30f;
+    public const float WindMaxSpeed = 8f;
 
     /// <summary>Volume (dB) of the airframe rumble at the speed a free fall lands at.</summary>
     public const float RumbleMaxVolume = -3f;
