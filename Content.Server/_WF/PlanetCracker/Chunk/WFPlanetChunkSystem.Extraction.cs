@@ -145,6 +145,13 @@ public sealed partial class WFPlanetChunkSystem
         // system would tear it into several grids the instant it is filled.
         chunkEnt.Comp.CanSplit = false;
 
+        // Also before the first SetTiles: the chunk is world-aligned, so its tiles sit at the ground's own indices,
+        // hundreds of tiles from the grid origin on any site away from the planet centre. ResetMassData then does
+        // inertia -= mass * |centre|^2 in floats, which cancels below zero and trips the engine's assert
+        // (SharedPhysicsSystem.Components.cs ResetMassData) on the tile write. The chunk never rotates: parked it is
+        // static, falling it goes straight down. A fixed-rotation body skips the inertia term altogether.
+        _physics.SetFixedRotation(chunkEnt.Owner, true);
+
         // STEP 4: one SetTiles, then drop the atmosphere the mass change just earned it.
         _map.SetTiles(chunkEnt.Owner, chunkEnt.Comp, _chunkTiles);
         RemComp<GridAtmosphereComponent>(chunkEnt.Owner);

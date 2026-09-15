@@ -21,6 +21,7 @@ using Robust.Shared.Map.Components;
 using Robust.Shared.Physics;
 using Robust.Shared.Physics.Components;
 using Robust.Shared.Timing;
+using Robust.Shared.Physics.Systems;
 
 namespace Content.Server._WF.PlanetCracker.Chunk;
 
@@ -32,6 +33,7 @@ namespace Content.Server._WF.PlanetCracker.Chunk;
 public sealed partial class WFPlanetChunkSystem : EntitySystem
 {
     [Dependency] private BiomeSystem _biome = default!;
+    [Dependency] private SharedPhysicsSystem _physics = default!;
     [Dependency] private CEZGridConnectorSystem _connectors = default!;
     [Dependency] private CEZLevelsSystem _zLevels = default!;
     [Dependency] private DecalSystem _decals = default!;
