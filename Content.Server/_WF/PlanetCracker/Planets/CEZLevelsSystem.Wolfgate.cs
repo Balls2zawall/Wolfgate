@@ -1,6 +1,7 @@
 using Content.Shared._CE.ZLevels.Core.Components;
 using Content.Shared._WF.PlanetCracker.Planets;
 using Robust.Shared.Map.Components;
+using Robust.Shared.Physics.Components;
 
 namespace Content.Server._CE.ZLevels.Core;
 
@@ -55,5 +56,22 @@ public sealed partial class CEZLevelsSystem
         return WfIsOrbitLayer(Transform(grid).MapUid ?? EntityUid.Invalid)
                && ZPhysicsQuery.TryComp(grid, out var zPhys)
                && !zPhys.VelocityGravity;
+    }
+
+    /// <summary>
+    /// Destroys every contact held by the grid's own children before the grid changes map. A grid move only
+    /// re-homes the grid's broadphase; a child anchored on it that was touching something on the old map (a gravity
+    /// anchor against a fissure mob, say) keeps that contact, and the broadphase asserts "already in contact" the
+    /// moment the grid comes back within reach of it.
+    /// </summary>
+    public void WfDestroyRiderContacts(EntityUid grid)
+    {
+        var children = Transform(grid).ChildEnumerator;
+
+        while (children.MoveNext(out var child))
+        {
+            if (TryComp<PhysicsComponent>(child, out var body))
+                _physics.DestroyContacts(body);
+        }
     }
 }

@@ -45,6 +45,7 @@ public sealed partial class CEZLevelsSystem
             angVel = body.AngularVelocity;
         }
 
+        WfDestroyRiderContacts(grid.Owner);
         _transform.SetCoordinates(grid.Owner, xform, new EntityCoordinates(targetMap, worldPos), rotation: worldRot);
 
         if (body != null)

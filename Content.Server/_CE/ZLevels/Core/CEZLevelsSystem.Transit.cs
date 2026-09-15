@@ -356,6 +356,7 @@ public sealed partial class CEZLevelsSystem
             var worldPos = _transform.GetWorldPosition(xform);
             var worldRot = _transform.GetWorldRotation(xform);
 
+            WfDestroyRiderContacts(gridUid); // WOLFGATE: riders' contacts with the old map must not survive the move.
             // The map change wipes joints and can reset momentum, so save and restore it.
             var linVel = Vector2.Zero;
             var angVel = 0f;

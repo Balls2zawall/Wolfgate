@@ -5,6 +5,7 @@ using Content.Shared.Parallax.Biomes;
 using Content.Shared.Physics;
 using Robust.Shared.Map;
 using Robust.Shared.Map.Components;
+using Robust.Shared.Maths;
 
 namespace Content.Server._WF.PlanetCracker.Fissures;
 
@@ -14,6 +15,9 @@ namespace Content.Server._WF.PlanetCracker.Fissures;
 /// </summary>
 public sealed partial class WFFissureSpawnerSystem
 {
+    /// <summary>Tint for the stamped cracks: the borrowed art is near-white glass, the ground wants dark soil.</summary>
+    private static readonly Color FissureColour = Color.FromHex("#2b2118");
+
     /// <summary>
     /// The four growth stages, in order. SetDecalId THROWS ArgumentOutOfRangeException on an unknown prototype id
     /// (Content.Server/Decals/DecalSystem.cs:427-430) rather than returning false, so only these four may ever reach it.
@@ -144,6 +148,7 @@ public sealed partial class WFFissureSpawnerSystem
                     FissureDecals[stage - 1],
                     new EntityCoordinates(ground.Owner, index),
                     out var id,
+                    color: FissureColour,
                     rotation: RingTangent((Vector2)index + half - centre),
                     zIndex: 0,
                     cleanable: false))
