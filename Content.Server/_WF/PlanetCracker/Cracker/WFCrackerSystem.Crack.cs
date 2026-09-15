@@ -18,7 +18,7 @@ namespace Content.Server._WF.PlanetCracker.Cracker;
 public sealed partial class WFCrackerSystem
 {
     /// <summary>How often the grid shake is re-triggered while the cut runs; the engine shake itself lasts about 2 s.</summary>
-    private static readonly TimeSpan ShakeInterval = TimeSpan.FromSeconds(2);
+    private static readonly TimeSpan ShakeInterval = TimeSpan.FromSeconds(12); // a rumble every so often, not a constant tremor: 2 s was nauseating in playtest
 
     /// <summary>Next tick of the sweep.</summary>
     private TimeSpan _nextSweep;
