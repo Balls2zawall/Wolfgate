@@ -4,6 +4,7 @@ using System.Numerics;
 using Content.IntegrationTests.Pair;
 using Content.Server.NPC.HTN;
 using Content.Server.NPC.Queries;
+using Content.Shared._WF.PlanetCracker.Fissures;
 using Content.Shared._WF.PlanetCracker.Planets;
 using Content.Shared.Decals;
 using Content.Shared.Salvage.Expeditions;
@@ -19,8 +20,8 @@ namespace Content.IntegrationTests.Tests._WF.PlanetCracker;
 
 /// <summary>
 /// Everything F8's data promises that only a loaded server can check: that the four growth-stage decals index and name
-/// real fissure.rsi states, that both one-shot effects' RSIs carry the state their prototype names and despawn on the
-/// animation's own length, that the NPC targeting pair indexes, and that Asclepiu's two salvage factions and every mob
+/// real states of the crack sheet they borrow, that the burst effect the spawner component actually names is a
+/// spawnable one-shot, that the NPC targeting pair indexes, and that Asclepiu's two salvage factions and every mob
 /// they can roll resolve.
 /// A mistyped decal id here is not a load failure: DecalSystem.SetDecalId THROWS ArgumentOutOfRangeException on an
 /// unknown prototype (Content.Server/Decals/DecalSystem.cs:427-430), so the growth promoter would surface it as a
@@ -38,27 +39,14 @@ public sealed class FissurePrototypeTest
         "WFFissure4",
     };
 
-    /// <summary>The decal sheet, which also carries the burst effect's state; see Resources/Prototypes/_WF/PlanetCracker/fissures.yml.</summary>
-    private const string FissureRsi = "/Textures/_WF/PlanetCracker/Decals/fissure.rsi";
+    /// <summary>
+    /// The sheet all four stages borrow: the stock window damage overlays, which are the only escalating ground-crack
+    /// art the tree ships. See Resources/Prototypes/_WF/PlanetCracker/fissures.yml.
+    /// </summary>
+    private const string FissureRsi = "/Textures/Structures/Windows/cracks.rsi";
 
-    /// <summary>The emerge sheet; see the same yml.</summary>
-    private const string EmergeRsi = "/Textures/_WF/PlanetCracker/Effects/mob_emerge.rsi";
-
-    /// <summary>The state WFEffectFissureBurst names, which deliberately lives in the Decals rsi rather than Effects/.</summary>
-    private const string BurstState = "burst";
-
-    /// <summary>The state WFEffectMobEmerge names.</summary>
-    private const string EmergeState = "emerge";
-
-    /// <summary>Six frames at 0.08 s, as both meta.json files declare; the yml mirrors it as a TimedDespawn lifetime.</summary>
-    private const float EffectLifetime = 0.48f;
-
-    /// <summary>The two one-shot effects and the RSI each of them draws out of.</summary>
-    private static readonly (string Proto, string Rsi, string State)[] Effects =
-    {
-        ("WFEffectFissureBurst", FissureRsi, BurstState),
-        ("WFEffectMobEmerge", EmergeRsi, EmergeState),
-    };
+    /// <summary>The longest a fissure burst may live; the stock spark effect it now names is half a second.</summary>
+    private const float MaxBurstLifetime = 2f;
 
     /// <summary>The crackable world whose faction table the fissures roll from.</summary>
     private const string Surface = "WFSurfaceAsclepiu";
@@ -101,7 +89,7 @@ public sealed class FissurePrototypeTest
                     var state = ((SpriteSpecifier.Rsi)decal.Sprite).RsiState;
 
                     Assert.That(rsi.TryGetState(state, out _), Is.True,
-                        $"{id} names state '{state}', which fissure.rsi does not have.");
+                        $"{id} names state '{state}', which the crack sheet does not have.");
 
                     // True makes DecalOverlay snap the decal to the eye's cardinal and SUBTRACT that from the
                     // per-decal Angle (Content.Client/Decals/Overlays/DecalOverlay.cs:103-109), which would throw
@@ -116,42 +104,14 @@ public sealed class FissurePrototypeTest
     }
 
     /// <summary>
-    /// The two one-shot effects' art, read with NO live entity anywhere.
-    /// Deliberately not the EverySpriteStateExists shape: that spawns and then runs ticks before reading the client
-    /// sprite, and both of these carry a 0.48 s lifetime, so the read would race the despawn exactly as
-    /// PlanetCrackerPrototypeTest already documents for WFEffectSurveyPulse. Resolving the RSI through the resource
-    /// cache proves the same thing and cannot race anything.
+    /// The burst the ring stamp spawns per tile, read off the COMPONENT rather than off a literal: the id now points
+    /// at an existing stock effect, and the only thing that keeps the spawner honest is that whatever it names still
+    /// spawns and still takes itself away. Spawned and read INSIDE one callback, because a one-shot effect is gone
+    /// within a handful of ticks and anything that runs ticks first is reading a corpse.
+    /// There is deliberately no emerge effect any more: a mob simply appears on its fissure tile.
     /// </summary>
     [Test]
-    public async Task FissureEffectRsisDeclareTheirStates()
-    {
-        await using var pair = await PoolManager.GetServerClient();
-        var client = pair.Client;
-        var cache = client.ResolveDependency<IResourceCache>();
-
-        await client.WaitAssertion(() =>
-        {
-            using (Assert.EnterMultipleScope())
-            {
-                foreach (var (proto, path, state) in Effects)
-                {
-                    var rsi = cache.GetResource<RSIResource>(new ResPath(path)).RSI;
-
-                    Assert.That(rsi.TryGetState(state, out _), Is.True,
-                        $"{path} has no '{state}' state for {proto} to name.");
-                }
-            }
-        });
-
-        await pair.CleanReturnAsync();
-    }
-
-    /// <summary>
-    /// The despawn length, read INSIDE the spawning callback so not one tick can elapse between the spawn and the read.
-    /// Anything that runs ticks first is reading a corpse: 0.48 s is fifteen ticks at the default rate.
-    /// </summary>
-    [Test]
-    public async Task FissureEffectsDespawnOnTheAnimationLength()
+    public async Task TheBurstEffectIsASpawnableOneShot()
     {
         await using var pair = await PoolManager.GetServerClient();
         var server = pair.Server;
@@ -160,20 +120,20 @@ public sealed class FissurePrototypeTest
 
         await server.WaitAssertion(() =>
         {
+            var proto = new WFFissureSpawnerComponent().BurstEffect;
+            var uid = entMan.SpawnEntity(proto, new MapCoordinates(Vector2.Zero, map.MapId));
+
             using (Assert.EnterMultipleScope())
             {
-                foreach (var (proto, _, _) in Effects)
-                {
-                    var uid = entMan.SpawnEntity(proto, new MapCoordinates(Vector2.Zero, map.MapId));
-
-                    Assert.That(entMan.TryGetComponent(uid, out TimedDespawnComponent? despawn), Is.True,
-                        $"{proto} is not a one-shot effect at all; it would sit on the ground forever.");
-                    Assert.That(despawn!.Lifetime, Is.EqualTo(EffectLifetime).Within(0.001f),
-                        $"{proto} does not despawn on its animation's own length.");
-
-                    entMan.DeleteEntity(uid);
-                }
+                Assert.That(entMan.GetComponent<MetaDataComponent>(uid).EntityPrototype?.ID, Is.EqualTo(proto.Id),
+                    $"{proto} spawned as something else.");
+                Assert.That(entMan.TryGetComponent(uid, out TimedDespawnComponent? despawn), Is.True,
+                    $"{proto} is not a one-shot effect at all; every fissure would leave one on the ground forever.");
+                Assert.That(despawn!.Lifetime, Is.GreaterThan(0f).And.LessThan(MaxBurstLifetime),
+                    $"{proto} lingers far longer than the moment a fissure opens.");
             }
+
+            entMan.DeleteEntity(uid);
         });
 
         await pair.CleanReturnAsync();

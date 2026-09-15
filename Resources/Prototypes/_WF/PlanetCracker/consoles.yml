@@ -12,9 +12,11 @@
       state: computer
     - map: [ "computerLayerKeyboard" ]
       state: generic_keyboard
+    # Existing art: four stock computer faces off the shared computers.rsi, so the layer simply drops its own
+    # `sprite:` and inherits BaseComputer's. A nav grid while idle, the telescience targeting grid once a pair is
+    # named, the same grid gone red while the cut runs, and the ordnance warning face for the grace timer.
     - map: [ "computerLayerScreen" ]
-      sprite: _WF/PlanetCracker/Structures/crack_console.rsi
-      state: idle
+      state: shuttle
     - map: [ "computerLayerKeys" ]
       state: generic_keys
   - type: WFCrackConsole
@@ -41,10 +43,10 @@
           False: { visible: true, shader: shaded }
       enum.WFCrackConsoleVisuals.Screen:
         computerLayerScreen:
-          Idle:      { state: idle }
-          Targeting: { state: targeting }
-          Cracking:  { state: cracking }
-          Alert:     { state: alert }
+          Idle:      { state: shuttle }
+          Targeting: { state: telesci }
+          Cracking:  { state: telesci_red }
+          Alert:     { state: explosive }
       enum.WiresVisuals.MaintenancePanelState:
         enum.WiresVisualLayers.MaintenancePanel:
           True: { visible: false }
@@ -62,9 +64,10 @@
       state: computer
     - map: [ "computerLayerKeyboard" ]
       state: generic_keyboard
+    # Existing art: two stock computer faces off the shared computers.rsi, inherited the same way as the crack
+    # console's. The sensor face while it sits there and the mineral face while a density scan runs.
     - map: [ "computerLayerScreen" ]
-      sprite: _WF/PlanetCracker/Structures/survey_console.rsi
-      state: idle
+      state: sensors
     - map: [ "computerLayerKeys" ]
       state: generic_keys
   - type: WFSectorSurveyConsole
@@ -91,8 +94,8 @@
           False: { visible: true, shader: shaded }
       enum.WFSurveyConsoleVisuals.Screen:
         computerLayerScreen:
-          Idle:     { state: idle }
-          Scanning: { state: scanning }
+          Idle:     { state: sensors }
+          Scanning: { state: mining }
       enum.WiresVisuals.MaintenancePanelState:
         enum.WiresVisualLayers.MaintenancePanel:
           True: { visible: false }

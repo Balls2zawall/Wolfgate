@@ -29,27 +29,29 @@ References: cari.institute cassette futurism, ARC Raiders concept art, Cyberpunk
 
 ## Sprites
 
-Priority **P1** is needed for a playable prototype. **P2** is polish and can land later.
+Priority **P1** is needed for a playable prototype. **P2** is polish and can land later. **RESOLVED** rows need no
+art at all: they were settled with something the tree already ships, and `SPRITE_LIST.md`'s "Uses existing art"
+table names exactly what each of them borrows. The `_WF/PlanetCracker/` placeholders for those are deleted.
 
 | # | Pri | Asset | Size | States | Notes |
 |---|---|---|---|---|---|
 | 1 | P1 | Gravity anchor | 3×3 (96×96), non-directional | `deployed`, `drilling` (anim, 8–12 frames), `locked` (anim, slow pulse), `off`, `broken`; `damaged` overlay (sparks, anim); `-unshaded` glow for `drilling` and `locked` | A squat drilling rig with a central bit, hydraulic legs and one big physical lever. Should look far too heavy to carry. |
-| 2 | P1 | Anchor crate | 2×2 (64×64) | `closed`, `open` | Reinforced shipping crate with lift points; same crate art serves replacement anchors with a stencil overlay state `replacement`. |
-| 3 | P1 | Gravity projector | 2×2 (64×64), 4 directions | `off`, `idle`, `charging` (anim), `firing` (anim), `broken`; `-unshaded` emitter | Sits on the hull edge and faces outward. New-era: glass emitter, neon coil. |
+| 2 | RESOLVED | Anchor crate | — | — | Uses `Structures/Storage/Crates/engicrate_secure.rsi` at `scale: 2, 2`; the replacement variant is marked with that crate's own `locked` lock light instead of a stencil. |
+| 3 | RESOLVED | Gravity projector | — | — | Uses the AK570 shuttle autocannon, `_Mono/Objects/ShuttleWeapons/artillery.rsi` (`space_artillery` + `fcs-unshaded`). Placed facing outward as before; the cut now swings it onto its own anchor and hands the placed facing back afterwards. |
 | 4 | P1 | Centrifuge | 3×3 (96×96), non-directional | `off`, `spinning` (anim, one seamless loop of a rotor; playback speed is set in code), `broken`; `-unshaded` interior glow | A ring rotor inside a caged housing; visible mass. Old-era. |
-| 5 | P1 | Crack control console | 1×1 computer screen | `idle`, `targeting`, `cracking`, `alert` (anim blink) | Screen only; body is the shared computer. |
-| 6 | P1 | Sector survey console | 1×1 computer screen | `idle`, `scanning` (anim) | Screen only. Also placed at the outpost. |
+| 5 | RESOLVED | Crack control console | — | — | Stock `Structures/Machines/computers.rsi` faces: `shuttle`, `telesci`, `telesci_red`, `explosive`. |
+| 6 | RESOLVED | Sector survey console | — | — | Stock `computers.rsi` faces: `sensors` and `mining`. Also placed at the outpost. |
 | 7 | P1 | Crack miner | 2×2 (64×64), non-directional | `idle`, `mining` (anim), `exhausted`, `broken`; `-unshaded` | Old-era. A drill head on a frame with a visible battery slot. |
-| 8 | P1 | Handheld surveyor | item | `icon`, `inhand-left`, `inhand-right`, `scanning` (anim) | New-era handheld with a folding antenna. |
-| 9 | P1 | Surveyor ground pulse | 3×3 effect (96×96) | `pulse` (anim, 6 frames, one-shot) | Expanding ring, semi-transparent. |
+| 8 | RESOLVED | Handheld surveyor | — | — | Uses `Objects/Specific/Research/anomalylocator.rsi` (`icon` plus both in-hands). No scanning state: nothing ever loaded one. |
+| 9 | RESOLVED | Surveyor ground pulse | — | — | No art: `WFEffectSurveyPulse` carries `SingularityDistortion` and the client's singularity overlay lenses the screen around it. |
 | 10 | P1 | Deep vein marker | 1×1 decal | `vein`, `vein-rich` | Grey base tinted in code per ore type. Reads as a shimmer under the ground. |
-| 11 | P1 | Fissure decals | 1×1 decal set | `fissure-1` to `fissure-4` (growth stages), 4 rotations each; `burst` (anim, 6 frames, one-shot) | Cracks spreading outward from an anchor. Stage 4 has the inner glow. `burst` plays where a creature climbs out. |
+| 11 | RESOLVED | Fissure decals | — | — | Uses the stock window damage overlays `Structures/Windows/cracks.rsi` (`DamageOverlay_5`/`_10`/`_20`, stage 4 repeating `_20`, so stage 4 has no glow). The burst is the stock `EffectSparks`. |
 | 12 | P1 | Crack ring decals | 1×1 decal set | `ring-straight`, `ring-curve`, each at 3 stages | Segments laid along the circle perimeter; stage 3 is wide and glowing. |
 | 13 | P1 | Crack-hole tile | tile 32×32, edge variants | like the existing chasm tile: full, plus edges and corners | Dark pit with a faint glow. Plus a `rim` decal set (straight, curve) for the lip. |
-| 14 | P1 | Beam segment | 32×32 tiling, anim, additive | `beam` (4–8 frames, seamless vertical tiling) | Drawn between projector and anchor by an overlay; the texture repeats along the line. Neon. |
-| 15 | P1 | Sky beam | 32×160 vertical | `skybeam` (anim) | Stands on each anchor on the surface during the crack; tapers upward and fades. |
+| 14 | RESOLVED | Beam segment | — | — | Uses the ship laser's own tintable beam, `_Mono/Objects/Weapons/Guns/Projectiles/lasers.rsi` `grayscale_beam`. The overlay stretches one frame along the line rather than tiling it. |
+| 15 | RESOLVED | Sky beam | — | — | The same frame stood up with `scale: 5, 1` then `rotation: 90`; no separate sheet. |
 | 16 | P2 | Chunk burst | 3×3 effect | `burst` (anim, 8 frames, one-shot) | Plays at the hole and at the chunk on extraction. Dust and rock. |
-| 17 | P2 | Mob emerge overlay | 1×1 overlay | `emerge` (anim, 6 frames) | Drawn on the creature as it climbs out of a fissure; dirt and cracks falling away. |
+| 17 | RESOLVED | Mob emerge overlay | — | — | Dropped: a fissure mob simply appears on its tile, with the stone-door sound as the only cue. |
 | 18 | P2 | Liftoff/extraction dust | reuse existing `CEZLiftoffDust` | none | |
 | 19 | P2 | Console UI icons | 16×16 | `anchor`, `projector`, `centrifuge`, `chunk`, `warning`, `beam` | Flat, single colour, for the diagram legend. |
 | 20 | P2 | Shipyard preview | as the shipyard uses | one image | Only if the shipyard listing shows one. |
@@ -112,7 +114,7 @@ Place one sector survey console at the outpost.
 
 ## Delivery checklist
 
-- RSI folders under `Resources/Textures/_WF/PlanetCracker/` with `meta.json` filled in (size, states, directions, delays, license and copyright lines).
+- RSI folders under `Resources/Textures/_WF/PlanetCracker/` with `meta.json` filled in (size, states, directions, delays, license and copyright lines). Nothing is owed for a RESOLVED row above.
 - Sounds under `Resources/Audio/_WF/PlanetCracker/` as OGG, with an `attributions.yml`.
 - Maps under `Resources/Maps/_WF/Shuttles/` (vessel and transport) and `Resources/Maps/_WF/Planets/` (surfaces), plus the vessel prototype YAML.
 - One screenshot of each machine in every state, and one of each ship interior, attached to the PR.

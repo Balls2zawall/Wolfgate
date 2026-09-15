@@ -778,6 +778,84 @@ public sealed class CrackExtractionTest
     }
 
     /// <summary>
+    /// The mounts swing onto their own anchor for the cut and are handed back the facing the mapper gave them when it
+    /// ends. The rotation is what aims the beam art at the tile it is cutting; without it the barrels stay wherever
+    /// they were bolted and the beam leaves the side of the housing.
+    /// Asserted on the SERVER for the same reason the beam component is: a projector carries no PVS override.
+    /// The anchor is several z-levels down and CE keeps world XY across a stack, so the expected angle is the plain
+    /// world-space bearing from the mount to the anchor.
+    /// </summary>
+    [Test]
+    public async Task ProjectorsFaceTheirAnchorForTheCutAndGoBackAfterwards()
+    {
+        await using var pair = await PoolManager.GetServerClient();
+        var server = pair.Server;
+        var entMan = server.EntMan;
+        var transform = server.System<SharedTransformSystem>();
+
+        var site = await BuildReadyToExtract(pair);
+
+        var placed = new List<Angle>();
+
+        await server.WaitAssertion(() =>
+        {
+            Assert.That(site.Projectors, Is.Not.Empty, "Precondition: the hull carries projectors to swing.");
+
+            foreach (var projector in site.Projectors)
+            {
+                placed.Add(entMan.GetComponent<TransformComponent>(projector).LocalRotation);
+            }
+        });
+
+        await BeginCut(pair, site);
+
+        // The sweep runs every 0.25 s while a hull is cutting, and the facing is written by the same pass as the beam.
+        await server.WaitRunTicks(pair.SecondsToTicks(1f));
+
+        await server.WaitAssertion(() =>
+        {
+            using (Assert.EnterMultipleScope())
+            {
+                foreach (var projector in site.Projectors)
+                {
+                    Assert.That(entMan.TryGetComponent(projector, out WFCrackBeamComponent? beam), Is.True,
+                        "Precondition: a projector is firing a beam, which is what it should be facing along.");
+                    Assert.That(entMan.TryGetEntity(beam!.Target, out var target), Is.True,
+                        "Precondition: the beam's target anchor resolves on the server.");
+
+                    var delta = transform.GetWorldPosition(target!.Value) - transform.GetWorldPosition(projector);
+                    var expected = Angle.FromWorldVec(delta);
+                    var actual = transform.GetWorldRotation(projector);
+
+                    Assert.That(actual.EqualsApprox(expected, FacingTolerance), Is.True,
+                        $"A firing projector faces {actual.Degrees:0.0} degrees, not the {expected.Degrees:0.0} its anchor is at.");
+                }
+            }
+        });
+
+        await CompleteCut(pair, site);
+        await server.WaitRunTicks(pair.SecondsToTicks(2f));
+
+        await server.WaitAssertion(() =>
+        {
+            using (Assert.EnterMultipleScope())
+            {
+                for (var i = 0; i < site.Projectors.Count; i++)
+                {
+                    var actual = entMan.GetComponent<TransformComponent>(site.Projectors[i]).LocalRotation;
+
+                    Assert.That(actual.EqualsApprox(placed[i], FacingTolerance), Is.True,
+                        $"A projector kept facing {actual.Degrees:0.0} degrees after the cut instead of the {placed[i].Degrees:0.0} it was placed at.");
+                    Assert.That(entMan.GetComponent<WFGravityProjectorComponent>(site.Projectors[i]).PlacedRotation,
+                        Is.Null, "A projector is still holding a remembered facing after the cut ended.");
+                }
+            }
+        });
+
+        await Cleanup(pair, site);
+    }
+
+    /// <summary>
     /// The hook fires once per disc, and a repeated completion - which the sweep can produce, because the completion
     /// silently returns on a failed lookup and repeats forever - must not cut a second one out of the same hull.
     /// </summary>
@@ -889,6 +967,12 @@ public sealed class CrackExtractionTest
 
     /// <summary>The pillar of light the cut stands on each targeted anchor.</summary>
     private const string SkyBeam = "WFCrackSkyBeam";
+
+    /// <summary>
+    /// How far off a mount's facing may be, in radians. Generous on purpose: the assertion is that it turned to the
+    /// anchor at all, not that it landed on a particular float.
+    /// </summary>
+    private const double FacingTolerance = 0.01;
 
     /// <summary>Every biome chunk origin the disc and its rim touch; the biome's own chunks are 8 tiles, not 16.</summary>
     private static HashSet<Vector2i> BiomeChunkOrigins(IEntityManager entMan, EntityUid ground, Vector2 centre, float radius)

@@ -50,11 +50,16 @@ public sealed partial class WFCrackerSystem
             if (!firing)
             {
                 RemComp<WFCrackBeamComponent>(projector.Owner);
+                RestoreFacing(projector);
                 continue;
             }
 
             // The list is sorted by grid-local X, so the split is stable from one sweep to the next.
-            var target = GetNetEntity((i & 1) == 0 ? a.Owner : b.Owner);
+            var anchor = (i & 1) == 0 ? a.Owner : b.Owner;
+            var target = GetNetEntity(anchor);
+
+            AimAt(projector, anchor);
+
             var beam = EnsureComp<WFCrackBeamComponent>(projector.Owner);
 
             if (beam.Target == target)
@@ -71,6 +76,39 @@ public sealed partial class WFCrackerSystem
         }
 
         PruneSkyBeams(ent, firing, a.Owner, b.Owner);
+    }
+
+    /// <summary>
+    /// Swings one projector onto the anchor it is cutting with, remembering the facing the mapper gave it the first
+    /// time a cut moves it.
+    /// The anchor is several layers below and CE keeps world XY across a stack, so the anchor's own world position is
+    /// what the mount points at; the beam overlay projects that same point into the viewer's pass. Rotating an
+    /// anchored entity is safe here: the projector's fixture is the inherited square, so no pose of it can straddle a
+    /// different set of tiles.
+    /// </summary>
+    private void AimAt(Entity<WFGravityProjectorComponent> projector, EntityUid anchor)
+    {
+        var xform = Transform(projector.Owner);
+
+        projector.Comp.PlacedRotation ??= xform.LocalRotation;
+
+        var delta = TransformSystem.GetWorldPosition(anchor) - TransformSystem.GetWorldPosition(xform);
+
+        // Directly on top of its own anchor there is no direction to face, so the mount simply holds what it has.
+        if (delta.LengthSquared() <= float.Epsilon)
+            return;
+
+        TransformSystem.SetWorldRotation(projector.Owner, Angle.FromWorldVec(delta));
+    }
+
+    /// <summary>Hands a projector back the facing it was placed with; a no-op on one no cut has ever moved.</summary>
+    private void RestoreFacing(Entity<WFGravityProjectorComponent> projector)
+    {
+        if (projector.Comp.PlacedRotation is not { } placed)
+            return;
+
+        projector.Comp.PlacedRotation = null;
+        TransformSystem.SetLocalRotation(projector.Owner, placed);
     }
 
     /// <summary>Parents one sky beam to an anchor, whose own global PVS override is what replicates it to every layer.</summary>

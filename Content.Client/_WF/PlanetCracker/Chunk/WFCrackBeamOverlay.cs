@@ -36,15 +36,22 @@ public sealed partial class WFCrackBeamOverlay : Overlay
     private readonly EntityQuery<CEZMapComponent> _zMapQuery;
     private readonly EntityQuery<WFGravityAnchorComponent> _anchorQuery;
 
-    /// <summary>The beam texture; an RSI frame, so it is an atlas sub-region and must never be tiled by UV.</summary>
-    private static readonly SpriteSpecifier BeamSprite =
-        new SpriteSpecifier.Rsi(new ResPath("/Textures/_WF/PlanetCracker/Effects/crack_beam.rsi"), "beam");
+    /// <summary>
+    /// The beam texture: the ship laser's own greyscale beam frame, which is the one state in that sheet authored
+    /// colourless so a gun can tint it, and which is exactly what the per-pair modulate below needs. It is a
+    /// FULL-WIDTH HORIZONTAL line, so the beam rect is laid out along X rather than Y.
+    /// An RSI frame, so it is an atlas sub-region and must never be tiled by UV; the rect stretches it instead, which
+    /// a line that already spans its frame edge to edge survives at any length.
+    /// </summary>
+    private static readonly SpriteSpecifier BeamSprite = new SpriteSpecifier.Rsi(
+        new ResPath("/Textures/_Mono/Objects/Weapons/Guns/Projectiles/lasers.rsi"), "grayscale_beam");
 
     /// <summary>
-    /// Where the beam leaves the projector, in its own rotated frame. The placeholder art is 64x64 on a 1x1 fixture
-    /// (machines.yml:103-107), so the emitter face sits one tile in front of the entity's own tile centre.
+    /// Where the beam leaves the projector, in its own rotated frame. The mount is the 64x64 AK570 on a 1x1 fixture
+    /// (machines.yml), whose twin barrels end 26 px below the sprite's centre, so the muzzle sits 26/32 of a tile in
+    /// front of the entity's own tile centre.
     /// </summary>
-    private static readonly Vector2 EmitterOffset = new(0f, -1f);
+    private static readonly Vector2 EmitterOffset = new(0f, -0.8125f);
 
     /// <summary>Shorter than this and the rect degenerates, so the beam is simply not drawn.</summary>
     private const float MinBeamLength = 0.05f;
@@ -121,7 +128,11 @@ public sealed partial class WFCrackBeamOverlay : Overlay
         var skin = WolfgateSkins.Get(_cfg.GetCVar(WolfgateCVars.UiStyle));
 
         var texture = _sprite.GetFrame(BeamSprite, _timing.CurTime);
-        var width = texture.Width / (float) EyeManager.PixelsPerMeter;
+
+        // The line runs along the frame's X, so its THICKNESS is the frame's height. The state's eight frames pulse
+        // between one and seven opaque pixels of that height and none of them is blank, so the beam throbs rather
+        // than blinking out the way a travelling bolt's fade would.
+        var width = texture.Height / (float) EyeManager.PixelsPerMeter;
 
         var query = _entityManager
             .EntityQueryEnumerator<WFCrackBeamComponent, WFGravityProjectorComponent, TransformComponent>();
@@ -180,9 +191,12 @@ public sealed partial class WFCrackBeamOverlay : Overlay
             // DrawTextureRect writes Modulate directly, which is linear, so this takes the CONVERTED skin colour.
             var colour = Color.FromSrgb(WFCrackCircleOverlay.ColourFor(skin, anchor, partner));
 
+            // The rect is laid out ALONG X because the texture's line is horizontal, so the angle is the plain
+            // atan2 of the difference rather than ToWorldAngle: Angle.FromWorldVec adds the quarter turn that maps
+            // "rotation zero faces south", which is right for an entity's facing and a quarter turn wrong here.
             var midPoint = near + diff / 2f;
-            var box = new Box2(-width / 2f, -length / 2f, width / 2f, length / 2f);
-            var rotated = new Box2Rotated(box.Translated(midPoint), diff.ToWorldAngle(), midPoint);
+            var box = new Box2(-length / 2f, -width / 2f, length / 2f, width / 2f);
+            var rotated = new Box2Rotated(box.Translated(midPoint), new Angle(diff), midPoint);
 
             handle.DrawTextureRect(texture, rotated, colour);
         }

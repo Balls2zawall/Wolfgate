@@ -35,14 +35,20 @@
   id: WFCrackSkyBeam
   categories: [ HideSpawnMenu ]
   components:
+  # Existing art: the same ship-laser beam frame the cutting beam overlay draws (_Mono lasers.rsi `grayscale_beam`),
+  # which is a full-width horizontal line authored greyscale so it can be tinted. A sprite layer is scaled before it
+  # is rotated (Matrix3Helpers.CreateTransform), so `scale: 5, 1` stretches the line to five tiles along its own X and
+  # `rotation: 90` then stands it up as the 1x5 pillar the beam wants.
   - type: Sprite
     drawdepth: Effects
     noRot: true # stays world-up on a rotated grid
-    offset: "0,2.0" # the sprite is 1x5 tiles centred on the entity; set in YAML, never at runtime
+    offset: "0,2.0" # the pillar is 1x5 tiles centred on the entity; set in YAML, never at runtime
     layers:
     - shader: unshaded
-      sprite: _WF/PlanetCracker/Effects/sky_beam.rsi
-      state: skybeam
+      sprite: _Mono/Objects/Weapons/Guns/Projectiles/lasers.rsi
+      state: grayscale_beam
+      scale: 5, 1
+      rotation: 90
   - type: Physics
     canCollide: false
   - type: Tag

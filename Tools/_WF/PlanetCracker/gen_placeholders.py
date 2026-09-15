@@ -114,38 +114,20 @@ def main():
         {"name": "deployed"}, {"name": "drilling", "frames": 8}, {"name": "locked", "frames": 4, "delay": 0.25},
         {"name": "off"}, {"name": "broken"}, {"name": "damaged", "frames": 4},
         {"name": "drilling-unshaded", "frames": 8, "unshaded": True}, {"name": "locked-unshaded", "frames": 4, "delay": 0.25, "unshaded": True}]))
-    # 2 anchor crate 2x2
-    made.append(rsi("Structures/anchor_crate", S64, "old", [
-        {"name": "closed"}, {"name": "open"}, {"name": "replacement"}]))
-    # 3 gravity projector 2x2, 4 directions
-    made.append(rsi("Structures/gravity_projector", S64, "new", [
-        {"name": "off", "dirs": 4}, {"name": "idle", "dirs": 4}, {"name": "charging", "dirs": 4, "frames": 6},
-        {"name": "firing", "dirs": 4, "frames": 6}, {"name": "broken", "dirs": 4},
-        {"name": "emitter-unshaded", "dirs": 4, "frames": 6, "unshaded": True}]))
+    # 2 anchor crate and 3 gravity projector: dropped, both use existing art (see SPRITE_LIST.md).
     # 4 centrifuge 3x3
     made.append(rsi("Structures/centrifuge", S96, "old", [
         {"name": "off"}, {"name": "spinning", "frames": 8, "delay": 0.08}, {"name": "broken"},
         {"name": "glow-unshaded", "frames": 8, "delay": 0.08, "unshaded": True}]))
-    # 5/6 console screens
-    made.append(rsi("Structures/crack_console", S32, "new", [
-        {"name": "idle"}, {"name": "targeting"}, {"name": "cracking", "frames": 2, "delay": 0.5}, {"name": "alert", "frames": 2, "delay": 0.3}]))
-    made.append(rsi("Structures/survey_console", S32, "new", [
-        {"name": "idle"}, {"name": "scanning", "frames": 4, "delay": 0.2}]))
+    # 5/6 console screens: dropped, both use stock computers.rsi faces.
     # 7 crack miner 2x2
     made.append(rsi("Structures/crack_miner", S64, "old", [
         {"name": "idle"}, {"name": "mining", "frames": 6}, {"name": "exhausted"}, {"name": "broken"},
         {"name": "mining-unshaded", "frames": 6, "unshaded": True}]))
-    # 8 handheld surveyor
-    made.append(rsi("Objects/surveyor", S32, "new", [
-        {"name": "icon"}, {"name": "inhand-left", "dirs": 4}, {"name": "inhand-right", "dirs": 4}, {"name": "scanning", "frames": 4, "delay": 0.15}]))
-    # 9 surveyor pulse
-    made.append(rsi("Effects/survey_pulse", S96, "fx", [{"name": "pulse", "frames": 6, "delay": 0.08}]))
+    # 8 handheld surveyor and 9 its pulse: dropped, an existing scanner and the singularity lensing shader.
     # 10 deep vein decal
     made.append(rsi("Decals/deep_vein", S32, "ui", [{"name": "vein"}, {"name": "vein-rich"}]))
-    # 11 fissures
-    made.append(rsi("Decals/fissure", S32, "ground", [
-        {"name": "fissure-1", "dirs": 4}, {"name": "fissure-2", "dirs": 4}, {"name": "fissure-3", "dirs": 4}, {"name": "fissure-4", "dirs": 4},
-        {"name": "burst", "frames": 6, "delay": 0.08}]))
+    # 11 fissures: dropped, the stock window crack overlays.
     # 12 crack ring
     made.append(rsi("Decals/crack_ring", S32, "ground", [
         {"name": "ring-straight-1", "dirs": 4}, {"name": "ring-straight-2", "dirs": 4}, {"name": "ring-straight-3", "dirs": 4},
@@ -153,12 +135,9 @@ def main():
     # 13 crack hole tile + rim
     made.append(rsi("Tiles/crack_hole", S32, "ground", [{"name": "crack_hole"}]))
     made.append(rsi("Decals/crack_rim", S32, "ground", [{"name": "rim-straight", "dirs": 4}, {"name": "rim-curve", "dirs": 4}]))
-    # 14 beams
-    made.append(rsi("Effects/crack_beam", S32, "fx", [{"name": "beam", "frames": 4, "delay": 0.06}]))
-    made.append(rsi("Effects/sky_beam", (32, 160), "fx", [{"name": "skybeam", "frames": 4, "delay": 0.1}]))
+    # 14 beams: dropped, both draw the _Mono ship laser beam.
     # P2
     made.append(rsi("Effects/chunk_burst", S96, "fx", [{"name": "burst", "frames": 8, "delay": 0.07}]))
-    made.append(rsi("Effects/mob_emerge", S32, "fx", [{"name": "emerge", "frames": 6, "delay": 0.08}]))
     made.append(rsi("Interface/icons", (16, 16), "ui", [
         {"name": "anchor"}, {"name": "projector"}, {"name": "centrifuge"}, {"name": "chunk"}, {"name": "warning"}, {"name": "beam"}]))
     for m in made:

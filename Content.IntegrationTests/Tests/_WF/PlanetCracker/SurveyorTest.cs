@@ -1,6 +1,5 @@
 #nullable enable
 using System.Collections.Generic;
-using System.Linq;
 using System.Numerics;
 using Content.IntegrationTests.Pair;
 using Content.Server._WF.PlanetCracker.Survey;
@@ -8,9 +7,9 @@ using Content.Shared._WF.PlanetCracker.Survey;
 using Content.Shared.Examine;
 using Content.Shared.Hands.EntitySystems;
 using Content.Shared.Interaction;
+using Content.Shared.Singularity.Components;
 using Content.Shared.Tag;
 using Content.Shared.Timing;
-using Robust.Client.GameObjects;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Localization;
 using Robust.Shared.Map;
@@ -25,8 +24,8 @@ namespace Content.IntegrationTests.Tests._WF.PlanetCracker;
 /// <summary>
 /// The handheld surveyor: what one pulse reveals and to whom, that the reveal is refused anywhere but a planet's
 /// ground layer, that the cooldown is the item's own UseDelay rather than anything this feature wrote, that the vein
-/// examine says nothing at all until the examiner has pulsed it, and that the pulse effect despawns on its art's own
-/// schedule.
+/// examine says nothing at all until the examiner has pulsed it, and that the pulse effect is the lensing ripple it
+/// claims to be and despawns on its own schedule.
 /// The scan is driven through the real interaction path - SharedInteractionSystem.UseInHandInteraction - with the
 /// scanner carrying the engine's InstantDoAfters tag, so TryStartDoAfter raises the completion inside the same call
 /// (Content.Shared/DoAfter/SharedDoAfterSystem.cs:259-263). That removes every source of flake a two-second wall-clock
@@ -44,10 +43,7 @@ public sealed class SurveyorTest
     /// <summary>The one-shot ground pulse the scan spawns.</summary>
     private const string PulseProto = "WFEffectSurveyPulse";
 
-    /// <summary>survey_pulse.rsi's only state.</summary>
-    private const string PulseState = "pulse";
-
-    /// <summary>Six frames at 0.08 s: the effect's lifetime is its art's, exactly.</summary>
+    /// <summary>The pulse's own half second; it draws no sprite, so nothing else pins this number.</summary>
     private const float PulseLifetime = 0.48f;
 
     /// <summary>The engine tag that makes TryStartDoAfter raise the completion in the same call.</summary>
@@ -276,13 +272,15 @@ public sealed class SurveyorTest
     }
 
     /// <summary>
-    /// The pulse is art with a stopwatch on it: 6 frames at 0.08 s, so the TimedDespawn has to be exactly 0.48 or the
-    /// sprite either cuts off or hangs. Sampled a couple of ticks in, because it outlives nothing.
+    /// The pulse has NO art: it is a SingularityDistortion the client's own singularity overlay lenses the screen
+    /// with, so what has to hold is that the component is on it, that it reaches the client at all - the component's
+    /// ComponentStartup is what takes the global PVS override that gets it there - and that the TimedDespawn still
+    /// takes it away. A pulse that lost the component would be a completely invisible effect with nothing to say so.
     /// This lives here rather than in PlanetCrackerPrototypeTest because it despawns faster than that file's own
     /// 15-tick sprite sweep, and because it belongs on planet ground rather than on a FloorSteel test grid.
     /// </summary>
     [Test]
-    public async Task PulseEffectDespawnsOnTimeAndNamesARealState()
+    public async Task PulseEffectDistortsAndDespawnsOnTime()
     {
         await using var pair = await PoolManager.GetServerClient(new PoolSettings { Connected = true, Dirty = true });
         var server = pair.Server;
@@ -314,7 +312,7 @@ public sealed class SurveyorTest
                     server.ResolveDependency<IComponentFactory>()), Is.True,
                 "The pulse prototype carries no TimedDespawn, so it would hang on the ground forever.");
             Assert.That(despawn!.Lifetime, Is.EqualTo(PulseLifetime).Within(0.001f),
-                "The pulse's lifetime no longer matches survey_pulse.rsi's six frames at 0.08 s.");
+                "The pulse's lifetime moved off the half second the scan is pitched at.");
             Assert.That(entMan.GetComponent<TimedDespawnComponent>(pulse).Lifetime,
                 Is.GreaterThan(0f).And.LessThanOrEqualTo(PulseLifetime),
                 "The spawned pulse is not counting down from its prototype's lifetime.");
@@ -327,15 +325,12 @@ public sealed class SurveyorTest
         {
             var uid = pair.ToClientUid(pulse);
 
-            Assert.That(client.EntMan.TryGetComponent(uid, out SpriteComponent? sprite), Is.True,
-                "The pulse never reached the client, so nobody saw it.");
-
-            var named = sprite!.AllLayers.FirstOrDefault(layer => layer.RsiState.Name == PulseState);
-
-            Assert.That(named, Is.Not.Null, $"The pulse's sprite names no layer in the '{PulseState}' state.");
-            Assert.That(named!.ActualRsi, Is.Not.Null, "The pulse's sprite layer resolves no RSI.");
-            Assert.That(named.ActualRsi!.TryGetState(PulseState, out _), Is.True,
-                $"The pulse names state '{PulseState}', which survey_pulse.rsi does not have.");
+            // SingularityOverlay.BeforeDraw walks SingularityDistortionComponent on the CLIENT, so the component
+            // reaching the client is the whole of "somebody saw it".
+            Assert.That(client.EntMan.TryGetComponent(uid, out SingularityDistortionComponent? distortion), Is.True,
+                "The pulse never reached the client as a distortion, so nobody saw anything at all.");
+            Assert.That(distortion!.Intensity, Is.GreaterThan(0f),
+                "The pulse's distortion has no intensity, which draws exactly nothing.");
         });
 
         // Well past 0.48 s at the pooled tickrate.

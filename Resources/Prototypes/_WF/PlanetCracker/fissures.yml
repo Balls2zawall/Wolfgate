@@ -1,74 +1,42 @@
-# Fissure decals, one-shot burst/emerge effects and the NPC targeting pair for F8's site threats:
-# fissures ringing an armed drill, mobs that emerge from them and hunt the anchor first.
+# Fissure decals and the NPC targeting pair for F8's site threats: fissures ringing an armed drill, mobs that emerge
+# from them and hunt the anchor first.
+#
+# Existing art for all four growth stages: the stock window damage overlays (Structures/Windows/cracks.rsi), which are
+# three escalating spiderweb cracks authored single-direction and near-white, so they read as splits in the ground and
+# take a decal's own colour. The sheet ships three stages and the design wants four, so stage four repeats the widest;
+# promoting a stage-three fissure to four is a no-op on screen and deliberately so - no new art was drawn for it.
 
 - type: decal
   id: WFFissure1
   tags: [ "wfcrack" ]
-  # Must stay false: true makes DecalOverlay snap the decal to the eye's cardinal and subtract that
-  # from the per-decal Angle argument (Content.Client/Decals/Overlays/DecalOverlay.cs:103-109), which
-  # would defeat the per-ring RingTangent rotation.
+  # Must stay false: true makes DecalOverlay snap the decal to the eye's cardinal and subtract that from the per-decal
+  # Angle argument (Content.Client/Decals/Overlays/DecalOverlay.cs:103-109), which would defeat the per-ring
+  # RingTangent rotation.
   snapCardinals: false
   defaultSnap: false
-  sprite: { sprite: _WF/PlanetCracker/Decals/fissure.rsi, state: fissure-1 }
+  sprite: { sprite: Structures/Windows/cracks.rsi, state: DamageOverlay_5 }
 
 - type: decal
   id: WFFissure2
   tags: [ "wfcrack" ]
   snapCardinals: false
   defaultSnap: false
-  sprite: { sprite: _WF/PlanetCracker/Decals/fissure.rsi, state: fissure-2 }
+  sprite: { sprite: Structures/Windows/cracks.rsi, state: DamageOverlay_10 }
 
 - type: decal
   id: WFFissure3
   tags: [ "wfcrack" ]
   snapCardinals: false
   defaultSnap: false
-  sprite: { sprite: _WF/PlanetCracker/Decals/fissure.rsi, state: fissure-3 }
+  sprite: { sprite: Structures/Windows/cracks.rsi, state: DamageOverlay_20 }
 
 - type: decal
   id: WFFissure4
   tags: [ "wfcrack" ]
   snapCardinals: false
   defaultSnap: false
-  sprite: { sprite: _WF/PlanetCracker/Decals/fissure.rsi, state: fissure-4 }
-
-# Must be an entity, not a decal: DecalOverlay draws Frame0 only, so an animated burst has to replicate
-# as a real sprite. The state deliberately lives in the Decals rsi, not Effects/.
-- type: entity
-  id: WFEffectFissureBurst
-  categories: [ HideSpawnMenu ]
-  components:
-  - type: TimedDespawn
-    lifetime: 0.48 # 6 frames x 0.08 s, from fissure.rsi/meta.json
-  - type: Sprite
-    drawdepth: Effects
-    noRot: true
-    layers:
-    - shader: unshaded
-      sprite: _WF/PlanetCracker/Decals/fissure.rsi
-      state: burst
-  - type: Tag
-    tags: [ HideContextMenu ]
-
-# Parented to the MOB itself (SpawnAttachedTo with EntityCoordinates(mob, Vector2.Zero)), so it must
-# not inherit the mob's rotation.
-- type: entity
-  id: WFEffectMobEmerge
-  categories: [ HideSpawnMenu ]
-  components:
-  - type: TimedDespawn
-    lifetime: 0.48 # 6 frames x 0.08 s, from mob_emerge.rsi/meta.json
-  - type: Sprite
-    drawdepth: Effects
-    noRot: true
-    layers:
-    - shader: unshaded
-      sprite: _WF/PlanetCracker/Effects/mob_emerge.rsi
-      state: emerge
-  - type: Transform
-    noRot: true
-  - type: Tag
-    tags: [ HideContextMenu ]
+  # The widest the sheet has, repeated: stage four is the same crack as stage three.
+  sprite: { sprite: Structures/Windows/cracks.rsi, state: DamageOverlay_20 }
 
 # Modelled on Resources/Prototypes/_Mono/NPCs/Shuttle/shuttle.yml:116-131.
 - type: utilityQuery

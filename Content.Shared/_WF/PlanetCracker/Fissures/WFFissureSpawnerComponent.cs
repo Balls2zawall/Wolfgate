@@ -143,13 +143,12 @@ public sealed partial class WFFissureSpawnerComponent : Component
     [ViewVariables]
     public List<EntityUid> Live = new();
 
-    /// <summary>The one-shot effect played on a tile as its fissure opens.</summary>
+    /// <summary>
+    /// The one-shot effect played on a tile as its fissure opens. The stock spark burst, which is already the
+    /// half-second one-shot the rest of the tree spawns for exactly this; no fissure effect art of our own exists.
+    /// </summary>
     [DataField]
-    public EntProtoId BurstEffect = "WFEffectFissureBurst";
-
-    /// <summary>The one-shot effect hung on a mob as it climbs out.</summary>
-    [DataField]
-    public EntProtoId EmergeEffect = "WFEffectMobEmerge";
+    public EntProtoId BurstEffect = "EffectSparks";
 
     /// <summary>Played once per ring as the ground splits.</summary>
     [DataField]

@@ -30,7 +30,8 @@ namespace Content.IntegrationTests.Tests._WF.PlanetCracker;
 
 /// <summary>
 /// Everything the planet cracker prototypes promise that only a loaded server can check: that each one indexes and
-/// spawns, that every sprite layer names a state its RSI actually has, and the handful of numbers the C# mirrors.
+/// spawns, that every sprite layer names a state its RSI actually has - borrowed sheets included - and the handful
+/// of numbers the C# mirrors.
 /// </summary>
 [TestFixture]
 public sealed class PlanetCrackerPrototypeTest
@@ -41,8 +42,8 @@ public sealed class PlanetCrackerPrototypeTest
     /// map-initialised test map, so WFDeepVein's MapInit handler deletes itself twice over - the tile is not in its
     /// AllowedTiles and the grid resolves no WFPlanetLayer -> WFPlanetNetwork -> surface -> veins chain - and
     /// EveryPrototypeSpawns' EntityExists assert would fail. WFEffectSurveyPulse despawns after 0.48 s, which is
-    /// shorter than EverySpriteStateExists' 15 ticks at net.tickrate 30 (0.50 s). Both are covered instead by
-    /// DeepVeinTest and SurveyorTest, which spawn them in a context where they survive and assert their RSI states there.
+    /// shorter than EverySpriteStateExists' 15 ticks at net.tickrate 30 (0.50 s), and draws no sprite at all. Both are
+    /// covered instead by DeepVeinTest and SurveyorTest, which spawn them where they survive long enough to read.
     /// </summary>
     private static readonly string[] Prototypes =
     {
@@ -91,19 +92,19 @@ public sealed class PlanetCrackerPrototypeTest
     /// <summary>The sprite layer key every computer screen visualiser drives.</summary>
     private const string ScreenLayer = "computerLayerScreen";
 
-    /// <summary>The console's own screen RSI, as the prototype names it.</summary>
-    private const string ScreenRsi = "/Textures/_WF/PlanetCracker/Structures/crack_console.rsi";
+    /// <summary>
+    /// The screen RSI both consoles now name, which is the shared computer sheet: the screen layers dropped their own
+    /// `sprite:` and inherit BaseComputer's, so every face has to be a state stock computers.rsi already ships.
+    /// </summary>
+    private const string ScreenRsi = "/Textures/Structures/Machines/computers.rsi";
 
     /// <summary>The sector survey console, which F2 gives a UserInterface block and a second screen visualiser.</summary>
     private const string SurveyConsole = "WFSectorSurveyConsole";
 
-    /// <summary>The survey console's own screen RSI, as the prototype names it.</summary>
-    private const string SurveyScreenRsi = "/Textures/_WF/PlanetCracker/Structures/survey_console.rsi";
+    /// <summary>The handheld surveyor's RSI: the stock anomaly locator, borrowed for its icon and both in-hands.</summary>
+    private const string SurveyorRsi = "/Textures/Objects/Specific/Research/anomalylocator.rsi";
 
-    /// <summary>The handheld surveyor's RSI, as the prototype names it.</summary>
-    private const string SurveyorRsi = "/Textures/_WF/PlanetCracker/Objects/surveyor.rsi";
-
-    /// <summary>The one state the surveyor prototype names; `scanning` ships unused this pass (plan D-N).</summary>
+    /// <summary>The one state the surveyor prototype names; the locator's `screen` ships unused (plan D-N).</summary>
     private const string SurveyorState = "icon";
 
     /// <summary>UserInterfaceComponent.Interfaces, which the engine keeps internal.</summary>
@@ -143,8 +144,9 @@ public sealed class PlanetCrackerPrototypeTest
     }
 
     /// <summary>
-    /// The regression guard on "the prototypes reference the placeholder RSIs verbatim". A state name that is not in
-    /// the generated meta.json only shows up as a missing sprite at runtime.
+    /// The regression guard on "the prototypes reference their RSIs verbatim". A state name that is not in the
+    /// meta.json only shows up as a missing sprite at runtime, and half of these sheets are now other people's art
+    /// that this feature does not own and cannot stop from being renamed.
     /// </summary>
     [Test]
     public async Task EverySpriteStateExists()
@@ -367,7 +369,7 @@ public sealed class PlanetCrackerPrototypeTest
 
                     Assert.That(state, Is.Not.Null, $"The {face} face names no RSI state.");
                     Assert.That(rsi.TryGetState(state!, out _), Is.True,
-                        $"The {face} face names state '{state}', which crack_console.rsi does not have.");
+                        $"The {face} face names state '{state}', which computers.rsi does not have.");
                 }
             }
         });
@@ -377,7 +379,7 @@ public sealed class PlanetCrackerPrototypeTest
 
     /// <summary>
     /// The survey console's half of the same trap, one document further down the same file: its own screen key beside
-    /// the two it has to re-declare, and two faces that have to name states survey_console.rsi actually ships.
+    /// the two it has to re-declare, and two faces that have to name states computers.rsi actually ships.
     /// Its new UserInterface block is covered by EveryActivatableUiResolvesItsInterface, which walks the same array.
     /// </summary>
     [Test]
@@ -416,7 +418,7 @@ public sealed class PlanetCrackerPrototypeTest
             Assert.That(screen.ContainsKey(ScreenLayer), Is.True,
                 "The survey console's screen visualiser does not drive the screen layer.");
 
-            var rsi = cache.GetResource<RSIResource>(new ResPath(SurveyScreenRsi)).RSI;
+            var rsi = cache.GetResource<RSIResource>(new ResPath(ScreenRsi)).RSI;
 
             using (Assert.EnterMultipleScope())
             {
@@ -429,7 +431,7 @@ public sealed class PlanetCrackerPrototypeTest
 
                     Assert.That(state, Is.Not.Null, $"The {face} face names no RSI state.");
                     Assert.That(rsi.TryGetState(state!, out _), Is.True,
-                        $"The {face} face names state '{state}', which survey_console.rsi does not have.");
+                        $"The {face} face names state '{state}', which computers.rsi does not have.");
                 }
             }
         });
@@ -438,8 +440,8 @@ public sealed class PlanetCrackerPrototypeTest
     }
 
     /// <summary>
-    /// The surveyor names one state and leans on its BaseRSI for the in-hands, so a renamed icon is a missing sprite in
-    /// every hand and nothing in the item block would say so.
+    /// The surveyor names one state and leans on its BaseRSI for the in-hands, so a borrowed RSI that has no `icon`,
+    /// or has no in-hands to fall back on, is a missing sprite in every hand and nothing in the item block would say so.
     /// </summary>
     [Test]
     public async Task SurveyorSpriteResolves()
@@ -465,7 +467,7 @@ public sealed class PlanetCrackerPrototypeTest
             using (Assert.EnterMultipleScope())
             {
                 Assert.That(rsi.TryGetState(SurveyorState, out _), Is.True,
-                    $"surveyor.rsi has no '{SurveyorState}' state for the prototype to name.");
+                    $"anomalylocator.rsi has no '{SurveyorState}' state for the prototype to name.");
                 Assert.That(sprite!.AllLayers.Any(layer => layer.RsiState.Name == SurveyorState), Is.True,
                     $"The surveyor's sprite names no layer in the '{SurveyorState}' state.");
             }

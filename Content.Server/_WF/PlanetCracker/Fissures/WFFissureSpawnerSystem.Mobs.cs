@@ -138,7 +138,7 @@ public sealed partial class WFFissureSpawnerSystem
 
     /// <summary>
     /// Makes one spawned mob a site threat: the anchor-first HTN root, the faction exception against the anchor and the
-    /// emerge effect and sound. A faction entry that is not a mob is left unstamped - WeaponTurretXeno
+    /// emerge sound. A faction entry that is not a mob is left unstamped - WeaponTurretXeno
     /// (salvage_factions.yml:22-25) carries an HTNComponent but no MobStateComponent, so it keeps TurretCompound and
     /// goes on shooting; it still counts toward <see cref="WFFissureSpawnerComponent.SpawnedTotal"/> and is tracked in
     /// <see cref="WFFissureSpawnerComponent.Spawned"/>, it just never joins <see cref="WFFissureSpawnerComponent.Live"/>.
@@ -167,9 +167,7 @@ public sealed partial class WFFissureSpawnerSystem
         // and widening either would break these mobs against players.
         _npcFaction.AggroEntity(mob, anchor);
 
-        // Parented to the MOB, the WhistleSystem.cs:25 idiom. Transform(mob).Coordinates would parent it to the ground
-        // GRID instead, and the effect would not follow a mob that moves during its 0.48 s.
-        SpawnAttachedTo(ent.Comp.EmergeEffect, new EntityCoordinates(mob, Vector2.Zero));
+        // No emerge effect: the threat simply appears on its fissure tile. The stone-door sound is the whole cue.
         _audio.PlayPvs(ent.Comp.EmergeSound, mob);
 
         ent.Comp.Live.Add(mob);

@@ -111,10 +111,16 @@
   name: gravity anchor crate
   description: A reinforced shipping crate with lift points. Pry it open on a planet surface.
   components:
+  # Existing art: the engineering secure crate, which already reads as a heavy shipping container with lift points.
+  # It is a 32x32 crate on a 2x2 fixture, so the whole sprite is scaled by exactly 2 to fill the footprint.
+  # Crate RSIs split the body (`base`) from the lid (`closed`/`open`), so the mapped layer is the LID: that is the one
+  # WFCrateVisuals.Open swaps, and the body has to sit under it unmapped.
   - type: Sprite
-    sprite: _WF/PlanetCracker/Structures/anchor_crate.rsi
+    sprite: Structures/Storage/Crates/engicrate_secure.rsi
     noRot: true
+    scale: 2, 2
     layers:
+    - state: base
     - map: [ "enum.WFCrateVisualLayers.Base" ]
       state: closed
   - type: Appearance
@@ -160,13 +166,17 @@
   name: replacement gravity anchor crate
   suffix: Replacement
   components:
+  # Same crate, plus the secure crate's own lock light as the variant marking: no stencil art exists and none is
+  # wanted, so the bought replacement is the one that reads as sealed and the two that ship with the hull do not.
   - type: Sprite
-    sprite: _WF/PlanetCracker/Structures/anchor_crate.rsi
+    sprite: Structures/Storage/Crates/engicrate_secure.rsi
     noRot: true
+    scale: 2, 2
     layers:
+    - state: base
     - map: [ "enum.WFCrateVisualLayers.Base" ]
       state: closed
     - map: [ "enum.WFCrateVisualLayers.Stencil" ]
-      state: replacement
+      state: locked
   - type: StaticPrice
     price: 400000            # design section 5 / D17: the cargo-purchasable replacement

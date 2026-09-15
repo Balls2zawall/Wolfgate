@@ -99,31 +99,37 @@
   id: WFGravityProjector
   parent: [ BaseMachinePowered, ConstructibleMachine ]
   name: gravity projector
-  description: A glass emitter on a riveted hull bracket. It beams straight down.
-  # The placeholder art is 64x64 (2x2) but the fixture is deliberately left at the inherited 1x1
+  description: A twin-barrelled hull mount that swings onto an anchor and beams straight down at it.
+  # Existing art: the AK570 shuttle autocannon (_Mono space artillery). It is a 64x64 SINGLE-direction mount drawn to
+  # be swung to any angle by FireControlRotate, which is exactly what WFCrackerSystem.Beams.cs does to it during a cut,
+  # and its twin barrels point south at rotation zero like every other rotating sprite in the engine.
+  # The sprite is 64x64 (2x2) but the fixture is deliberately left at the inherited 1x1
   # (base_structuremachines.yml:10-20). An even-sided AABB centred on a tile centre straddles four
   # tiles by half-tiles and cannot align to the snap grid, and AnchorEntity claims one tile either
   # way, so the sprite simply overhangs its machine tile. Keep mapped projectors >= 2 tiles apart.
   components:
   - type: Sprite
-    sprite: _WF/PlanetCracker/Structures/gravity_projector.rsi
+    sprite: _Mono/Objects/ShuttleWeapons/artillery.rsi
     layers:
     - map: [ "enum.WFProjectorVisualLayers.Base" ]
-      state: off
+      state: space_artillery
     - map: [ "enum.WFProjectorVisualLayers.Emitter" ]
-      state: emitter-unshaded
+      state: fcs-unshaded
       shader: unshaded
       visible: false
   - type: Appearance
   - type: GenericVisualizer
     visuals:
       enum.WFProjectorVisuals.State:
+        # The turret ships ONE body state, so the five projector states separate on colour instead: an unpowered mount
+        # is grey, a broken one is bled red, and the three live ones are the art as drawn.
         enum.WFProjectorVisualLayers.Base:
-          Off:      { state: off }
-          Idle:     { state: idle }
-          Charging: { state: charging }
-          Firing:   { state: firing }
-          Broken:   { state: broken }
+          Off:      { state: space_artillery, color: "#888888" }
+          Idle:     { state: space_artillery, color: "#ffffff" }
+          Charging: { state: space_artillery, color: "#ffffff" }
+          Firing:   { state: space_artillery, color: "#ffffff" }
+          Broken:   { state: space_artillery, color: "#7a4a4a" }
+        # fcs-unshaded is the mount's own fire-control glow, which is the only unshaded state the RSI ships.
         enum.WFProjectorVisualLayers.Emitter:
           Off:      { visible: false }
           Idle:     { visible: false }
@@ -132,7 +138,7 @@
           Broken:   { visible: false }
   - type: Transform
     anchored: true
-    noRot: false             # 4-direction sprite: the mapper faces it at the berth
+    noRot: false             # free-rotating mount: the mapper faces it outward, the cut swings it onto its anchor
   - type: Rotatable
     rotateWhileAnchored: true
   - type: ApcPowerReceiver

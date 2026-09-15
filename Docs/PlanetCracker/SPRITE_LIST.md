@@ -20,15 +20,6 @@ what the placeholder `meta.json` declares; change them freely, the code reads th
 | | | `damaged` | 96×96 | 1 | 4 | 0.10 | sparks overlay while damaged |
 | | | `drilling-unshaded` | 96×96 | 1 | 8 | 0.10 | glow layer for drilling |
 | | | `locked-unshaded` | 96×96 | 1 | 4 | 0.25 | glow layer for locked |
-| `Structures/anchor_crate.rsi` | 2×2 | `closed` | 64×64 | 1 | 1 | | crate |
-| | | `open` | 64×64 | 1 | 1 | | crate opened |
-| | | `replacement` | 64×64 | 1 | 1 | | replacement-anchor crate |
-| `Structures/gravity_projector.rsi` | 2×2 | `off` | 64×64 | **4** | 1 | | unpowered |
-| | | `idle` | 64×64 | 4 | 1 | | powered, waiting |
-| | | `charging` | 64×64 | 4 | 6 | 0.10 | spool-up |
-| | | `firing` | 64×64 | 4 | 6 | 0.10 | beam active |
-| | | `broken` | 64×64 | 4 | 1 | | destroyed |
-| | | `emitter-unshaded` | 64×64 | 4 | 6 | 0.10 | emitter glow |
 | `Structures/centrifuge.rsi` | 3×3 | `off` | 96×96 | 1 | 1 | | stopped |
 | | | `spinning` | 96×96 | 1 | 8 | 0.08 | one seamless rotor loop |
 | | | `broken` | 96×96 | 1 | 1 | | destroyed |
@@ -38,32 +29,12 @@ what the placeholder `meta.json` declares; change them freely, the code reads th
 | | | `exhausted` | 64×64 | 1 | 1 | | vein under it is spent |
 | | | `broken` | 64×64 | 1 | 1 | | destroyed |
 | | | `mining-unshaded` | 64×64 | 1 | 6 | 0.10 | glow while mining |
-| `Structures/crack_console.rsi` | screen only | `idle` | 32×32 | 1 | 1 | | screen art on the shared computer body |
-| | | `targeting` | 32×32 | 1 | 1 | | anchors paired, waiting |
-| | | `cracking` | 32×32 | 1 | 2 | 0.50 | crack running |
-| | | `alert` | 32×32 | 1 | 2 | 0.30 | grace or fault blink |
-| `Structures/survey_console.rsi` | screen only | `idle` | 32×32 | 1 | 1 | | screen art |
-| | | `scanning` | 32×32 | 1 | 4 | 0.20 | scan running |
-
-## Objects
-
-| RSI | State | Canvas | Dirs | Frames | Delay | Used for |
-|---|---|---|---|---|---|---|
-| `Objects/surveyor.rsi` | `icon` | 32×32 | 1 | 1 | | item |
-| | `inhand-left` | 32×32 | 4 | 1 | | in hand |
-| | `inhand-right` | 32×32 | 4 | 1 | | in hand |
-| | `scanning` | 32×32 | 1 | 4 | 0.15 | while scanning |
 
 ## Effects (entities, drawn unshaded)
 
 | RSI | State | Canvas | Frames | Delay | Used for |
 |---|---|---|---|---|---|
-| `Effects/crack_beam.rsi` | `beam` | 32×32 | 4 | 0.06 | projector → anchor beam; repeats along the line, must tile vertically |
-| `Effects/sky_beam.rsi` | `skybeam` | 32×160 | 4 | 0.10 | stands on each anchor during the crack, fades upward |
-| `Effects/survey_pulse.rsi` | `pulse` | 96×96 | 6 | 0.08 | one-shot ring at the surveyor |
 | `Effects/chunk_burst.rsi` | `burst` | 96×96 | 8 | 0.07 | one-shot at hole and chunk on extraction |
-| `Effects/mob_emerge.rsi` | `emerge` | 32×32 | 6 | 0.08 | one-shot on a creature leaving a fissure (F8) |
-| `Decals/fissure.rsi` | `burst` | 32×32 | 6 | 0.08 | one-shot where a fissure spawns (F8); lives in the decal RSI |
 
 ## Decals (ground)
 
@@ -75,7 +46,6 @@ directions only because they were generated that way.
 |---|---|---|---|
 | `Decals/crack_rim.rsi` | `rim-straight` | 32×32 | lip of the hole, straight run |
 | | `rim-curve` | 32×32 | lip of the hole, corner |
-| `Decals/fissure.rsi` | `fissure-1` … `fissure-4` | 32×32 each | fissure growth stages around a drilling anchor (F8); stage 4 glows |
 | `Decals/deep_vein.rsi` | `vein` | 32×32 | grey, tinted in code per ore |
 | | `vein-rich` | 32×32 | rich vein variant |
 
@@ -85,6 +55,26 @@ directions only because they were generated that way.
 |---|---|---|---|
 | `Interface/icons.rsi` | `projector`, `beam`, `warning`, `chunk` | 16×16 | console diagram and legend |
 | | `anchor`, `centrifuge` | 16×16 | declared, not drawn yet; keep for the legend |
+
+## Uses existing art
+
+Seven of the original asks were resolved with art (or a code effect) the tree already ships, so no artist time goes
+into them and the generated placeholders are deleted. Nothing under `_WF/PlanetCracker/` carries these any more;
+the prototypes and the beam overlay name the paths below directly, and `gen_placeholders.py` no longer makes them.
+
+| Was | Now uses | States | Why |
+|---|---|---|---|
+| `Structures/anchor_crate.rsi` | `Structures/Storage/Crates/engicrate_secure.rsi` | `base` + `closed`/`open`, `locked` on the replacement | The stock engineering secure crate already reads as a heavy shipping container. 32×32 art on a 2×2 fixture, so the sprite carries `scale: 2, 2`; the lid is the mapped `WFCrateVisualLayers.Base` layer and the body sits under it. The replacement variant's stencil layer is the crate's own lock light, because no stencil art exists. |
+| `Structures/gravity_projector.rsi` | `_Mono/Objects/ShuttleWeapons/artillery.rsi` | `space_artillery`, `fcs-unshaded` | The AK570 shuttle autocannon: a 64×64 single-direction mount drawn to be swung to any angle, which is exactly what the cut now does to it. One body state, so off/idle/charging/firing/broken separate on colour instead; `fcs-unshaded` is the emitter glow layer. |
+| `Structures/crack_console.rsi` | `Structures/Machines/computers.rsi` | `shuttle`, `telesci`, `telesci_red`, `explosive` | The screen layer drops its own `sprite:` and inherits BaseComputer's sheet. Nav grid idle, targeting grid once paired, the same grid red while cutting, ordnance warning on the grace timer. |
+| `Structures/survey_console.rsi` | `Structures/Machines/computers.rsi` | `sensors`, `mining` | Same inheritance. Sensor face at rest, mineral face while a density scan runs. |
+| `Objects/surveyor.rsi` | `Objects/Specific/Research/anomalylocator.rsi` | `icon`, `inhand-left`, `inhand-right` | A handheld density scanner with both in-hands already drawn. The scanning state is dropped: nothing ever loaded it. |
+| `Effects/crack_beam.rsi` | `_Mono/Objects/Weapons/Guns/Projectiles/lasers.rsi` | `grayscale_beam` | The ship laser's own beam, and the one state in that sheet authored colourless so a gun can tint it — which is what the overlay's per-pair modulate needs. It is a HORIZONTAL full-width line, so `WFCrackBeamOverlay` lays its rect along X and takes the thickness from the frame's height. |
+| `Effects/sky_beam.rsi` | `_Mono/Objects/Weapons/Guns/Projectiles/lasers.rsi` | `grayscale_beam` | The same frame, stood up: the layer takes `scale: 5, 1` and then `rotation: 90`, which is the 1×5 pillar the old sheet drew by hand. |
+| `Effects/survey_pulse.rsi` | no art at all | — | `WFEffectSurveyPulse` carries `SingularityDistortion` (intensity 400, falloff 2) and the client's own singularity overlay lenses the screen around it. |
+| `Effects/mob_emerge.rsi` | no art at all | — | Dropped outright. A fissure mob simply appears on its tile; the stone-door sound is the cue. |
+| `Decals/fissure.rsi` (`fissure-1..4`) | `Structures/Windows/cracks.rsi` | `DamageOverlay_5`, `DamageOverlay_10`, `DamageOverlay_20`, `DamageOverlay_20` | The stock window damage overlays are three escalating near-white spiderweb cracks, single-direction, which read as splits in the ground. The sheet has three stages and the design wants four, so stage 4 repeats the widest. |
+| `Decals/fissure.rsi` (`burst`) | `EffectSparks` | `Effects/sparks.rsi` `sparks` | The stock half-second spark one-shot, already spawned this way all over the tree. `WFFissureSpawnerComponent.BurstEffect` names it. |
 
 ## Not needed
 
@@ -96,10 +86,9 @@ directions only because they were generated that way.
 
 | Group | Distinct PNGs | Largest canvas |
 |---|---|---|
-| Structures | 31 | 96×96, with 8-frame strips at 768×96 |
-| Objects | 4 | 32×32 |
-| Effects | 6 | 96×96 strips, sky beam 32×160 |
-| Decals | 8 | 32×32 |
+| Structures | 17 | 96×96, with 8-frame strips at 768×96 |
+| Effects | 1 | 96×96 strip |
+| Decals | 3 | 32×32 |
 | Interface | 6 | 16×16 |
 
 Maps (cracker hull, transport) are separate and unchanged from `ASSET_REQUIREMENTS.md`.
