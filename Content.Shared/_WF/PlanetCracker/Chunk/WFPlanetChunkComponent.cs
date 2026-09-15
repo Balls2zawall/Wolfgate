@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Numerics;
 using Robust.Shared.Audio;
 using Robust.Shared.GameStates;
@@ -84,6 +85,14 @@ public sealed partial class WFPlanetChunkComponent : Component
     /// <summary>World rotation snapshotted alongside <see cref="DropWorldPos"/>.</summary>
     [DataField]
     public Angle DropWorldRot;
+
+    /// <summary>Hull tiles the gangway to this chunk was laid on, lifted again at drop.</summary>
+    [DataField]
+    public List<Vector2i> GangwayTiles = new();
+
+    /// <summary>The hull carrying the gangway.</summary>
+    [DataField]
+    public NetEntity? GangwayHull;
 
     /// <summary>
     /// Per-tile crash blast intensity, copied onto CEZGridFallerComponent at drop time. The engine's own central blast

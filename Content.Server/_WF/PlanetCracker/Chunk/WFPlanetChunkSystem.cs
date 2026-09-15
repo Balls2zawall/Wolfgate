@@ -41,6 +41,7 @@ public sealed partial class WFPlanetChunkSystem : EntitySystem
     [Dependency] private GravitySystem _gravity = default!;
     [Dependency] private IGameTiming _timing = default!;
     [Dependency] private IMapManager _mapManager = default!;
+    [Dependency] private ITileDefinitionManager _tileDefs = default!;
     [Dependency] private SharedAudioSystem _audio = default!;
     [Dependency] private SharedMapSystem _map = default!;
     [Dependency] private SharedTransformSystem _transform = default!;
@@ -252,8 +253,19 @@ public sealed partial class WFPlanetChunkSystem : EntitySystem
         faller.CrashTileIntensity = ent.Comp.CrashTileIntensity;
         faller.CrashTileMaxIntensity = ent.Comp.CrashTileMaxIntensity;
 
-        // Snapshotted before the grid moves; the chunk is dynamic for the whole fall, so the pose is re-asserted once
+        // The gangway goes first: the chunk it led to is leaving.
+        LiftGangway(ent);
+
+        // Back over the hole before the fall: the chunk hangs clear of the hull and turned to its heading, and a fall
+        // is straight down, so the hole pose - the ground's own origin and heading, which its tile indices were cut at -
+        // is put back here. Snapshotted too: the chunk is dynamic for the whole fall, so the pose is re-asserted once
         // at landing rather than trusted to survive it.
+        if (TryGetEntity(ent.Comp.GroundMap, out var groundUid))
+        {
+            var (groundPos, groundRot) = _transform.GetWorldPositionRotation(groundUid.Value);
+            _transform.SetWorldPositionRotation(ent.Owner, groundPos, groundRot);
+        }
+
         var (dropPos, dropRot) = _transform.GetWorldPositionRotation(ent.Owner);
         ent.Comp.DropWorldPos = dropPos;
         ent.Comp.DropWorldRot = dropRot;

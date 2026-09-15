@@ -485,13 +485,18 @@ public sealed class CrackExtractionTest
         await AlignHull(pair, site, Vector2.Zero);
         await Energise(pair, site.Cracker);
         await BeginCut(pair, site);
+
+        // The hull's own footprint, after the snap and before the gangway is laid on it: the gangway overlaps the
+        // disc by one tile on purpose, so it is not what the disc has to clear.
+        var hull = Box2.Empty;
+        await server.WaitPost(() => hull = lookup.GetWorldAABB(site.Cracker));
+
         await CompleteCut(pair, site);
 
         var cut = await ReadCut(pair);
 
         await server.WaitAssertion(() =>
         {
-            var hull = lookup.GetWorldAABB(site.Cracker);
             var chunk = lookup.GetWorldAABB(cut.Chunk);
 
             using (Assert.EnterMultipleScope())
@@ -500,6 +505,26 @@ public sealed class CrackExtractionTest
                     "The chunk is not hanging on the orbit layer.");
                 Assert.That(hull.Intersects(chunk), Is.False,
                     $"The disc {chunk} was hung through the hull {hull}.");
+
+                // The gangway: lattice from the marker's tile out over the gap and one tile into the disc.
+                var comp = entMan.GetComponent<WFPlanetChunkComponent>(cut.Chunk);
+                Assert.That(comp.GangwayTiles.Count, Is.GreaterThanOrEqualTo(3),
+                    "No gangway was laid from the hull to the chunk.");
+                Assert.That(entMan.GetNetEntity(site.Cracker), Is.EqualTo(comp.GangwayHull),
+                    "The gangway is recorded on the wrong hull.");
+
+                var hullGrid = entMan.GetComponent<MapGridComponent>(site.Cracker);
+                var maps = server.System<SharedMapSystem>();
+                var lattice = server.ResolveDependency<ITileDefinitionManager>()[WFPlanetChunkSystem.GangwayTile].TileId;
+
+                foreach (var index in comp.GangwayTiles)
+                {
+                    Assert.That(maps.TryGetTileRef(site.Cracker, hullGrid, index, out var tileRef) && tileRef.Tile.TypeId == lattice,
+                        Is.True, $"Gangway tile {index} is not lattice on the hull.");
+                }
+
+                var far = maps.GridTileToWorld(site.Cracker, hullGrid, comp.GangwayTiles[^1]).Position;
+                Assert.That(chunk.Contains(far), Is.True, "The gangway's last tile does not reach the disc.");
             }
         });
 

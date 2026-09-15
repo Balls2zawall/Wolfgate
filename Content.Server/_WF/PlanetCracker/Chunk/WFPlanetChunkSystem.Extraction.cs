@@ -193,9 +193,14 @@ public sealed partial class WFPlanetChunkSystem
         _ignored.Clear();
         _shuttle.GetAllDockedShuttles(cracker.Owner, _ignored);
 
-        // STEP 10: hang it in the berth. Translation only, with the ground grid's own rotation, so the chunk's tile
-        // indices stay pixel-perfect over the hole for F6 and F7.
-        var target = groundWorldPos + (GetBerthCentreClearOf(cracker, berth, radius, _ignored) - centre);
+        // STEP 10: hang it in the berth, turned about its own disc centre to the hull's heading so its tiles line up
+        // with the deck and the gangway. The hole pose is not kept: the drop re-poses the chunk over the hole first.
+        // The circle centre is world XY; the chunk's own frame is the ground's, so it is taken back to ground-local
+        // before the hull's heading is put on it.
+        var hang = GetBerthCentreClearOf(cracker, berth, radius, _ignored);
+        var hullRot = _transform.GetWorldRotation(cracker.Owner);
+        var localCentre = (-groundWorldRot).RotateVec(centre - groundWorldPos);
+        var target = hang - hullRot.RotateVec(localCentre);
 
         WarnOnObstruction(cracker, chunkEnt, berth.MapId, target, _ignored);
 
@@ -206,7 +211,7 @@ public sealed partial class WFPlanetChunkSystem
             (chunkEnt.Owner, chunkEnt.Comp),
             orbitMap,
             target,
-            groundWorldRot,
+            hullRot,
             offset: orbitDepth - groundDepth,
             depth: orbitDepth);
 
@@ -230,6 +235,8 @@ public sealed partial class WFPlanetChunkSystem
 
         cracker.Comp.Chunk = GetNetEntity(chunkEnt.Owner);
         Dirty(cracker);
+
+        LayGangway(cracker, (chunkEnt.Owner, comp), hang, radius, _ignored);
 
         // The connector resolves its links by world position and never subscribes MoveEvent, so a new grid on a layer
         // has to ask for the recalculation itself.
