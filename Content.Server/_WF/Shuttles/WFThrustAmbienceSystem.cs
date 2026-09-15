@@ -28,6 +28,9 @@ public sealed partial class WFThrustAmbienceSystem : EntitySystem
     private const ShuttleButtons Thrusting = ShuttleButtons.StrafeUp | ShuttleButtons.StrafeDown
         | ShuttleButtons.StrafeLeft | ShuttleButtons.StrafeRight | ShuttleButtons.Brake;
 
+    /// <summary>Loop gain in dB; a touch under the file's own level, which read loud over the rest of the hull.</summary>
+    private const float ThrustVolume = -6f;
+
     private static readonly TimeSpan SweepInterval = TimeSpan.FromSeconds(0.1);
     private static readonly TimeSpan RecutInterval = TimeSpan.FromSeconds(10);
 
@@ -80,7 +83,7 @@ public sealed partial class WFThrustAmbienceSystem : EntitySystem
                 continue;
 
             comp.Stream = _audio.Stop(comp.Stream);
-            comp.Stream = _audio.PlayGlobal(ThrustLoop, _audience.Aboard(grid), true, AudioParams.Default.WithLoop(true))?.Entity;
+            comp.Stream = _audio.PlayGlobal(ThrustLoop, _audience.Aboard(grid), true, AudioParams.Default.WithLoop(true).WithVolume(ThrustVolume))?.Entity;
             comp.NextRecut = _timing.CurTime + RecutInterval;
         }
     }
