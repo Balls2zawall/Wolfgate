@@ -234,8 +234,9 @@ public sealed class ChunkDropTest
             velocity = faller?.Velocity ?? 0f;
             progress = entMan.TryGetComponent(chunk, out CEZPhysicsComponent? zPhys) ? zPhys.LocalPosition : -1f;
             bodyType = entMan.TryGetComponent(chunk, out PhysicsComponent? body) ? body.BodyType : BodyType.Static;
-            stillPinned = entMan.HasComponent<PreventGridAnchorChangesComponent>(chunk)
-                || entMan.HasComponent<ForceAnchorComponent>(chunk);
+            // PreventGridAnchorChanges deliberately stays on: it is what keeps CE's un-forced Enable from unfixing
+            // the chunk's rotation mid-push. The pin that matters is the force-anchor and the static body.
+            stillPinned = entMan.HasComponent<ForceAnchorComponent>(chunk);
         });
 
         await server.WaitRunTicks(1);

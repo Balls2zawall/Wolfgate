@@ -780,6 +780,67 @@ public sealed class FlightTest
         await pair.CleanReturnAsync();
     }
 
+    /// <summary>
+    /// A hull that has landed on the ground and lifted off again still answers its planar thrusters: a relaunched
+    /// shuttle that climbed but could not move sideways is what this guards against.
+    /// </summary>
+    [Test]
+    public async Task RelaunchedHullStillSteers()
+    {
+        await using var pair = await PoolManager.GetServerClient();
+        var server = pair.Server;
+        var entMan = server.EntMan;
+        var transform = server.System<SharedTransformSystem>();
+
+        await EnableFeature(pair);
+
+        var layers = await BuildStandalone(pair);
+        var ground = layers[0];
+        var airMapId = await MapIdOf(pair, layers[1]);
+
+        var hull = await BuildCracker(pair, airMapId);
+        await MapInitHull(pair, hull);
+        await AddLandingThrusters(pair, hull, 3);
+
+        // Terrain under the hull: CE only eases a descent onto ground it can see, and a bare test layer is a crash.
+        await LayTiles(pair, ground, new Vector2i(-8, -8), new Vector2i(24, 24));
+
+        var descend = await HoldVertical(pair, hull, ShuttleButtons.DescendZ);
+        var landed = false;
+
+        for (var second = 0; second < 40 && !landed; second++)
+        {
+            await server.WaitRunTicks(pair.SecondsToTicks(1f));
+            await server.WaitPost(() => landed = entMan.GetComponent<TransformComponent>(hull).MapUid == ground);
+        }
+
+        await server.WaitPost(() => entMan.DeleteEntity(descend));
+        Assert.That(landed, Is.True, "Precondition: the hull never landed on the ground layer.");
+        await server.WaitRunTicks(pair.SecondsToTicks(2f));
+
+        var before = Vector2.Zero;
+        await server.WaitPost(() => before = transform.GetWorldPosition(hull));
+
+        await HoldVertical(pair, hull, ShuttleButtons.AscendZ | ShuttleButtons.StrafeRight);
+        await server.WaitRunTicks(pair.SecondsToTicks(6f));
+
+        await server.WaitAssertion(() =>
+        {
+            var after = transform.GetWorldPosition(hull);
+            var body = entMan.GetComponent<PhysicsComponent>(hull);
+            var map = entMan.GetComponent<TransformComponent>(hull).MapUid;
+            var state = $"map={entMan.ToPrettyString(map)} type={body.BodyType} status={body.BodyStatus} awake={body.Awake} "
+                        + $"damping={body.LinearDamping} mass={body.Mass} fixedRot={body.FixedRotation} vel={body.LinearVelocity} "
+                        + $"canCollide={body.CanCollide} shuttleEnabled={entMan.GetComponent<ShuttleComponent>(hull).Enabled}";
+
+            Assert.That((after - before).Length(), Is.GreaterThan(1f),
+                $"The relaunched hull did not move sideways under thrust ({before} -> {after}); {state}");
+        });
+
+        await Teardown(pair, layers);
+        await pair.CleanReturnAsync();
+    }
+
     /// <summary>The map id of a z-layer, for the spawners that want one.</summary>
     /// <summary>
     /// A big hull grinding out a hard landing never writes a non-finite number into itself, whether it arrived with

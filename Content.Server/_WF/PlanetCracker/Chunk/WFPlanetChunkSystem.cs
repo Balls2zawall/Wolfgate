@@ -214,10 +214,12 @@ public sealed partial class WFPlanetChunkSystem : EntitySystem
         if (ent.Comp.Dropped)
             return false;
 
-        // Release first: TryEnterTransit's own per-grid Enable is un-forced, so a grid still carrying
-        // PreventGridAnchorChanges would stay static for the whole fall with nothing logged.
+        // The force-anchor goes, but PreventGridAnchorChanges STAYS: TryEnterTransit's own per-grid Enable is
+        // un-forced and that component is what makes it skip the chunk. Let through, it would unfix the chunk's
+        // rotation, and ResetMassData then asserts the server down on any site away from the planet origin (the
+        // same negative inertia the extraction guards against). The body is made dynamic by hand just below instead.
         RemComp<ForceAnchorComponent>(ent.Owner);
-        RemComp<PreventGridAnchorChangesComponent>(ent.Owner);
+        EnsureComp<PreventGridAnchorChangesComponent>(ent.Owner);
         EnsureComp<ShuttleComponent>(ent.Owner);
         // ShuttleSystem.Enable minus its SetFixedRotation(false): the chunk keeps fixed rotation for life (see the
         // extraction's note on ResetMassData), because unfixing it recomputes an inertia that goes negative on any
