@@ -47,12 +47,19 @@ def main():
         if not os.path.exists(FALLBACK):
             sys.exit("no ffmpeg and no %s to copy" % FALLBACK)
         for name in TONES:
-            shutil.copyfile(FALLBACK, os.path.join(OUT_DIR, name + ".ogg"))
+            path = os.path.join(OUT_DIR, name + ".ogg")
+            if os.path.exists(path):
+                print("kept", name + ".ogg")  # a real recording is already in place; never overwrite it
+                continue
+            shutil.copyfile(FALLBACK, path)
             print("copied", name + ".ogg")
         return
 
     for name, (expr, seconds) in TONES.items():
         path = os.path.join(OUT_DIR, name + ".ogg")
+        if os.path.exists(path):
+            print("kept", name + ".ogg")  # a real recording is already in place; never overwrite it
+            continue
         subprocess.run([
             "ffmpeg", "-y", "-hide_banner", "-loglevel", "error",
             "-f", "lavfi", "-i", expr,
