@@ -28,6 +28,9 @@ namespace Content.Server._WF.PlanetCracker.Chunk;
 /// </summary>
 public sealed partial class WFPlanetChunkSystem
 {
+    /// <summary>Tiles of open space kept between the hull's furthest edge and the disc's near edge.</summary>
+    public const float BerthClearance = 2f;
+
     /// <summary>Rim decal on a stretch of ring that runs along an axis.</summary>
     private const string RimStraightDecal = "WFCrackRimStraight";
 
@@ -185,14 +188,14 @@ public sealed partial class WFPlanetChunkSystem
         // STEP 9: the decal ring, after the stamp, on pinned biome ground just outside the circle.
         StampRim(groundMap, centre, half);
 
-        // STEP 10: hang it in the berth. Translation only, with the ground grid's own rotation, so the chunk's tile
-        // indices stay pixel-perfect over the hole for F6 and F7.
-        var target = groundWorldPos + (berth.Position - centre);
-
-        // Built here rather than inside the advisory warning, because step 11's Smimsh reads the same set and anything
-        // missing from it is CrushGrid'd - starting with the hull that just cut the chunk.
+        // Built before the berth pose, because the pose clears every hull in this set, step 11's Smimsh reads the same
+        // set and anything missing from it is CrushGrid'd - starting with the hull that just cut the chunk.
         _ignored.Clear();
         _shuttle.GetAllDockedShuttles(cracker.Owner, _ignored);
+
+        // STEP 10: hang it in the berth. Translation only, with the ground grid's own rotation, so the chunk's tile
+        // indices stay pixel-perfect over the hole for F6 and F7.
+        var target = groundWorldPos + (GetBerthCentreClearOf(cracker, berth, radius, _ignored) - centre);
 
         WarnOnObstruction(cracker, chunkEnt, berth.MapId, target, _ignored);
 
@@ -403,6 +406,45 @@ public sealed partial class WFPlanetChunkSystem
     /// Advisory clearance check over the berth: the extraction proceeds either way, but it says what it hit.
     /// The ignore set is handed in rather than built here, so the caller owns the set Smimsh later depends on.
     /// </summary>
+    /// <summary>
+    /// Where a disc of this radius actually hangs: the berth centre pushed out along the marker's facing until the disc
+    /// clears the cracker and everything docked to it, with the marker's own Distance as the floor. The distance is
+    /// a mapper's guess; the radius is half the pair spacing plus padding, 10 to 22 tiles across the pairing band, so
+    /// a berth eight tiles off the deck hung the disc through the hull and the two grids' contacts welded them.
+    /// </summary>
+    public Vector2 GetBerthCentreClearOf(
+        Entity<WFPlanetCrackerComponent> cracker,
+        MapCoordinates berth,
+        float radius,
+        IReadOnlySet<EntityUid> hulls)
+    {
+        if (cracker.Comp.Berth is not { } netBerth || !TryGetEntity(netBerth, out var marker))
+            return berth.Position;
+
+        var (markerPos, markerRot) = _transform.GetWorldPositionRotation(marker.Value);
+        var facing = markerRot.ToWorldVec();
+
+        // The furthest any hull corner reaches past the marker along its facing; never behind it.
+        var reach = 0f;
+
+        foreach (var hull in hulls)
+        {
+            if (!TryComp<MapGridComponent>(hull, out var grid))
+                continue;
+
+            var matrix = _transform.GetWorldMatrix(hull);
+            var box = grid.LocalAABB;
+
+            reach = MathF.Max(reach, Vector2.Dot(Vector2.Transform(box.BottomLeft, matrix) - markerPos, facing));
+            reach = MathF.Max(reach, Vector2.Dot(Vector2.Transform(box.BottomRight, matrix) - markerPos, facing));
+            reach = MathF.Max(reach, Vector2.Dot(Vector2.Transform(box.TopLeft, matrix) - markerPos, facing));
+            reach = MathF.Max(reach, Vector2.Dot(Vector2.Transform(box.TopRight, matrix) - markerPos, facing));
+        }
+
+        var distance = MathF.Max((berth.Position - markerPos).Length(), reach + radius + BerthClearance);
+        return markerPos + facing * distance;
+    }
+
     private void WarnOnObstruction(
         Entity<WFPlanetCrackerComponent> cracker,
         Entity<MapGridComponent> chunk,

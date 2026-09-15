@@ -467,6 +467,46 @@ public sealed class CrackExtractionTest
     }
 
     /// <summary>
+    /// A berth marked too close to the deck still hangs the disc clear of it. The test hull's own eight-tile berth is
+    /// inside every radius the pairing band allows (10 to 22), and the disc used to be hung straight through the hull,
+    /// where the two grids' contacts welded them together.
+    /// </summary>
+    [Test]
+    public async Task TheChunkClearsTheHullWhenTheBerthIsTooClose()
+    {
+        await using var pair = await PoolManager.GetServerClient();
+        var server = pair.Server;
+        var entMan = server.EntMan;
+        var lookup = server.System<EntityLookupSystem>();
+
+        var site = await BuildCrackerInOrbit(pair);
+        await EnlargeBerth(pair, site, new Vector2i(12, 12), 8f);
+        await DeployPair(pair, site, 0f, 16f, true);
+        await AlignHull(pair, site, Vector2.Zero);
+        await Energise(pair, site.Cracker);
+        await BeginCut(pair, site);
+        await CompleteCut(pair, site);
+
+        var cut = await ReadCut(pair);
+
+        await server.WaitAssertion(() =>
+        {
+            var hull = lookup.GetWorldAABB(site.Cracker);
+            var chunk = lookup.GetWorldAABB(cut.Chunk);
+
+            using (Assert.EnterMultipleScope())
+            {
+                Assert.That(entMan.GetComponent<TransformComponent>(cut.Chunk).MapUid, Is.EqualTo(site.Orbit),
+                    "The chunk is not hanging on the orbit layer.");
+                Assert.That(hull.Intersects(chunk), Is.False,
+                    $"The disc {chunk} was hung through the hull {hull}.");
+            }
+        });
+
+        await pair.CleanReturnAsync();
+    }
+
+    /// <summary>
     /// Placement is a translation with the ground grid's own rotation, so the chunk's tile indices stay pixel-perfect
     /// over the hole, and the parked chunk is a static, airless, self-lit body the berth can hold.
     /// </summary>
