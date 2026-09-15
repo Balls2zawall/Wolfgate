@@ -69,6 +69,9 @@ public sealed partial class WFCrackerSystem
         // be re-wrenched afterwards, so the pose the radar ghost reads is refreshed here rather than written once.
         UpdateBerthPose(ent);
 
+        // Before anything that reads the hull's pose: a locked hull that somehow came loose is pinned back first.
+        ReassertLock(ent);
+
         UpdateSurvey(ent);
 
         // The setup stages are reconciled against the anchors as well as on the events, so a missed edge cannot leave

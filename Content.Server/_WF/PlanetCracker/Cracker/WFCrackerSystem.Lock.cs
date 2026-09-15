@@ -362,12 +362,37 @@ public sealed partial class WFCrackerSystem
         if (HasComp<ForceAnchorComponent>(ent.Owner))
             return true;
 
-        // Adding the component re-raises MapInitEvent on an already map-initialised entity, which is what runs
-        // ForceAnchorSystem's Disable(force: true) plus PreventGridAnchorChanges; there is no other runtime entry.
+        // Adding the component re-raises MapInitEvent on a map-initialised entity, which runs ForceAnchorSystem's
+        // Disable(force: true) plus PreventGridAnchorChanges. A grid that never map-initialised gets no such event, so
+        // the same pin is applied here by hand; both are idempotent.
         AddComp<ForceAnchorComponent>(ent.Owner);
+        PinStatic(ent.Owner);
         ent.Comp.Locked = true;
         Dirty(ent);
         return true;
+    }
+
+    /// <summary>The force-anchor pin itself: a static body that nothing un-forced can re-enable.</summary>
+    private void PinStatic(EntityUid uid)
+    {
+        _shuttle.Disable(uid, force: true);
+        EnsureComp<PreventGridAnchorChangesComponent>(uid);
+    }
+
+    /// <summary>
+    /// Re-asserts a lock this system applied. Nothing is supposed to re-enable a pinned hull, so a hull found moving
+    /// again is pinned back and logged loudly: the log line is the only evidence of whichever path let it go.
+    /// </summary>
+    public void ReassertLock(Entity<WFPlanetCrackerComponent> ent)
+    {
+        if (!ent.Comp.Locked || !TryComp<PhysicsComponent>(ent.Owner, out var body))
+            return;
+
+        if (body.BodyType == BodyType.Static && HasComp<PreventGridAnchorChangesComponent>(ent.Owner))
+            return;
+
+        Log.Warning($"{ToPrettyString(ent.Owner)} was {body.BodyType} with its crack lock on (anchor changes prevented: {HasComp<PreventGridAnchorChangesComponent>(ent.Owner)}); pinned again.");
+        PinStatic(ent.Owner);
     }
 
     /// <summary>
