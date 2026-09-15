@@ -20,4 +20,11 @@ public sealed partial class WFSkidComponent : Component
     /// <summary>When the leading edge is next chewed on; the sweep is throttled rather than run every tick.</summary>
     [DataField]
     public TimeSpan NextBite;
+
+    /// <summary>
+    /// When the obstacles under the hull are next flattened. Its own clock rather than the bite's: the wall pass runs
+    /// every tick for as long as the hull is overlapping something, and each thing broken is a networked sound.
+    /// </summary>
+    [DataField]
+    public TimeSpan NextPlough;
 }

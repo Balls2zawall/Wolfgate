@@ -56,8 +56,24 @@ public sealed partial class WFFlightSystem
     /// <summary>Speed (m/s) the hull loses for each tile it leaves behind.</summary>
     private const float SkidTileSpeedCost = 0.5f;
 
-    /// <summary>How often the leading edge is chewed on; the footprint walk is not a per-tick job.</summary>
-    private static readonly TimeSpan SkidBiteInterval = TimeSpan.FromSeconds(0.25);
+    /// <summary>
+    /// How often the leading edge is chewed on. The footprint walk is not a per-tick job, and neither is anything else
+    /// a skid does that makes a noise: the crush and the plough both run on this interval so a capital hull grinding
+    /// across a populated deck is one round of damage sounds every quarter second rather than one per victim per tick.
+    /// </summary>
+    public static readonly TimeSpan SkidBiteInterval = TimeSpan.FromSeconds(0.25);
+
+    /// <summary>
+    /// Tiles a hull is never ground below. A grid with nothing left is not a hull that can be repaired, and a massless
+    /// grid is a physics body whose solve divides by its own mass.
+    /// </summary>
+    private const int SkidMinTiles = 4;
+
+    /// <summary>
+    /// Tiles one bite may tear off. Everything over the budget keeps the damage it has and comes off at the next bite,
+    /// so a capital hull does not queue a hundred craters into one frame the way a crash used to (CrashAudioTest).
+    /// </summary>
+    private const int SkidMaxBiteTiles = 24;
 
     private readonly List<Vector2i> _skidEdge = new();
 
@@ -83,25 +99,34 @@ public sealed partial class WFFlightSystem
                 continue;
             }
 
-            var velocity = body.LinearVelocity;
-            var speed = velocity.Length();
-
-            if (speed <= SkidStopSpeed)
+            // A non-finite velocity defeats every comparison it appears in - NaN is neither over nor under a
+            // threshold - so it would slide past the stop test, be divided into a NaN heading and written straight
+            // back into the hull, and from there into every child transform and every sound played on it. The hull
+            // is stopped instead, which is what a skid ends in anyway.
+            if (!TryHeading(body.LinearVelocity, out var heading, out var speed) || speed <= SkidStopSpeed)
             {
+                if (!float.IsFinite(body.LinearVelocity.LengthSquared()))
+                    _physics.SetLinearVelocity(grid, Vector2.Zero, body: body);
+
                 EndSkid(grid, skid);
                 continue;
             }
 
-            // Anything standing where the hull is going gets the same treatment an FTL arrival gives it.
-            _shuttle.Smimsh(grid);
-
-            if (speed <= SkidRamSpeed || _timing.CurTime < skid.NextBite)
+            if (_timing.CurTime < skid.NextBite)
                 continue;
 
             var elapsed = (float) SkidBiteInterval.TotalSeconds;
             skid.NextBite = _timing.CurTime + SkidBiteInterval;
 
-            GrindLeadingEdge((grid, gridComp), skid, body, velocity / speed, speed, elapsed);
+            // Anything standing where the hull is going gets the same treatment an FTL arrival gives it. On the bite
+            // interval rather than every tick: the crush gibs and deletes everything under the footprint, each of
+            // which is its own networked sound, and a capital hull's footprint is a lot of them.
+            _shuttle.Smimsh(grid);
+
+            if (speed <= SkidRamSpeed)
+                continue;
+
+            GrindLeadingEdge((grid, gridComp), skid, body, heading, speed, elapsed);
         }
     }
 
@@ -117,7 +142,9 @@ public sealed partial class WFFlightSystem
         if (!TryComp<WFSkidComponent>(grid.Owner, out var skid))
             return;
 
-        severity = Math.Clamp(severity, 0f, 1f);
+        // Math.Clamp hands a NaN back out unchanged, and a NaN damage is over every threshold there is: it would tear
+        // the whole footprint off in one frame on a landing nobody could have measured.
+        severity = float.IsFinite(severity) ? Math.Clamp(severity, 0f, 1f) : 0f;
 
         // The whole hull takes the landing; nothing comes off from this alone.
         BiteTiles(grid, skid, ImpactTileDamage * severity, null);
@@ -125,14 +152,31 @@ public sealed partial class WFFlightSystem
         if (!TryComp<PhysicsComponent>(grid.Owner, out var body))
             return;
 
-        var velocity = body.LinearVelocity;
-        var speed = velocity.Length();
-
         // Straight down onto its own footprint has no leading edge to concentrate the impact on.
-        if (speed <= SkidStopSpeed)
+        if (!TryHeading(body.LinearVelocity, out var heading, out var speed) || speed <= SkidStopSpeed)
             return;
 
-        BiteTiles(grid, skid, ImpactEdgeDamage * severity, velocity / speed);
+        BiteTiles(grid, skid, ImpactEdgeDamage * severity, heading);
+    }
+
+    /// <summary>
+    /// A hull's direction of travel and how fast it is going, or false when it has no direction to have. The one place
+    /// a velocity is turned into a heading: a zero vector normalises to NaN and a non-finite one stays non-finite, and
+    /// either of those written back into a grid is a NaN world position for everything aboard it.
+    /// </summary>
+    private static bool TryHeading(Vector2 velocity, out Vector2 heading, out float speed)
+    {
+        heading = Vector2.Zero;
+        speed = 0f;
+
+        var lengthSquared = velocity.LengthSquared();
+
+        if (!float.IsFinite(lengthSquared) || lengthSquared <= float.Epsilon)
+            return false;
+
+        speed = MathF.Sqrt(lengthSquared);
+        heading = velocity / speed;
+        return true;
     }
 
     /// <summary>
@@ -167,7 +211,8 @@ public sealed partial class WFFlightSystem
     /// </summary>
     private int BiteTiles(Entity<MapGridComponent> grid, WFSkidComponent skid, float damage, Vector2? heading)
     {
-        if (damage <= 0f)
+        // A NaN is under no threshold and over every one at the same time; it is not a landing this hull took.
+        if (!float.IsFinite(damage) || damage <= 0f)
             return 0;
 
         // The hull's own frame: the footprint is indexed in it, and the hull may be sliding sideways or spinning.
@@ -189,6 +234,10 @@ public sealed partial class WFFlightSystem
 
         var lost = 0;
 
+        // What this bite is allowed to take: never past the floor the hull has to keep, and never more of it in one
+        // frame than the explosion queue and the client's audio can carry. Damage over the budget stays on the tile.
+        var budget = Math.Min(SkidMaxBiteTiles, _skidEdge.Count - SkidMinTiles);
+
         foreach (var indices in _skidEdge)
         {
             if (heading is not null && Projection(indices, local) < best - SkidEdgeDepth)
@@ -196,7 +245,7 @@ public sealed partial class WFFlightSystem
 
             var total = skid.TileDamage.GetValueOrDefault(indices) + damage;
 
-            if (total < SkidTileThreshold)
+            if (total < SkidTileThreshold || lost >= budget)
             {
                 skid.TileDamage[indices] = total;
                 continue;

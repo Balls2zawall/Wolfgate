@@ -17,6 +17,7 @@ using Robust.Shared.GameObjects;
 using Robust.Shared.Map;
 using Robust.Shared.Map.Components;
 using Robust.Shared.Maths;
+using Robust.Shared.Physics.Components;
 using Robust.Shared.Physics.Systems;
 using static Content.IntegrationTests.Tests._WF.PlanetCracker.PlanetCrackerFixture;
 
@@ -51,6 +52,13 @@ public sealed class FlightTest
 
     /// <summary>WFAnchorCrateComponent.VirtualMass, times the cracker's two crates.</summary>
     private const float CrackerCargoMass = 12f;
+
+    /// <summary>
+    /// Every sound two hulls are allowed to make grinding out a hard landing over three seconds. As built it is five:
+    /// a thud and a scrape loop each, and the atmosphere's own wind. The floor under the number is that none of the
+    /// skid's damage - the crush, the plough, the craters - is allowed to be a sound per victim per tick.
+    /// </summary>
+    private const int AudioBudget = 24;
 
     /// <summary>
     /// A gravity generator lifts nothing over a planet and landing thrusters lift everything. The cracker's own
@@ -671,6 +679,152 @@ public sealed class FlightTest
     }
 
     /// <summary>The map id of a z-layer, for the spawners that want one.</summary>
+    /// <summary>
+    /// A big hull grinding out a hard landing never writes a non-finite number into itself, whether it arrived with
+    /// planar speed or came straight down onto its own footprint, and the whole grind is worth a bounded number of
+    /// sounds. Neither half is a server-side nicety: a NaN on the grid is a NaN world position for every sound played
+    /// on it, which the client's echo pass hands to MathF.Sign and dies on
+    /// (AudioEchoSystem.TryProcessAreaSpaceMagnitude), and a sound per crushed thing per tick is the same OpenAL
+    /// source exhaustion that already killed a client once (CrashAudioTest).
+    /// </summary>
+    [Test]
+    public async Task SkiddingHullsStayFiniteAndBounded()
+    {
+        await using var pair = await PoolManager.GetServerClient();
+        var server = pair.Server;
+        var entMan = server.EntMan;
+        var physics = server.System<SharedPhysicsSystem>();
+        var transform = server.System<SharedTransformSystem>();
+        var zLevels = server.System<CEZLevelsSystem>();
+
+        await EnableFeature(pair);
+        var layers = await BuildStandalone(pair);
+        var ground = layers[0];
+        var groundMapId = await MapIdOf(pair, ground);
+
+        await LayTiles(pair, ground, new Vector2i(-40, -40), new Vector2i(120, 40));
+
+        // Two 15x15 hulls, far enough apart that neither ploughs into the other: one parked, one sliding away.
+        var parked = await BuildCracker(pair, groundMapId);
+        var sliding = await BuildCracker(pair, groundMapId, new Vector2(60f, 0f));
+        var hulls = new[] { parked, sliding };
+
+        await MapInitHull(pair, parked);
+        await MapInitHull(pair, sliding);
+
+        await server.WaitPost(() =>
+        {
+            foreach (var hull in hulls)
+            {
+                entMan.EnsureComponent<CEZGridFallerComponent>(hull);
+                entMan.EnsureComponent<WFLiftLostComponent>(hull).Ratio = 0.6f;
+            }
+
+            physics.SetLinearVelocity(parked, Vector2.Zero);
+            physics.SetLinearVelocity(sliding, new Vector2(WFFlightSystem.SkidRamSpeed + 4f, 0f));
+        });
+
+        var before = new HashSet<EntityUid>();
+
+        await server.WaitAssertion(() =>
+        {
+            var existing = entMan.EntityQueryEnumerator<AudioComponent>();
+            while (existing.MoveNext(out var uid, out _))
+            {
+                before.Add(uid);
+            }
+
+            foreach (var hull in hulls)
+            {
+                var grid = entMan.GetComponent<MapGridComponent>(hull);
+                var faller = entMan.GetComponent<CEZGridFallerComponent>(hull);
+                var impact = zLevels.WfGetFreeFallSpeed(faller) * (CEZLevelsSystem.WFHardLandingFraction - 0.05f);
+
+                Assert.That(zLevels.WfTryHardLanding((hull, grid, faller), impact), Is.True,
+                    "A touchdown just under the threshold was not a hard landing.");
+            }
+        });
+
+        var clips = new Dictionary<string, int>();
+        var seen = new HashSet<EntityUid>();
+        var bad = new HashSet<string>();
+        var skidded = false;
+
+        // Several seconds of grinding: many bites of the leading edge for the hull that is moving, and the first tick
+        // is already enough for the one that is not to be let go of.
+        for (var i = 0; i < 90; i++)
+        {
+            await server.WaitRunTicks(2);
+            await server.WaitPost(() =>
+            {
+                var query = entMan.EntityQueryEnumerator<AudioComponent>();
+                while (query.MoveNext(out var uid, out var audio))
+                {
+                    if (!before.Contains(uid) && seen.Add(uid))
+                        clips[audio.FileName] = clips.GetValueOrDefault(audio.FileName) + 1;
+                }
+
+                foreach (var hull in hulls)
+                {
+                    if (entMan.Deleted(hull))
+                    {
+                        bad.Add($"{hull} was deleted mid-skid");
+                        continue;
+                    }
+
+                    var xform = entMan.GetComponent<TransformComponent>(hull);
+                    var body = entMan.GetComponent<PhysicsComponent>(hull);
+                    var world = transform.GetWorldPosition(xform);
+                    var velocity = body.LinearVelocity;
+
+                    if (!float.IsFinite(world.X) || !float.IsFinite(world.Y))
+                        bad.Add($"{hull} world position is {world}");
+
+                    if (!double.IsFinite(transform.GetWorldRotation(xform).Theta))
+                        bad.Add($"{hull} world rotation is not finite");
+
+                    if (!float.IsFinite(velocity.X) || !float.IsFinite(velocity.Y))
+                        bad.Add($"{hull} linear velocity is {velocity}");
+
+                    if (!float.IsFinite(body.AngularVelocity))
+                        bad.Add($"{hull} angular velocity is not finite");
+                }
+
+                if (entMan.HasComponent<WFSkidComponent>(sliding))
+                    skidded = true;
+            });
+        }
+
+        var heard = new List<string>();
+        foreach (var (clip, count) in clips)
+        {
+            heard.Add($"{clip} x{count}");
+        }
+
+        var breakdown = string.Join(", ", heard);
+        TestContext.Out.WriteLine($"Skid audio: {seen.Count} audio entities. {breakdown}");
+
+        await server.WaitAssertion(() =>
+        {
+            using (Assert.EnterMultipleScope())
+            {
+                Assert.That(bad, Is.Empty,
+                    $"A hard landing put a non-finite number on a hull: {string.Join("; ", bad)}. Every sound played " +
+                    $"on that hull inherits it, and the client's echo pass throws on the first one it measures.");
+                Assert.That(skidded, Is.True,
+                    "The hull that landed with planar speed never skidded, so nothing here was measured.");
+                Assert.That(entMan.HasComponent<WFSkidComponent>(parked), Is.False,
+                    "The hull that landed with no planar speed is still grinding itself down on the spot.");
+                Assert.That(seen, Has.Count.LessThanOrEqualTo(AudioBudget),
+                    $"Two hulls grinding out a hard landing created {seen.Count} audio entities. Everything heard: " +
+                    $"{breakdown}");
+            }
+        });
+
+        await Teardown(pair, layers);
+        await pair.CleanReturnAsync();
+    }
+
     private static async Task<MapId> MapIdOf(TestPair pair, EntityUid layer)
     {
         var server = pair.Server;

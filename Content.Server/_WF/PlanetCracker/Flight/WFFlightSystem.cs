@@ -183,7 +183,14 @@ public sealed partial class WFFlightSystem : EntitySystem
     {
         var velocity = body.LinearVelocity;
 
-        if (body.BodyType == BodyType.Static || velocity.Length() >= GlideMinSpeed)
+        if (body.BodyType == BodyType.Static)
+            return velocity;
+
+        // Non-finite is not a speed: it is over every threshold and under every one, and kept as the glide heading it
+        // is written back into the hull at the next layer. The nudge below replaces it with a real one.
+        var lengthSquared = velocity.LengthSquared();
+
+        if (float.IsFinite(lengthSquared) && lengthSquared >= GlideMinSpeed * GlideMinSpeed)
             return velocity;
 
         velocity = _transform.GetWorldRotation(grid).ToWorldVec() * GlideMinSpeed;
@@ -397,11 +404,12 @@ public sealed partial class WFFlightSystem : EntitySystem
 
         var velocity = body.LinearVelocity;
 
-        // A transit hop restores momentum, but the remembered heading is what a hull that lost it falls back on.
-        if (velocity.LengthSquared() < 0.0001f)
+        // A transit hop restores momentum, but the remembered heading is what a hull that lost it falls back on. A
+        // non-finite one is treated as no momentum at all rather than multiplied up and handed back to the hull.
+        if (!IsGlide(velocity))
             velocity = comp.Glide;
 
-        if (velocity.LengthSquared() < 0.0001f)
+        if (!IsGlide(velocity))
             return;
 
         velocity *= 1f + GlideGainPerLayer;
@@ -409,6 +417,14 @@ public sealed partial class WFFlightSystem : EntitySystem
         _physics.SetLinearVelocity(grid, velocity, body: body);
 
         comp.Glide = velocity;
+    }
+
+    /// <summary>Whether a velocity is real forward motion: finite, and more than the rounding either side of nothing.</summary>
+    private static bool IsGlide(Vector2 velocity)
+    {
+        var lengthSquared = velocity.LengthSquared();
+
+        return float.IsFinite(lengthSquared) && lengthSquared >= 0.0001f;
     }
 
     /// <summary>The bottom of a planet stack, which is where a fall ends.</summary>

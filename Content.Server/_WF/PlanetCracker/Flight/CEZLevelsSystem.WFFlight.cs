@@ -306,7 +306,13 @@ public sealed partial class CEZLevelsSystem
         if (TerminatingOrDeleted(grid) || !_mapGridQuery.HasComp(grid) || !HasComp<WFLiftLostComponent>(grid))
             return;
 
-        if (!_physQuery.TryComp(grid, out var body) || body.LinearVelocity.Length() <= WFFlightSystem.SkidRamSpeed)
+        if (!_physQuery.TryComp(grid, out var body))
+            return;
+
+        var crashSpeed = body.LinearVelocity.Length();
+
+        // A NaN is not a speed worth skidding on, and it is under no threshold: the comparison alone would let it in.
+        if (!float.IsFinite(crashSpeed) || crashSpeed <= WFFlightSystem.SkidRamSpeed)
             return;
 
         // No thud: the crash was the noise this landing made, and one crash is one bang (CrashGrid).
@@ -326,7 +332,7 @@ public sealed partial class CEZLevelsSystem
     /// </summary>
     private bool WfPloughThroughWalls(EntityUid grid, PhysicsComponent body)
     {
-        if (!HasComp<WFSkidComponent>(grid))
+        if (!TryComp<WFSkidComponent>(grid, out var skid))
             return false;
 
         if (!_mapGridQuery.TryComp(grid, out var gridComp)
@@ -335,6 +341,14 @@ public sealed partial class CEZLevelsSystem
         {
             return true;
         }
+
+        // Breaking on the leading edge's own interval rather than every tick: a hull sitting on a fence line is in
+        // contact with it for as long as it is sliding along it, and one destruction sound per post per tick is a
+        // hull's worth of networked audio entities a second. Between intervals it passes through rather than bouncing.
+        if (_timing.CurTime < skid.NextPlough)
+            return true;
+
+        skid.NextPlough = _timing.CurTime + WFFlightSystem.SkidBiteInterval;
 
         var bounds = _transform.GetWorldMatrix(grid).TransformBox(gridComp.LocalAABB);
 
@@ -363,8 +377,10 @@ public sealed partial class CEZLevelsSystem
         var speed = velocity.Length();
         var cost = WFPloughSpeedCost * _wfPloughed.Count;
 
+        // Non-finite is neither over nor under the cost, so it has to be named: dividing it back out would write a
+        // NaN position onto the hull and onto everything parented to it.
         _physics.SetLinearVelocity(grid,
-            speed <= cost ? Vector2.Zero : velocity / speed * (speed - cost),
+            !float.IsFinite(speed) || speed <= cost ? Vector2.Zero : velocity / speed * (speed - cost),
             body: body);
 
         return true;
