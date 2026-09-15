@@ -218,7 +218,14 @@ public sealed partial class WFPlanetChunkSystem : EntitySystem
         RemComp<ForceAnchorComponent>(ent.Owner);
         RemComp<PreventGridAnchorChangesComponent>(ent.Owner);
         EnsureComp<ShuttleComponent>(ent.Owner);
-        _shuttle.Enable(ent.Owner, force: true);
+        // ShuttleSystem.Enable minus its SetFixedRotation(false): the chunk keeps fixed rotation for life (see the
+        // extraction's note on ResetMassData), because unfixing it recomputes an inertia that goes negative on any
+        // site away from the planet origin and asserts the server down. A falling disc has no use for spin anyway.
+        if (TryComp<PhysicsComponent>(ent.Owner, out var dropBody))
+        {
+            _physics.SetBodyType(ent.Owner, BodyType.Dynamic, body: dropBody);
+            _physics.SetBodyStatus(ent.Owner, dropBody, BodyStatus.InAir);
+        }
 
         if (TryComp<PhysicsComponent>(ent.Owner, out var body) && body.BodyType == BodyType.Static)
             Log.Error($"{ToPrettyString(ent.Owner)} is still a static body after its chunk lock was released; it will not fall.");
