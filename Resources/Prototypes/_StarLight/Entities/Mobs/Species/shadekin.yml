@@ -131,7 +131,8 @@
           Heat: 0.1
     - type: Fingerprint
     - type: Blindable
-    # Removed DarkenedVision (unknown component). NightVision is toggled by ShadekinSystem.
+    - type: NightVision # WOLFGATE - ShadekinSystem turns this on in the dark
+      phosphorColor: "#C8B4FF"
     # Other
     - type: Temperature
       heatDamageThreshold: 325

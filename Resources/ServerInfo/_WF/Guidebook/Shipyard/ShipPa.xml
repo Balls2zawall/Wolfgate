@@ -1,0 +1,39 @@
+<Document>
+  # Ship PA System
+
+  Every powered PA speaker anchored to a ship's grid joins that ship's public address network
+  automatically - there's no wiring or configuration to do. Speakers carry the pilot's
+  announcements and the ship's alarms to anyone standing near a working one.
+
+  <Box>
+    <GuideEntityEmbed Entity="WallmountShipPaSpeaker" Caption="PA speaker"/>
+  </Box>
+
+  ## Placement
+
+  Any PA speaker anchored to the ship joins its network. A ship with no speakers at all announces
+  through its air alarms instead, so most vessels are covered until a proper network goes in. A PA
+  speaker goes together like an intercom: screw two steel sheets to a wall. Pry it back off with a
+  crowbar to reclaim the steel.
+
+  ## Situation codes
+
+  The pilot console's PA & Alarms panel sets a ship-wide situation code. Setting a code sounds its tone
+  over every working speaker, shows the announcement above each speaker in earshot, and posts it in chat.
+
+  - [color=#3fe05a]Code Green[/color] - normal operations.
+  - [color=#ffd23f]Code Yellow[/color] - elevated readiness.
+  - [color=#ff3030]Code Red[/color] - hostile action underway.
+  - [color=#d0d0d0]Code Black[/color] - abandon ship.
+
+  ## General quarters
+
+  The general quarters toggle sounds a looping klaxon on every speaker until it's secured again
+  from the same panel.
+
+  ## Damage and repair
+
+  A speaker takes damage like any structure: light damage makes its audio crackle and distort,
+  heavy damage breaks it silent until repaired. Fix it with a welder, or with a ship repair tool
+  once it's part of a ship's hull.
+</Document>

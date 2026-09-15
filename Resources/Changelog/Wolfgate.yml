@@ -162,3 +162,32 @@ Entries:
   id: 100013
   time: '2026-09-13T02:49:48.0000000+00:00'
   url: https://github.com/VanguardControl/Wolfgate/pull/26
+- author: Gandalf2k15
+  changes:
+    - type: Add
+      message: >-
+        You can now drag+drop ghosts as an admin to put them in control of a
+        body.
+    - type: Add
+      message: You can now ctrl+click a ghost as an admin to spawn them in.
+  id: 100014
+  time: '2026-09-13T17:01:05.0000000+00:00'
+  url: https://github.com/VanguardControl/Wolfgate/pull/28
+- author: Gandalf2k15
+  changes:
+    - type: Add
+      message: Far better impact sounds across the board!
+  id: 100015
+  time: '2026-09-14T07:54:21.0000000+00:00'
+  url: https://github.com/VanguardControl/Wolfgate/pull/30
+- author: Gandalf2k15
+  changes:
+    - type: Add
+      message: >-
+        Added a ship PA system to the ship panel of the shuttle console, as well
+        as green, amber, red and black alerts and general quarters.
+    - type: Add
+      message: You can now send PA announcements shipwide.
+  id: 100016
+  time: '2026-09-14T08:50:46.0000000+00:00'
+  url: https://github.com/VanguardControl/Wolfgate/pull/31
