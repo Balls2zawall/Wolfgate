@@ -164,5 +164,11 @@ public sealed partial class WFTestGridFactory : EntitySystem
     {
         EnsureComp<ShuttleComponent>(grid.Owner);
         _shuttle.Enable(grid.Owner, force: true);
+
+        // MapManager leaves a code-built grid un-map-initialised even on a live map, and a component added later only
+        // gets MapInitEvent on an entity that is. The crack lock's ForceAnchor handler is one such: a hull spawned by
+        // the command flew freely through its whole cut until this ran. Idempotent, so the test fixture's own call
+        // after building is harmless.
+        EntityManager.RunMapInit(grid.Owner, MetaData(grid.Owner));
     }
 }
