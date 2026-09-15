@@ -62,6 +62,7 @@ public sealed class CrackerTestGridTest
     {
         ["ComputerShuttle"] = 1,
         ["WFThrusterLanding"] = 2,
+        ["DebugGyroscope"] = 1,
         ["AirlockShuttle"] = 1,
         ["WFAnchorCrate"] = 1,
         ["DebugThruster"] = 4,

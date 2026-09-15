@@ -111,6 +111,8 @@ public sealed partial class WFTestGridFactory : EntitySystem
         // D11 anchor-capacity machinery back spawns one on the hull itself (CrackerTestGridTest).
         SpawnOnHull(grid, "WFThrusterLanding", 2, 4);
         SpawnOnHull(grid, "WFThrusterLanding", 4, 4);
+        // Without one the hull can strafe but never turn.
+        SpawnOnHull(grid, "DebugGyroscope", 3, 4);
         SpawnOnHull(grid, "AirlockShuttle", 3, 0);
         SpawnOnHull(grid, "WFAnchorCrate", 3, 7);
 
