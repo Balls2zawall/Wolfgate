@@ -1,18 +1,22 @@
-using System.Numerics;
 using Content.Shared._WF.PlanetCracker.Cracker;
 using Content.Shared._WF.PlanetCracker.Cracker.BUI;
 using Robust.Client.Graphics;
+using Robust.Client.UserInterface;
+using Robust.Client.UserInterface.Controls;
 
 namespace Content.Client._WF.PlanetCracker.Cracker;
 
 /// <summary>
-/// The nine crack stages as one strip: the stage the hull is in lit, the ones behind it dimmed, the ones ahead in
-/// glass, and a fill bar under the Cracking segment showing how far through the cut the hull is. The bar blinks while
-/// a damaged anchor holds the cut.
+/// The nine crack stages as one strip: one fixed-width cell per stage, the stage the hull is in lit, the ones behind
+/// it dimmed and the ones ahead in glass, with the active countdown and the cut's fill bar under them.
+/// Every cell is a real PanelContainer and Label rather than a hand-placed DrawString, because the strip this replaced
+/// drew nine stage names at fixed pixel offsets: they overlapped each other, shrank against the rest of the window at
+/// UIScale > 1, and the control measured as a bare bar the window's MinSize then clipped. Nothing here is rebuilt per
+/// frame - <see cref="SetState"/> writes text and colours into the controls built once in the constructor.
 /// </summary>
 public sealed class WFCrackTimeline : WFDiagramControl
 {
-    /// <summary>The nine stages, in order; one segment each.</summary>
+    /// <summary>The nine stages, in order; one cell each.</summary>
     private static readonly WFCrackState[] Stages =
     {
         WFCrackState.Idle,
@@ -26,107 +30,200 @@ public sealed class WFCrackTimeline : WFDiagramControl
         WFCrackState.Falling,
     };
 
-    /// <summary>Gap between segments, in pixels.</summary>
-    private const float Gap = 2f;
+    /// <summary>Width of one stage cell, in virtual pixels; fixed, so the strip never reflows under a long name.</summary>
+    private const float CellWidth = 66f;
 
-    /// <summary>Padding around the strip, in pixels.</summary>
-    private const float Pad = 4f;
+    /// <summary>Gap between stage cells, in virtual pixels.</summary>
+    private const float CellGap = 2f;
 
-    /// <summary>Height of a segment bar, in pixels.</summary>
-    private const float SegmentHeight = 10f;
+    /// <summary>Height of the crack progress bar, in virtual pixels.</summary>
+    private const float BarHeight = 10f;
 
-    /// <summary>Height of the progress bar drawn under the Cracking segment, in pixels.</summary>
-    private const float ProgressHeight = 5f;
+    /// <summary>One background box per stage cell, recoloured in place on every state push.</summary>
+    private readonly StyleBoxFlat[] _cellBoxes = new StyleBoxFlat[Stages.Length];
 
-    /// <summary>Blink period of the paused progress bar, in seconds.</summary>
-    private const float PausedBlinkPeriod = 0.7f;
+    /// <summary>One label per stage cell; the text is set once, only the colour moves.</summary>
+    private readonly Label[] _cellLabels = new Label[Stages.Length];
 
-    private WFCrackConsoleState? _state;
+    private readonly Label _countdown;
 
-    /// <summary>The state the strip draws; null until the console has pushed one.</summary>
-    public void SetState(WFCrackConsoleState? state)
+    private readonly ProgressBar _progress;
+
+    private readonly StyleBoxFlat _progressTrack = new();
+
+    private readonly StyleBoxFlat _progressFill = new();
+
+    public WFCrackTimeline()
     {
-        _state = state;
-    }
+        var root = new BoxContainer
+        {
+            Orientation = BoxContainer.LayoutOrientation.Vertical,
+            HorizontalExpand = true,
+        };
 
-    /// <inheritdoc/>
-    protected override Vector2 MeasureOverride(Vector2 availableSize)
-    {
-        base.MeasureOverride(availableSize);
-        return new Vector2(0f, Pad * 2f + SegmentHeight + ProgressHeight + FontSize * 2f);
-    }
-
-    /// <inheritdoc/>
-    protected override void Draw(DrawingHandleScreen handle)
-    {
-        base.Draw(handle);
-        RefreshSkin();
-
-        handle.DrawRect(PixelSizeBox, Geom(Skin.Ink));
-
-        var box = PixelSizeBox;
-
-        if (box.Width <= 0 || box.Height <= 0)
-            return;
-
-        var current = _state?.State ?? WFCrackState.Idle;
-        var currentIndex = Array.IndexOf(Stages, current);
-        var width = (box.Width - Pad * 2f - Gap * (Stages.Length - 1)) / Stages.Length;
-
-        if (width <= 0f)
-            return;
-
-        var top = Pad + FontSize + 2f;
+        var strip = new BoxContainer
+        {
+            Orientation = BoxContainer.LayoutOrientation.Horizontal,
+            HorizontalAlignment = HAlignment.Center,
+        };
 
         for (var i = 0; i < Stages.Length; i++)
         {
-            var left = Pad + (width + Gap) * i;
-            var bar = new UIBox2(left, top, left + width, top + SegmentHeight);
+            var name = Loc.GetString(StageKey(Stages[i]));
 
-            var colour = i == currentIndex ? Skin.Accent
-                : i < currentIndex ? Skin.AccentDim
-                : Skin.Glass;
+            var label = new Label
+            {
+                Text = name,
+                Align = Label.AlignMode.Center,
+                ClipText = true,
+                HorizontalExpand = true,
+            };
 
-            // DrawRect is a linear-target call.
-            handle.DrawRect(bar, Geom(colour));
+            label.StyleClasses.Add("LabelSubText");
 
-            var label = Loc.GetString(StageKey(Stages[i]));
-            var size = handle.GetDimensions(Font, label, 1f);
-            var textColour = i == currentIndex ? Skin.Text : Skin.TextMuted;
+            var box = new StyleBoxFlat
+            {
+                ContentMarginLeftOverride = 3,
+                ContentMarginRightOverride = 3,
+                ContentMarginTopOverride = 2,
+                ContentMarginBottomOverride = 2,
+            };
 
-            handle.DrawString(Font, new Vector2(left + (width - size.X) / 2f, Pad), label, textColour);
+            var cell = new PanelContainer
+            {
+                PanelOverride = box,
+                SetWidth = CellWidth,
+                // The full name, because a long stage clips inside a fixed cell.
+                ToolTip = name,
+                Margin = new Thickness(0f, 0f, i == Stages.Length - 1 ? 0f : CellGap, 0f),
+            };
 
-            if (i != currentIndex || Stages[i] != WFCrackState.Cracking)
-                continue;
+            cell.AddChild(label);
+            strip.AddChild(cell);
 
-            DrawProgress(handle, bar);
+            _cellBoxes[i] = box;
+            _cellLabels[i] = label;
         }
+
+        _countdown = new Label
+        {
+            ClipText = true,
+            HorizontalExpand = true,
+            Margin = new Thickness(0f, 3f, 0f, 2f),
+        };
+
+        _progress = new ProgressBar
+        {
+            MinValue = 0f,
+            MaxValue = 1f,
+            Value = 0f,
+            MinHeight = BarHeight,
+            HorizontalExpand = true,
+            BackgroundStyleBoxOverride = _progressTrack,
+            ForegroundStyleBoxOverride = _progressFill,
+        };
+
+        root.AddChild(strip);
+        root.AddChild(_countdown);
+        root.AddChild(_progress);
+        AddChild(root);
+
+        Apply(null);
     }
 
-    /// <summary>The cut's own fill bar, under the Cracking segment.</summary>
-    private void DrawProgress(DrawingHandleScreen handle, UIBox2 segment)
+    /// <summary>The state the strip shows; null until the console has pushed one.</summary>
+    public void SetState(WFCrackConsoleState? state)
     {
-        if (_state is not { } state)
-            return;
+        Apply(state);
+    }
 
-        var total = (float)state.CrackTotal.TotalSeconds;
-        var fraction = total > 0f
-            ? Math.Clamp(1f - (float)state.CrackRemaining.TotalSeconds / total, 0f, 1f)
-            : 0f;
+    /// <summary>Writes one state into the cells, the countdown line and the fill bar. No control is rebuilt.</summary>
+    private void Apply(WFCrackConsoleState? state)
+    {
+        RefreshSkin();
 
-        var track = new UIBox2(segment.Left, segment.Bottom + 1f, segment.Right, segment.Bottom + 1f + ProgressHeight);
+        var current = state?.State ?? WFCrackState.Idle;
+        var currentIndex = Array.IndexOf(Stages, current);
 
-        handle.DrawRect(track, Geom(Skin.Glass));
+        for (var i = 0; i < Stages.Length; i++)
+        {
+            _cellBoxes[i].BackgroundColor = i == currentIndex
+                ? Skin.Accent
+                : i < currentIndex
+                    ? Skin.AccentDim
+                    : Skin.Glass;
 
-        if (fraction <= 0f)
-            return;
+            _cellLabels[i].FontColorOverride = i == currentIndex
+                ? Skin.Ink
+                : i < currentIndex
+                    ? Skin.Text
+                    : Skin.TextMuted;
+        }
 
-        var colour = state.CrackPaused
-            ? Blink(PausedBlinkPeriod) ? Skin.Caution : Skin.Glass
-            : Skin.Good;
+        _countdown.Text = CountdownText(state);
+        _countdown.FontColorOverride = CountdownColour(state);
 
-        handle.DrawRect(new UIBox2(track.Left, track.Top, track.Left + track.Width * fraction, track.Bottom),
-            Geom(colour));
+        _progress.Value = CrackFraction(state);
+        _progressTrack.BackgroundColor = Skin.Glass;
+        _progressFill.BackgroundColor = state is { CrackPaused: true } ? Skin.Caution : Skin.Good;
+    }
+
+    /// <summary>How far through the cut the hull is, 0 to 1.</summary>
+    private static float CrackFraction(WFCrackConsoleState? state)
+    {
+        if (state is not { } pushed)
+            return 0f;
+
+        var total = (float)pushed.CrackTotal.TotalSeconds;
+
+        if (total <= 0f)
+            return 0f;
+
+        return Math.Clamp(1f - (float)pushed.CrackRemaining.TotalSeconds / total, 0f, 1f);
+    }
+
+    /// <summary>The one countdown the stage carries, most urgent first; nominal when it carries none.</summary>
+    private static string CountdownText(WFCrackConsoleState? state)
+    {
+        if (state is not { } pushed)
+            return Loc.GetString("wf-crack-console-grace-nominal");
+
+        if (pushed.EvacRunning)
+            return Loc.GetString("wf-crack-console-evac", ("time", Format(pushed.EvacRemaining)));
+
+        if (pushed.DisconnectArmed)
+            return Loc.GetString("wf-crack-console-disconnect", ("time", Format(pushed.DisconnectRemaining)));
+
+        if (pushed.GraceRunning)
+            return Loc.GetString("wf-crack-console-grace", ("time", Format(pushed.GraceRemaining)));
+
+        if (pushed.CrackPaused)
+            return Loc.GetString("wf-crack-console-crack-paused");
+
+        return pushed.State == WFCrackState.Cracking
+            ? Loc.GetString("wf-crack-console-crack-remaining", ("time", Format(pushed.CrackRemaining)))
+            : Loc.GetString("wf-crack-console-grace-nominal");
+    }
+
+    /// <summary>Danger for a running countdown, caution for a held cut, muted for nominal.</summary>
+    private Color CountdownColour(WFCrackConsoleState? state)
+    {
+        if (state is not { } pushed)
+            return Skin.TextMuted;
+
+        if (pushed.EvacRunning || pushed.DisconnectArmed || pushed.GraceRunning)
+            return Skin.Danger;
+
+        if (pushed.CrackPaused)
+            return Skin.Caution;
+
+        return pushed.State == WFCrackState.Cracking ? Skin.Text : Skin.TextMuted;
+    }
+
+    /// <summary>Minutes and seconds, the only shape any of the countdowns needs.</summary>
+    private static string Format(TimeSpan time)
+    {
+        return time <= TimeSpan.Zero ? "0:00" : $"{(int)time.TotalMinutes}:{time.Seconds:D2}";
     }
 
     /// <summary>Locale key naming one stage; the strip never shows a server-sent string.</summary>

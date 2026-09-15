@@ -1156,6 +1156,73 @@ public sealed class CrackConsoleTest
     /// A console state with non-trivial geometry: a rotated berth, a cut circle offset from it across two maps, a
     /// locked pair, a running cut and two projectors, one of them firing.
     /// </summary>
+    /// <summary>
+    /// Every crack stage through the console window and its stage strip. The strip used to place nine stage names by
+    /// hand at fixed pixel offsets, so they drew through each other and through the bar under them; it is a strip of
+    /// real controls now, and this drives all nine stages plus each countdown shape that rides on them, asserts no
+    /// throw, and asserts the strip measures itself rather than relying on the window's MinSize.
+    /// </summary>
+    [Test]
+    public async Task CrackConsoleWindowSurvivesEveryStage()
+    {
+        await using var pair = await PoolManager.GetServerClient(new PoolSettings { Connected = true });
+
+        await pair.Client.WaitPost(() =>
+        {
+            var window = new WFCrackConsoleWindow();
+            var timeline = new WFCrackTimeline();
+            var size = window.SetSize;
+
+            Assert.DoesNotThrow(() =>
+            {
+                foreach (var stage in Enum.GetValues<WFCrackState>())
+                {
+                    var state = SyntheticState();
+
+                    state.State = stage;
+                    state.CrackPaused = stage == WFCrackState.Cracking;
+                    state.GraceRunning = stage == WFCrackState.Cracked;
+                    state.DisconnectArmed = stage == WFCrackState.Disconnecting;
+                    state.DisconnectRemaining = TimeSpan.FromSeconds(24);
+                    state.EvacRunning = stage == WFCrackState.Released;
+                    state.EvacRemaining = TimeSpan.FromSeconds(41);
+                    state.PendingAbort = stage == WFCrackState.Surveying ? WFCrackState.Idle : null;
+
+                    window.UpdateState(state);
+                    timeline.SetState(state);
+
+                    window.Measure(size);
+                    window.Arrange(new UIBox2(0f, 0f, size.X, size.Y));
+                    timeline.Measure(size);
+                    timeline.Arrange(new UIBox2(0f, 0f, size.X, size.Y));
+                }
+
+                // No state at all: the strip is built and laid out before the console has pushed one.
+                timeline.SetState(null);
+                timeline.Measure(size);
+            }, "The crack console window should take every crack stage without throwing.");
+
+            timeline.Measure(new Vector2(float.PositiveInfinity, float.PositiveInfinity));
+
+            using (Assert.EnterMultipleScope())
+            {
+                Assert.That(timeline.DependenciesInjected, Is.True,
+                    "WFCrackTimeline never had IoCManager.InjectDependencies called on it.");
+                Assert.That(timeline.DesiredSize.X, Is.GreaterThan(0f),
+                    "The stage strip measures as zero wide, so it vanishes in any parent that does not pin its size.");
+                Assert.That(timeline.DesiredSize.Y, Is.GreaterThan(0f),
+                    "The stage strip measures as zero tall, so it vanishes in any parent that does not pin its size.");
+                Assert.That(window.MinSize.X, Is.GreaterThanOrEqualTo(timeline.DesiredSize.X),
+                    "The window cannot be shrunk narrower than the stage strip, or the strip is clipped away.");
+            }
+
+            window.Dispose();
+            timeline.Dispose();
+        });
+
+        await pair.CleanReturnAsync();
+    }
+
     private static WFCrackConsoleState SyntheticState()
     {
         return new WFCrackConsoleState
