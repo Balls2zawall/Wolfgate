@@ -559,7 +559,10 @@ public sealed partial class WFCrackerSystem
 
         // Both ambience loops are cut to whoever was there when the cut began; re-cut now and then so somebody who
         // landed or boarded since is inside them too.
-        if (++_recutCounter[ent.Owner] % AmbienceRecutShakes == 0 && TryGetTargetedPair(ent, out var a, out var b))
+        var recuts = _recutCounter.GetValueOrDefault(ent.Owner) + 1;
+        _recutCounter[ent.Owner] = recuts;
+
+        if (recuts % AmbienceRecutShakes == 0 && TryGetTargetedPair(ent, out var a, out var b))
         {
             StartShipAmbience(ent);
             StartGroundRumble(ent, a, b);
