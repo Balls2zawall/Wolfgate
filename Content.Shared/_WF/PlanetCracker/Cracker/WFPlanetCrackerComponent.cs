@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Numerics;
 using Robust.Shared.Audio;
 using Robust.Shared.GameStates;
@@ -195,11 +196,11 @@ public sealed partial class WFPlanetCrackerComponent : Component
 
     /// <summary>Looped while the cut runs.</summary>
     [DataField]
-    public SoundSpecifier RumbleSound = new SoundPathSpecifier("/Audio/Ambience/Objects/crushing.ogg");
+    public SoundSpecifier RumbleSound = new SoundPathSpecifier("/Audio/_WF/PlanetCracker/Crack/ship_side_crack_ambience_loop.ogg");
 
     /// <summary>Looped while the grace countdown runs.</summary>
     [DataField]
-    public SoundSpecifier KlaxonSound = new SoundPathSpecifier("/Audio/Machines/alarm.ogg");
+    public SoundSpecifier KlaxonSound = new SoundPathSpecifier("/Audio/_WF/PlanetCracker/Crack/gravity_gen_warning_alarm.ogg");
 
     /// <summary>Looped once the hull is falling.</summary>
     [DataField]
@@ -211,18 +212,38 @@ public sealed partial class WFPlanetCrackerComponent : Component
 
     /// <summary>One-shot boom as the disc tears free; played globally on both layers at extraction.</summary>
     [DataField]
-    public SoundSpecifier ExtractSound = new SoundPathSpecifier("/Audio/Effects/explosionfar.ogg");
+    public SoundSpecifier ExtractSound = new SoundPathSpecifier("/Audio/_WF/PlanetCracker/Crack/crack_complete_1.ogg");
+
+    /// <summary>The second completion sound, played everywhere the first is.</summary>
+    [DataField]
+    public SoundSpecifier ExtractSound2 = new SoundPathSpecifier("/Audio/_WF/PlanetCracker/Crack/crack_complete_2.ogg");
 
     /// <summary>Looped on the hull while the evacuation countdown runs.</summary>
     [DataField]
-    public SoundSpecifier EvacSound = new SoundPathSpecifier("/Audio/Machines/alarm.ogg");
+    public SoundSpecifier EvacSound = new SoundPathSpecifier("/Audio/_WF/PlanetCracker/Crack/chunk_release_alarm_loop.ogg");
 
     /// <summary>
     /// Looped on the ground layer at the cut circle while the cut runs. The hull's own rumble is replicated to orbit
     /// but the client zeroes gain across maps, so the site needs a source of its own or it is silent.
     /// </summary>
     [DataField]
-    public SoundSpecifier GroundRumbleSound = new SoundPathSpecifier("/Audio/Ambience/Objects/crushing.ogg");
+    public SoundSpecifier GroundRumbleSound = new SoundPathSpecifier("/Audio/_WF/PlanetCracker/Crack/planet_side_crack_ambience_loop_1.ogg");
+
+    /// <summary>The second planet-side ambience loop, played alongside the first to the same audience.</summary>
+    [DataField]
+    public SoundSpecifier GroundAmbienceSound2 = new SoundPathSpecifier("/Audio/_WF/PlanetCracker/Crack/planet_side_crack_ambience_loop_2.ogg");
+
+    /// <summary>The beam igniting, once at every projector and anchor as the cut begins.</summary>
+    [DataField]
+    public SoundSpecifier BeamFireSound = new SoundPathSpecifier("/Audio/_WF/PlanetCracker/Crack/beam_fire.ogg");
+
+    /// <summary>The beam holding, looped at every projector and anchor for the whole cut.</summary>
+    [DataField]
+    public SoundSpecifier BeamLoopSound = new SoundPathSpecifier("/Audio/_WF/PlanetCracker/Crack/beam_loop.ogg");
+
+    /// <summary>One of the ground cracking open, played at the cut circle every hull rumble.</summary>
+    [DataField]
+    public SoundSpecifier CrackEffectSound = new SoundCollectionSpecifier("WFRandomCrackEffect");
 
     /// <summary>Live rumble loop; server-only, never networked, stopped on every state edge.</summary>
     [ViewVariables]
@@ -239,6 +260,14 @@ public sealed partial class WFPlanetCrackerComponent : Component
     /// <summary>Live ground-side rumble loop at the cut site; server-only, never networked.</summary>
     [ViewVariables]
     public EntityUid? GroundRumbleStream;
+
+    /// <summary>The second planet-side ambience stream.</summary>
+    [ViewVariables]
+    public EntityUid? GroundAmbienceStream2;
+
+    /// <summary>The beam loops, one per projector and per anchor, for the length of the cut.</summary>
+    [ViewVariables]
+    public List<EntityUid> BeamStreams = new();
 
     /// <summary>Live evacuation alarm loop; server-only, never networked.</summary>
     [ViewVariables]

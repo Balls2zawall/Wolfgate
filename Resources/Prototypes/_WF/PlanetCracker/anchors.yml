@@ -97,7 +97,7 @@
   - type: AmbientSound
     enabled: false
     sound:
-      path: /Audio/Ambience/Objects/circular_saw.ogg
+      path: /Audio/_WF/PlanetCracker/Crack/planet_side_anchor_loop.ogg
     range: 12
     volume: -4
   - type: WFGravityAnchor

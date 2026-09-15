@@ -37,4 +37,11 @@ public sealed partial class WFCentrifugeComponent : Component
     /// <summary>Spin fraction it must fall below to stop counting as at full (design D25).</summary>
     [DataField]
     public float FullOff = 0.95f;
+
+    /// <summary>The two spin loops, server-side; their volume follows the spin.</summary>
+    [ViewVariables]
+    public EntityUid? HumStream1;
+
+    [ViewVariables]
+    public EntityUid? HumStream2;
 }

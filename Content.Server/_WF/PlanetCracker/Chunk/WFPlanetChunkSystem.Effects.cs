@@ -45,8 +45,14 @@ public sealed partial class WFPlanetChunkSystem
             Filter.Empty().AddInMap(orbitMapId, EntityManager).AddInMap(groundMapId, EntityManager),
             true);
 
+        _audio.PlayGlobal(
+            cracker.Comp.ExtractSound2,
+            Filter.Empty().AddInMap(orbitMapId, EntityManager).AddInMap(groundMapId, EntityManager),
+            true);
         _audio.PlayPvs(cracker.Comp.ExtractSound, new EntityCoordinates(groundMap, centre));
+        _audio.PlayPvs(cracker.Comp.ExtractSound2, new EntityCoordinates(groundMap, centre));
         _audio.PlayPvs(cracker.Comp.ExtractSound, new EntityCoordinates(chunk, centre));
+        _audio.PlayPvs(cracker.Comp.ExtractSound2, new EntityCoordinates(chunk, centre));
 
         // The chunk's tile indices are identical to the ground's, so the disc centre is the same local vector on both.
         Spawn(BurstEffect, new EntityCoordinates(groundMap, centre));

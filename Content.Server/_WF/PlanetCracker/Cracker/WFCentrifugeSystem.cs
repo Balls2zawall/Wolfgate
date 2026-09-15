@@ -1,3 +1,5 @@
+using Robust.Shared.Audio.Systems;
+using Robust.Shared.Audio;
 using Content.Server._CE.ZLevels.Core;
 using Content.Server.Power.Components;
 using Content.Shared._WF.PlanetCracker.Cracker;
@@ -16,6 +18,17 @@ public sealed partial class WFCentrifugeSystem : EntitySystem
 {
     [Dependency] private IGameTiming _timing = default!;
     [Dependency] private CEZLevelsSystem _zLevels = default!;
+    [Dependency] private SharedAudioSystem _audio = default!;
+
+    /// <summary>The generator spooling up from a standstill.</summary>
+    public static readonly SoundSpecifier StartSound = new SoundPathSpecifier("/Audio/_WF/PlanetCracker/Crack/gravitic_generator_start_effect.ogg");
+
+    /// <summary>The two running loops, both played together and both scaled by spin.</summary>
+    public static readonly SoundSpecifier HumSound1 = new SoundPathSpecifier("/Audio/_WF/PlanetCracker/Crack/gravitic_generator_loop_1.ogg");
+    public static readonly SoundSpecifier HumSound2 = new SoundPathSpecifier("/Audio/_WF/PlanetCracker/Crack/gravitic_generator_loop_2.ogg");
+
+    /// <summary>Loop volume at a standstill, in dB; zero at full spin.</summary>
+    private const float HumQuiet = -20f;
 
     /// <summary>
     /// Spin movement that is worth a state send. Deliberately coarse: at the shipped chargeRate of 0.00417 a sweep
@@ -50,6 +63,8 @@ public sealed partial class WFCentrifugeSystem : EntitySystem
             // not arm and disarm the grace timer every sweep.
             var atFull = comp.AtFull ? spin >= comp.FullOff : spin >= comp.FullOn;
 
+            UpdateHum(uid, comp, spin);
+
             var load = 0f;
             var capacity = 0f;
 
@@ -77,5 +92,36 @@ public sealed partial class WFCentrifugeSystem : EntitySystem
             comp.Capacity = capacity;
             Dirty(uid, comp);
         }
+    }
+
+    /// <summary>
+    /// Runs the two spin loops: started the moment the rotor leaves a standstill, with the spool-up effect on top,
+    /// quiet at first and full at full spin, and stopped again once it is still.
+    /// </summary>
+    private void UpdateHum(EntityUid uid, WFCentrifugeComponent comp, float spin)
+    {
+        if (spin <= 0f)
+        {
+            comp.HumStream1 = _audio.Stop(comp.HumStream1);
+            comp.HumStream2 = _audio.Stop(comp.HumStream2);
+            return;
+        }
+
+        var volume = MathHelper.Lerp(HumQuiet, 0f, Math.Clamp(spin, 0f, 1f));
+
+        if (comp.HumStream1 == null)
+        {
+            // comp.Spin is the last spin sent, so it still reads zero on the sweep the rotor first moves.
+            if (comp.Spin <= 0f)
+                _audio.PlayPvs(StartSound, uid);
+
+            var loop = AudioParams.Default.WithLoop(true).WithVolume(volume);
+            comp.HumStream1 = _audio.PlayPvs(HumSound1, uid, loop)?.Entity;
+            comp.HumStream2 = _audio.PlayPvs(HumSound2, uid, loop)?.Entity;
+            return;
+        }
+
+        _audio.SetVolume(comp.HumStream1, volume);
+        _audio.SetVolume(comp.HumStream2, volume);
     }
 }

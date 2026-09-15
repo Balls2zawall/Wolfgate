@@ -122,7 +122,7 @@ public sealed partial class WFPlanetChunkComponent : Component
 
     /// <summary>Looped on the chunk while the evacuation alarm runs.</summary>
     [DataField]
-    public SoundSpecifier EvacSound = new SoundPathSpecifier("/Audio/Misc/redalert.ogg");
+    public SoundSpecifier EvacSound = new SoundPathSpecifier("/Audio/_WF/PlanetCracker/Crack/chunk_release_alarm_loop.ogg");
 
     /// <summary>Ids of the rim decals stamped around the hole, kept for admin teardown; there is no bulk decal removal.</summary>
     [ViewVariables]

@@ -18,6 +18,11 @@ namespace Content.Server._WF.PlanetCracker.Cracker;
 public sealed partial class WFCrackerSystem
 {
     /// <summary>How often the grid shake is re-triggered while the cut runs; the engine shake itself lasts about 2 s.</summary>
+    /// <summary>Hull rumbles between ambience re-cuts: five is once a minute.</summary>
+    private const int AmbienceRecutShakes = 5;
+
+    private readonly Dictionary<EntityUid, int> _recutCounter = new();
+
     private static readonly TimeSpan ShakeInterval = TimeSpan.FromSeconds(12); // a rumble every so often, not a constant tremor: 2 s was nauseating in playtest
 
     /// <summary>Next tick of the sweep.</summary>
@@ -170,9 +175,69 @@ public sealed partial class WFCrackerSystem
         _anchors.SetCrackProgress(a, 0f);
         _anchors.SetCrackProgress(b, 0f);
 
-        ent.Comp.RumbleStream = _audio.PlayPvs(ent.Comp.RumbleSound, ent.Owner, AudioParams.Default.WithLoop(true))?.Entity;
-
+        StartShipAmbience(ent);
         StartGroundRumble(ent, a, b);
+        StartBeams(ent, a, b);
+    }
+
+    /// <summary>The ship-side ambience, to everyone aboard the hull rather than a point source at its origin.</summary>
+    private void StartShipAmbience(Entity<WFPlanetCrackerComponent> ent)
+    {
+        StopRumble(ent);
+        ent.Comp.RumbleStream = _audio.PlayGlobal(
+            ent.Comp.RumbleSound,
+            _audience.Aboard(ent.Owner),
+            true,
+            AudioParams.Default.WithLoop(true))?.Entity;
+    }
+
+    /// <summary>The beams igniting and then holding: once and then looped, at every projector and both anchors.</summary>
+    private void StartBeams(
+        Entity<WFPlanetCrackerComponent> ent,
+        Entity<WFGravityAnchorComponent> a,
+        Entity<WFGravityAnchorComponent> b)
+    {
+        StopBeams(ent);
+        GetProjectors(ent.Owner, _projectorBuffer);
+
+        foreach (var projector in _projectorBuffer)
+        {
+            StartBeam(ent, projector.Owner);
+        }
+
+        StartBeam(ent, a.Owner);
+        StartBeam(ent, b.Owner);
+    }
+
+    private void StartBeam(Entity<WFPlanetCrackerComponent> ent, EntityUid at)
+    {
+        _audio.PlayPvs(ent.Comp.BeamFireSound, at);
+
+        if (_audio.PlayPvs(ent.Comp.BeamLoopSound, at, AudioParams.Default.WithLoop(true)) is { } loop)
+            ent.Comp.BeamStreams.Add(loop.Entity);
+    }
+
+    /// <summary>Cuts every beam loop.</summary>
+    private void StopBeams(Entity<WFPlanetCrackerComponent> ent)
+    {
+        foreach (var stream in ent.Comp.BeamStreams)
+        {
+            _audio.Stop(stream);
+        }
+
+        ent.Comp.BeamStreams.Clear();
+    }
+
+    /// <summary>One crack of the ground at the cut circle, for everyone near it.</summary>
+    private void PlayGroundCrackEffect(Entity<WFPlanetCrackerComponent> ent)
+    {
+        if (!TryGetTargetedPair(ent, out var a, out var b) || !TryGetCircle(a.Owner, b.Owner, out var centre, out _))
+            return;
+
+        if (Transform(a.Owner).MapUid is not { } groundMap)
+            return;
+
+        _audio.PlayPvs(ent.Comp.CrackEffectSound, new EntityCoordinates(groundMap, centre));
     }
 
     /// <summary>
@@ -489,6 +554,16 @@ public sealed partial class WFCrackerSystem
 
         if (TryComp<GravityComponent>(ent.Owner, out var gravity))
             _gravity.StartGridShake(ent.Owner, gravity);
+
+        PlayGroundCrackEffect(ent);
+
+        // Both ambience loops are cut to whoever was there when the cut began; re-cut now and then so somebody who
+        // landed or boarded since is inside them too.
+        if (++_recutCounter[ent.Owner] % AmbienceRecutShakes == 0 && TryGetTargetedPair(ent, out var a, out var b))
+        {
+            StartShipAmbience(ent);
+            StartGroundRumble(ent, a, b);
+        }
     }
 
     /// <summary>
@@ -511,6 +586,7 @@ public sealed partial class WFCrackerSystem
     private void StopRumble(Entity<WFPlanetCrackerComponent> ent)
     {
         ent.Comp.RumbleStream = _audio.Stop(ent.Comp.RumbleStream);
+        StopBeams(ent);
     }
 
     /// <summary>
@@ -533,18 +609,20 @@ public sealed partial class WFCrackerSystem
         if (xform.MapUid is not { } groundMap)
             return;
 
-        ent.Comp.GroundRumbleStream = _audio.PlayStatic(
-            ent.Comp.GroundRumbleSound,
-            Filter.Empty().AddInMap(xform.MapID, EntityManager),
-            new EntityCoordinates(groundMap, centre),
-            false,
-            AudioParams.Default.WithLoop(true).WithMaxDistance(40f))?.Entity;
+        // The whole planet hears the cut, not a radius round the circle: two loops to everyone on the ground layer.
+        var audience = Filter.Empty().AddInMap(xform.MapID, EntityManager);
+
+        ent.Comp.GroundRumbleStream = _audio.PlayGlobal(
+            ent.Comp.GroundRumbleSound, audience, true, AudioParams.Default.WithLoop(true))?.Entity;
+        ent.Comp.GroundAmbienceStream2 = _audio.PlayGlobal(
+            ent.Comp.GroundAmbienceSound2, audience, true, AudioParams.Default.WithLoop(true))?.Entity;
     }
 
     /// <summary>Stops the ground-side rumble loop.</summary>
     private void StopGroundRumble(Entity<WFPlanetCrackerComponent> ent)
     {
         ent.Comp.GroundRumbleStream = _audio.Stop(ent.Comp.GroundRumbleStream);
+        ent.Comp.GroundAmbienceStream2 = _audio.Stop(ent.Comp.GroundAmbienceStream2);
     }
 
     /// <summary>

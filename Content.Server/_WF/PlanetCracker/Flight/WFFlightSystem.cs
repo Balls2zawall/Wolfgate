@@ -86,7 +86,7 @@ public sealed partial class WFFlightSystem : EntitySystem
 
     /// <summary>Played once at touchdown of a hard landing.</summary>
     public static readonly SoundSpecifier HardLandingSound =
-        new SoundPathSpecifier("/Audio/_WF/PlanetCracker/Flight/hard_landing.ogg");
+        new SoundPathSpecifier("/Audio/_WF/PlanetCracker/Crack/grid_crash_effect.ogg");
 
     /// <summary>The scrape, looped on the hull for as long as it is still moving.</summary>
     public static readonly SoundSpecifier SkidSound =

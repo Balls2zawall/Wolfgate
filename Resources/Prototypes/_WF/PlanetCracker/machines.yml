@@ -65,12 +65,6 @@
       off: "off"
       on: "spinning"
   - type: WFCentrifuge
-  - type: AmbientSound
-    enabled: false
-    sound:
-      path: /Audio/Ambience/Objects/gravity_gen_hum.ogg
-    range: 10
-    volume: -4
   - type: Repairable
     qualities: [ Welding, Applicating ]   # BaseStructure narrows this to Applicating
     fuelCost: 25
