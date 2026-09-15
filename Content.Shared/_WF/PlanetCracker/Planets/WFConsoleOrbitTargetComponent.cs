@@ -25,4 +25,11 @@ public sealed partial class WFConsoleOrbitTargetComponent : Component
     /// <summary>True while the hull cannot make the hop at all: already in FTL, in cooldown or riding a transit map.</summary>
     [DataField, AutoNetworkedField]
     public bool Busy;
+
+    /// <summary>
+    /// Pooled lift over weight for this hull on the planet below, computed server-side; 1 is level flight. Only
+    /// meaningful while <see cref="InOrbit"/>, which is the one place the descent decision is taken.
+    /// </summary>
+    [DataField, AutoNetworkedField]
+    public float LiftRatio;
 }

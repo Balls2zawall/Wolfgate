@@ -53,6 +53,8 @@ public sealed class PlanetCrackerPrototypeTest
         "WFCentrifuge",
         "WFGravityProjector",
         "WFTransportGravgen",
+        "WFThrusterLanding",
+        "WFLandingThrusterKit",
         "WFCrackConsole",
         "WFSectorSurveyConsole",
         "WFChunkBerthMarker",

@@ -16,6 +16,7 @@ using Content.Shared._WF.PlanetCracker.Anchors;
 using Content.Shared._WF.PlanetCracker.Cracker;
 using Content.Shared._WF.PlanetCracker.Planets;
 using Content.Shared.Gravity;
+using Content.Shared.Power.EntitySystems;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Map;
 using Robust.Shared.Map.Components;
@@ -53,11 +54,14 @@ public sealed class CrackerTestGridTest
         ["DebugThruster"] = 4,
     };
 
-    /// <summary>Plan F.2: eight entities on the micro transport.</summary>
+    /// <summary>
+    /// Plan F.2, as F10 leaves it: the gravity generator is gone - the transport flies over a planet on landing
+    /// thrusters, which is the only lift there is over one - so nine entities rather than eight.
+    /// </summary>
     private static readonly Dictionary<string, int> TransportContents = new()
     {
         ["ComputerShuttle"] = 1,
-        ["WFTransportGravgen"] = 1,
+        ["WFThrusterLanding"] = 2,
         ["AirlockShuttle"] = 1,
         ["WFAnchorCrate"] = 1,
         ["DebugThruster"] = 4,
@@ -317,6 +321,7 @@ public sealed class CrackerTestGridTest
 
         var map = await pair.CreateTestMap();
         var transport = await BuildTransport(pair, map.MapId);
+        await AddGravgen(pair, transport);
         await Energise(pair, transport);
 
         await server.WaitAssertion(() =>
@@ -355,6 +360,7 @@ public sealed class CrackerTestGridTest
 
         var map = await pair.CreateTestMap();
         var transport = await BuildTransport(pair, map.MapId);
+        await AddGravgen(pair, transport);
         await Energise(pair, transport);
 
         var before = 0f;
@@ -458,6 +464,7 @@ public sealed class CrackerTestGridTest
 
         var map = await pair.CreateTestMap();
         var transport = await BuildTransport(pair, map.MapId);
+        await AddGravgen(pair, transport);
 
         await server.WaitPost(() => entMan.SpawnEntity(Crate, new EntityCoordinates(transport, new Vector2(1.5f, 7.5f))));
         await server.WaitRunTicks(pair.SecondsToTicks(2f));
@@ -951,5 +958,30 @@ public sealed class CrackerTestGridTest
 
         await Teardown(pair, stack);
         await pair.CleanReturnAsync();
+    }
+
+    /// <summary>
+    /// Bolts the old transport gravity generator back onto a hull. F10 took it out of the factory layout - the
+    /// transport flies on landing thrusters now - but it is still the fixture that carries WFAnchorCapacity and the
+    /// rating the D11 tests are about, so those tests bring their own.
+    /// </summary>
+    private static async Task<EntityUid> AddGravgen(TestPair pair, EntityUid transport)
+    {
+        var server = pair.Server;
+        var entMan = server.EntMan;
+        var receiver = server.System<SharedPowerReceiverSystem>();
+        var uid = EntityUid.Invalid;
+
+        await server.WaitPost(() =>
+        {
+            uid = entMan.SpawnEntity(Gravgen, new EntityCoordinates(transport, new Vector2(3.5f, 4.5f)));
+
+            // No cabling on a code-built hull, exactly as WFTestGridFactory.SpawnOnHull does it.
+            receiver.SetNeedsPower(uid, false);
+        });
+
+        await server.WaitRunTicks(pair.SecondsToTicks(1f));
+
+        return uid;
     }
 }

@@ -41,6 +41,13 @@ public sealed partial class WFPlanetSurfacePrototype : IPrototype
     [DataField]
     public bool CloudLayer = true;
 
+    /// <summary>
+    /// Surface gravity in gees, stamped onto every layer of the stack. A hull's landing-thruster lift is divided by
+    /// it, so doubling this halves the lift ratio of everything that tries to fly here.
+    /// </summary>
+    [DataField]
+    public float Gravity = 1f;
+
     /// <summary>How close to the sector planet a shuttle must be to enter orbit.</summary>
     [DataField]
     public float OrbitRange = 2000f;

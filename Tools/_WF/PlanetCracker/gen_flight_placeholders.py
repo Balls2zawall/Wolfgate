@@ -1,0 +1,68 @@
+#!/usr/bin/env python3
+"""Generates the F10 atmospheric-flight placeholder audio.
+
+Six callout chimes plus a landing thud and a looping scrape, each a short, distinct
+tone so the alarms can be told apart by ear long before real voice lines exist.
+Falls back to copying /Audio/Announcements/attention.ogg under every name if ffmpeg
+is not on PATH.
+
+Usage: python Tools/_WF/PlanetCracker/gen_flight_placeholders.py
+Writes into Resources/Audio/_WF/PlanetCracker/Flight/
+"""
+
+import os
+import shutil
+import subprocess
+import sys
+
+ROOT = os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", ".."))
+OUT_DIR = os.path.join(ROOT, "Resources", "Audio", "_WF", "PlanetCracker", "Flight")
+FALLBACK = os.path.join(ROOT, "Resources", "Audio", "Announcements", "attention.ogg")
+
+# name -> (ffmpeg lavfi expression, seconds). Pitch and rhythm climb with urgency.
+TONES = {
+    "lift_lost": ("sine=frequency=520:duration=0.5,tremolo=f=4:d=0.6", 0.5),
+    "dont_sink": ("sine=frequency=420:duration=0.7,tremolo=f=3:d=0.5", 0.7),
+    "sink_rate": ("sine=frequency=620:duration=0.7,tremolo=f=6:d=0.7", 0.7),
+    "terrain": ("sine=frequency=760:duration=0.6,tremolo=f=8:d=0.8", 0.6),
+    "too_low_terrain": ("sine=frequency=900:duration=0.8,tremolo=f=10:d=0.8", 0.8),
+    "pull_up": ("sine=frequency=1100:duration=0.9,tremolo=f=14:d=0.9", 0.9),
+    "hard_landing": ("anoisesrc=color=brown:duration=1.2:amplitude=0.8", 1.2),
+    "skid": ("anoisesrc=color=pink:duration=2.0:amplitude=0.4", 2.0),
+}
+
+
+def have_ffmpeg():
+    try:
+        subprocess.run(["ffmpeg", "-version"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, check=True)
+        return True
+    except Exception:
+        return False
+
+
+def main():
+    os.makedirs(OUT_DIR, exist_ok=True)
+
+    if not have_ffmpeg():
+        if not os.path.exists(FALLBACK):
+            sys.exit("no ffmpeg and no %s to copy" % FALLBACK)
+        for name in TONES:
+            shutil.copyfile(FALLBACK, os.path.join(OUT_DIR, name + ".ogg"))
+            print("copied", name + ".ogg")
+        return
+
+    for name, (expr, seconds) in TONES.items():
+        path = os.path.join(OUT_DIR, name + ".ogg")
+        subprocess.run([
+            "ffmpeg", "-y", "-hide_banner", "-loglevel", "error",
+            "-f", "lavfi", "-i", expr,
+            "-t", str(seconds),
+            "-af", "afade=t=in:st=0:d=0.05,afade=t=out:st=%s:d=0.1" % max(0.0, seconds - 0.1),
+            "-ac", "1", "-ar", "44100", "-c:a", "libvorbis", "-q:a", "3",
+            path,
+        ], check=True)
+        print("wrote", name + ".ogg")
+
+
+if __name__ == "__main__":
+    main()

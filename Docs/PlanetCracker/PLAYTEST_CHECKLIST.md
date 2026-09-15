@@ -83,6 +83,8 @@ There is no cabling on either hull: every powered machine is switched to `!Needs
 
 **Report.** The button missing entirely while parked beside the body, or enabled from thousands of tiles away (the readout sweep or the range gate is wrong). A popup instead of a hop with the hull clearly in range. The hull starts falling on arrival (orbit exemption broken). Also report if you can FTL away while standing on the surface — the outbound gate should refuse that.
 
+**Going down.** The same control block carries *Enter atmosphere: Asclepiu* under the orbit button, with the hull's lift ratio beneath it (F10). That is the only way out of orbit downward — a held **F** from orbit is refused with a popup naming the button. See §7.
+
 **Leaving.** Press *Leave orbit* on the same console; you come back out beside the body on the sector map. The sector body's own FTL beacon still works as a second route in for a hull that has a drive. If your gravgen dies while you are on a non-orbit layer you are stranded — the console offers neither the orbit button nor a destination list; `wfplanet tp <planet>` is the escape hatch.
 
 ## 6. Survey the surface (optional, F2)
@@ -103,13 +105,25 @@ There is no cabling on either hull: every powered machine is switched to `!Needs
 
 ## 7. Descend with the transport
 
-**Do.** Board the transport, switch its `WFTransportGravgen` on, take its shuttle console, and hold **F** to descend. **R** ascends.
+**Lift over a planet is landing thrusters, not the gravity generator (F10).** The transport now carries two `WFThrusterLanding` instead of its gravgen; anything else you fly down there needs some bolted on, or converted with a `WFLandingThrusterKit` (spawn one, click an anchored thruster with it). The console shows the hull's *lift ratio* under the orbit button: green at 1.00 or better, amber down to 0.50, red below that. At 1.00 the hull flies exactly as it always did.
 
-**See.** The hull spools and drops a layer at a time: orbit (depth 4) → three air layers → ground (depth 0). The altimeter on the console tracks it. On touchdown the thrusters disable.
+**Do.** Board the transport, take its shuttle console, and press *Enter atmosphere: Asclepiu*. Then hold **F** to descend and **R** to climb.
 
-**Report.** F does nothing with the gravgen at full. A hull leaving orbit on its own (you did not press F) — orbit is parking, nothing pulls on you there. A layer skipped on the way down, or a hull arriving on the ground without the transit maps and the crash. The ground failing to generate under you.
+**See.** The lift readout above the button reads about 2.6 : 1 with both thrusters powered. The hull drops out of orbit into the gap below it and hangs there; **F** then walks it down a layer at a time: orbit (depth 4) → three air layers → ground (depth 0). The altimeter tracks it. On touchdown the thrusters disable.
 
-**Cold descent.** F from orbit with the gravgen off or dead is allowed on purpose: the hull enters transit and falls for real through every layer, then crashes. Below orbit a dead gravgen refuses to descend, as before.
+**Report.** *Enter atmosphere* missing or greyed while parked in orbit. **F** doing nothing below orbit with the lift reading 1.00 or better. A hull leaving orbit on its own — orbit is parking, nothing pulls on you there. A layer skipped, or a hull arriving on the ground without the transit maps.
+
+**Holding F in orbit does nothing on purpose.** You get a popup pointing at the console button. That is the only way down, and it is where the lift warning lives.
+
+**Descending without lift.** Switch a landing thruster off (or unanchor one) so the readout goes amber or red, then press *Enter atmosphere*. You get a confirm dialog naming the ratio. Confirm it and the hull is in **lift lost**: it sinks and cannot climb back out. Between 0.50 and 1.00 the sink is slowed in proportion — near 0.90 it is a long slow descent; under 0.50 it falls at the full rate. Give the hull some sideways speed before you drop and it glides, picking up about 25 % more speed along its heading for each layer it falls through.
+
+**See.** The PA takes the ship over: a caution chime, then *Don't sink* out of orbit, *Sink rate*, *Terrain*, *Too low — terrain* in the last gap and *Pull up* repeating every 3 s in its final seconds. The ship's situation code shows each one on the console's PA panel and your own code comes back when it is over.
+
+**Report.** Callouts out of order, a stage repeating, or the ship left on a flight code after it has landed. No alarms at all with the hull clearly sinking. Alarms you cannot hear with speakers online (check §Ship PA if the ship has none — the state still applies, you just cannot hear it).
+
+**Touchdown.** Come down slowly (under 0.8 levels/second — a partial-lift sink, not a full plummet) and it is a **hard landing**: one thud, a looping scrape, and the hull skids along the ground keeping the speed it came in with, tearing tiles off its leading edge and flattening walls, crates and anything else anchored in its path while it does. The hull survives, is repairable, and flies again once the lift is back at 1.00. Come down fast and it is the ordinary crash.
+
+**Report.** A slow lift-lost touchdown exploding anyway, or a full-speed plummet walking away. A skid that never stops, or one that stops instantly. Tiles coming off a hull that is barely moving (the leading edge should only grind above about 4 m/s).
 
 **Note.** Biome chunks unload about 10 s after the last viewer leaves, and nothing reserves tiles under a landed hull. A transport parked with its crew back in orbit can lose the ground under it intermittently. Record it, but it is a known limit, not new.
 
@@ -117,13 +131,13 @@ There is no cabling on either hull: every powered machine is switched to `!Needs
 
 **Do.** Take **one** `WFAnchorCrate` from the cracker onto the transport. Pull it (standard dragging) — the crates are dynamic-bodied and cannot be wrenched.
 
-**See.** With one crate aboard the transport flies: 31.5 hull mass + 6 virtual mass for the crate against a 40 rating. Examining the gravgen reads `Rated for 1 anchor(s); 1 aboard.`
+**See.** With one crate aboard the transport flies: 31.5 hull mass + 6 virtual mass for the crate, against 100 of landing-thruster lift. The console's lift readout drops from about 2.7 : 1 to 2.3 : 1 when the second crate comes aboard — cargo weighs against lift exactly as it always did.
 
-**Do.** Now try to carry **two**.
+**D11's anchor COUNT cap now needs a gravity generator.** Since F10 the transport flies on thrusters and carries no `WFTransportGravgen`, and `WFAnchorCapacity` — the "rated for 1 anchor(s)" placard and the overload popup — lives on that machine. To exercise it, spawn a `WFTransportGravgen` on the transport (`wfplanet` is not needed, just admin-spawn it) and carry two crates.
 
-**See.** `Gravity generator overloaded: too many anchors aboard.` and, per D11, the transport **drops** — the second crate takes it to 43.5 against 40. The popup is the only warning and it lasts a second.
+**See.** With the gravgen aboard: examining it reads `Rated for 1 anchor(s); 1 aboard.` with one crate and `Gravity generator overloaded: too many anchors aboard.` with two. The popup is the only warning and it lasts a second.
 
-**Report.** Two crates flying fine (the virtual mass is not reaching the pooled lift check), or one crate dropping the hull (the numbers are wrong).
+**Report.** The lift readout not moving at all when cargo comes aboard (the virtual mass is not reaching the pooled lift check). The placard or the overload popup missing with a gravgen aboard.
 
 ## 9. Deploy and pair the anchors
 
@@ -284,5 +298,6 @@ Do not report these.
 - **Effects are simple.** The beams are a single animated texture with an additive shader drawn in a client overlay, the sky beam is one static sprite, the shake is the stock 2 s grid shake on a re-trigger loop, and the crack ring is drawn by the overlay rather than staged decals. The centrifuge spin has no pitch shift — the engine exposes no `SetPitch` — so the rotor dial is the only speed cue.
 - **The hulls are code-built.** There is no shipyard vessel, no cargo product for replacement anchors or miners, no mapped cracker and no outpost survey console (D18). `WFTestGridFactory` builds a 15×15 cracker and a 7×9 transport with `!NeedsPower` machines and a 12×12 berth. Every mass, capacity, `maxHandledMass` and virtual-mass figure is tuned to those two hulls and will have to be re-derived against real maps.
 - **No fissures and no sanction announcement.** F8 and F9 are in progress.
+- **All eight flight sounds are generated tones.** `lift_lost`, `dont_sink`, `sink_rate`, `terrain`, `too_low_terrain`, `pull_up`, `hard_landing` and `skid` under `/Audio/_WF/PlanetCracker/Flight/` are ffmpeg placeholders, distinct from each other and nothing more. Report only that you cannot tell two of them apart.
 - **No fauna on Asclepiu.** Mob marker layers are deliberately absent — marker-spawned entities are never unloaded and orbiting hulls seed them.
 - **The surface is deterministic.** `WFSurfaceAsclepiu` fixes its biome seed, so the same terrain and the same veins come back every round.

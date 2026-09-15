@@ -422,6 +422,10 @@ public sealed partial class WFCrackerSystem
             Log.Error($"{ToPrettyString(ent.Owner)} could not be pushed into transit for its crack fall.");
         }
 
+        // F10: the hull is coming down with no lift, which is exactly the state the flight alarms exist for.
+        if (_zLevels.WfTryGetLiftRatio(ent.Owner, out var liftRatio))
+            _flight.EnterLiftLost(ent.Owner, liftRatio);
+
         SetState(ent, WFCrackState.Falling);
 
         // The chunk joins the same fall at a distinct progress: two grids at identical progress fail the transit

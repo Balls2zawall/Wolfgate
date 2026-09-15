@@ -191,6 +191,7 @@ public sealed partial class WFPlanetNetworkSystem : EntitySystem
         {
             var marker = EnsureComp<WFPlanetLayerComponent>(layer);
             marker.Network = networkNet;
+            marker.Gravity = surface.Gravity;
             Dirty(layer, marker);
         }
 

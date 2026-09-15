@@ -186,11 +186,13 @@ public sealed partial class CEZLevelsSystem
             if (mapUid == null || !HasComp<CEZMapComponent>(mapUid))
                 continue;
 
-            // WOLFGATE: orbit holds a cold hull up forever, so a descent from it is allowed without lift (it falls).
-            var wfColdDrop = WfIsColdOrbitDescent(mapUid.Value, input);
+            // WOLFGATE: leaving orbit is the console's enter-atmosphere button, which is where the lift warning lives (F10).
+            if (WfRefusesOrbitDescent(mapUid.Value, gridUid, input))
+                continue;
 
             // No gravgen, dumbass.
-            if (!wfColdDrop && (!TryComp<GravityComponent>(gridUid, out var gravity) || !gravity.Enabled))
+            // WOLFGATE: over a planet the lift is the landing thrusters', which GravityComponent knows nothing about.
+            if (!WfHasVerticalLift(gridUid) && (!TryComp<GravityComponent>(gridUid, out var gravity) || !gravity.Enabled))
                 continue;
 
             var down = input < 0f;

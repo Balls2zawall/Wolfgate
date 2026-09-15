@@ -1,0 +1,6 @@
+# PLACEHOLDERS. Generated tones, not final audio: see Tools/_WF/PlanetCracker/gen_flight_placeholders.py.
+# Replace each file in place with the real callout or effect; nothing references them by anything but path.
+- files: ["lift_lost.ogg", "dont_sink.ogg", "sink_rate.ogg", "terrain.ogg", "too_low_terrain.ogg", "pull_up.ogg", "hard_landing.ogg", "skid.ogg"]
+  license: "CC0-1.0"
+  copyright: "Placeholder tones generated procedurally with ffmpeg for Wolfgate"
+  source: "https://github.com/VanguardControl/Wolfgate"

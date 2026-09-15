@@ -89,7 +89,10 @@ public sealed partial class WFTestGridFactory : EntitySystem
 
         // Layout is plan section F.2 verbatim; eight entities, one crate.
         SpawnOnHull(grid, "ComputerShuttle", 3, 1);
-        SpawnOnHull(grid, "WFTransportGravgen", 3, 4);
+        // F10: the transport flies over planets on landing thrusters, so its gravgen is gone. Anything that wants the
+        // D11 anchor-capacity machinery back spawns one on the hull itself (CrackerTestGridTest).
+        SpawnOnHull(grid, "WFThrusterLanding", 2, 4);
+        SpawnOnHull(grid, "WFThrusterLanding", 4, 4);
         SpawnOnHull(grid, "AirlockShuttle", 3, 0);
         SpawnOnHull(grid, "WFAnchorCrate", 3, 7);
 

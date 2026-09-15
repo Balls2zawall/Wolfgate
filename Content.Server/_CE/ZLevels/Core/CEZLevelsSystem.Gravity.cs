@@ -65,6 +65,9 @@ public sealed partial class CEZLevelsSystem
                 if (!gravgen.GravityActive || !gravgenXform.ParentUid.IsValid())
                     continue;
 
+                if (WfGravgenIsOnPlanet(gravgenXform.ParentUid)) // WOLFGATE: over a planet only landing thrusters lift (F10).
+                    continue;
+
                 // Unrated (<= 0) = unlimited; infinity absorbs any finite additions.
                 var rated = gravgen.MaxHandledMass <= 0f ? float.PositiveInfinity : gravgen.MaxHandledMass;
                 _gravgenCapacity[gravgenXform.ParentUid] =
@@ -78,6 +81,8 @@ public sealed partial class CEZLevelsSystem
             {
                 _gravgenCapacity[anchorGrid] = float.PositiveInfinity;
             }
+
+            WfAddLandingThrusterCapacity(_gravgenCapacity); // WOLFGATE: landing thrusters are the planet-side lift (F10).
 
             var levelQuery = EntityQueryEnumerator<CEZGridFallerComponent, MapGridComponent>();
             while (levelQuery.MoveNext(out var uid, out var faller, out var grid))
@@ -301,7 +306,10 @@ public sealed partial class CEZLevelsSystem
             if (_timing.CurTime < faller.GravityTime)
                 return;
 
-            faller.Velocity = ApproachTerminal(faller.Velocity, faller.GridGravity, faller.GridTerminalVelocity, frameTime);
+            // WOLFGATE: partial landing-thruster lift slows the sink, and this is where lift lost begins (F10).
+            var wfGravity = WfSinkGravity(grid, transitSet, faller.GridGravity);
+
+            faller.Velocity = ApproachTerminal(faller.Velocity, wfGravity, faller.GridTerminalVelocity, frameTime); // WOLFGATE
         }
         else
         {
@@ -395,8 +403,14 @@ public sealed partial class CEZLevelsSystem
 
         foreach (var landedUid in crashSet)
         {
-            if (TryComp<MapGridComponent>(landedUid, out var landedGrid) && TryComp<CEZGridFallerComponent>(landedUid, out var landedFaller))
-                CrashGrid((landedUid, landedGrid, landedFaller));
+            if (!TryComp<MapGridComponent>(landedUid, out var landedGrid) || !TryComp<CEZGridFallerComponent>(landedUid, out var landedFaller))
+                continue;
+
+            // WOLFGATE: a lift-lost hull that touched down slowly enough lands hard and skids instead of exploding (F10).
+            if (WfTryHardLanding((landedUid, landedGrid, landedFaller), impact))
+                continue;
+
+            CrashGrid((landedUid, landedGrid, landedFaller));
         }
     }
 

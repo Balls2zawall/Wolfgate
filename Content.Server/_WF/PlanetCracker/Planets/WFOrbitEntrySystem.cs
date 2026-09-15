@@ -3,6 +3,7 @@ using Content.Server.Shuttles.Components;
 using Content.Server.Shuttles.Systems;
 using Content.Shared._CE.ZLevels.Core.Components;
 using Content.Shared._WF.CCVar;
+using Content.Shared._WF.PlanetCracker.Flight;
 using Content.Shared._WF.PlanetCracker.Planets;
 using Content.Shared.Popups;
 using Content.Shared.Shuttles.Components;
@@ -41,6 +42,7 @@ public sealed partial class WFOrbitEntrySystem : EntitySystem
         {
             subs.Event<WFEnterPlanetOrbitMessage>(OnEnterOrbitMessage);
             subs.Event<WFLeavePlanetOrbitMessage>(OnLeaveOrbitMessage);
+            subs.Event<WFEnterAtmosphereMessage>(OnEnterAtmosphereMessage);
         });
     }
 
@@ -107,6 +109,7 @@ public sealed partial class WFOrbitEntrySystem : EntitySystem
         var planetName = string.Empty;
         var inOrbit = false;
         var busy = false;
+        var liftRatio = 0f;
 
         if (xform.GridUid is { } grid && HasComp<ShuttleComponent>(grid) && Transform(grid).MapUid is { } mapUid)
         {
@@ -121,6 +124,10 @@ public sealed partial class WFOrbitEntrySystem : EntitySystem
                     inOrbit = true;
                     planet = netPlanet;
                     planetName = Name(body.Value);
+
+                    // The descent decision lives on this button, so the number it is taken against is computed here
+                    // rather than guessed at by the client, which cannot see a thruster's power state at all.
+                    _zLevels.WfTryGetLiftRatio(grid, out liftRatio);
                 }
             }
             else if (TryGetNearestBody(grid, mapUid, out var nearest))
@@ -138,13 +145,20 @@ public sealed partial class WFOrbitEntrySystem : EntitySystem
 
         var comp = EnsureComp<WFConsoleOrbitTargetComponent>(console);
 
-        if (comp.Planet == planet && comp.PlanetName == planetName && comp.InOrbit == inOrbit && comp.Busy == busy)
+        if (comp.Planet == planet
+            && comp.PlanetName == planetName
+            && comp.InOrbit == inOrbit
+            && comp.Busy == busy
+            && MathF.Abs(comp.LiftRatio - liftRatio) < LiftRatioEpsilon)
+        {
             return;
+        }
 
         comp.Planet = planet;
         comp.PlanetName = planetName;
         comp.InOrbit = inOrbit;
         comp.Busy = busy;
+        comp.LiftRatio = liftRatio;
         Dirty(console, comp);
     }
 

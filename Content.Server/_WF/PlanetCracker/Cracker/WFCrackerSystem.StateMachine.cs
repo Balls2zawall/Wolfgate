@@ -1,6 +1,7 @@
 using System.Numerics;
 using Content.Server._CE.ZLevels.Core;
 using Content.Server._WF.PlanetCracker.Anchors;
+using Content.Server._WF.PlanetCracker.Flight;
 using Content.Server.Gravity;
 using Content.Server.Shuttles.Systems;
 using Content.Shared._WF.PlanetCracker.Anchors;
@@ -36,6 +37,7 @@ public sealed partial class WFCrackerSystem
     [Dependency] private SharedPowerReceiverSystem _receiver = default!;
     [Dependency] private ShuttleSystem _shuttle = default!;
     [Dependency] private WFGravityProjectorSystem _projectors = default!;
+    [Dependency] private WFFlightSystem _flight = default!;
 
     /// <summary>Docked grids around the hull; reused by the snap and by the clear-area check.</summary>
     private readonly HashSet<EntityUid> _docked = new();

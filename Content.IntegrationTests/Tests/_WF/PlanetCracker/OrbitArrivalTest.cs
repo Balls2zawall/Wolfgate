@@ -140,9 +140,10 @@ public sealed class OrbitArrivalTest
     }
 
     /// <summary>
-    /// The deliberate way down: a descend input at a console puts the hull into the gap between orbit and the layer
-    /// below, never straight onto a lower layer and never onto the ground. A hull with no lift still gets to fall -
-    /// otherwise a cold ship parked in orbit by the fix above would be stranded there for the rest of the round.
+    /// The deliberate way down: the console's enter-atmosphere action puts the hull into the gap between orbit and the
+    /// layer below, never straight onto a lower layer and never onto the ground. A hull with no lift still gets to
+    /// fall - otherwise a cold ship parked in orbit by the fix above would be stranded there for the rest of the
+    /// round - it just has to confirm first (F10; the raw descend input out of orbit is refused, see FlightTest).
     /// </summary>
     [Test]
     public async Task DescendFromOrbitEntersTransit()
@@ -161,10 +162,10 @@ public sealed class OrbitArrivalTest
         var hull = await BuildCracker(pair, orbitMapId);
         await OpenOriginTile(pair, hull);
         await MapInitHull(pair, hull);
-        await HoldDescend(pair, hull);
 
-        // One sweep of UpdateGridGravity is all the descend needs; the gravity pass is throttled to 0.5 s.
-        await server.WaitRunTicks(pair.SecondsToTicks(1f));
+        var refusal = await EnterAtmosphere(pair, hull);
+
+        Assert.That(refusal, Is.Null, $"The confirmed descent was refused: {refusal}");
 
         await server.WaitAssertion(() =>
         {
@@ -274,36 +275,6 @@ public sealed class OrbitArrivalTest
         var transform = server.System<SharedTransformSystem>();
 
         await server.WaitPost(() => transform.SetLocalPosition(hull, new Vector2(0.5f, 0.5f)));
-        await server.WaitRunTicks(1);
-    }
-
-    /// <summary>
-    /// Seats a pilot at the hull's own console holding the descend key. CollectPilotVerticalInputs reads nothing but the
-    /// console's grid and the held buttons (CEZLevelsSystem.PilotControl.cs:91-113), so the input is written directly
-    /// rather than driven through the console UI.
-    /// </summary>
-    private static async Task HoldDescend(TestPair pair, EntityUid hull)
-    {
-        var server = pair.Server;
-        var entMan = server.EntMan;
-        var console = EntityUid.Invalid;
-
-        await server.WaitPost(() =>
-        {
-            foreach (var child in Children(entMan, hull))
-            {
-                if (entMan.GetComponent<MetaDataComponent>(child).EntityPrototype?.ID == "ComputerShuttle")
-                    console = child;
-            }
-
-            Assert.That(console, Is.Not.EqualTo(EntityUid.Invalid), "The test hull has no shuttle console to pilot from.");
-
-            var pilot = entMan.SpawnEntity(ViewerProto, new EntityCoordinates(hull, new Vector2(2.5f, 3.5f)));
-            var pilotComp = entMan.EnsureComponent<PilotComponent>(pilot);
-            pilotComp.Console = console;
-            pilotComp.HeldButtons = ShuttleButtons.DescendZ;
-        });
-
         await server.WaitRunTicks(1);
     }
 }

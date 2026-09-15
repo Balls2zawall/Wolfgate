@@ -1,3 +1,5 @@
+using Content.Client._WF.PlanetCracker.Flight;
+using Content.Shared._WF.PlanetCracker.Flight;
 using Content.Shared._WF.PlanetCracker.Planets;
 using Content.Shared.Shuttles.Components;
 using Robust.Client.UserInterface.Controls;
@@ -6,32 +8,73 @@ using Robust.Shared.Timing;
 namespace Content.Client._WF.PlanetCracker.Planets;
 
 /// <summary>
-/// The shuttle console's "enter planet orbit" / "leave orbit" control. It needs no FTL drive and never touches the
-/// destination list: the server answers a BUI message with the ordinary FTL transit.
+/// The shuttle console's orbit control: enter orbit, leave orbit, or - once in orbit - enter the planet's atmosphere,
+/// with the hull's lift ratio under it. It needs no FTL drive and never touches the destination list: the server
+/// answers a BUI message with the ordinary FTL transit.
 /// It reads <see cref="WFConsoleOrbitTargetComponent"/> off the console entity every frame rather than the shuttle BUI
 /// state, because that state is only pushed on docking, beacon and power events and would be stale while the hull flies.
+/// It is a container rather than a bare button because the descent decision needs the lift readout beside it; the nav
+/// screen's settings column is a single narrow stack, so the readout sits under the buttons rather than next to them.
 /// </summary>
-public sealed partial class WFOrbitButton : Button
+public sealed partial class WFOrbitButton : BoxContainer
 {
     [Dependency] private readonly IEntityManager _entMan = default!;
 
     private readonly SharedUserInterfaceSystem _ui;
 
+    private readonly Button _orbitButton;
+    private readonly Button _atmosphereButton;
+    private readonly Label _liftLabel;
+
+    private WFEnterAtmosphereConfirmWindow? _confirm;
+
     private EntityUid? _console;
+
+    /// <summary>Lift ratio at or above which the hull flies; matches CEZLevelsSystem.WFFullLiftRatio.</summary>
+    private const float FullLift = 1f;
+
+    /// <summary>Lift ratio under which partial lift stops helping; matches CEZLevelsSystem.WFPartialLiftRatio.</summary>
+    private const float PartialLift = 0.5f;
+
+    private static readonly Color LiftGood = Color.FromHex("#3fe05a");
+    private static readonly Color LiftMarginal = Color.FromHex("#ffd23f");
+    private static readonly Color LiftBad = Color.FromHex("#ff3030");
 
     public WFOrbitButton()
     {
         IoCManager.InjectDependencies(this);
         _ui = _entMan.System<SharedUserInterfaceSystem>();
 
-        StyleClasses.Add("ButtonSquare");
-        TextAlign = Label.AlignMode.Center;
+        Orientation = LayoutOrientation.Vertical;
         Visible = false;
 
-        OnPressed += OnOrbitPressed;
+        _orbitButton = new Button
+        {
+            TextAlign = Label.AlignMode.Center,
+        };
+        _orbitButton.StyleClasses.Add("ButtonSquare");
+        _orbitButton.OnPressed += OnOrbitPressed;
+
+        _atmosphereButton = new Button
+        {
+            TextAlign = Label.AlignMode.Center,
+            Visible = false,
+        };
+        _atmosphereButton.StyleClasses.Add("ButtonSquare");
+        _atmosphereButton.OnPressed += OnAtmospherePressed;
+
+        _liftLabel = new Label
+        {
+            Align = Label.AlignMode.Center,
+            Visible = false,
+        };
+
+        AddChild(_orbitButton);
+        AddChild(_atmosphereButton);
+        AddChild(_liftLabel);
     }
 
-    /// <summary>Binds this button to the console whose interface it sits in.</summary>
+    /// <summary>Binds this control to the console whose interface it sits in.</summary>
     public void SetConsole(EntityUid? console)
     {
         _console = console;
@@ -49,22 +92,40 @@ public sealed partial class WFOrbitButton : Button
         }
 
         Visible = true;
-        Disabled = target.Busy || target.Planet == null;
+        _orbitButton.Disabled = target.Busy || target.Planet == null;
 
         var planet = target.PlanetName;
 
         if (string.IsNullOrEmpty(planet))
         {
-            Text = Loc.GetString("wf-shuttle-console-orbit-none");
+            _orbitButton.Text = Loc.GetString("wf-shuttle-console-orbit-none");
+            _atmosphereButton.Visible = false;
+            _liftLabel.Visible = false;
             return;
         }
 
-        Text = Loc.GetString(target.InOrbit ? "wf-shuttle-console-leave-orbit" : "wf-shuttle-console-enter-orbit",
+        _orbitButton.Text = Loc.GetString(target.InOrbit ? "wf-shuttle-console-leave-orbit" : "wf-shuttle-console-enter-orbit",
             ("planet", planet));
+
+        _atmosphereButton.Visible = target.InOrbit;
+        _liftLabel.Visible = target.InOrbit;
+
+        if (!target.InOrbit)
+            return;
+
+        _atmosphereButton.Disabled = target.Busy;
+        _atmosphereButton.Text = Loc.GetString("wf-shuttle-console-enter-atmosphere", ("planet", planet));
+
+        _liftLabel.Text = Loc.GetString("wf-shuttle-console-lift-ratio", ("ratio", target.LiftRatio.ToString("F2")));
+        _liftLabel.FontColorOverride = target.LiftRatio >= FullLift
+            ? LiftGood
+            : target.LiftRatio >= PartialLift
+                ? LiftMarginal
+                : LiftBad;
     }
 
     /// <summary>Asks the server for the hop; every gate is re-checked there, so a stale button can only be refused.</summary>
-    private void OnOrbitPressed(ButtonEventArgs args)
+    private void OnOrbitPressed(BaseButton.ButtonEventArgs args)
     {
         if (_console is not { } console
             || !_entMan.TryGetComponent<WFConsoleOrbitTargetComponent>(console, out var target)
@@ -85,5 +146,32 @@ public sealed partial class WFOrbitButton : Button
             return;
 
         _ui.ClientSendUiMessage(console, ShuttleConsoleUiKey.Key, new WFEnterPlanetOrbitMessage(netConsole, planet));
+    }
+
+    /// <summary>
+    /// Drops out of orbit. A hull that cannot hold itself up is asked first; the server refuses an unconfirmed
+    /// descent on its own account, so the dialog is the explanation rather than the gate.
+    /// </summary>
+    private void OnAtmospherePressed(BaseButton.ButtonEventArgs args)
+    {
+        if (_console is not { } console
+            || !_entMan.TryGetComponent<WFConsoleOrbitTargetComponent>(console, out var target)
+            || target.Busy
+            || !target.InOrbit)
+        {
+            return;
+        }
+
+        var netConsole = _entMan.GetNetEntity(console);
+
+        if (target.LiftRatio >= FullLift)
+        {
+            _ui.ClientSendUiMessage(console, ShuttleConsoleUiKey.Key, new WFEnterAtmosphereMessage(netConsole, false));
+            return;
+        }
+
+        _confirm ??= new WFEnterAtmosphereConfirmWindow();
+        _confirm.Ask(target.PlanetName, target.LiftRatio,
+            () => _ui.ClientSendUiMessage(console, ShuttleConsoleUiKey.Key, new WFEnterAtmosphereMessage(netConsole, true)));
     }
 }

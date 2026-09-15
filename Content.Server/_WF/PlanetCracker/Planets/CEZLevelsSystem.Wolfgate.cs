@@ -48,15 +48,6 @@ public sealed partial class CEZLevelsSystem
     /// </summary>
     private bool WfRefusesLevelHop(EntityUid grid) => WfIsOrbitLayer(Transform(grid).MapUid ?? EntityUid.Invalid);
 
-    /// <summary>
-    /// True when a pilot's descend input should be honoured on a hull with no working gravity generator. Only ever on an
-    /// orbit layer and only downward: orbit holds a cold hull up indefinitely, so without this the crew of a ship that
-    /// lost its gravgen in orbit would have no way down at all.
-    /// </summary>
-    private bool WfIsColdOrbitDescent(EntityUid mapUid, float input)
-    {
-        return input < 0f && WfIsOrbitLayer(mapUid);
-    }
 
     /// <summary>Test seam: whether this grid is currently parked by the orbit hold.</summary>
     public bool WfIsParkedInOrbit(Entity<MapGridComponent> grid)

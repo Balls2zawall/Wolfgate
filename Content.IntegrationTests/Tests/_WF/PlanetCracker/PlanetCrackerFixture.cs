@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Numerics;
 using System.Reflection;
 using Content.IntegrationTests.Pair;
+using Content.Server._CE.ZLevels.Core;
 using Content.Server._WF.PlanetCracker.Anchors;
 using Content.Server._WF.PlanetCracker.Cracker;
 using Content.Server._WF.PlanetCracker.Planets;
@@ -14,11 +15,16 @@ using Content.Shared._CE.ZLevels.Core.Components;
 using Content.Shared._WF.CCVar;
 using Content.Shared._WF.PlanetCracker.Anchors;
 using Content.Shared._WF.PlanetCracker.Chunk;
+using Content.Shared._WF.PlanetCracker.Flight;
 using Content.Shared._WF.PlanetCracker.Cracker;
 using Content.Shared._WF.PlanetCracker.Cracker.BUI;
 using Content.Shared._WF.PlanetCracker.Planets;
 using Content.Shared._WF.PlanetCracker.Survey;
+using Content.Server.Shuttles.Components;
 using Content.Shared.Containers.ItemSlots;
+using Content.Shared.Movement.Systems;
+using Content.Shared.Power.EntitySystems;
+using Content.Shared.Shuttles.Components;
 using Content.Shared.Parallax.Biomes;
 using Content.Shared.Parallax.Biomes.Markers;
 using Content.Shared.Stacks;
@@ -927,6 +933,101 @@ public static class PlanetCrackerFixture
         }
 
         return EntityUid.Invalid;
+    }
+
+    /// <summary>The shuttle console resting on a hull, or Invalid; the one the orbit and flight actions come from.</summary>
+    public static EntityUid FindShuttleConsole(IEntityManager entMan, EntityUid hull)
+    {
+        foreach (var uid in Children(entMan, hull))
+        {
+            if (entMan.HasComponent<ShuttleConsoleComponent>(uid))
+                return uid;
+        }
+
+        return EntityUid.Invalid;
+    }
+
+    /// <summary>
+    /// Seats a pilot at the hull's own shuttle console holding the descend key. CollectPilotVerticalInputs reads
+    /// nothing but the console's grid and the held buttons (CEZLevelsSystem.PilotControl.cs), so the input is written
+    /// directly rather than driven through the console UI. Returns the pilot.
+    /// </summary>
+    public static async Task<EntityUid> HoldDescend(TestPair pair, EntityUid hull)
+    {
+        var server = pair.Server;
+        var entMan = server.EntMan;
+        var pilot = EntityUid.Invalid;
+
+        await server.WaitPost(() =>
+        {
+            var console = FindShuttleConsole(entMan, hull);
+
+            Assert.That(console, Is.Not.EqualTo(EntityUid.Invalid), "The hull has no shuttle console to pilot from.");
+
+            pilot = entMan.SpawnEntity(ViewerProto, new EntityCoordinates(hull, new Vector2(2.5f, 3.5f)));
+            var pilotComp = entMan.EnsureComponent<PilotComponent>(pilot);
+            pilotComp.Console = console;
+            pilotComp.HeldButtons = ShuttleButtons.DescendZ;
+        });
+
+        await server.WaitRunTicks(1);
+
+        return pilot;
+    }
+
+    /// <summary>
+    /// Drops a hull out of orbit through the console action F10 put the decision behind, and hands back the refusal
+    /// text when the server said no. The pilot gate is bypassed deliberately: the system method is the authority and
+    /// the BUI message only forwards to it.
+    /// </summary>
+    /// <param name="settle">Seconds of ticks to run afterwards; zero leaves the hull exactly where the call put it.</param>
+    public static async Task<string?> EnterAtmosphere(TestPair pair, EntityUid hull, bool confirmed = true, float settle = 1f)
+    {
+        var server = pair.Server;
+        var entMan = server.EntMan;
+        var orbit = server.System<WFOrbitEntrySystem>();
+        string? reason = null;
+
+        await server.WaitPost(() =>
+        {
+            var console = FindShuttleConsole(entMan, hull);
+
+            Assert.That(console, Is.Not.EqualTo(EntityUid.Invalid), "The hull has no shuttle console to descend from.");
+
+            orbit.TryEnterAtmosphere(console, confirmed, out reason);
+        });
+
+        if (settle > 0f)
+            await server.WaitRunTicks(pair.SecondsToTicks(settle));
+
+        return reason;
+    }
+
+    /// <summary>Bolts landing thrusters onto a code-built hull, which is the only lift there is over a planet.</summary>
+    public static async Task<List<EntityUid>> AddLandingThrusters(TestPair pair, EntityUid hull, int count, float lift = 50f)
+    {
+        var server = pair.Server;
+        var entMan = server.EntMan;
+        var receiver = server.System<SharedPowerReceiverSystem>();
+        var thrusters = new List<EntityUid>();
+
+        await server.WaitPost(() =>
+        {
+            for (var i = 0; i < count; i++)
+            {
+                var uid = entMan.SpawnEntity("WFThrusterLanding", new EntityCoordinates(hull, new Vector2(1.5f + i, 1.5f)));
+
+                // No cabling on a code-built hull, exactly as WFTestGridFactory.SpawnOnHull does it.
+                receiver.SetNeedsPower(uid, false);
+                entMan.GetComponent<WFLandingThrusterComponent>(uid).LiftThrust = lift;
+
+                thrusters.Add(uid);
+            }
+        });
+
+        await server.WaitRunTicks(pair.SecondsToTicks(1f));
+
+        return thrusters;
     }
 
     /// <summary>The centrifuge resting on a hull, or Invalid.</summary>
