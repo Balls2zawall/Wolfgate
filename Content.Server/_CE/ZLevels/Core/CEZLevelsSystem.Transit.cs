@@ -546,6 +546,12 @@ public sealed partial class CEZLevelsSystem
 
             if (!TryMapUp(topUpper, out _))
             {
+                // WOLFGATE: orbit tops a planet stack and is somewhere to arrive, not a ceiling to hang under: a held
+                // climb pops out into it instead of pinning the hull at the top of the last gap until the key is let
+                // go (F10).
+                if (WfIsOrbitLayer(topUpper) && TryExitTransit(grid))
+                    return true;
+
                 // Top of the network: give on-demand generation a chance to extend it
                 // upward before clamping.
                 RaiseExpandEvent(topUpper, up: true);

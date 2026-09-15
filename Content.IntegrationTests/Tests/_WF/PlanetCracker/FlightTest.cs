@@ -733,6 +733,53 @@ public sealed class FlightTest
         await pair.CleanReturnAsync();
     }
 
+    /// <summary>
+    /// A hull with the lift to fly climbs from the ground all the way into orbit on the held ascend key alone: every
+    /// air layer, the cloud layer, and the last gap into orbit. A pilot who lifted off and then hung in a gap, unable
+    /// to reach orbit or steer, is what this guards against.
+    /// </summary>
+    [Test]
+    public async Task HeldAscendClimbsFromGroundToOrbit()
+    {
+        await using var pair = await PoolManager.GetServerClient();
+        var server = pair.Server;
+        var entMan = server.EntMan;
+
+        await EnableFeature(pair);
+
+        var layers = await BuildStandalone(pair);
+        var ground = layers[0];
+        var orbit = layers[^1];
+        var groundMapId = await MapIdOf(pair, ground);
+
+        var hull = await BuildCracker(pair, groundMapId);
+        await MapInitHull(pair, hull);
+        await AddLandingThrusters(pair, hull, 3);
+        await HoldVertical(pair, hull, ShuttleButtons.AscendZ);
+
+        var trail = new List<string>();
+        var reached = false;
+
+        // The key stays held the whole way: letting go always settled the hull up into orbit, holding on pinned it.
+        for (var second = 0; second < 45 && !reached; second++)
+        {
+            await server.WaitRunTicks(pair.SecondsToTicks(1f));
+
+            await server.WaitPost(() =>
+            {
+                var map = entMan.GetComponent<TransformComponent>(hull).MapUid;
+                var z = entMan.TryGetComponent(hull, out CEZPhysicsComponent? zPhys) ? zPhys.LocalPosition : float.NaN;
+                trail.Add($"{second}s {entMan.ToPrettyString(map)} z={z:F2}");
+                reached = map == orbit;
+            });
+        }
+
+        Assert.That(reached, Is.True, "The hull never reached orbit on a held ascend: " + string.Join(" | ", trail));
+
+        await Teardown(pair, layers);
+        await pair.CleanReturnAsync();
+    }
+
     /// <summary>The map id of a z-layer, for the spawners that want one.</summary>
     /// <summary>
     /// A big hull grinding out a hard landing never writes a non-finite number into itself, whether it arrived with
