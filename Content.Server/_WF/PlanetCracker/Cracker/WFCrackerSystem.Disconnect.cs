@@ -6,6 +6,7 @@ using Content.Shared._WF.PlanetCracker.Cracker;
 using Content.Shared.Popups;
 using Robust.Shared.Audio;
 using Robust.Shared.Player;
+using Content.Server._WF.PlanetCracker.Planets;
 
 namespace Content.Server._WF.PlanetCracker.Cracker;
 
@@ -23,6 +24,7 @@ public sealed partial class WFCrackerSystem
 {
     [Dependency] private ChatSystem _chat = default!;
     [Dependency] private SharedPopupSystem _popup = default!;
+    [Dependency] private WFGridAudienceSystem _audience = default!;
 
     /// <summary>How long is left on the pairing window when the single "closing" popup fires.</summary>
     private static readonly TimeSpan DisconnectBeatAt = TimeSpan.FromSeconds(15);
@@ -330,7 +332,7 @@ public sealed partial class WFCrackerSystem
         // with a 15 tile default MaxDistance, which on a capital hull is a bridge-area klaxon and nothing more.
         ent.Comp.EvacStream = _audio.PlayGlobal(
             ent.Comp.EvacSound,
-            Filter.Empty().AddInGrid(ent.Owner, EntityManager),
+            _audience.Aboard(ent.Owner),
             true,
             AudioParams.Default.WithLoop(true).WithVolume(-4f))?.Entity;
     }
@@ -348,7 +350,7 @@ public sealed partial class WFCrackerSystem
             return;
 
         _chat.DispatchFilteredAnnouncement(
-            Filter.Empty().AddInGrid(grid, EntityManager),
+            _audience.Aboard(grid),
             Loc.GetString(key, args),
             sender: Loc.GetString("wf-crack-announce-sender"),
             playSound: false,
@@ -363,7 +365,7 @@ public sealed partial class WFCrackerSystem
 
         var message = Loc.GetString(key, args);
 
-        foreach (var player in Filter.Empty().AddInGrid(grid, EntityManager).Recipients)
+        foreach (var player in _audience.Aboard(grid).Recipients)
         {
             if (player.AttachedEntity is not { } uid)
                 continue;

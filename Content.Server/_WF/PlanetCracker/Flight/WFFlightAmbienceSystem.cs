@@ -9,6 +9,7 @@ using Robust.Shared.Map.Components;
 using Robust.Shared.Physics.Components;
 using Robust.Shared.Player;
 using Robust.Shared.Timing;
+using Content.Server._WF.PlanetCracker.Planets;
 
 namespace Content.Server._WF.PlanetCracker.Flight;
 
@@ -22,6 +23,7 @@ public sealed partial class WFFlightAmbienceSystem : EntitySystem
 {
     [Dependency] private IGameTiming _timing = default!;
     [Dependency] private SharedAudioSystem _audio = default!;
+    [Dependency] private WFGridAudienceSystem _audience = default!;
     [Dependency] private CEZLevelsSystem _zLevels = default!;
 
     /// <summary>Volume (dB) of the wind on a hull that is barely moving.</summary>
@@ -202,7 +204,7 @@ public sealed partial class WFFlightAmbienceSystem : EntitySystem
 
         return _audio.PlayGlobal(
             sound,
-            Filter.Empty().AddInGrid(grid, EntityManager),
+            _audience.Aboard(grid),
             true,
             AudioParams.Default.WithLoop(true).WithVolume(volume).WithPitchScale(pitch))?.Entity;
     }

@@ -14,6 +14,7 @@ using Robust.Shared.Physics.Systems;
 using Robust.Shared.Player;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Timing;
+using Content.Server._WF.PlanetCracker.Planets;
 
 namespace Content.Server._WF.PlanetCracker.Flight;
 
@@ -26,6 +27,7 @@ public sealed partial class WFFlightSystem : EntitySystem
 {
     [Dependency] private IGameTiming _timing = default!;
     [Dependency] private IPrototypeManager _proto = default!;
+    [Dependency] private WFGridAudienceSystem _audience = default!;
     [Dependency] private CEZLevelsSystem _zLevels = default!;
     [Dependency] private SharedAudioSystem _audio = default!;
     [Dependency] private SharedPhysicsSystem _physics = default!;
@@ -131,7 +133,7 @@ public sealed partial class WFFlightSystem : EntitySystem
 
         comp.Alarm = _audio.PlayGlobal(
             LiftLostLoop,
-            Filter.Empty().AddInGrid(grid, EntityManager),
+            _audience.Aboard(grid),
             true,
             AudioParams.Default.WithLoop(true).WithVolume(AlarmVolume))?.Entity;
     }
