@@ -19,4 +19,12 @@ public sealed partial class WFOrbitLayerComponent : Component
     /// <summary>The z-network entity this layer belongs to.</summary>
     [DataField, AutoNetworkedField]
     public NetEntity? Network;
+
+    /// <summary>Speed cap (m/s) for a grid parked here; tighter than an air layer's, because orbit is where hulls sit.</summary>
+    [DataField, AutoNetworkedField]
+    public float MaxSpeed = 3f;
+
+    /// <summary>Linear damping a grid on the orbit layer runs under.</summary>
+    [DataField, AutoNetworkedField]
+    public float LinearDamping = 3f;
 }

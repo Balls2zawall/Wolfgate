@@ -341,6 +341,41 @@ public static class PlanetCrackerFixture
     }
 
     /// <summary>
+    /// Builds a bare square grid with nothing whatsoever on it: no console, no thrusters, no shuttle component. This
+    /// is debris - a fragment split off in combat, or a wreck - which is what orbit decay is mostly about.
+    /// </summary>
+    public static async Task<EntityUid> BuildDebris(TestPair pair, MapId map, int size = 3, Vector2? offset = null)
+    {
+        var server = pair.Server;
+        var mapMan = server.ResolveDependency<IMapManager>();
+        var tileDefs = server.ResolveDependency<ITileDefinitionManager>();
+        var maps = server.System<SharedMapSystem>();
+        var transform = server.System<SharedTransformSystem>();
+        var grid = EntityUid.Invalid;
+
+        await server.WaitPost(() =>
+        {
+            var built = mapMan.CreateGridEntity(map);
+            transform.SetLocalPosition(built.Owner, offset ?? Vector2.Zero);
+
+            var floor = new Tile(tileDefs[FloorTile].TileId);
+            var tiles = new List<(Vector2i GridIndices, Tile Tile)>(size * size);
+
+            for (var x = 0; x < size; x++)
+            for (var y = 0; y < size; y++)
+            {
+                tiles.Add((new Vector2i(x, y), floor));
+            }
+
+            maps.SetTiles(built.Owner, built.Comp, tiles);
+            grid = built.Owner;
+        });
+
+        await server.WaitRunTicks(pair.SecondsToTicks(1f));
+        return grid;
+    }
+
+    /// <summary>
     /// Map-initialises a code-built hull.
     /// MapManager's grid creation deliberately leaves a new grid un-map-initialised even on a live map, and adding a
     /// component only re-raises MapInitEvent on an entity that IS map-initialised. Without this the crack's

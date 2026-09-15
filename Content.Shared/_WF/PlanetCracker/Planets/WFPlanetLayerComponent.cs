@@ -18,4 +18,16 @@ public sealed partial class WFPlanetLayerComponent : Component
     /// </summary>
     [DataField, AutoNetworkedField]
     public float Gravity = 1f;
+
+    /// <summary>
+    /// Speed cap (m/s) for a grid flying this layer, copied off the world's wfPlanetSurface at build time. A planet's
+    /// surface streams in around whatever is over it, so a fast hull outruns its own terrain; the cap is what stops
+    /// that. <see cref="WFOrbitLayerComponent"/> carries its own, tighter pair for the orbit layer.
+    /// </summary>
+    [DataField, AutoNetworkedField]
+    public float MaxSpeed = 6f;
+
+    /// <summary>Linear damping a grid flying this layer runs under; thrusters still work, they fight it.</summary>
+    [DataField, AutoNetworkedField]
+    public float LinearDamping = 1.5f;
 }

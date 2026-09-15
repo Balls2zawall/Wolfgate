@@ -192,6 +192,8 @@ public sealed partial class WFPlanetNetworkSystem : EntitySystem
             var marker = EnsureComp<WFPlanetLayerComponent>(layer);
             marker.Network = networkNet;
             marker.Gravity = surface.Gravity;
+            marker.MaxSpeed = surface.AirMaxSpeed;
+            marker.LinearDamping = surface.AirDamping;
             Dirty(layer, marker);
         }
 
@@ -225,6 +227,8 @@ public sealed partial class WFPlanetNetworkSystem : EntitySystem
         var orbitLayer = EnsureComp<WFOrbitLayerComponent>(orbit);
         orbitLayer.Planet = planetEntity is { } planetUid ? GetNetEntity(planetUid) : null;
         orbitLayer.Range = surface.OrbitRange;
+        orbitLayer.MaxSpeed = surface.OrbitMaxSpeed;
+        orbitLayer.LinearDamping = surface.OrbitDamping;
         orbitLayer.Network = networkNet;
         Dirty(orbit, orbitLayer);
 

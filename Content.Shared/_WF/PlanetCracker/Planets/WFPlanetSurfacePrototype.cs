@@ -52,6 +52,25 @@ public sealed partial class WFPlanetSurfacePrototype : IPrototype
     [DataField]
     public float OrbitRange = 2000f;
 
+    /// <summary>
+    /// Speed cap (m/s) for a grid on this world's orbit layer, stamped onto <see cref="WFOrbitLayerComponent"/>.
+    /// Orbit is where the surface streams in under a hull, so it is the tightest cap in the stack.
+    /// </summary>
+    [DataField]
+    public float OrbitMaxSpeed = 3f;
+
+    /// <summary>Linear damping a grid on this world's orbit layer flies under; thrusters fight it rather than beat it.</summary>
+    [DataField]
+    public float OrbitDamping = 3f;
+
+    /// <summary>Speed cap (m/s) for a grid on one of this world's air layers, stamped onto every layer marker.</summary>
+    [DataField]
+    public float AirMaxSpeed = 6f;
+
+    /// <summary>Linear damping a grid flying one of this world's air layers runs under.</summary>
+    [DataField]
+    public float AirDamping = 1.5f;
+
     /// <summary>Whether the network is built eagerly when the sector body spawns at round start.</summary>
     [DataField]
     public bool BuildAtRoundStart;

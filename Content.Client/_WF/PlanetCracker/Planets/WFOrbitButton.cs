@@ -25,6 +25,7 @@ public sealed partial class WFOrbitButton : BoxContainer
     private readonly Button _orbitButton;
     private readonly Button _atmosphereButton;
     private readonly Label _liftLabel;
+    private readonly Label _decayLabel;
 
     private WFEnterAtmosphereConfirmWindow? _confirm;
 
@@ -70,9 +71,16 @@ public sealed partial class WFOrbitButton : BoxContainer
             Visible = false,
         };
 
+        _decayLabel = new Label
+        {
+            Align = Label.AlignMode.Center,
+            Visible = false,
+        };
+
         AddChild(_orbitButton);
         AddChild(_atmosphereButton);
         AddChild(_liftLabel);
+        AddChild(_decayLabel);
     }
 
     /// <summary>Binds this control to the console whose interface it sits in.</summary>
@@ -91,6 +99,7 @@ public sealed partial class WFOrbitButton : BoxContainer
             _orbitButton.Visible = false;
             _atmosphereButton.Visible = false;
             _liftLabel.Visible = false;
+            _decayLabel.Visible = false;
             return;
         }
 
@@ -104,6 +113,7 @@ public sealed partial class WFOrbitButton : BoxContainer
             _orbitButton.Text = Loc.GetString("wf-shuttle-console-orbit-none");
             _atmosphereButton.Visible = false;
             _liftLabel.Visible = false;
+            _decayLabel.Visible = false;
             return;
         }
 
@@ -112,9 +122,18 @@ public sealed partial class WFOrbitButton : BoxContainer
 
         _atmosphereButton.Visible = target.InOrbit;
         _liftLabel.Visible = target.InOrbit;
+        _decayLabel.Visible = target.InOrbit;
 
         if (!target.InOrbit)
             return;
+
+        // F11: station-keeping, read off the same server sweep. -1 is a hull that is holding its own orbit.
+        var decaying = target.DecaySeconds >= 0f;
+
+        _decayLabel.Text = decaying
+            ? Loc.GetString("wf-shuttle-console-orbit-decaying", ("seconds", MathF.Ceiling(target.DecaySeconds).ToString("F0")))
+            : Loc.GetString("wf-shuttle-console-orbit-stable");
+        _decayLabel.FontColorOverride = decaying ? LiftBad : LiftGood;
 
         _atmosphereButton.Disabled = target.Busy;
         _atmosphereButton.Text = Loc.GetString("wf-shuttle-console-enter-atmosphere", ("planet", planet));

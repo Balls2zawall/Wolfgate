@@ -28,6 +28,9 @@ public sealed partial class WFOrbitEntrySystem : EntitySystem
     /// <summary>How often a console's orbit readout is recomputed; a hull crosses the range band over minutes.</summary>
     private static readonly TimeSpan RefreshInterval = TimeSpan.FromSeconds(1);
 
+    /// <summary>Decay countdown change under which the readout is not re-sent; it is displayed in whole seconds.</summary>
+    private const float DecaySecondsEpsilon = 0.5f;
+
     /// <summary>Sector bodies with a live orbit layer, rebuilt once per sweep rather than per console.</summary>
     private readonly List<(EntityUid Body, EntityUid Orbit, float Range)> _bodies = new();
 
@@ -110,6 +113,7 @@ public sealed partial class WFOrbitEntrySystem : EntitySystem
         var inOrbit = false;
         var busy = false;
         var liftRatio = 0f;
+        var decaySeconds = -1f;
 
         if (xform.GridUid is { } grid && HasComp<ShuttleComponent>(grid) && Transform(grid).MapUid is { } mapUid)
         {
@@ -128,6 +132,10 @@ public sealed partial class WFOrbitEntrySystem : EntitySystem
                     // The descent decision lives on this button, so the number it is taken against is computed here
                     // rather than guessed at by the client, which cannot see a thruster's power state at all.
                     _zLevels.WfTryGetLiftRatio(grid, out liftRatio);
+
+                    // F11: the countdown is the decay system's, and this is the only sweep a console reads from.
+                    if (TryComp<WFOrbitDecayComponent>(grid, out var decay) && decay.Announced)
+                        decaySeconds = MathF.Max(0f, (float) (decay.DecayAt - _timing.CurTime).TotalSeconds);
                 }
             }
             else if (TryGetNearestBody(grid, mapUid, out var nearest))
@@ -149,7 +157,8 @@ public sealed partial class WFOrbitEntrySystem : EntitySystem
             && comp.PlanetName == planetName
             && comp.InOrbit == inOrbit
             && comp.Busy == busy
-            && MathF.Abs(comp.LiftRatio - liftRatio) < LiftRatioEpsilon)
+            && MathF.Abs(comp.LiftRatio - liftRatio) < LiftRatioEpsilon
+            && MathF.Abs(comp.DecaySeconds - decaySeconds) < DecaySecondsEpsilon)
         {
             return;
         }
@@ -159,6 +168,7 @@ public sealed partial class WFOrbitEntrySystem : EntitySystem
         comp.InOrbit = inOrbit;
         comp.Busy = busy;
         comp.LiftRatio = liftRatio;
+        comp.DecaySeconds = decaySeconds;
         Dirty(console, comp);
     }
 

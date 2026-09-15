@@ -56,6 +56,32 @@ public sealed partial class WFOrbitEntrySystem
             return false;
         }
 
+        if (!confirmed
+            && _zLevels.WfTryGetLiftRatio(grid, out var ratio)
+            && ratio < CEZLevelsSystem.WFFullLiftRatio)
+        {
+            reason = Loc.GetString("wf-flight-lift-warning", ("ratio", ratio.ToString("F2")));
+            return false;
+        }
+
+        return TryDropFromOrbit(grid, out reason);
+    }
+
+    /// <summary>
+    /// Puts one grid into the gap below the orbit layer and, when it cannot hold itself up there, into lift lost.
+    /// The pilot's confirmed descent and the orbit-decay countdown (F11) both end here, so an unmanned wreck falls
+    /// through the same seed, the same transit and the same GPWS sequence a piloted hull gets.
+    /// </summary>
+    /// <param name="grid">The grid leaving orbit; it needs no console, no pilot and no shuttle component.</param>
+    /// <param name="reason">Why the descent was refused, already localised.</param>
+    public bool TryDropFromOrbit(EntityUid grid, [NotNullWhen(false)] out string? reason)
+    {
+        if (Transform(grid).MapUid is not { } mapUid || !HasComp<WFOrbitLayerComponent>(mapUid))
+        {
+            reason = Loc.GetString("wf-orbit-not-in-orbit");
+            return false;
+        }
+
         if (HasComp<FTLComponent>(grid))
         {
             reason = Loc.GetString("wf-flight-busy");
@@ -69,12 +95,6 @@ public sealed partial class WFOrbitEntrySystem
         }
 
         var hasRatio = _zLevels.WfTryGetLiftRatio(grid, out var ratio);
-
-        if (hasRatio && ratio < CEZLevelsSystem.WFFullLiftRatio && !confirmed)
-        {
-            reason = Loc.GetString("wf-flight-lift-warning", ("ratio", ratio.ToString("F2")));
-            return false;
-        }
 
         // The sweep's pooled-lift memo is up to half a second stale and would otherwise decide the first tick of the
         // descent, which is the tick that settles a hull straight back onto the layer it just left.

@@ -43,3 +43,12 @@ wf-alert-too-low-terrain-announcement = Too low. Terrain.
 wf-alert-pull-up = Pull Up
 wf-alert-pull-up-desc = Seconds from impact.
 wf-alert-pull-up-announcement = Pull up. Pull up.
+
+## Orbit decay (F11)
+wf-shuttle-console-orbit-stable = Orbit: stable
+wf-shuttle-console-orbit-decaying = Orbit decaying: { $seconds } s
+
+wf-alert-orbit-decay = Orbit Decay
+wf-alert-orbit-decay-desc = Station-keeping is lost; the hull is falling out of orbit.
+wf-alert-orbit-decay-announcement = Orbit decaying: station-keeping lost. { $ship } is falling out of orbit.
+wf-alert-orbit-decay-countdown = Orbit decaying: station-keeping lost, { $seconds } seconds to atmospheric entry.

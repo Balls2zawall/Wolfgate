@@ -32,4 +32,11 @@ public sealed partial class WFConsoleOrbitTargetComponent : Component
     /// </summary>
     [DataField, AutoNetworkedField]
     public float LiftRatio;
+
+    /// <summary>
+    /// Seconds left before this hull's orbit decays and it is dropped into the atmosphere, or -1 while it is holding
+    /// station. Only meaningful while <see cref="InOrbit"/>; nothing else in the stack can decay.
+    /// </summary>
+    [DataField, AutoNetworkedField]
+    public float DecaySeconds = -1f;
 }

@@ -87,6 +87,20 @@ There is no cabling on either hull: every powered machine is switched to `!Needs
 
 **Leaving.** Press *Leave orbit* on the same console; you come back out beside the body on the sector map. The sector body's own FTL beacon still works as a second route in for a hull that has a drive. If your gravgen dies while you are on a non-orbit layer you are stranded — the console offers neither the orbit button nor a destination list; `wfplanet tp <planet>` is the escape hatch.
 
+## 5b. Orbit decay and planet drag (F11)
+
+**An orbit layer holds up only what is holding itself up.** A grid keeps station while one linear thruster is switched on and running (landing thrusters count, gyroscopes do not), or it is force-anchored, or it is docked to something that has one. Anything else gets sixty seconds and then falls.
+
+**Do.** With the hull parked in orbit, read the line under the lift ratio: it says *Orbit: stable*. Now kill the hull's thrusters — cut the power, or take the thrusters apart — and watch the same line.
+
+**See.** A PA call: *"Orbit decaying: station-keeping lost, 60 seconds to atmospheric entry"*, the caution chime, and the ship's situation code taken over by **Orbit Decay**. The console line counts down, *Orbit decaying: 42 s*. Restore power inside the minute and the countdown clears, the code goes quietly back to whatever the ship was flying under, and the line reads *Orbit: stable* again. Let it run out and the hull drops out of orbit exactly as *Enter atmosphere* would have dropped it: lift lost, the wind, the GPWS callouts all the way down, a hard landing or a crash at the bottom. A wreck on the ground stays there — nothing cleans it up.
+
+**Also do.** Spawn a bare grid or shoot a chunk off a hull in orbit and leave it alone; it should come down on its own inside the minute with nobody aboard. Then fly around in orbit and on the air layers.
+
+**See.** Flight over a planet is slow and heavy: about 3 m/s in orbit and 6 m/s on an air layer, with the thrusters clearly fighting the drag rather than beating it. That is deliberate — the surface streams in under you and a fast hull outruns its own terrain. Off the planet, the hull is its old self again the instant it leaves the layer.
+
+**Report.** A hull with a running thruster decaying anyway, or a dead hull that never does. The countdown restarting, or the PA line repeating every second. The ship's own code not coming back after a recovery. A landed wreck disappearing. The chunk in the berth being given a countdown. A hull that is still fast on a planet layer, or one that stays sluggish after leaving orbit.
+
 ## 6. Survey the surface (optional, F2)
 
 **Do.** Spawn a `WFSurveyor` and a `WFSectorSurveyConsole`. Open the console on the cracker.

@@ -551,3 +551,34 @@ Deviations and limits:
 - **The skid's wall pass destroys every hard anchored body under the footprint**, not only the ones CE reported a contact with — the contact record carries boxes, not entities. It only runs on a tick where CE did find a contact, so a hull sliding over open ground destroys nothing.
 - **Nothing tests the F4 fall's alarms end to end.** The hook is one line in `WFCrackerSystem.Crack.Fall` and `FlightTest` covers the same path from the console; a cracker that somehow had `r >= 1` would fall without alarms, which the design did not consider.
 - **The transport's gravity generator moved into the tests.** `WFTransportGravgen` is still the D11 anchor-capacity fixture and still a shipped prototype, but the factory no longer puts one on the hull; the three `CrackerTestGridTest` cases about it bolt one on themselves through a local `AddGravgen` helper. The knock-on is that the **transport no longer overloads on two crates**: two 50-rated landing thrusters are 100 of lift against 43.5 of loaded hull. Cargo still weighs against lift and the readout still moves, but D11's *count* cap (`WFAnchorCapacity`) rides the gravgen and is therefore only reachable with one aboard. Playtest §8 says so.
+
+### F11 — orbit decay
+
+**An orbit layer holds up only what is holding itself up.** A grid keeps station while it has at least one `ThrusterComponent` of type `Linear` that is `Enabled` and `IsOn` (landing thrusters count, gyroscopes do not), **or** it carries `ForceAnchorComponent`, **or** it is docked — directly or transitively — to a grid that has one of those. Everything else on an orbit layer is decaying: a ship whose power died, a hull whose thrusters were shot off, a fragment split off in combat, debris, a wreck. Station-keeping is deliberately not the lift question: a hull with one landing thruster rates 0.40 of its own weight and could not hover for a second, and it still holds an orbit.
+
+`WFOrbitDecaySystem` sweeps at 1 Hz over every grid whose map carries `WFOrbitLayerComponent` — the orbit marker is not a grid and is skipped by that alone, and a `WFPlanetChunkComponent` grid is exempt deliberately, because F7 owns when a chunk falls (a countdown stamped while it was still a bare grid is cleared rather than merely ignored). A grid with no station-keeping gets `WFOrbitDecayComponent { Grace, DecayAt, Announced, PriorCode }`, a `WFAlertOrbitDecay` situation code (`selectable: false`, the `lift_lost.ogg` chime) and one PA line naming the seconds it has left. Regaining station-keeping inside the grace drops the component and hands the ship its own code back silently, the same restore F10's lift-lost state does. On expiry the hull goes down `WFOrbitEntrySystem.TryDropFromOrbit` — the very routine the console's *Enter atmosphere* button ends in, refactored out of `TryEnterAtmosphere` rather than copied — so an unmanned wreck falls with the same seed, the same transit, the same lift-lost state and the full GPWS sequence a piloted hull gets. **Wrecks are never cleaned up**: the feature puts grids on the ground and stops.
+
+**The console says so.** `WFConsoleOrbitTargetComponent.DecaySeconds` (-1 while stable) is filled by the existing `WFOrbitEntrySystem` sweep and `WFOrbitButton` reads *Orbit: stable* or *Orbit decaying: 42 s* under the lift ratio, green or red.
+
+**Planet flight is slow flight.** A world's surface streams in around whatever is over it, so a hull crossing a planet layer at shuttle speeds outruns its own terrain and the chunk loader behind it. `WFPlanetDragSystem` sweeps every grid each tick: on a layer carrying `WFPlanetLayerComponent` — orbit and the air layers, never the ground layer once landed and never a transit gap, which carries no layer marker at all — it lends the grid the layer's `LinearDamping` (remembering the grid's own on `WFPlanetDragComponent`) and clamps its linear velocity to the layer's `MaxSpeed`. Leaving the layer by any route hands the damping straight back. Thrusters are untouched; they fight the drag rather than beat it. A `WFLiftLostComponent` hull is allowed `LiftLostAllowance` over the cap so a glide still reads as a fall, and the chunk and force-anchored grids are skipped entirely.
+
+**Tunables.**
+
+| Name | Where | Default |
+|---|---|---|
+| `Grace` | `WFOrbitDecayComponent`, per grid | 60 s |
+| `SweepInterval` | `WFOrbitDecaySystem.cs` | 1 s |
+| `orbitMaxSpeed` / `orbitDamping` | `WFPlanetSurfacePrototype`, copied to `WFOrbitLayerComponent` | 3 m/s / 3 |
+| `airMaxSpeed` / `airDamping` | `WFPlanetSurfacePrototype`, copied to `WFPlanetLayerComponent` | 6 m/s / 1.5 |
+| `LiftLostAllowance` | `WFPlanetDragSystem.cs` | 1.5x the layer's cap |
+
+Deviations and limits:
+
+- **The warning is announced by hand, not by `SetCode`.** `SetCode`'s own announcement takes only `$ship`, and the one thing the crew needs here is how many seconds they have, so the code is set with `announce: false` and the countdown line goes out through `ShipPaSystem.Announce` — exactly the shape F10's repeating pull-up callout uses. The prototype's own `announcement` is the countdown-free wording, for an admin who sets the code by hand.
+- **A ship that was on no code at all keeps the warning code after recovery.** `PriorCode` is null, and F10's restore has the same shape: there is nothing to hand back.
+- **A refused drop retries.** If `TryDropFromOrbit` says no — the hull is mid-FTL, or the stack has nowhere below it — the component stays with its deadline already past and the sweep tries again a second later. The code is handed back before the drop and put back up if the drop failed, so the PA never reads the warning out twice.
+- **Docking is followed by ports, not by CE's rigid set.** `CollectRigidSet` also welds z-network connectors, which would let a network membership hold a wreck in orbit; the rule the user set is docking, so the flood is over `DockingSystem.GetDocks` and `DockingComponent.DockedWith` and asks for no `ShuttleComponent`, which a fragment does not have.
+- **The drag restore is tested by moving the grid off the layer**, not by the orbit hop: to the sweep they are the same event — a change of map — and the hop itself is already covered by `OrbitArrivalTest`.
+- **Every existing hull in orbit is now on a 60-second clock unless something aboard is running.** That is the design, but it means a mapper's derelict parked on an orbit layer needs `ForceAnchorComponent` (or a longer `Grace` on the component) if it is meant to stay put.
+
+Tests: `Content.IntegrationTests/Tests/_WF/PlanetCracker/OrbitDecayTest.cs` and `PlanetDragTest.cs`.
