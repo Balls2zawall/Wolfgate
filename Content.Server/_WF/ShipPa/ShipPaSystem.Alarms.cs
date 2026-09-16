@@ -5,8 +5,9 @@ using Robust.Shared.Utility;
 namespace Content.Server._WF.ShipPa;
 
 /// <summary>
-/// Looping ship-wide alarms. One alarm is a single sound running on every working speaker at once;
-/// speakers that come online later join the loop in phase rather than starting from the top.
+/// Ship-wide sounds that run for a while: looping alarms, and one-off tracks that play to the end. Either is
+/// a single sound running on every working speaker at once, and speakers that come online later join it in
+/// phase rather than starting from the top.
 /// </summary>
 public sealed partial class ShipPaSystem
 {
@@ -23,6 +24,9 @@ public sealed partial class ShipPaSystem
 
     private readonly List<EntityUid> _deadGrids = new();
 
+    /// <summary>Tracks that played out this reconcile, stopped after the sweep rather than during it.</summary>
+    private readonly List<(EntityUid Grid, string Key)> _finishedTracks = new();
+
     /// <summary>Speakers carrying the PA of the grid being reconciled.</summary>
     private readonly HashSet<EntityUid> _activeSpeakers = new();
 
@@ -34,26 +38,52 @@ public sealed partial class ShipPaSystem
     /// </summary>
     public void StartAlarm(EntityUid grid, string key, SoundSpecifier sound, AudioParams? audioParams = null, string? message = null, Color? color = null)
     {
+        Start(grid, key, sound, loop: true, audioParams, message, color);
+    }
+
+    /// <summary>
+    /// Starts a one-off sound ship-wide that plays through to its end and then clears itself. Speakers that
+    /// come online part-way through join wherever the rest of the ship has got to, rather than replaying it.
+    /// Returns false when the sound couldn't be resolved.
+    /// </summary>
+    public bool StartTrack(EntityUid grid, string key, SoundSpecifier sound, AudioParams? audioParams = null, string? message = null, Color? color = null)
+    {
+        return Start(grid, key, sound, loop: false, audioParams, message, color);
+    }
+
+    private bool Start(EntityUid grid, string key, SoundSpecifier sound, bool loop, AudioParams? audioParams, string? message, Color? color)
+    {
         if (!Exists(grid) || TerminatingOrDeleted(grid))
-            return;
+            return false;
 
         var resolved = _audio.ResolveSound(sound);
 
         if (string.IsNullOrEmpty(_audio.GetAudioPath(resolved)))
-            return;
+            return false;
 
-        var length = (float) _audio.GetAudioLength(resolved).TotalSeconds;
+        float length;
+        try
+        {
+            length = (float) _audio.GetAudioLength(resolved).TotalSeconds;
+        }
+        catch (Exception e)
+        {
+            // Sounds mounted at runtime can be missing or malformed in ways a shipped one never is.
+            Log.Warning($"Couldn't read the length of {_audio.GetAudioPath(resolved)} for the PA: {e.Message}");
+            return false;
+        }
 
         if (length <= 0f)
-            return;
+            return false;
 
-        // Restarting an alarm replaces it outright, so the ship never runs two copies of one key.
+        // Restarting replaces the old one outright, so the ship never runs two copies of one key.
         StopAlarm(grid, key);
 
         var alarm = new ActiveAlarm
         {
             Resolved = resolved,
-            Params = (audioParams ?? sound.Params).WithLoop(true),
+            Params = (audioParams ?? sound.Params).WithLoop(loop),
+            Loop = loop,
             Start = _timing.CurTime,
             Length = length,
             BroadcastId = NextBroadcastId(),
@@ -65,6 +95,7 @@ public sealed partial class ShipPaSystem
 
         _alarms.GetOrNew(grid)[key] = alarm;
         ReconcileAlarm(grid, alarm);
+        return true;
     }
 
     public void StopAlarm(EntityUid grid, string key)
@@ -99,6 +130,7 @@ public sealed partial class ShipPaSystem
 
         _nextReconcile = _timing.CurTime + ReconcileInterval;
         _deadGrids.Clear();
+        _finishedTracks.Clear();
 
         foreach (var (grid, alarms) in _alarms)
         {
@@ -108,11 +140,28 @@ public sealed partial class ShipPaSystem
                 continue;
             }
 
-            foreach (var alarm in alarms.Values)
+            foreach (var (key, alarm) in alarms)
             {
+                // A track that has played out clears itself; an alarm runs until something stops it.
+                if (!alarm.Loop && Elapsed(alarm) >= alarm.Length)
+                {
+                    _finishedTracks.Add((grid, key));
+                    continue;
+                }
+
                 ReconcileAlarm(grid, alarm);
             }
         }
+
+        // Stopped outside the loop above, which is iterating the dictionaries they're removed from.
+        foreach (var (grid, key) in _finishedTracks)
+        {
+            StopAlarm(grid, key);
+            var ev = new ShipPaTrackFinishedEvent(grid, key);
+            RaiseLocalEvent(ref ev);
+        }
+
+        _finishedTracks.Clear();
 
         // The streams died with the grid; just forget the bookkeeping.
         foreach (var grid in _deadGrids)
@@ -200,7 +249,13 @@ public sealed partial class ShipPaSystem
     /// </summary>
     private EntityUid? PlayAlarmStream(Entity<ShipPaSpeakerComponent> speaker, ActiveAlarm alarm, TimeSpan now)
     {
-        var offset = (float) ((now - alarm.Start).TotalSeconds % alarm.Length);
+        var elapsed = (float) (now - alarm.Start).TotalSeconds;
+
+        // A loop wraps; a track is simply over, and a speaker joining now has nothing left to catch up to.
+        if (!alarm.Loop && elapsed >= alarm.Length)
+            return null;
+
+        var offset = alarm.Loop ? elapsed % alarm.Length : elapsed;
         var stream = _audio.PlayPvs(alarm.Resolved, speaker.Owner, BuildParams(speaker, alarm.Params).WithPlayOffset(offset));
 
         if (stream == null)
@@ -274,6 +329,11 @@ public sealed partial class ShipPaSystem
         }
     }
 
+    private float Elapsed(ActiveAlarm alarm)
+    {
+        return (float) (_timing.CurTime - alarm.Start).TotalSeconds;
+    }
+
     private void StopStream(AlarmStream stream)
     {
         if (Exists(stream.Audio))
@@ -290,6 +350,9 @@ public sealed partial class ShipPaSystem
     {
         public ResolvedSoundSpecifier Resolved = default!;
         public AudioParams Params;
+
+        /// <summary>False for a one-off track, which ends on its own instead of running until stopped.</summary>
+        public bool Loop = true;
 
         /// <summary>When the alarm started, so a new copy can be wound forward to match.</summary>
         public TimeSpan Start;

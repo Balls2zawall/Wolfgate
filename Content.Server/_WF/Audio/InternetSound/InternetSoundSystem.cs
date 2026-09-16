@@ -3,15 +3,20 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using Content.Server._WF.ShipPa;
 using Content.Server.Administration.Logs;
 using Content.Server.Administration.Managers;
 using Content.Shared._WF.Audio.InternetSound;
 using Content.Shared._WF.CCVar;
+using Content.Shared._WF.ShipPa;
 using Content.Shared.Administration;
 using Content.Shared.Database;
 using Robust.Server.Player;
 using Robust.Shared.Asynchronous;
+using Robust.Shared.Audio;
+using Robust.Shared.Audio.Systems;
 using Robust.Shared.Configuration;
+using Robust.Shared.ContentPack;
 using Robust.Shared.Network;
 using Robust.Shared.Network.Transfer;
 using Robust.Shared.Player;
@@ -20,9 +25,15 @@ using Robust.Shared.Timing;
 namespace Content.Server._WF.Audio.InternetSound;
 
 /// <summary>
-/// Admin internet sounds: fetches a link with yt-dlp, sends the audio to every connected client over the bulk
-/// transfer channel, and stops it on request. One sound at a time; it must finish or be stopped before the next.
+/// Internet sounds: fetches a link with yt-dlp, mounts the result as a resource on the server and every
+/// client, then plays it like any other sound — to everyone at once for admins, or out of a ship's PA
+/// speakers, which crew can do from the shuttle console.
 /// </summary>
+/// <remarks>
+/// Several tracks can run at once, but not many: every client holds the decoded audio of every live track
+/// whether or not it can hear it, so <see cref="InternetSoundCVars.MaxConcurrent"/> is a memory limit on
+/// players' machines rather than a load limit on the server.
+/// </remarks>
 public sealed partial class InternetSoundSystem : EntitySystem
 {
     [Dependency] private ITransferManager _transfer = default!;
@@ -32,80 +43,248 @@ public sealed partial class InternetSoundSystem : EntitySystem
     [Dependency] private IAdminLogManager _adminLogger = default!;
     [Dependency] private IAdminManager _adminManager = default!;
     [Dependency] private IGameTiming _timing = default!;
+    [Dependency] private IResourceManager _resourceManager = default!;
+    [Dependency] private SharedAudioSystem _audio = default!;
+    [Dependency] private ShipPaSystem _shipPa = default!;
 
     private const int MaxTitleLength = 200;
 
     /// <summary>
-    /// Clients start once their download arrives, so a sound counts as playing a little past its length.
+    /// Key the ship PA runs internet sounds under, so a second one replaces the first rather than layering.
     /// </summary>
-    private static readonly TimeSpan ArrivalGrace = TimeSpan.FromSeconds(15);
+    public const string TrackKey = "wf-internet-sound";
 
-    private sealed record NowPlaying(string Title, string Admin, TimeSpan Ends);
+    private InternetSoundResources _resources = default!;
 
-    private CancellationTokenSource? _fetch;
-    private NowPlaying? _playing;
+    /// <summary>Everything in flight, from the moment a fetch starts until its audio is released.</summary>
+    private readonly Dictionary<int, Track> _tracks = new();
+
+    /// <summary>The track each ship is running, so a second request replaces rather than layers.</summary>
+    private readonly Dictionary<EntityUid, int> _byGrid = new();
+
+    /// <summary>The track going out to everyone at once, if any. Only admins can start one.</summary>
+    private int _global;
+
     private int _lastId;
+
+    private enum TrackState
+    {
+        Fetching,
+        Sending,
+        Playing,
+    }
+
+    /// <summary>
+    /// One internet sound on its way to, or out of, the speakers.
+    /// </summary>
+    private sealed class Track
+    {
+        public int Id;
+        public string Title = string.Empty;
+
+        /// <summary>Who asked for it, for the admin window and the logs.</summary>
+        public string Requester = string.Empty;
+
+        /// <summary>The ship it plays on, or null for everyone at once.</summary>
+        public EntityUid? Grid;
+
+        public TrackState State;
+        public CancellationTokenSource? Fetch;
+
+        /// <summary>The admin to report progress to, if an admin started it.</summary>
+        public ICommonSession? Admin;
+
+        /// <summary>Clients that haven't confirmed they have the audio yet.</summary>
+        public HashSet<NetUserId> Waiting = new();
+
+        public TimeSpan Deadline;
+
+        /// <summary>The audio entity, for a sound played to everyone. PA tracks live in ShipPaSystem.</summary>
+        public EntityUid? Audio;
+
+        public bool IsPa => Grid != null;
+    }
 
     public override void Initialize()
     {
         base.Initialize();
 
+        _resources = InternetSoundResources.For(_resourceManager);
+
         // Send-only here; clients register the receiving side.
         _transfer.RegisterTransferMessage(InternetSoundProtocol.TransferKey);
 
         SubscribeNetworkEvent<InternetSoundStateRequestEvent>(OnStateRequest);
+        SubscribeNetworkEvent<InternetSoundReadyEvent>(OnClientReady);
+        SubscribeLocalEvent<ShipPaTrackFinishedEvent>(OnTrackFinished);
     }
 
     public override void Shutdown()
     {
         base.Shutdown();
-        _fetch?.Cancel();
-        _fetch = null;
+
+        foreach (var track in _tracks.Values)
+        {
+            track.Fetch?.Cancel();
+        }
+
+        _tracks.Clear();
+        _byGrid.Clear();
+        _global = 0;
+
+        // Nothing is playing after this, so anything still mounted is dead weight.
+        foreach (var id in _resources.StoredIds().ToList())
+        {
+            _resources.Remove(id);
+        }
     }
 
     public override void Update(float frameTime)
     {
         base.Update(frameTime);
 
-        if (_playing == null || _timing.CurTime < _playing.Ends)
-            return;
+        foreach (var track in _tracks.Values.ToList())
+        {
+            switch (track.State)
+            {
+                // Whoever hasn't confirmed by the deadline misses it rather than holding everyone up.
+                case TrackState.Sending when _timing.CurTime >= track.Deadline:
+                    StartPlayback(track);
+                    break;
 
-        _playing = null;
-        SendState();
+                // The engine deletes a finished non-looping audio entity by itself.
+                case TrackState.Playing when !track.IsPa && track.Audio is { } audio && !Exists(audio):
+                    Finish(track);
+                    break;
+
+                // A ship that blew up or left takes its track with it.
+                case TrackState.Playing when track.Grid is { } grid && !Exists(grid):
+                    Finish(track);
+                    break;
+            }
+        }
     }
 
     /// <summary>
-    /// Starts fetching a link; once converted, every connected client plays it. Refused while another sound is
-    /// fetching or playing. Progress goes to the requesting admin.
+    /// Fetches a link and plays it to every connected player. Admin only; refused while another global sound
+    /// is in play.
     /// </summary>
     public void Play(ICommonSession? admin, string url)
     {
+        if (_global != 0)
+        {
+            Report(admin, Loc.GetString("wf-internet-sound-busy", ("title", _tracks[_global].Title)), true);
+            return;
+        }
+
+        Begin(admin, admin?.Name ?? Loc.GetString("wf-internet-sound-server-name"), url, null);
+    }
+
+    /// <summary>
+    /// Fetches a link and plays it out of one ship's speakers, positioned and distorted like anything else
+    /// its PA carries. Replaces whatever that ship was already playing.
+    /// </summary>
+    public void PlayOverPa(ICommonSession? admin, string url, EntityUid grid)
+    {
+        PlayOverPa(admin, admin?.Name ?? Loc.GetString("wf-internet-sound-server-name"), url, grid, out _);
+    }
+
+    /// <summary>
+    /// Fetches a link for one ship's PA on behalf of whoever asked. <paramref name="error"/> is a loc string
+    /// for the caller to show when this returns false.
+    /// </summary>
+    public bool PlayOverPa(ICommonSession? admin, string requester, string url, EntityUid grid, out string? error)
+    {
+        error = null;
+
+        if (!Exists(grid) || TerminatingOrDeleted(grid))
+        {
+            error = Loc.GetString("wf-internet-sound-no-ship");
+            Report(admin, error, true);
+            return false;
+        }
+
+        var (online, _, _) = _shipPa.CountSpeakers(grid);
+
+        if (online == 0)
+        {
+            error = Loc.GetString("wf-internet-sound-no-speakers", ("ship", _shipPa.GetShipName(grid)));
+            Report(admin, error, true);
+            return false;
+        }
+
+        // A ship replacing its own track doesn't add to the load, so it doesn't count against the cap.
+        if (!_byGrid.ContainsKey(grid) && _tracks.Count >= _cfg.GetCVar(InternetSoundCVars.MaxConcurrent))
+        {
+            error = Loc.GetString("wf-internet-sound-too-many");
+            Report(admin, error, true);
+            return false;
+        }
+
+        return Begin(admin, requester, url, grid, out error);
+    }
+
+    private void Begin(ICommonSession? admin, string requester, string url, EntityUid? grid)
+    {
+        Begin(admin, requester, url, grid, out _);
+    }
+
+    private bool Begin(ICommonSession? admin, string requester, string url, EntityUid? grid, out string? error)
+    {
+        error = null;
+
         if (!_cfg.GetCVar(InternetSoundCVars.Enabled))
         {
-            Report(admin, Loc.GetString("wf-internet-sound-disabled"), true);
-            return;
+            error = Loc.GetString("wf-internet-sound-disabled");
+            Report(admin, error, true);
+            return false;
         }
 
-        if (_fetch != null)
-        {
-            Report(admin, Loc.GetString("wf-internet-sound-busy-fetching"), true);
-            return;
-        }
+        // A ship replacing its own track doesn't add to the load, so it doesn't count against the cap.
+        var replacing = grid is { } existing && _byGrid.ContainsKey(existing);
 
-        if (_playing != null)
+        if (!replacing && _tracks.Count >= _cfg.GetCVar(InternetSoundCVars.MaxConcurrent))
         {
-            Report(admin, Loc.GetString("wf-internet-sound-busy", ("title", _playing.Title)), true);
-            return;
+            error = Loc.GetString("wf-internet-sound-too-many");
+            Report(admin, error, true);
+            return false;
         }
 
         // http(s) only, so yt-dlp can't be pointed at server files.
         if (!Uri.TryCreate(url, UriKind.Absolute, out var uri) || uri.Scheme != Uri.UriSchemeHttp && uri.Scheme != Uri.UriSchemeHttps)
         {
-            Report(admin, Loc.GetString("wf-internet-sound-invalid-url"), true);
-            return;
+            error = Loc.GetString("wf-internet-sound-invalid-url");
+            Report(admin, error, true);
+            return false;
         }
 
-        var fetch = _fetch = new CancellationTokenSource();
+        // Whatever that ship had is replaced, so its audio comes back rather than piling up.
+        if (grid is { } target && _byGrid.TryGetValue(target, out var old))
+            Drop(_tracks[old]);
+
+        var id = ++_lastId;
+        var fetch = new CancellationTokenSource();
+
+        var track = new Track
+        {
+            Id = id,
+            Title = uri.AbsoluteUri,
+            Requester = requester,
+            Grid = grid,
+            State = TrackState.Fetching,
+            Fetch = fetch,
+            Admin = admin,
+        };
+
+        _tracks[id] = track;
+
+        if (grid is { } uid)
+            _byGrid[uid] = id;
+        else
+            _global = id;
+
+        // Ship PA is positional, so stereo would only cost memory for an image the speakers throw away.
+        var stereo = _cfg.GetCVar(InternetSoundCVars.Stereo) && grid == null;
 
         var settings = new InternetSoundDownloader.Settings(
             _cfg.GetCVar(InternetSoundCVars.YtDlpPath),
@@ -114,11 +293,14 @@ public sealed partial class InternetSoundSystem : EntitySystem
             _cfg.GetCVar(InternetSoundCVars.Timeout),
             _cfg.GetCVar(InternetSoundCVars.MaxSizeMb),
             Math.Clamp(_cfg.GetCVar(InternetSoundCVars.SampleRate), 8000, 48000),
-            _cfg.GetCVar(InternetSoundCVars.Stereo) ? 2 : 1);
-        var adminName = admin?.Name ?? Loc.GetString("wf-internet-sound-server-name");
+            stereo ? 2 : 1,
+            Math.Clamp(_cfg.GetCVar(InternetSoundCVars.Bitrate), 8, 192));
 
         Report(admin, Loc.GetString("wf-internet-sound-fetching", ("url", uri.AbsoluteUri)), false);
-        _adminLogger.Add(LogType.AdminCommands, LogImpact.Low, $"{adminName} requested internet sound {uri.AbsoluteUri}");
+
+        _adminLogger.Add(LogType.AdminCommands, LogImpact.Low,
+            $"{requester} requested internet sound {uri.AbsoluteUri}{(grid is { } ship ? $" for {_shipPa.GetShipName(ship)}" : " for everyone")}");
+
         SendState();
 
         Task.Run(async () =>
@@ -126,7 +308,7 @@ public sealed partial class InternetSoundSystem : EntitySystem
             try
             {
                 var result = await InternetSoundDownloader.Fetch(uri.AbsoluteUri, settings, fetch.Token);
-                _task.RunOnMainThread(() => Broadcast(fetch, admin, adminName, uri.AbsoluteUri, result));
+                _task.RunOnMainThread(() => Distribute(id, fetch, uri.AbsoluteUri, result));
             }
             catch (OperationCanceledException) when (fetch.IsCancellationRequested)
             {
@@ -134,66 +316,247 @@ public sealed partial class InternetSoundSystem : EntitySystem
             }
             catch (OperationCanceledException)
             {
-                _task.RunOnMainThread(() => Fail(fetch, admin, Loc.GetString("wf-internet-sound-error-timeout")));
+                _task.RunOnMainThread(() => Fail(id, fetch, Loc.GetString("wf-internet-sound-error-timeout")));
             }
             catch (InternetSoundDownloader.FetchException e)
             {
-                _task.RunOnMainThread(() => Fail(fetch, admin, Loc.GetString(e.LocKey, ("detail", e.Message))));
+                _task.RunOnMainThread(() => Fail(id, fetch, Loc.GetString(e.LocKey, ("detail", e.Message))));
             }
             catch (Exception e)
             {
                 _task.RunOnMainThread(() =>
                 {
                     Log.Error($"Internet sound fetch for {uri.AbsoluteUri} failed: {e}");
-                    Fail(fetch, admin, Loc.GetString("wf-internet-sound-error-unknown"));
+                    Fail(id, fetch, Loc.GetString("wf-internet-sound-error-unknown"));
                 });
             }
         });
+
+        return true;
     }
 
     /// <summary>
-    /// Cancels any fetch in progress and stops playback on every client.
+    /// Stops everything: cancels fetches, silences every track and frees their audio.
     /// </summary>
     public void Stop(ICommonSession? admin)
     {
-        _fetch?.Cancel();
-        _fetch = null;
-        _playing = null;
+        foreach (var track in _tracks.Values.ToList())
+        {
+            Drop(track);
+        }
 
-        RaiseNetworkEvent(new InternetSoundStopEvent(0));
         Report(admin, Loc.GetString("wf-internet-sound-stopped"), false);
-        _adminLogger.Add(LogType.AdminCommands, LogImpact.Low, $"{admin?.Name ?? "Server"} stopped the internet sound");
+        _adminLogger.Add(LogType.AdminCommands, LogImpact.Low, $"{admin?.Name ?? "Server"} stopped every internet sound");
         SendState();
     }
 
-    private void Broadcast(CancellationTokenSource fetch, ICommonSession? admin, string adminName, string url, InternetSoundDownloader.Result result)
+    /// <summary>
+    /// Stops whatever one ship is playing. True if there was something to stop.
+    /// </summary>
+    public bool StopForGrid(EntityUid grid)
     {
-        // Stopped while converting.
-        if (_fetch != fetch)
+        if (!_byGrid.TryGetValue(grid, out var id) || !_tracks.TryGetValue(id, out var track))
+            return false;
+
+        Drop(track);
+        SendState();
+        return true;
+    }
+
+    /// <summary>
+    /// True when this ship has an internet sound fetching, sending or playing.
+    /// </summary>
+    public bool IsPlayingOn(EntityUid grid)
+    {
+        return _byGrid.ContainsKey(grid);
+    }
+
+    /// <summary>
+    /// Mounts the fetched audio here and sends it to every client, then waits for them to confirm before
+    /// anything plays.
+    /// </summary>
+    private void Distribute(int id, CancellationTokenSource fetch, string url, InternetSoundDownloader.Result result)
+    {
+        // Stopped or replaced while converting.
+        if (!_tracks.TryGetValue(id, out var track) || track.Fetch != fetch)
             return;
 
-        _fetch = null;
+        track.Fetch = null;
+        track.Title = result.Title;
+        _resources.Store(id, result.Audio);
 
-        var length = ImaAdpcmWav.GetDuration(result.Audio) ?? TimeSpan.FromSeconds(_cfg.GetCVar(InternetSoundCVars.MaxDuration));
-        _playing = new NowPlaying(result.Title, adminName, _timing.CurTime + length + ArrivalGrace);
+        // Reading the length here both gives us a duration and proves the Ogg is one the engine can play,
+        // before any of it goes out to clients.
+        try
+        {
+            _audio.GetAudioLength(InternetSoundResources.PathFor(id));
+        }
+        catch (Exception e)
+        {
+            Log.Error($"Internet sound \"{result.Title}\" from {url} isn't loadable audio: {e}");
+            Report(track.Admin, Loc.GetString("wf-internet-sound-error-unplayable"), true);
+            Drop(track);
+            SendState();
+            return;
+        }
 
-        var payload = Encode(++_lastId, result.Title, adminName, result.Audio);
+        var payload = Encode(id, result.Title, track.Requester, track.IsPa, result.Audio);
+        track.Waiting.Clear();
+
         foreach (var session in _players.Sessions)
         {
+            track.Waiting.Add(session.UserId);
             Send(session.Channel, payload);
         }
 
-        Report(admin, Loc.GetString("wf-internet-sound-playing", ("title", result.Title), ("count", _players.PlayerCount)), false);
-        _adminLogger.Add(LogType.AdminCommands, LogImpact.Low, $"{adminName} played internet sound \"{result.Title}\" ({url})");
+        track.State = TrackState.Sending;
+        track.Deadline = _timing.CurTime + TimeSpan.FromSeconds(_cfg.GetCVar(InternetSoundCVars.ReadyTimeout));
+
+        var megabytes = result.Audio.Length / (1024f * 1024f);
+        Report(track.Admin, Loc.GetString("wf-internet-sound-sending",
+            ("title", result.Title),
+            ("count", track.Waiting.Count),
+            ("size", megabytes.ToString("0.0"))), false);
+
+        _adminLogger.Add(LogType.AdminCommands, LogImpact.Low,
+            $"{track.Requester} is sending internet sound \"{result.Title}\" ({url}) to {track.Waiting.Count} players");
+
+        SendState();
+
+        // A server with nobody on it would otherwise sit waiting for the deadline.
+        if (track.Waiting.Count == 0)
+            StartPlayback(track);
+    }
+
+    private void OnClientReady(InternetSoundReadyEvent ev, EntitySessionEventArgs args)
+    {
+        if (!_tracks.TryGetValue(ev.Id, out var track) || track.State != TrackState.Sending)
+            return;
+
+        if (ev.Failed)
+            Log.Warning($"{args.SenderSession.Name} couldn't load internet sound \"{track.Title}\".");
+
+        if (!track.Waiting.Remove(args.SenderSession.UserId) || track.Waiting.Count > 0)
+            return;
+
+        StartPlayback(track);
+    }
+
+    /// <summary>
+    /// Everyone who's going to have the audio has it, so play it like any other sound.
+    /// </summary>
+    private void StartPlayback(Track track)
+    {
+        if (track.State != TrackState.Sending)
+            return;
+
+        var path = InternetSoundResources.PathFor(track.Id);
+        var sound = new SoundPathSpecifier(path);
+
+        if (track.Grid is { } grid)
+        {
+            if (!Exists(grid) || TerminatingOrDeleted(grid))
+            {
+                Report(track.Admin, Loc.GetString("wf-internet-sound-no-ship"), true);
+                Drop(track);
+                SendState();
+                return;
+            }
+
+            if (!_shipPa.StartTrack(grid, TrackKey, sound, AudioParams.Default, track.Title))
+            {
+                Report(track.Admin, Loc.GetString("wf-internet-sound-no-speakers", ("ship", _shipPa.GetShipName(grid))), true);
+                Drop(track);
+                SendState();
+                return;
+            }
+
+            track.State = TrackState.Playing;
+
+            Report(track.Admin, Loc.GetString("wf-internet-sound-playing-pa",
+                ("title", track.Title),
+                ("ship", _shipPa.GetShipName(grid))), false);
+        }
+        else
+        {
+            var stream = _audio.PlayGlobal(path, Filter.Broadcast(), true, AudioParams.Default);
+
+            if (stream == null)
+            {
+                Report(track.Admin, Loc.GetString("wf-internet-sound-error-unplayable"), true);
+                Drop(track);
+                SendState();
+                return;
+            }
+
+            EnsureComp<InternetSoundAudioComponent>(stream.Value.Entity);
+            track.Audio = stream.Value.Entity;
+            track.State = TrackState.Playing;
+
+            Report(track.Admin, Loc.GetString("wf-internet-sound-playing", ("title", track.Title)), false);
+            RaiseNetworkEvent(new InternetSoundPlayingEvent(track.Id));
+        }
+
         SendState();
     }
 
-    private void Fail(CancellationTokenSource fetch, ICommonSession? admin, string message)
+    private void OnTrackFinished(ref ShipPaTrackFinishedEvent ev)
     {
-        if (_fetch == fetch)
-            _fetch = null;
+        if (ev.Key != TrackKey || !_byGrid.TryGetValue(ev.Grid, out var id) || !_tracks.TryGetValue(id, out var track))
+            return;
 
-        Report(admin, message, true);
+        Finish(track);
+    }
+
+    /// <summary>
+    /// The sound played through to its end on its own.
+    /// </summary>
+    private void Finish(Track track)
+    {
+        Drop(track);
+        SendState();
+    }
+
+    /// <summary>
+    /// Takes a track out of play wherever it got to: cancels its fetch, stops its streams, tells clients to
+    /// close the radio and frees the audio everywhere.
+    /// </summary>
+    private void Drop(Track track)
+    {
+        track.Fetch?.Cancel();
+        track.Fetch = null;
+
+        if (track.Grid is { } grid)
+        {
+            _shipPa.StopAlarm(grid, TrackKey);
+            _byGrid.Remove(grid);
+        }
+        else
+        {
+            if (track.Audio is { } audio && Exists(audio))
+                _audio.Stop(audio);
+
+            if (_global == track.Id)
+                _global = 0;
+        }
+
+        _tracks.Remove(track.Id);
+
+        RaiseNetworkEvent(new InternetSoundStopEvent(track.Id));
+
+        // Only safe now every stream of it is stopped. Clients still wait for the entities to actually go
+        // away before freeing the decoded audio.
+        RaiseNetworkEvent(new InternetSoundReleaseEvent(track.Id));
+        _resources.Remove(track.Id);
+    }
+
+    private void Fail(int id, CancellationTokenSource fetch, string message)
+    {
+        if (!_tracks.TryGetValue(id, out var track) || track.Fetch != fetch)
+            return;
+
+        Report(track.Admin, message, true);
+        Drop(track);
         SendState();
     }
 
@@ -218,7 +581,24 @@ public sealed partial class InternetSoundSystem : EntitySystem
 
     private InternetSoundStateEvent BuildState()
     {
-        return new InternetSoundStateEvent(_fetch != null, _playing?.Title, _playing?.Admin);
+        var entries = new List<InternetSoundEntry>();
+
+        foreach (var track in _tracks.Values)
+        {
+            var ship = track.Grid is { } grid && Exists(grid) ? _shipPa.GetShipName(grid) : null;
+            var netGrid = track.Grid is { } uid && Exists(uid) ? GetNetEntity(uid) : (NetEntity?) null;
+
+            entries.Add(new InternetSoundEntry(
+                track.Id,
+                track.Title,
+                track.Requester,
+                ship,
+                netGrid,
+                track.State == TrackState.Fetching,
+                track.State == TrackState.Sending));
+        }
+
+        return new InternetSoundStateEvent(entries, _global != 0);
     }
 
     private async void Send(INetChannel channel, byte[] payload)
@@ -249,14 +629,15 @@ public sealed partial class InternetSoundSystem : EntitySystem
     /// <summary>
     /// Header first, length-prefixed, so clients can show the radio before the audio finishes arriving.
     /// </summary>
-    private static byte[] Encode(int id, string title, string admin, byte[] audio)
+    private static byte[] Encode(int id, string title, string requester, bool isPa, byte[] audio)
     {
         using var header = new MemoryStream();
         using (var writer = new BinaryWriter(header, Encoding.UTF8, leaveOpen: true))
         {
             writer.Write(id);
             writer.Write(title.Length > MaxTitleLength ? title[..MaxTitleLength] : title);
-            writer.Write(admin);
+            writer.Write(requester);
+            writer.Write(isPa);
         }
 
         using var payload = new MemoryStream((int) header.Length + audio.Length + 4);

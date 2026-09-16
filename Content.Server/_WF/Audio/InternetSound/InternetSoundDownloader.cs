@@ -11,12 +11,21 @@ using System.Threading.Tasks;
 namespace Content.Server._WF.Audio.InternetSound;
 
 /// <summary>
-/// Fetches audio from a link with yt-dlp and converts it to IMA ADPCM WAV with ffmpeg. Runs off the main thread.
-/// ADPCM rather than Ogg because clients can decode it off their main thread; the engine's Ogg loader can't be.
+/// Fetches audio from a link with yt-dlp and converts it to Ogg Vorbis with ffmpeg. Runs off the main thread.
+/// Ogg because it's what the engine's audio loader reads, which is what lets the result be mounted as an
+/// ordinary resource and played through speakers like any other sound.
 /// </summary>
 public static class InternetSoundDownloader
 {
-    public sealed record Settings(string YtDlpPath, string FfmpegPath, int MaxDurationSeconds, int TimeoutSeconds, int MaxSizeMb, int SampleRate, int Channels);
+    public sealed record Settings(
+        string YtDlpPath,
+        string FfmpegPath,
+        int MaxDurationSeconds,
+        int TimeoutSeconds,
+        int MaxSizeMb,
+        int SampleRate,
+        int Channels,
+        int BitrateKbps);
 
     public sealed record Result(string Title, byte[] Audio);
 
@@ -73,15 +82,21 @@ public static class InternetSoundDownloader
             if (source == null || !File.Exists(source))
                 throw new FetchException("wf-internet-sound-error-rejected", settings.MaxDurationSeconds.ToString());
 
-            var output = Path.Combine(dir, "sound.wav");
+            var output = Path.Combine(dir, "sound.ogg");
+
+            // Trimming rumble and everything near the new Nyquist first stops the encoder spending its very
+            // small budget on content a loudspeaker would never reproduce anyway.
+            var cutoff = (int) (settings.SampleRate * 0.45f);
+
             var convert = await Run(settings.FfmpegPath,
                 new[]
                 {
                     "-hide_banner", "-loglevel", "error", "-nostdin", "-y",
                     "-i", source,
                     "-vn", "-map_metadata", "-1",
+                    "-af", $"highpass=f=70,lowpass=f={cutoff}",
                     "-ac", settings.Channels.ToString(), "-ar", settings.SampleRate.ToString(),
-                    "-c:a", "adpcm_ima_wav",
+                    "-c:a", "libvorbis", "-b:a", $"{settings.BitrateKbps}k",
                     "-t", settings.MaxDurationSeconds.ToString(),
                     output,
                 },

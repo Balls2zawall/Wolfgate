@@ -53,4 +53,17 @@
                 StyleClasses="ButtonSquare"
                 Margin="4 0 0 0"/>
     </BoxContainer>
+    <BoxContainer Orientation="Horizontal" HorizontalExpand="True" Margin="4 0 4 4">
+        <LineEdit Name="SoundEdit"
+                  PlaceHolder="{Loc 'shuttle-console-ship-sound-placeholder'}"
+                  HorizontalExpand="True"/>
+        <Button Name="SoundButton"
+                Text="{Loc 'shuttle-console-ship-sound'}"
+                StyleClasses="ButtonSquare"
+                Margin="4 0 0 0"/>
+        <Button Name="SoundStopButton"
+                Text="{Loc 'shuttle-console-ship-sound-stop'}"
+                StyleClasses="ButtonSquare"
+                Margin="4 0 0 0"/>
+    </BoxContainer>
 </BoxContainer>

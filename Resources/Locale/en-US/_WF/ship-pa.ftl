@@ -55,3 +55,9 @@ cmd-shippa-hint-active = <true|false>
 
 # Guidebook.
 guide-entry-ship-pa = Ship PA System
+
+## Console internet sounds
+ship-pa-sound-disabled = The PA won't take outside audio.
+ship-pa-sound-cooldown = The PA is still busy with the last request.
+ship-pa-sound-refused = The PA won't play that.
+ship-pa-sound-queued = Fetching the track. It plays once everyone has it.
