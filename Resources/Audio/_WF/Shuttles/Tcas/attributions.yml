@@ -1,0 +1,4 @@
+- files: ["traffic_alarm.ogg", "collision_alarm.ogg", "traffic.ogg"]
+  license: "CC0-1.0"
+  copyright: "TODO: fill in the real source and licence before this ships"
+  source: "https://github.com/VanguardControl/Wolfgate"

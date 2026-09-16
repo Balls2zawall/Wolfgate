@@ -36,6 +36,11 @@
             StyleClasses="ButtonSquare"
             MinSize="0 40"
             Margin="4 8 4 4"/>
+    <Button Name="CollisionAlertButton"
+            Text="{Loc 'shuttle-console-ship-collision-alert-off'}"
+            StyleClasses="ButtonSquare"
+            MinSize="0 40"
+            Margin="4 0 4 4"/>
     <BoxContainer Orientation="Horizontal" HorizontalExpand="True" Margin="8 0 8 4">
         <Label Name="SpeakersCaption" Text="{Loc 'shuttle-console-ship-speakers'}" FontColorOverride="#00ff2a"/>
         <Label Name="SpeakersLabel"

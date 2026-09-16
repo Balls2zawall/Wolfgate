@@ -16,6 +16,7 @@ public sealed partial class ShuttleConsoleBoundUserInterface
         _window.ShipCodeRequested += code => SendMessage(new ShipAlertCodeRequestMessage(code));
         _window.ShipGeneralQuartersRequested += active => SendMessage(new ShipGeneralQuartersRequestMessage(active));
         _window.ShipAnnounceRequested += text => SendMessage(new ShipPaAnnounceRequestMessage(text));
+        _window.ShipCollisionAlertRequested += enabled => SendMessage(new CollisionWarningToggleMessage(enabled));
     }
 
     protected override void ReceiveMessage(BoundUserInterfaceMessage message)

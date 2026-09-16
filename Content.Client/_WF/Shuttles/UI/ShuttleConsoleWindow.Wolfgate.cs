@@ -25,11 +25,17 @@ public sealed partial class ShuttleConsoleWindow
     /// </summary>
     public event Action<string>? ShipAnnounceRequested;
 
+    /// <summary>
+    /// The pilot switched the collision warning on or off.
+    /// </summary>
+    public event Action<bool>? ShipCollisionAlertRequested;
+
     private void WfInitialize()
     {
         ShipContainer.CodeRequested += code => ShipCodeRequested?.Invoke(code);
         ShipContainer.GeneralQuartersRequested += active => ShipGeneralQuartersRequested?.Invoke(active);
         ShipContainer.AnnounceRequested += text => ShipAnnounceRequested?.Invoke(text);
+        ShipContainer.CollisionAlertRequested += enabled => ShipCollisionAlertRequested?.Invoke(enabled);
 
         // Flipping an overlay changes what the server needs to send, so re-request with the new mask.
         ShipContainer.OverlaysChanged += () =>
