@@ -25,8 +25,8 @@ public static class InternetSoundProtocol
 }
 
 /// <summary>
-/// A client reporting that it has the track with this id mounted, or couldn't get it. The server waits for
-/// these before playing, because a client without the file would silently miss the sound.
+/// A client reporting that it has the track with this id mounted, or couldn't get it. Global admin sounds wait for
+/// these; PA listeners independently join the shared timeline when their download arrives.
 /// </summary>
 [Serializable, NetSerializable]
 public sealed class InternetSoundReadyEvent : EntityEventArgs

@@ -26,6 +26,17 @@ namespace Content.IntegrationTests.Tests._WF.ShipPa;
 public sealed class ShipPaInternetSoundTest
 {
     /// <summary>A short shipped sound, standing in for a fetched track.</summary>
+    public sealed class FinishedObserver : EntitySystem
+    {
+        public int Count;
+        public override void Initialize()
+        {
+            base.Initialize();
+            SubscribeLocalEvent<ShipPaTrackFinishedEvent>(OnFinished);
+        }
+        private void OnFinished(ref ShipPaTrackFinishedEvent ev) => Count++;
+    }
+
     private const string SourceSound = "/Audio/Effects/Arcade/newgame.ogg";
 
     private const string SpeakerProto = "WallmountShipPaSpeaker";
@@ -65,7 +76,7 @@ public sealed class ShipPaInternetSoundTest
     }
 
     [Test]
-    public async Task ATrackPlaysOnEverySpeakerAndClearsItself()
+    public async Task ATrackHasOneTimelineAndClearsItself()
     {
         await using var pair = await PoolManager.GetServerClient(new PoolSettings { Connected = false, Dirty = true });
         var server = pair.Server;
@@ -77,6 +88,7 @@ public sealed class ShipPaInternetSoundTest
 
         var speakers = new List<EntityUid>();
         var path = string.Empty;
+        var observer = server.System<FinishedObserver>();
 
         await server.WaitAssertion(() =>
         {
@@ -104,6 +116,7 @@ public sealed class ShipPaInternetSoundTest
 
         await server.WaitAssertion(() =>
         {
+            observer.Count = 0;
             Assert.That(pa.StartTrack(grid, InternetSoundSystem.TrackKey, new SoundPathSpecifier(path)), Is.True,
                 "A mounted track should start on the ship's PA.");
         });
@@ -112,13 +125,13 @@ public sealed class ShipPaInternetSoundTest
 
         await server.WaitAssertion(() =>
         {
-            var playing = StreamsFor(entMan, path);
-            Assert.That(playing, Has.Count.EqualTo(speakers.Count),
-                "Every working speaker should carry its own copy of the track.");
-
-            Assert.That(playing.Select(uid => entMan.GetComponent<ShipPaAudioComponent>(uid).BroadcastId).Distinct().Count(),
-                Is.EqualTo(1),
-                "The copies should share one broadcast id so the client mesh can duck all but the nearest.");
+            Assert.That(StreamsFor(entMan, path), Is.Empty);
+            var broadcasts = entMan.GetComponent<ShipPaBroadcastComponent>(grid).Broadcasts;
+            Assert.That(broadcasts, Has.Count.EqualTo(1));
+            Assert.That(broadcasts[0].Path, Is.EqualTo(path));
+            Assert.That(broadcasts[0].Kind, Is.EqualTo(ShipPaBroadcastKind.Track));
+            broadcasts[0].Priority = 73; // Lifecycle must not depend on ordering.
+            Assert.That(speakers.All(uid => entMan.GetComponent<ShipPaSpeakerComponent>(uid).Enabled), Is.True);
         });
 
         // The sound is a couple of seconds long; the PA notices it has finished on its next reconcile.
@@ -131,6 +144,9 @@ public sealed class ShipPaInternetSoundTest
 
             // Clearing the key is what tells the sound system the audio is safe to free; a looping alarm
             // in the same slot would still be active here.
+            Assert.That(observer.Count, Is.EqualTo(1), "Track completion must survive a priority change.");
+            Assert.That(entMan.HasComponent<ShipPaBroadcastComponent>(grid), Is.False,
+                "Idle grids must leave the broadcast update query.");
             Assert.That(pa.IsAlarmActive(grid, InternetSoundSystem.TrackKey), Is.False,
                 "A finished track should leave its PA slot free for the next one.");
         });
@@ -187,15 +203,10 @@ public sealed class ShipPaInternetSoundTest
 
         await server.WaitAssertion(() =>
         {
-            var playing = StreamsFor(entMan, path);
-
-            // Past the engine's per-file cap a speaker gets an entity but no audio, so the far end of a
-            // long hull would caption the track in silence. Fewer, audible streams beats more, mute ones.
-            Assert.That(playing, Has.Count.LessThan(speakerCount),
-                "A ship with more speakers than the source budget should not stream to all of them.");
-
-            Assert.That(playing, Is.Not.Empty,
-                "It should still come out of the speakers nearest the crew.");
+            Assert.That(StreamsFor(entMan, path), Is.Empty, "Speaker count must never allocate server audio.");
+            Assert.That(entMan.GetComponent<ShipPaBroadcastComponent>(grid).Broadcasts, Has.Count.EqualTo(1));
+            Assert.That(pa.GetSpeakers(grid).Count(s => s.Comp.Enabled), Is.EqualTo(speakerCount),
+                "Every area retains coverage; there is no ship-wide source budget.");
         });
 
         await pair.CleanReturnAsync();

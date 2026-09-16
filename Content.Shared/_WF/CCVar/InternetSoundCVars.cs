@@ -89,8 +89,8 @@ public sealed class InternetSoundCVars
         CVarDef.Create("wf.internet_sound.max_size_mb", 8, CVar.SERVERONLY);
 
     /// <summary>
-    /// Seconds to wait for clients to confirm they have the audio before playing it. Whoever hasn't answered
-    /// by then misses the track rather than holding up the ship.
+    /// Seconds to wait for clients before starting a global admin sound. PA tracks do not wait;
+    /// each listener joins their shared timeline when the file arrives.
     /// </summary>
     public static readonly CVarDef<int> ReadyTimeout =
         CVarDef.Create("wf.internet_sound.ready_timeout", 45, CVar.SERVERONLY);

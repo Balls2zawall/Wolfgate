@@ -1,4 +1,5 @@
 using Content.Shared.Guidebook;
+using Robust.Shared.Network;
 
 namespace Content.Client.Guidebook;
 
@@ -8,8 +9,10 @@ namespace Content.Client.Guidebook;
 /// Requests data from the server on <see cref="Initialize"/>.
 /// Can also be pushed new data when the server reloads prototypes.
 /// </summary>
-public sealed class GuidebookDataSystem : EntitySystem
+public sealed partial class GuidebookDataSystem : EntitySystem
 {
+    [Dependency] private IClientNetManager _net = default!;
+
     private GuidebookData? _data;
 
     public override void Initialize()
@@ -18,8 +21,9 @@ public sealed class GuidebookDataSystem : EntitySystem
 
         SubscribeNetworkEvent<UpdateGuidebookDataEvent>(OnServerUpdated);
 
-        // Request data from the server
-        RaiseNetworkEvent(new RequestGuidebookDataEvent());
+        // Replay playback starts these systems without a server connection.
+        if (_net.IsConnected)
+            RaiseNetworkEvent(new RequestGuidebookDataEvent());
     }
 
     private void OnServerUpdated(UpdateGuidebookDataEvent args)

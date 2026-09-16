@@ -11,6 +11,8 @@ using Content.Shared._WF.CCVar;
 using Content.Shared._WF.ShipPa;
 using Content.Shared.Administration;
 using Content.Shared.Database;
+using Content.Shared.GameTicking;
+using Robust.Shared.Enums;
 using Robust.Server.Player;
 using Robust.Shared.Asynchronous;
 using Robust.Shared.Audio;
@@ -102,6 +104,8 @@ public sealed partial class InternetSoundSystem : EntitySystem
         /// <summary>The audio entity, for a sound played to everyone. PA tracks live in ShipPaSystem.</summary>
         public EntityUid? Audio;
 
+        public byte[]? Payload;
+
         public bool IsPa => Grid != null;
     }
 
@@ -117,10 +121,13 @@ public sealed partial class InternetSoundSystem : EntitySystem
         SubscribeNetworkEvent<InternetSoundStateRequestEvent>(OnStateRequest);
         SubscribeNetworkEvent<InternetSoundReadyEvent>(OnClientReady);
         SubscribeLocalEvent<ShipPaTrackFinishedEvent>(OnTrackFinished);
+        SubscribeLocalEvent<RoundRestartCleanupEvent>(_ => Stop(null));
+        _players.PlayerStatusChanged += OnPlayerStatusChanged;
     }
 
     public override void Shutdown()
     {
+        _players.PlayerStatusChanged -= OnPlayerStatusChanged;
         base.Shutdown();
 
         foreach (var track in _tracks.Values)
@@ -372,8 +379,8 @@ public sealed partial class InternetSoundSystem : EntitySystem
     }
 
     /// <summary>
-    /// Mounts the fetched audio here and sends it to every client, then waits for them to confirm before
-    /// anything plays.
+    /// Mounts and distributes the audio. PA playback begins immediately; global admin sounds retain
+    /// their readiness barrier. Late PA downloads join the timeline rather than delaying everyone.
     /// </summary>
     private void Distribute(int id, CancellationTokenSource fetch, string url, InternetSoundDownloader.Result result)
     {
@@ -400,7 +407,7 @@ public sealed partial class InternetSoundSystem : EntitySystem
             return;
         }
 
-        var payload = Encode(id, result.Title, track.Requester, track.IsPa, result.Audio);
+        var payload = track.Payload = Encode(id, result.Title, track.Requester, track.IsPa, result.Audio);
         track.Waiting.Clear();
 
         foreach (var session in _players.Sessions)
@@ -423,9 +430,23 @@ public sealed partial class InternetSoundSystem : EntitySystem
 
         SendState();
 
-        // A server with nobody on it would otherwise sit waiting for the deadline.
-        if (track.Waiting.Count == 0)
+        // PA sources are created locally only once their asset exists. They need no readiness barrier.
+        if (track.IsPa || track.Waiting.Count == 0)
             StartPlayback(track);
+    }
+
+    private void OnPlayerStatusChanged(object? sender, SessionStatusEventArgs args)
+    {
+        if (args.NewStatus != SessionStatus.InGame)
+            return;
+
+        // A joining client receives current PA assets and the grid timeline independently. It starts
+        // at the current timestamp when both arrive; it never restarts the track for other listeners.
+        foreach (var track in _tracks.Values)
+        {
+            if (track.IsPa && track.Payload != null)
+                Send(args.Session.Channel, track.Payload);
+        }
     }
 
     private void OnClientReady(InternetSoundReadyEvent ev, EntitySessionEventArgs args)
@@ -540,6 +561,7 @@ public sealed partial class InternetSoundSystem : EntitySystem
                 _global = 0;
         }
 
+        track.Payload = null;
         _tracks.Remove(track.Id);
 
         RaiseNetworkEvent(new InternetSoundStopEvent(track.Id));

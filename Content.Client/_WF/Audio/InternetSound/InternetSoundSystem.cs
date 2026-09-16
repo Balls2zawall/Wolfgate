@@ -1,6 +1,7 @@
 using System.IO;
 using System.Linq;
 using System.Numerics;
+using Content.Client._WF.ShipPa;
 using Content.Client.Audio;
 using Content.Shared._WF.Audio.InternetSound;
 using Content.Shared._WF.CCVar;
@@ -29,6 +30,7 @@ public sealed partial class InternetSoundSystem : EntitySystem
     [Dependency] private IConfigurationManager _cfg = default!;
     [Dependency] private IClientConsoleHost _console = default!;
     [Dependency] private IResourceCache _resourceCache = default!;
+    [Dependency] private ShipPaMeshSystem _pa = default!;
     [Dependency] private IGameTiming _timing = default!;
     [Dependency] private ContentAudioSystem _contentAudio = default!;
     [Dependency] private ClientGlobalSoundSystem _globalSound = default!;
@@ -55,9 +57,12 @@ public sealed partial class InternetSoundSystem : EntitySystem
     private readonly List<(int Id, TimeSpan Deadline)> _releasing = new();
 
     /// <summary>
-    /// Id of a track still downloading, or 0.
+    /// Independent transfers; a second ship must not cancel the first ship's download.
     /// </summary>
-    private int _loadingId;
+    private readonly HashSet<int> _loading = new();
+    private readonly HashSet<int> _stopped = new();
+    private readonly HashSet<int> _received = new();
+    private bool _shutdown;
 
     private InternetSoundPopup? _popup;
 
@@ -84,6 +89,8 @@ public sealed partial class InternetSoundSystem : EntitySystem
         base.Initialize();
 
         _resources = InternetSoundResources.For(_resourceCache);
+        InitializeReplay();
+        UpdatesBefore.Add(typeof(ShipPaMeshSystem));
 
         // The engine starts new music on its own audio frame; run after it so we can re-pause in the same frame.
         UpdatesAfter.Add(typeof(AudioSystem));
@@ -112,12 +119,16 @@ public sealed partial class InternetSoundSystem : EntitySystem
     {
         base.Shutdown();
 
+        ShutdownReplay();
+        _shutdown = true;
+        _loading.Clear();
         ClosePopup();
         ResumeMusic();
 
         // Disconnecting took every audio entity with it, so everything still mounted is safe to free.
         foreach (var id in _resources.StoredIds().ToList())
         {
+            _pa.ReleasePath(InternetSoundResources.PathFor(id));
             Free(id);
         }
 
@@ -135,6 +146,7 @@ public sealed partial class InternetSoundSystem : EntitySystem
     {
         base.FrameUpdate(frameTime);
 
+        UpdateReplayResources();
         UpdateReleases();
         UpdateGlobalSound();
     }
@@ -301,7 +313,9 @@ public sealed partial class InternetSoundSystem : EntitySystem
 
     private void BeginLoading(Header header)
     {
-        _loadingId = header.Id;
+        if (_shutdown || _stopped.Contains(header.Id) || _received.Contains(header.Id))
+            return;
+        _loading.Add(header.Id);
 
         // A ship's PA is diegetic: it comes out of speakers you can walk away from, so there's no radio and
         // nothing to turn down beyond the ordinary volume sliders.
@@ -314,11 +328,21 @@ public sealed partial class InternetSoundSystem : EntitySystem
     /// </summary>
     private void FinishLoading(Header header, byte[] audio)
     {
-        if (_loadingId != header.Id)
+        if (_shutdown || _stopped.Contains(header.Id) || !_loading.Remove(header.Id))
             return;
-
-        _loadingId = 0;
         _resources.Store(header.Id, audio);
+        // Resource caches outlive reconnects. Reusing an id on another server must replace its old
+        // silent stub, while a duplicate transfer in this session must never replace live audio.
+        try
+        {
+            _resourceCache.ReloadResource<AudioResource>(InternetSoundResources.PathFor(header.Id));
+            _received.Add(header.Id);
+        }
+        catch (Exception e)
+        {
+            FailLoading(header, e);
+            return;
+        }
         RaiseNetworkEvent(new InternetSoundReadyEvent(header.Id, false));
     }
 
@@ -326,14 +350,18 @@ public sealed partial class InternetSoundSystem : EntitySystem
     {
         Log.Error($"Failed to receive internet sound: {e}");
 
-        if (header == null)
+        if (header == null || _received.Contains(header.Id))
             return;
 
-        if (_loadingId == header.Id)
-        {
-            _loadingId = 0;
+        _loading.Remove(header.Id);
+        _stopped.Add(header.Id);
+        if (header.IsPa)
+            _pa.ReleasePath(InternetSoundResources.PathFor(header.Id));
+        _resources.Remove(header.Id);
+        if (_popupId == header.Id)
             ClosePopup();
-        }
+        if (_shutdown)
+            return;
 
         // Tell the server anyway, so one bad client doesn't hold the track up until the deadline.
         RaiseNetworkEvent(new InternetSoundReadyEvent(header.Id, true));
@@ -394,6 +422,11 @@ public sealed partial class InternetSoundSystem : EntitySystem
 
     private void OnRelease(InternetSoundReleaseEvent ev)
     {
+        if (_replay.Replay != null)
+            return;
+        _stopped.Add(ev.Id);
+        _loading.Remove(ev.Id);
+        _pa.ReleasePath(InternetSoundResources.PathFor(ev.Id));
         if (_releasing.Any(entry => entry.Id == ev.Id))
             return;
 
@@ -402,8 +435,16 @@ public sealed partial class InternetSoundSystem : EntitySystem
 
     private void OnStop(InternetSoundStopEvent ev)
     {
-        if (ev.Id == 0 || ev.Id == _loadingId)
-            _loadingId = 0;
+        if (_replay.Replay != null)
+            return;
+        if (ev.Id == 0)
+            _loading.Clear();
+        else
+        {
+            _stopped.Add(ev.Id);
+            _loading.Remove(ev.Id);
+            _pa.ReleasePath(InternetSoundResources.PathFor(ev.Id));
+        }
 
         // Several tracks can be in play, so one ending mustn't close another's radio.
         if (ev.Id == 0 || ev.Id == _popupId)

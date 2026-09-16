@@ -6,9 +6,8 @@ using Robust.Shared.Utility;
 namespace Content.Shared._WF.Audio.InternetSound;
 
 /// <summary>
-/// A content root holding the one internet sound currently in play, mounted on both the server and every
-/// client so a fetched track is an ordinary <see cref="ResPath"/> everywhere. That is what lets the server
-/// play it through PA speakers with PlayPvs like any other sound.
+/// A content root holding active internet sounds on the server and clients. Each downloaded track has
+/// an ordinary resource path, usable by positional PA playback and by replay recordings.
 /// </summary>
 /// <remarks>
 /// Roots can only ever be added to <see cref="IResourceManager"/>, never removed, so this mounts once per
@@ -58,9 +57,21 @@ public sealed class InternetSoundResources
         return new ResPath($"{id}.ogg");
     }
 
+    public event Action<int, byte[]>? Stored;
+
+    public IEnumerable<InternetSoundReplayAsset> ReplayAssets()
+    {
+        foreach (var (path, bytes) in _root.GetAllFiles())
+        {
+            if (int.TryParse(path.FilenameWithoutExtension, out var id))
+                yield return new InternetSoundReplayAsset(id, bytes);
+        }
+    }
+
     public void Store(int id, byte[] audio)
     {
         _root.AddOrUpdateFile(RelativeFor(id), audio);
+        Stored?.Invoke(id, audio);
     }
 
     public bool Has(int id)
