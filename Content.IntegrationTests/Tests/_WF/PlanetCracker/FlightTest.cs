@@ -796,14 +796,16 @@ public sealed class FlightTest
 
         var layers = await BuildStandalone(pair);
         var ground = layers[0];
-        var airMapId = await MapIdOf(pair, layers[1]);
+        var orbitMapId = await MapIdOf(pair, layers[^1]);
 
-        var hull = await BuildCracker(pair, airMapId);
+        // The transport, the way it is flown: from orbit through the console's own descent, on its own landing
+        // thrusters, onto terrain. CE only eases a descent onto ground it can see; a bare test layer is a crash.
+        var hull = await BuildTransport(pair, orbitMapId, Vector2.Zero);
         await MapInitHull(pair, hull);
-        await AddLandingThrusters(pair, hull, 3);
-
-        // Terrain under the hull: CE only eases a descent onto ground it can see, and a bare test layer is a crash.
         await LayTiles(pair, ground, new Vector2i(-8, -8), new Vector2i(24, 24));
+
+        var refusal = await EnterAtmosphere(pair, hull, confirmed: true);
+        Assert.That(refusal, Is.Null, $"Precondition: the descent was refused: {refusal}");
 
         var descend = await HoldVertical(pair, hull, ShuttleButtons.DescendZ);
         var landed = false;
