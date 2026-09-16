@@ -618,6 +618,7 @@ public partial class ShuttleNavControl : BaseShuttleControl // Mono
         DrawCircles(handle);
 
         DrawIFFBeacons(handle, worldToView, mapPos, xform.MapUid); // Far Horizons
+        DrawWfBerth(handle, worldToView, xform.GridUid); // WOLFGATE: chunk berth ghost on the radar (design D20).
 
         // Draw shields
         DrawShields(handle, xform, worldToShuttle);

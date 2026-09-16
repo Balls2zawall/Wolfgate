@@ -128,9 +128,11 @@ public sealed partial class ShipPaSystem
         var now = _timing.CurTime;
 
         // The active set can change under a running alarm, e.g. the first dedicated speaker going up
-        // takes the ship off its air alarms, so streams on units that dropped out stop too.
+        // takes the ship off its air alarms, so streams on units that dropped out stop too. A looping alarm is the
+        // worst of the fan-out - nothing despawns it - so it is held to the same carrier cap as a one-shot.
         _speakerBuffer.Clear();
         GatherSpeakers(grid, _speakerBuffer);
+        SelectCarriers(_speakerBuffer);
         _activeSpeakers.Clear();
 
         foreach (var speaker in _speakerBuffer)
@@ -142,13 +144,8 @@ public sealed partial class ShipPaSystem
 
         foreach (var (speaker, stream) in alarm.Streams)
         {
-            if (Exists(stream.Audio)
-                && _activeSpeakers.Contains(speaker)
-                && TryComp(speaker, out ShipPaSpeakerComponent? comp)
-                && IsFunctional((speaker, comp)))
-            {
+            if (Exists(stream.Audio) && _activeSpeakers.Contains(speaker))
                 continue;
-            }
 
             _staleStreams.Add(speaker);
         }
@@ -165,9 +162,6 @@ public sealed partial class ShipPaSystem
 
         foreach (var entity in _speakerBuffer)
         {
-            if (!IsFunctional(entity))
-                continue;
-
             if (!alarm.Streams.TryGetValue(entity.Owner, out var stream))
             {
                 if (PlayAlarmStream(entity, alarm, now) is not { } audio)
