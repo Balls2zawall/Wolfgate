@@ -81,7 +81,7 @@ public sealed partial class WFCrackerSystem
 
         // The setup stages are reconciled against the anchors as well as on the events, so a missed edge cannot leave
         // a hull claiming a pair it no longer has.
-        if (ent.Comp.State is WFCrackState.AnchorsPlaced or WFCrackState.AnchorsLocked)
+        if (ent.Comp.State is WFCrackState.Surveying or WFCrackState.AnchorsPlaced or WFCrackState.AnchorsLocked)
             ReconcilePair(ent);
 
         // Unconditional, and deliberately ahead of the chain below: an armed pairing window has to be runnable down

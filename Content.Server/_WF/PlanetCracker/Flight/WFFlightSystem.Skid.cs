@@ -93,7 +93,8 @@ public sealed partial class WFFlightSystem
             if (TerminatingOrDeleted(grid) || !TryComp<WFSkidComponent>(grid, out var skid))
                 continue;
 
-            if (!TryComp<PhysicsComponent>(grid, out var body) || !TryComp<MapGridComponent>(grid, out var gridComp))
+            if (!_zLevels.WfHasSkidGround(grid)
+                || !TryComp<PhysicsComponent>(grid, out var body) || !TryComp<MapGridComponent>(grid, out var gridComp))
             {
                 EndSkid(grid, skid);
                 continue;

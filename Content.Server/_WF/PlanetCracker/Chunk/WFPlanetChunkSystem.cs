@@ -55,18 +55,25 @@ public sealed partial class WFPlanetChunkSystem : EntitySystem
     /// <summary>Chunks the sweep decided to drop, collected first so the drop may move grids mid-pass.</summary>
     private readonly List<Entity<WFPlanetChunkComponent>> _dropBuffer = new();
 
+    /// <summary>Chunks whose transit admission failure has already been logged; cleared after a successful retry.</summary>
+    private readonly HashSet<EntityUid> _transitFailureLogged = new();
+
     /// <inheritdoc/>
     public override void Initialize()
     {
         base.Initialize();
 
-        // Exactly two subscriptions, both broadcast and both by ref to match the [ByRefEvent] crack events. F5 adds no
-        // directed (component, event) pair anywhere: the hull's belong to WFCrackerSystem, the anchors' to
-        // WFGravityAnchorSystem, and TileChangedEvent on a CEZMapComponent map is already CESharedZLevelsSystem's.
+        // Crack events are broadcast by ref; the chunk's shutdown only clears failed-release bookkeeping.
         SubscribeLocalEvent<WFCrackCompletedEvent>(OnCrackCompleted);
         SubscribeLocalEvent<WFCrackerFallingEvent>(OnCrackerFalling);
+        SubscribeLocalEvent<WFPlanetChunkComponent, ComponentShutdown>(OnChunkShutdown);
 
         InitializeDisconnect();
+    }
+
+    private void OnChunkShutdown(EntityUid uid, WFPlanetChunkComponent component, ComponentShutdown args)
+    {
+        _transitFailureLogged.Remove(uid);
     }
 
     /// <summary>The cut finished: everything that has to be true before a disc may be lifted, then the extraction.</summary>
@@ -255,9 +262,6 @@ public sealed partial class WFPlanetChunkSystem : EntitySystem
         faller.CrashTileIntensity = ent.Comp.CrashTileIntensity;
         faller.CrashTileMaxIntensity = ent.Comp.CrashTileMaxIntensity;
 
-        // The gangway goes first: the chunk it led to is leaving.
-        LiftGangway(ent);
-
         // The chunk falls from exactly where it hangs - clear of the hull, turned to its heading - and lands wherever
         // that is, hole or not: where the rig carried it is where it comes down (playtest decision). Snapshotted
         // before the grid moves; the chunk is dynamic for the whole fall, so the pose is re-asserted once at landing
@@ -268,19 +272,29 @@ public sealed partial class WFPlanetChunkSystem : EntitySystem
 
         if (!TryComp<MapGridComponent>(ent.Owner, out var grid))
         {
-            Log.Error($"{ToPrettyString(ent.Owner)} tried to drop but is not a grid.");
+            if (_transitFailureLogged.Add(ent.Owner))
+                Log.Error($"{ToPrettyString(ent.Owner)} tried to drop but is not a grid.");
+
+            RestoreParkedChunk(ent);
+            return false;
         }
-        else if (!_zLevels.TryEnterTransit((ent.Owner, grid), startProgress))
+
+        if (!_zLevels.TryEnterTransit((ent.Owner, grid), startProgress))
         {
             // It returns false without logging when the map is not a z-map or is already a transit map.
-            Log.Error($"{ToPrettyString(ent.Owner)} could not be pushed into transit for its chunk drop.");
+            if (_transitFailureLogged.Add(ent.Owner))
+                Log.Warning($"{ToPrettyString(ent.Owner)} could not be pushed into transit for its chunk drop; retrying.");
+
+            RestoreParkedChunk(ent);
+            return false;
         }
-        else
-        {
-            // Recorded because Dropped is set either way: a chunk that never left its berth is still parked on a map
-            // that is not a transit map, which is exactly what UpdateDropped reads as a landing.
-            ent.Comp.EnteredTransit = true;
-        }
+
+        _transitFailureLogged.Remove(ent.Owner);
+        ent.Comp.EnteredTransit = true;
+
+        // The gangway goes after transit admission succeeds: a failed admission must leave the berth and its retry
+        // path intact.
+        LiftGangway(ent);
 
         ent.Comp.Dropped = true;
         Dirty(ent);
@@ -305,6 +319,20 @@ public sealed partial class WFPlanetChunkSystem : EntitySystem
             : EntityUid.Invalid);
         RaiseLocalEvent(ref ev);
         return true;
+    }
+
+    /// <summary>Restores a parked chunk after transit admission failed so the watchdog can retry it later.</summary>
+    private void RestoreParkedChunk(Entity<WFPlanetChunkComponent> ent)
+    {
+        EnsureComp<ForceAnchorComponent>(ent.Owner);
+        EnsureComp<PreventGridAnchorChangesComponent>(ent.Owner);
+        _shuttle.Disable(ent.Owner, force: true);
+
+        if (TryComp<PhysicsComponent>(ent.Owner, out var body))
+        {
+            _physics.SetBodyType(ent.Owner, BodyType.Static, body: body);
+            _physics.SetBodyStatus(ent.Owner, body, BodyStatus.OnGround);
+        }
     }
 
     /// <summary>The chunk hanging in this hull's berth, if it still has one.</summary>

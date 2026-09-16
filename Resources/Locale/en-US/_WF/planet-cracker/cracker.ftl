@@ -95,6 +95,7 @@ wf-crack-console-refuse-obstructed = Refused: another ship sits over the destina
 wf-crack-console-refuse-alignment = Refused: the berth is too far from the cut circle.
 wf-crack-console-refuse-no-abort = The cut cannot be called off once it has begun.
 wf-crack-console-refuse-no-shuttle = Refused: this hull has no thruster control and could never be released.
+wf-crack-console-refuse-external-lock = Refused: this hull is already force-anchored by another system.
 
 wf-crack-console-offset = Offset { $x }, { $y } — { $distance } tiles
 wf-crack-console-aligned = Aligned

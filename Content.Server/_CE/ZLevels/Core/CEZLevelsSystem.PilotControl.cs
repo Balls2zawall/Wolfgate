@@ -190,9 +190,10 @@ public sealed partial class CEZLevelsSystem
             if (mapUid == null || !HasComp<CEZMapComponent>(mapUid))
                 continue;
 
-            // No gravgen, dumbass.
-            // WOLFGATE: over a planet the lift is the landing thrusters', which GravityComponent knows nothing about.
-            if (!WfHasVerticalLift(gridUid) && (!TryComp<GravityComponent>(gridUid, out var gravity) || !gravity.Enabled))
+            // WOLFGATE: planetary lift replaces, rather than supplements, the station gravgen gate.
+            if (WfIsPlanetFlight(gridUid)
+                    ? !WfHasVerticalLift(gridUid)
+                    : !TryComp<GravityComponent>(gridUid, out var gravity) || !gravity.Enabled)
                 continue;
 
             var down = input < 0f;

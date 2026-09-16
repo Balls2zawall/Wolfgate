@@ -59,7 +59,7 @@ public sealed partial class CEZLevelsSystem
 
     private readonly Dictionary<EntityUid, TimeSpan> _wfNextOrbitRefusal = new();
 
-    private readonly List<EntityUid> _wfPloughed = new();
+    private readonly HashSet<EntityUid> _wfPloughed = new();
 
     private readonly Dictionary<(float Gravity, float Terminal), float> _wfFreeFallSpeeds = new();
 
@@ -243,6 +243,16 @@ public sealed partial class CEZLevelsSystem
         return WfTryGetLiftRatio(grid, out var ratio) && ratio >= WFFullLiftRatio;
     }
 
+    /// <summary>A skid only damages a hull while its footprint touches planetary terrain.</summary>
+    public bool WfHasSkidGround(EntityUid grid)
+    {
+        return _mapGridQuery.TryComp(grid, out var gridComp)
+               && Transform(grid).MapUid is { } map
+               && HasComp<WFPlanetLayerComponent>(map)
+               && _mapGridQuery.HasComp(map)
+               && HasGroundUnderFootprint((grid, gridComp), map);
+    }
+
     /// <summary>
     /// The speed (levels/second) a hull that fell one whole gap under its own weight actually touches down at. CE
     /// zeroes the fall speed at every layer boundary, so this - not GridTerminalVelocity, which the taper only ever
@@ -336,15 +346,8 @@ public sealed partial class CEZLevelsSystem
     /// </summary>
     private bool WfPloughThroughWalls(EntityUid grid, PhysicsComponent body)
     {
-        if (!TryComp<WFSkidComponent>(grid, out var skid))
+        if (!TryComp<WFSkidComponent>(grid, out var skid) || !WfHasSkidGround(grid))
             return false;
-
-        if (!_mapGridQuery.TryComp(grid, out var gridComp)
-            || Transform(grid).MapUid is not { } map
-            || !_mapGridQuery.TryComp(map, out var mapGrid))
-        {
-            return true;
-        }
 
         // Breaking on the leading edge's own interval rather than every tick: a hull sitting on a fence line is in
         // contact with it for as long as it is sliding along it, and one destruction sound per post per tick is a
@@ -354,14 +357,13 @@ public sealed partial class CEZLevelsSystem
 
         skid.NextPlough = _timing.CurTime + WFFlightSystem.SkidBiteInterval;
 
-        var bounds = _transform.GetWorldMatrix(grid).TransformBox(gridComp.LocalAABB);
-
         _wfPloughed.Clear();
 
-        foreach (var ent in _map.GetAnchoredEntities(map, mapGrid, bounds))
+        foreach (var contact in _wallContacts)
         {
-            // Only the obstructions CE's wall pass would have bounced off: a hard, colliding, anchored body. Floor
-            // fixtures and decorations under the hull are not what stopped it and are left alone.
+            // A broad bounding rectangle includes empty corners and gaps in irregular hulls. Only destroy
+            // obstacles which CE found touching hull tiles, once even when several tiles hit the same wall.
+            var ent = contact.Wall;
             if (!TerminatingOrDeleted(ent) && _physQuery.TryComp(ent, out var obstacle) && obstacle.CanCollide && obstacle.Hard)
                 _wfPloughed.Add(ent);
         }

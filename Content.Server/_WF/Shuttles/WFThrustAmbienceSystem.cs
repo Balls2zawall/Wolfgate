@@ -1,6 +1,5 @@
 using Content.Server._WF.PlanetCracker.Planets;
 using Content.Server.Shuttles.Components;
-using Content.Shared.Movement.Systems;
 using Content.Shared.Shuttles.Components;
 using Robust.Shared.Audio;
 using Robust.Shared.Audio.Systems;
@@ -9,7 +8,7 @@ using Robust.Shared.Timing;
 namespace Content.Server._WF.Shuttles;
 
 /// <summary>
-/// The thrust loop: while any pilot is holding a movement or rotation key, the hull's crew and anyone hovering over it
+/// The thrust loop: while any powered linear thruster is actually firing, the hull's crew and anyone hovering over it
 /// hear the engines. One stream per hull, to the grid audience rather than a point source at the grid origin, which
 /// on a capital hull would be engines in one corridor. Re-cut on an interval so somebody who boarded mid-burn is in.
 /// </summary>
@@ -21,13 +20,6 @@ public sealed partial class WFThrustAmbienceSystem : EntitySystem
 
     public static readonly SoundSpecifier ThrustLoop = new SoundPathSpecifier("/Audio/_WF/Shuttle/thrust_loop.ogg");
 
-    /// <summary>
-    /// Keys that mean the thrusters are firing: the strafes and the brake. Rotation is the gyroscope's and the
-    /// vertical keys are the landing thrusters', so neither counts.
-    /// </summary>
-    private const ShuttleButtons Thrusting = ShuttleButtons.StrafeUp | ShuttleButtons.StrafeDown
-        | ShuttleButtons.StrafeLeft | ShuttleButtons.StrafeRight | ShuttleButtons.Brake;
-
     /// <summary>Loop gain in dB; a touch under the file's own level, which read loud over the rest of the hull.</summary>
     private const float ThrustVolume = -6f;
 
@@ -37,6 +29,12 @@ public sealed partial class WFThrustAmbienceSystem : EntitySystem
     private TimeSpan _nextSweep;
     private readonly HashSet<EntityUid> _thrusting = new();
     private readonly List<(EntityUid Grid, WFThrustAmbienceComponent Comp)> _playing = new();
+
+    public override void Initialize()
+    {
+        base.Initialize();
+        SubscribeLocalEvent<WFThrustAmbienceComponent, ComponentShutdown>(OnAmbienceShutdown);
+    }
 
     public override void Update(float frameTime)
     {
@@ -48,13 +46,13 @@ public sealed partial class WFThrustAmbienceSystem : EntitySystem
         _nextSweep = _timing.CurTime + SweepInterval;
         _thrusting.Clear();
 
-        var pilots = EntityQueryEnumerator<PilotComponent>();
-        while (pilots.MoveNext(out _, out var pilot))
+        var thrusters = EntityQueryEnumerator<ThrusterComponent, TransformComponent>();
+        while (thrusters.MoveNext(out _, out var thruster, out var xform))
         {
-            if ((pilot.HeldButtons & Thrusting) == 0 || pilot.Console is not { } console || TerminatingOrDeleted(console))
+            if (thruster.Type != ThrusterType.Linear || !thruster.Enabled || !thruster.IsOn || !thruster.Firing)
                 continue;
 
-            if (Transform(console).GridUid is { } grid && HasComp<ShuttleComponent>(grid))
+            if (xform.GridUid is { } grid && HasComp<ShuttleComponent>(grid))
                 _thrusting.Add(grid);
         }
 
@@ -86,6 +84,11 @@ public sealed partial class WFThrustAmbienceSystem : EntitySystem
             comp.Stream = _audio.PlayGlobal(ThrustLoop, _audience.Aboard(grid), true, AudioParams.Default.WithLoop(true).WithVolume(ThrustVolume))?.Entity;
             comp.NextRecut = _timing.CurTime + RecutInterval;
         }
+    }
+
+    private void OnAmbienceShutdown(EntityUid uid, WFThrustAmbienceComponent component, ComponentShutdown args)
+    {
+        component.Stream = _audio.Stop(component.Stream);
     }
 }
 

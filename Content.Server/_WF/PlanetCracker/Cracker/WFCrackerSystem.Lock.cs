@@ -91,6 +91,13 @@ public sealed partial class WFCrackerSystem
             return false;
         }
 
+        // Refuse external ownership before the snap can move a mapper's anchored hull.
+        if (HasComp<ForceAnchorComponent>(ent.Owner))
+        {
+            reason = "wf-crack-console-refuse-external-lock";
+            return false;
+        }
+
         // Trap (b): the snap comes first. A force-anchored hull is a static body, and a static body makes its own CE
         // grid network static-anchored, at which point the sync system pins every move straight back.
         if (!TrySnapToCircle(ent, out reason))
@@ -358,9 +365,13 @@ public sealed partial class WFCrackerSystem
             return false;
         }
 
-        // A mapper's own ForceAnchor is left alone and Locked stays clear, so the release never steals it.
+        // A mapper's own ForceAnchor is external ownership. Refuse rather than leaving Locked clear and later
+        // releasing the mapper's anchor as though this system owned it.
         if (HasComp<ForceAnchorComponent>(ent.Owner))
-            return true;
+        {
+            reason = "wf-crack-console-refuse-external-lock";
+            return false;
+        }
 
         // Adding the component re-raises MapInitEvent on a map-initialised entity, which runs ForceAnchorSystem's
         // Disable(force: true) plus PreventGridAnchorChanges. A grid that never map-initialised gets no such event, so
@@ -411,9 +422,7 @@ public sealed partial class WFCrackerSystem
             _shuttle.Enable(ent.Owner, force: true);
         }
 
-        // The read-back runs even when this system never applied the lock. EngageLock deliberately leaves a mapper's
-        // own ForceAnchor alone, so such a hull reaches the fall still static, and the whole point of the check is that
-        // a hull which cannot fall must never fail silently.
+        // Also diagnose an external lock applied during a cut: this system must never remove a mapper's lock.
         if (TryComp<PhysicsComponent>(ent.Owner, out var body) && body.BodyType == BodyType.Static)
             Log.Error($"{ToPrettyString(ent.Owner)} is still a static body after its crack lock was released; it will not fall.");
     }

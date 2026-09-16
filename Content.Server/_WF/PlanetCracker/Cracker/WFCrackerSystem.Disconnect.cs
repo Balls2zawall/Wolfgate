@@ -32,6 +32,9 @@ public sealed partial class WFCrackerSystem
     /// <summary>The two evacuation popup beats, in the order EvacBeat counts them off.</summary>
     private static readonly TimeSpan[] EvacBeatsAt = { TimeSpan.FromSeconds(30), TimeSpan.FromSeconds(10) };
 
+    /// <summary>Short retry delay when a chunk could not enter transit at release time.</summary>
+    private static readonly TimeSpan ReleaseRetryDelay = TimeSpan.FromSeconds(1);
+
     /// <summary>Hulls already reported as stuck in Released; the sweep is 1 Hz and that state is permanent.</summary>
     private readonly HashSet<EntityUid> _releaseStuckLogged = new();
 
@@ -254,19 +257,47 @@ public sealed partial class WFCrackerSystem
         if (ent.Comp.State != WFCrackState.Disconnecting)
             return;
 
-        ent.Comp.EvacRunning = false;
-        StopHullAlarm(ent);
-        Dirty(ent);
-
         // The chunk system drops synchronously off this, which raises WFChunkDroppedEvent and so reaches EnterReleased
         // below before this call returns.
         var ev = new WFCrackerReleasingEvent(ent.Owner);
         RaiseLocalEvent(ref ev);
 
-        // Nothing dropped - an admin deleted the chunk, or the back-link never resolved - so the hull is not stranded
-        // in a Disconnecting it can no longer leave.
+        // A chunk that is still owned and parked failed to enter transit. Keep the disconnect alive and retry through
+        // the normal expiry path; DropChunk deliberately leaves the back-link intact on this failure.
         if (ent.Comp.State == WFCrackState.Disconnecting)
+        {
+            if (TryGetOwnedParkedChunk(ent))
+            {
+                RetryRelease(ent);
+                return;
+            }
+
+            // Nothing dropped: an admin deleted the chunk, or the back-link never resolved. There is no owned chunk
+            // left to retry, so the hull may still complete the release fallback.
             EnterReleased(ent);
+        }
+    }
+
+    /// <summary>Re-arms the release attempt after transit admission failed, without claiming a successful release.</summary>
+    private void RetryRelease(Entity<WFPlanetCrackerComponent> ent)
+    {
+        ent.Comp.EvacRunning = true;
+        ent.Comp.EvacEnd = _timing.CurTime + ReleaseRetryDelay;
+        // Keep the existing alarm and completed warning beats; retrying must not replay them every second.
+        Dirty(ent);
+    }
+
+    /// <summary>Resolves the chunk backlink locally without coupling the cracker system to the chunk system.</summary>
+    private bool TryGetOwnedParkedChunk(Entity<WFPlanetCrackerComponent> ent)
+    {
+        if (ent.Comp.Chunk is not { } netChunk
+            || !TryGetEntity(netChunk, out var chunk)
+            || !TryComp<WFPlanetChunkComponent>(chunk, out var chunkComp))
+        {
+            return false;
+        }
+
+        return !chunkComp.Dropped;
     }
 
     /// <summary>A chunk going into transit is what actually ends the disconnect, whichever path pushed it.</summary>

@@ -150,12 +150,13 @@ public sealed partial class WFCrackerSystem
     }
 
     /// <summary>
-    /// Puts a setup-stage hull back where its anchors say it belongs. Once the cut is running the abort spin-down owns
-    /// the fallback instead, so this deliberately does nothing from Cracking onwards.
+    /// Puts a setup-stage hull back where its anchors say it belongs. Surveying is included because a valid pair may
+    /// already exist when the hull enters the orbit layer; in that case there is no new pair event to drive the edge.
+    /// Once the cut is running the abort spin-down owns the fallback instead.
     /// </summary>
     private void ReconcilePair(Entity<WFPlanetCrackerComponent> ent)
     {
-        if (ent.Comp.State is not (WFCrackState.AnchorsPlaced or WFCrackState.AnchorsLocked))
+        if (ent.Comp.State is not (WFCrackState.Surveying or WFCrackState.AnchorsPlaced or WFCrackState.AnchorsLocked))
             return;
 
         // A target whose pair has gone, stopped being a pair or stopped being locked is dropped before anything else.

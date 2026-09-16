@@ -175,10 +175,9 @@ public sealed partial class WFPlanetChunkSystem
     /// </summary>
     private void UpdateDropped(Entity<WFPlanetChunkComponent> ent)
     {
-        // TryEnterTransit refuses a non-CE map, a map that is already transit, an empty convoy and a stack with no gap
-        // either way (CEZLevelsSystem.Transit.cs:407-433), and DropChunk sets Dropped regardless. Such a chunk is still
-        // parked in its berth, so the landing test below would call it landed on this very sweep and the cleanup would
-        // delete the grid 10 s later. It is a parked chunk and not a wreck: cut both loops once and leave it alone.
+        // Defensive handling for an inconsistent/admin-edited dropped state: without transit admission this is not
+        // evidence of a landing and must never trigger cleanup in the berth. Normal failed attempts now leave
+        // Dropped false and retain ownership so release can retry.
         if (!ent.Comp.EnteredTransit)
         {
             if (ent.Comp.Evacuating || ent.Comp.DropStream is not null)
