@@ -2,8 +2,6 @@ using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Net;
-using System.Net.Sockets;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -49,20 +47,32 @@ public static class InternetSoundDownloader
         using var timeout = CancellationTokenSource.CreateLinkedTokenSource(cancel);
         timeout.CancelAfter(TimeSpan.FromSeconds(settings.TimeoutSeconds));
 
-        await EnsurePublicHost(new Uri(url), timeout.Token);
+        var uri = new Uri(url);
+        if (uri.Scheme is not ("http" or "https") || uri.Port is not (80 or 443))
+            throw new FetchException("wf-internet-sound-error-host", uri.Host);
+        await using var proxy = new InternetSoundDownloadProxy(timeout.Token);
 
         var dir = Path.Combine(Path.GetTempPath(), "wolfgate-internet-sound", Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(dir);
 
         try
         {
+            // HLS can otherwise fall back to FFmpeg even with --downloader native. An empty
+            // tool directory makes that fallback fail closed; only our local-only conversion may use it.
+            var nativeTools = Path.Combine(dir, "native-only");
+            Directory.CreateDirectory(nativeTools);
             // "--" stops the link being read as an option; the filter refuses livestreams and long videos up front.
             var download = await Run(settings.YtDlpPath,
                 new[]
                 {
+                    "--ignore-config", "--no-plugin-dirs", "--no-remote-components", "--no-cache-dir",
+                    "--proxy", proxy.Url,
+                    "--downloader", "native", "--fixup", "never",
+                    "--ffmpeg-location", nativeTools,
                     "--no-playlist", "--no-warnings", "--no-progress", "--no-simulate",
                     "--match-filter", $"!is_live & duration <=? {settings.MaxDurationSeconds}",
-                    "-f", "bestaudio/best",
+                    // Only protocols handled by native downloaders through the checked proxy.
+                    "-f", "bestaudio[protocol=https]/bestaudio[protocol=http]/bestaudio[protocol=http_dash_segments]/bestaudio[protocol=m3u8_native]/best[protocol=https]/best[protocol=http]/best[protocol=http_dash_segments]/best[protocol=m3u8_native]",
                     "-o", Path.Combine(dir, "source.%(ext)s"),
                     "--print", $"before_dl:{TitlePrefix}%(title)s",
                     "--print", $"after_move:{PathPrefix}%(filepath)s",
@@ -75,12 +85,19 @@ public static class InternetSoundDownloader
             var title = lines.FirstOrDefault(l => l.StartsWith(TitlePrefix))?[TitlePrefix.Length..] ?? url;
             var source = lines.FirstOrDefault(l => l.StartsWith(PathPrefix))?[PathPrefix.Length..];
 
+            if (proxy.DeniedHost is { } denied)
+                throw new FetchException("wf-internet-sound-error-host", denied);
             if (download.ExitCode != 0)
                 throw new FetchException("wf-internet-sound-error-download", LastLine(download.Error));
 
             // A clean exit with no file means the match filter skipped it.
             if (source == null || !File.Exists(source))
                 throw new FetchException("wf-internet-sound-error-rejected", settings.MaxDurationSeconds.ToString());
+
+            var relativeSource = Path.GetRelativePath(dir, Path.GetFullPath(source));
+            if (Path.IsPathRooted(relativeSource) || relativeSource == ".."
+                || relativeSource.StartsWith(".." + Path.DirectorySeparatorChar))
+                throw new FetchException("wf-internet-sound-error-download", "Invalid download path.");
 
             var output = Path.Combine(dir, "sound.ogg");
 
@@ -92,6 +109,8 @@ public static class InternetSoundDownloader
                 new[]
                 {
                     "-hide_banner", "-loglevel", "error", "-nostdin", "-y",
+                    // A downloaded manifest must not make FFmpeg open its own network connections.
+                    "-protocol_whitelist", "file,pipe",
                     "-i", source,
                     "-vn", "-map_metadata", "-1",
                     "-af", $"highpass=f=70,lowpass=f={cutoff}",
@@ -184,48 +203,6 @@ public static class InternetSoundDownloader
 
             return (process.ExitCode, await output, await error);
         }
-    }
-
-    /// <summary>
-    /// Refuses links whose host resolves to a loopback, private, link-local or other non-public address, so the
-    /// server can't be pointed at its own network. Redirects are followed by yt-dlp and aren't re-checked.
-    /// </summary>
-    private static async Task EnsurePublicHost(Uri uri, CancellationToken cancel)
-    {
-        IPAddress[] addresses;
-        try
-        {
-            addresses = IPAddress.TryParse(uri.Host.Trim('[', ']'), out var literal)
-                ? new[] { literal }
-                : await Dns.GetHostAddressesAsync(uri.DnsSafeHost, cancel);
-        }
-        catch (SocketException)
-        {
-            throw new FetchException("wf-internet-sound-error-host", uri.Host);
-        }
-
-        if (addresses.Length == 0 || addresses.Any(IsNonPublic))
-            throw new FetchException("wf-internet-sound-error-host", uri.Host);
-    }
-
-    private static bool IsNonPublic(IPAddress address)
-    {
-        if (address.IsIPv4MappedToIPv6)
-            address = address.MapToIPv4();
-
-        if (IPAddress.IsLoopback(address) || address.Equals(IPAddress.Any) || address.Equals(IPAddress.IPv6Any))
-            return true;
-
-        if (address.AddressFamily == AddressFamily.InterNetworkV6)
-            return address.IsIPv6LinkLocal || address.IsIPv6SiteLocal || address.IsIPv6UniqueLocal || address.IsIPv6Multicast;
-
-        var b = address.GetAddressBytes();
-        return b[0] is 0 or 10 or 127
-               || b[0] == 172 && b[1] is >= 16 and <= 31
-               || b[0] == 192 && b[1] == 168
-               || b[0] == 169 && b[1] == 254
-               || b[0] == 100 && b[1] is >= 64 and <= 127 // Carrier-grade NAT.
-               || b[0] >= 224; // Multicast and reserved.
     }
 
     private static string LastLine(string text)

@@ -1,3 +1,4 @@
+using System;
 using Content.Server._WF.Audio.InternetSound;
 using Content.Server.Administration.Logs;
 using Content.Server.Shuttles.Components;
@@ -152,8 +153,9 @@ public sealed partial class ShipAlertSystem : EntitySystem
         _popup.PopupEntity(Loc.GetString("ship-pa-sound-queued"), ent, args.Actor);
 
         // Players can put arbitrary audio on a ship, so this wants to be findable after the fact.
+        var origin = GetSafeOrigin(url);
         _adminLogger.Add(LogType.Action, LogImpact.High,
-            $"{ToPrettyString(args.Actor):player} queued internet sound {url} on the PA of {ToPrettyString(grid):grid}");
+            $"{ToPrettyString(args.Actor):player} queued internet sound {origin} on the PA of {ToPrettyString(grid):grid}");
     }
 
     private void OnInternetSoundStop(Entity<ShuttleConsoleComponent> ent, ref ShipPaInternetSoundStopMessage args)
@@ -265,5 +267,21 @@ public sealed partial class ShipAlertSystem : EntitySystem
             .Replace('\r', ' ')
             .Replace('\n', ' ')
             .Trim();
+    }
+
+    internal static string GetSafeOrigin(string url)
+    {
+        if (!Uri.TryCreate(url, UriKind.Absolute, out var uri) || string.IsNullOrEmpty(uri.Host))
+            return "<invalid URL>";
+
+        var builder = new UriBuilder(uri)
+        {
+            UserName = string.Empty,
+            Password = string.Empty,
+            Query = string.Empty,
+            Fragment = string.Empty,
+        };
+
+        return builder.Uri.GetLeftPart(UriPartial.Authority);
     }
 }
