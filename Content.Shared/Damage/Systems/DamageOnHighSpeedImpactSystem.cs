@@ -19,21 +19,21 @@ public sealed partial class DamageOnHighSpeedImpactSystem : EntitySystem
     [Dependency] private SharedColorFlashEffectSystem _color = default!;
     [Dependency] private SharedStunSystem _stun = default!;
 
-    // WOLFGATE: impact-sound budget per tick, see WfImpactSoundAllowed.
-    private const int WfImpactSoundsPerTick = 6;
-    private GameTick _wfSoundTick;
-    private int _wfSoundsThisTick;
+    // WOLFGATE: impact-sound budget over time, see WfImpactSoundAllowed.
+    private const int WfImpactSoundsPerWindow = 6;
+    private TimeSpan _wfSoundWindowEnd;
+    private int _wfSoundsThisWindow;
 
-    /// <summary>WOLFGATE: allows at most a handful of impact thuds per tick; damage is never throttled, only the sound.</summary>
+    /// <summary>WOLFGATE: allows at most six impact thuds per second; damage is never throttled, only the sound.</summary>
     private bool WfImpactSoundAllowed()
     {
-        if (_wfSoundTick != _gameTiming.CurTick)
+        if (_gameTiming.CurTime >= _wfSoundWindowEnd)
         {
-            _wfSoundTick = _gameTiming.CurTick;
-            _wfSoundsThisTick = 0;
+            _wfSoundWindowEnd = _gameTiming.CurTime + TimeSpan.FromSeconds(1);
+            _wfSoundsThisWindow = 0;
         }
 
-        return ++_wfSoundsThisTick <= WfImpactSoundsPerTick;
+        return ++_wfSoundsThisWindow <= WfImpactSoundsPerWindow;
     }
 
     public override void Initialize()
@@ -70,7 +70,7 @@ public sealed partial class DamageOnHighSpeedImpactSystem : EntitySystem
         _damageable.TryChangeDamage(uid, component.Damage * damageScale);
 
         if (_gameTiming.IsFirstTimePredicted)
-            if (WfImpactSoundAllowed()) // WOLFGATE: a skidding hull throws every loose item aboard into a wall at once; cap the thuds per tick or the client runs out of audio sources.
+            if (WfImpactSoundAllowed()) // WOLFGATE: a skidding hull throws every loose item aboard into a wall at once; cap overlapping thuds over time or the client runs out of audio sources.
                 _audio.PlayPvs(component.SoundHit, uid, AudioParams.Default.WithVariation(0.125f).WithVolume(-0.125f));
         _color.RaiseEffect(Color.Red, new List<EntityUid>() { uid }, Filter.Pvs(uid, entityManager: EntityManager));
     }
