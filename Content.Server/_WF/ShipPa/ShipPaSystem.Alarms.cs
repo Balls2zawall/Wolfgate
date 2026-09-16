@@ -180,6 +180,13 @@ public sealed partial class ShipPaSystem
         // takes the ship off its air alarms, so streams on units that dropped out stop too.
         _speakerBuffer.Clear();
         GatherSpeakers(grid, _speakerBuffer);
+        _speakerBuffer.RemoveAll(speaker => !IsFunctional(speaker));
+
+        // A long hull carries more speakers than one client will give sources to, so a running alarm only
+        // keeps streams on the ones nearest the crew. They're re-picked every reconcile, and a new copy is
+        // wound forward to match, so walking the ship hands the alarm along rather than dropping it.
+        TrimToBudget(_speakerBuffer);
+
         _activeSpeakers.Clear();
 
         foreach (var speaker in _speakerBuffer)
@@ -191,6 +198,8 @@ public sealed partial class ShipPaSystem
 
         foreach (var (speaker, stream) in alarm.Streams)
         {
+            // Dropping a stream nobody is near frees a source for one they can actually hear; they walk
+            // back into range and the reconcile starts it again, wound forward to match the ship.
             if (Exists(stream.Audio)
                 && _activeSpeakers.Contains(speaker)
                 && TryComp(speaker, out ShipPaSpeakerComponent? comp)
@@ -214,9 +223,6 @@ public sealed partial class ShipPaSystem
 
         foreach (var entity in _speakerBuffer)
         {
-            if (!IsFunctional(entity))
-                continue;
-
             if (!alarm.Streams.TryGetValue(entity.Owner, out var stream))
             {
                 if (PlayAlarmStream(entity, alarm, now) is not { } audio)
@@ -235,13 +241,9 @@ public sealed partial class ShipPaSystem
             return;
 
         alarm.NextBubble = now + BubbleInterval;
-        var wrapped = WrapBubble(grid, alarm.Message, alarm.Color);
 
-        foreach (var speaker in alarm.Streams.Keys)
-        {
-            if (TryComp(speaker, out ShipPaSpeakerComponent? comp))
-                SpeakerBubble((speaker, comp), alarm.Message, wrapped);
-        }
+        // Captions go to the whole ship; only the audio is budgeted.
+        Bubble(grid, alarm.Message, alarm.Color);
     }
 
     /// <summary>

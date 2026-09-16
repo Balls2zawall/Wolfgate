@@ -138,6 +138,69 @@ public sealed class ShipPaInternetSoundTest
         await pair.CleanReturnAsync();
     }
 
+    [Test]
+    public async Task ABigShipStaysInsideTheClientSourceBudget()
+    {
+        await using var pair = await PoolManager.GetServerClient(new PoolSettings { Connected = false, Dirty = true });
+        var server = pair.Server;
+        var map = await pair.CreateTestMap();
+
+        var entMan = server.EntMan;
+        var pa = entMan.System<ShipPaSystem>();
+        var grid = map.Grid.Owner;
+
+        // Comfortably more speakers than the engine will give one client sources for.
+        const int speakerCount = 25;
+        var path = string.Empty;
+
+        await server.WaitAssertion(() =>
+        {
+            var resourceManager = server.ResolveDependency<IResourceManager>();
+            var resources = InternetSoundResources.For(resourceManager);
+
+            const int id = 9003;
+            resources.Store(id, Read(resourceManager, SourceSound));
+            path = InternetSoundResources.PathFor(id);
+
+            var mapSys = entMan.System<SharedMapSystem>();
+
+            for (var i = 0; i < speakerCount; i++)
+            {
+                mapSys.SetTile(map.Grid, new Vector2i(i, 0), map.Tile.Tile);
+
+                var speaker = entMan.SpawnEntity(SpeakerProto, new EntityCoordinates(grid, i + 0.5f, 0.5f));
+                entMan.GetComponent<ApcPowerReceiverComponent>(speaker).NeedsPower = false;
+            }
+        });
+
+        await pair.RunTicksSync(20);
+
+        await server.WaitAssertion(() =>
+        {
+            Assert.That(pa.CountSpeakers(grid).Online, Is.EqualTo(speakerCount),
+                "Every speaker should still be part of the ship's PA.");
+
+            Assert.That(pa.StartTrack(grid, InternetSoundSystem.TrackKey, new SoundPathSpecifier(path)), Is.True);
+        });
+
+        await pair.RunTicksSync(5);
+
+        await server.WaitAssertion(() =>
+        {
+            var playing = StreamsFor(entMan, path);
+
+            // Past the engine's per-file cap a speaker gets an entity but no audio, so the far end of a
+            // long hull would caption the track in silence. Fewer, audible streams beats more, mute ones.
+            Assert.That(playing, Has.Count.LessThan(speakerCount),
+                "A ship with more speakers than the source budget should not stream to all of them.");
+
+            Assert.That(playing, Is.Not.Empty,
+                "It should still come out of the speakers nearest the crew.");
+        });
+
+        await pair.CleanReturnAsync();
+    }
+
     private static byte[] Read(IResourceManager resources, string path)
     {
         using var stream = resources.ContentFileRead(path);

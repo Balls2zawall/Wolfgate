@@ -4,6 +4,7 @@ using Content.Shared._WF.ShipPa;
 using Content.Shared.Chat;
 using Robust.Shared.Audio;
 using Robust.Shared.Audio.Systems;
+using Robust.Shared.Map;
 using Robust.Shared.Player;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
@@ -23,12 +24,19 @@ public sealed partial class ShipPaSystem : EntitySystem
     [Dependency] private SharedAppearanceSystem _appearance = default!;
     [Dependency] private ChatSystem _chat = default!;
     [Dependency] private IChatManager _chatManager = default!;
+    [Dependency] private ISharedPlayerManager _players = default!;
 
     /// <summary>Distance at which a stream is still at full volume.</summary>
     private const float ReferenceDistance = 3f;
 
     /// <summary>How sharply a stream falls off past <see cref="ReferenceDistance"/>.</summary>
     private const float RolloffFactor = 1.5f;
+
+    /// <summary>
+    /// Most copies of one broadcast to run at once. Kept under the engine's per-file source cap of 16 so
+    /// other sounds a speaker makes, like the damage crackle, still fit. See <see cref="TrimToBudget"/>.
+    /// </summary>
+    private const int MaxConcurrentStreams = 12;
 
     /// <summary>How often expired broadcasts and queued speaker counts are cleaned up.</summary>
     private static readonly TimeSpan UpdateInterval = TimeSpan.FromSeconds(0.25);
@@ -40,6 +48,9 @@ public sealed partial class ShipPaSystem : EntitySystem
 
     /// <summary>Reused by <see cref="Broadcast"/> so a one-shot doesn't allocate.</summary>
     private readonly List<Entity<ShipPaSpeakerComponent>> _speakerBuffer = new();
+
+    /// <summary>Reused by <see cref="TrimToBudget"/>; where the listeners are this sweep.</summary>
+    private readonly List<MapCoordinates> _listenerPositions = new();
 
     private TimeSpan _nextUpdate;
     private int _nextBroadcastId = 1;
@@ -87,23 +98,29 @@ public sealed partial class ShipPaSystem : EntitySystem
         // Every copy goes out in the same tick, which is what keeps them in phase.
         _speakerBuffer.Clear();
         GatherSpeakers(grid, _speakerBuffer);
+        _speakerBuffer.RemoveAll(speaker => !IsFunctional(speaker));
+
+        // The whole ship carried it, whether or not every speaker got a stream, so the light and the
+        // "somebody heard this" answer come before the budget is applied.
+        length = _audio.GetAudioLength(resolved);
 
         foreach (var speaker in _speakerBuffer)
         {
-            if (!IsFunctional(speaker))
-                continue;
+            speaker.Comp.BroadcastingUntil = now + length.Value;
+            UpdateAppearance(speaker);
+            played = true;
+        }
 
+        TrimToBudget(_speakerBuffer);
+
+        foreach (var speaker in _speakerBuffer)
+        {
             var stream = _audio.PlayPvs(resolved, speaker.Owner, BuildParams(speaker, baseParams));
 
             if (stream == null)
                 continue;
 
             TagStream(stream.Value.Entity, id, speaker.Owner, speaker.Comp.Distortion, false);
-
-            length ??= _audio.GetAudioLength(resolved);
-            speaker.Comp.BroadcastingUntil = now + length.Value;
-            UpdateAppearance(speaker);
-            played = true;
         }
 
         _speakerBuffer.Clear();
@@ -208,6 +225,58 @@ public sealed partial class ShipPaSystem : EntitySystem
         var speakers = new List<Entity<ShipPaSpeakerComponent>>();
         GatherSpeakers(grid, speakers);
         return speakers;
+    }
+
+    /// <summary>
+    /// Trims a speaker list to the ones worth giving a stream, keeping those nearest to a player.
+    /// </summary>
+    /// <remarks>
+    /// The engine caps concurrent copies of one sound file per client at <c>audio.default_concurrent</c>
+    /// (16 by default), and every speaker on a broadcast plays the same file. A big ship carries more
+    /// speakers than that, so past the cap a speaker gets its entity, its light and its bubble but no
+    /// audio — which is why the back of a long hull goes quiet while still captioning the track. The
+    /// client mesh mutes all but the nearest copy anyway, so the ones furthest from anybody are exactly
+    /// the ones to drop. Ships inside the budget are left alone, and alarms reconcile every half second,
+    /// so walking down the hull brings speakers in wound forward to match the rest of the ship.
+    /// </remarks>
+    private void TrimToBudget(List<Entity<ShipPaSpeakerComponent>> speakers)
+    {
+        if (speakers.Count <= MaxConcurrentStreams)
+            return;
+
+        _listenerPositions.Clear();
+
+        foreach (var session in _players.Sessions)
+        {
+            if (session.AttachedEntity is { } player && Exists(player))
+                _listenerPositions.Add(_xform.GetMapCoordinates(player));
+        }
+
+        // With nobody aboard no client renders any of this, so any subset will do.
+        if (_listenerPositions.Count > 0)
+            speakers.Sort((a, b) => ListenerDistance(a).CompareTo(ListenerDistance(b)));
+
+        speakers.RemoveRange(MaxConcurrentStreams, speakers.Count - MaxConcurrentStreams);
+        _listenerPositions.Clear();
+    }
+
+    /// <summary>
+    /// Distance from a speaker to the closest listener, or infinity if none share its map.
+    /// </summary>
+    private float ListenerDistance(Entity<ShipPaSpeakerComponent> speaker)
+    {
+        var position = _xform.GetMapCoordinates(speaker.Owner);
+        var best = float.PositiveInfinity;
+
+        foreach (var listener in _listenerPositions)
+        {
+            if (listener.MapId != position.MapId)
+                continue;
+
+            best = MathF.Min(best, (listener.Position - position.Position).Length());
+        }
+
+        return best;
     }
 
     /// <summary>
