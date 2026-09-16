@@ -18,6 +18,7 @@ public sealed partial class ShuttleConsoleBoundUserInterface
         _window.ShipAnnounceRequested += text => SendMessage(new ShipPaAnnounceRequestMessage(text));
         _window.ShipSoundRequested += url => SendMessage(new ShipPaInternetSoundRequestMessage(url));
         _window.ShipSoundStopRequested += () => SendMessage(new ShipPaInternetSoundStopMessage());
+        _window.ShipCollisionAlertRequested += enabled => SendMessage(new CollisionWarningToggleMessage(enabled));
     }
 
     protected override void ReceiveMessage(BoundUserInterfaceMessage message)

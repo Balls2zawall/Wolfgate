@@ -12,3 +12,5 @@ shuttle-console-ship-announce = Announce
 shuttle-console-ship-sound = Play
 shuttle-console-ship-sound-stop = Cut
 shuttle-console-ship-sound-placeholder = Link to play over the speakers...
+shuttle-console-ship-collision-alert-on = Collision alert: on
+shuttle-console-ship-collision-alert-off = Collision alert: OFF

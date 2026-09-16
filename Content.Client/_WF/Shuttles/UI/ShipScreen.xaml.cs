@@ -44,6 +44,7 @@ public sealed partial class ShipScreen : BoxContainer
         AlarmPanel.AnnounceRequested += text => AnnounceRequested?.Invoke(text);
         AlarmPanel.SoundRequested += url => SoundRequested?.Invoke(url);
         AlarmPanel.SoundStopRequested += () => SoundStopRequested?.Invoke();
+        AlarmPanel.CollisionAlertRequested += enabled => CollisionAlertRequested?.Invoke(enabled);
 
         DamageToggle.OnToggled += args => SetOverlay(() => ShipView.ShowDamage = args.Pressed);
         FireToggle.OnToggled += args => SetOverlay(() => ShipView.ShowFire = args.Pressed);
@@ -77,6 +78,11 @@ public sealed partial class ShipScreen : BoxContainer
     public event Action<string>? AnnounceRequested;
     public event Action<string>? SoundRequested;
     public event Action? SoundStopRequested;
+
+    /// <summary>
+    /// The pilot switched the collision warning on or off.
+    /// </summary>
+    public event Action<bool>? CollisionAlertRequested;
 
     public ShipOverlays Overlays => ShipView.Overlays;
 
