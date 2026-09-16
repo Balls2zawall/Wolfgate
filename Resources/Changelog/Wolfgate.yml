@@ -191,3 +191,12 @@ Entries:
   id: 100016
   time: '2026-09-14T08:50:46.0000000+00:00'
   url: https://github.com/VanguardControl/Wolfgate/pull/31
+- author: Gandalf2k15
+  changes:
+    - type: Add
+      message: >-
+        Added TCAS(Traffic Collision Avoidance System), to alert you of lethal
+        imminent collisions.
+  id: 100017
+  time: '2026-09-16T05:35:09.0000000+00:00'
+  url: https://github.com/VanguardControl/Wolfgate/pull/35
