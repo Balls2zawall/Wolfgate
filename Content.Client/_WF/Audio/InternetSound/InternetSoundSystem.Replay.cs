@@ -80,7 +80,7 @@ public sealed partial class InternetSoundSystem
         {
             foreach (var broadcast in state.Broadcasts)
             {
-                if (!broadcast.IsPlaying(_timing.CurTime) || !_replayAssets.TryGetValue(broadcast.Path, out var asset))
+                if (!broadcast.IsActive(_timing.CurTime) || !_replayAssets.TryGetValue(broadcast.Path, out var asset))
                     continue;
                 _replayNeeded.Add(asset.Id);
                 if (!_replayMounted.Add(asset.Id))

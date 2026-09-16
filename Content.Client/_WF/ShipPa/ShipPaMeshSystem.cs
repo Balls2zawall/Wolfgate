@@ -13,6 +13,7 @@ using Robust.Shared.Audio.Components;
 using Robust.Shared.Audio.Systems;
 using Robust.Shared.Physics.Systems;
 using Robust.Shared.Timing;
+using Robust.Shared.Spawners;
 using Robust.Shared.Utility;
 
 namespace Content.Client._WF.ShipPa;
@@ -151,7 +152,7 @@ public sealed partial class ShipPaMeshSystem : EntitySystem
 
     private bool IsAvailable(Candidate candidate)
     {
-        if (_released.Contains(candidate.Broadcast.Path) || !candidate.Broadcast.IsPlaying(_timing.CurTime)
+        if (_released.Contains(candidate.Broadcast.Path) || !candidate.Broadcast.IsActive(_timing.CurTime)
             || !TryComp(candidate.Grid, out ShipPaBroadcastComponent? state)
             || !state.Broadcasts.Exists(b => b.Id == candidate.Broadcast.Id)
             || !TryComp(candidate.Speaker, out ShipPaSpeakerComponent? speaker) || !speaker.Enabled
@@ -186,7 +187,7 @@ public sealed partial class ShipPaMeshSystem : EntitySystem
             var score = ShipPaPlaybackPolicy.Score(distance, speaker.Range, occlusion);
             foreach (var broadcast in state.Broadcasts)
             {
-                if (_timing.CurTime < broadcast.Start || _released.Contains(broadcast.Path))
+                if (_released.Contains(broadcast.Path))
                     continue;
 
                 var candidate = new Candidate(grid, uid, broadcast, score);
@@ -194,7 +195,7 @@ public sealed partial class ShipPaMeshSystem : EntitySystem
                                && _resources.ContentFileExists(new ResPath(broadcast.Path));
                 // Do not query the resource cache before the file arrives: its missing-file cache would
                 // otherwise poison later playback. An incomplete download must not block other audio.
-                if (!broadcast.IsPlaying(_timing.CurTime) || !hasAsset)
+                if (!broadcast.IsActive(_timing.CurTime) || !hasAsset)
                     continue;
 
                 if (_selected is { } old && old.Speaker == uid && old.Broadcast.Id == broadcast.Id)
@@ -231,7 +232,7 @@ public sealed partial class ShipPaMeshSystem : EntitySystem
         foreach (var broadcast in state.Broadcasts)
         {
             if (broadcast.Caption == null || _captioned.Contains(broadcast.Id)
-                || _timing.CurTime < broadcast.Start || _released.Contains(broadcast.Path)
+                || _released.Contains(broadcast.Path)
                 || (!broadcast.Loop && _timing.CurTime >= broadcast.RetainUntil))
                 continue;
             if (caption == null || broadcast.Priority > caption.Priority
@@ -303,10 +304,20 @@ public sealed partial class ShipPaMeshSystem : EntitySystem
 
         // The engine's normal local source despawn must use the remaining duration, not a fresh track.
         _audio.SetPlaybackPosition(stream.Value.Entity, target.Broadcast.Position(_timing.CurTime));
+        // This system owns voice lifetime, including the wait before a scheduled start.
+        // The engine's ordinary despawn timer would otherwise consume that wait from the clip.
+        RemComp<TimedDespawnComponent>(stream.Value.Entity);
+        var prepared = _timing.CurTime < target.Broadcast.Start;
+        if (prepared)
+        {
+            var audio = Comp<AudioComponent>(stream.Value.Entity);
+            audio.Pause();
+            audio.PlaybackPosition = 0f;
+        }
         var marker = EnsureComp<ShipPaAudioComponent>(stream.Value.Entity);
         marker.BroadcastId = target.Broadcast.Id;
         marker.Speaker = target.Speaker;
-        _voices.Add(new Voice { Entity = stream.Value.Entity, Speaker = target.Speaker, Broadcast = target.Broadcast });
+        _voices.Add(new Voice { Entity = stream.Value.Entity, Speaker = target.Speaker, Broadcast = target.Broadcast, Fade = prepared ? 1f : 0f });
     }
 
     private void Apply(Voice voice, AudioComponent audio)
@@ -342,6 +353,14 @@ public sealed partial class ShipPaMeshSystem : EntitySystem
         var edge = Math.Clamp((speaker.Range - distance) / 2f, 0f, 1f);
         audio.Gain = SharedAudioSystem.VolumeToGain(voice.Broadcast.Params.Volume + speaker.Volume - 6f * speaker.Distortion)
                      * voice.Fade * edge * flutter;
+
+        if (_timing.CurTime < voice.Broadcast.Start)
+        {
+            audio.Gain = 0f;
+            audio.Pause();
+            audio.PlaybackPosition = 0f;
+            return;
+        }
 
         if (_timing.Paused || (_replay.Replay != null && !_replay.Playing))
         {

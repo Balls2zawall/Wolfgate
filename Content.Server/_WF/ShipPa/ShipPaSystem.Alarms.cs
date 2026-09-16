@@ -45,13 +45,14 @@ public sealed partial class ShipPaSystem
         var state = EnsureComp<ShipPaBroadcastComponent>(grid);
         // Key replacement is atomic to clients. Never replicate an intermediate empty timeline.
         state.Broadcasts.RemoveAll(b => b.Key == key);
+        var start = _timing.CurTime + TimeSpan.FromSeconds(ShipPaPlaybackPolicy.StartLeadSeconds);
         var broadcast = new ShipPaBroadcast
         {
-            Id = NextBroadcastId(), Key = key, Path = path, Start = _timing.CurTime,
+            Id = NextBroadcastId(), Key = key, Path = path, Start = start,
             Length = length, Loop = loop, Kind = kind, Priority = priority, Caption = caption, Color = color ?? Color.White,
             // Damage must never change playback rate.
             Params = (audioParams ?? sound.Params).WithLoop(loop).WithPitchScale(1f).WithVariation(null),
-            RetainUntil = _timing.CurTime + TimeSpan.FromSeconds(kind == ShipPaBroadcastKind.Announcement && caption != null ? Math.Max(8f, length) : length),
+            RetainUntil = start + TimeSpan.FromSeconds(kind == ShipPaBroadcastKind.Announcement && caption != null ? Math.Max(8f, length) : length),
         };
         state.Broadcasts.Add(broadcast);
         Dirty(grid, state);
@@ -73,7 +74,7 @@ public sealed partial class ShipPaSystem
 
     public bool IsAlarmActive(EntityUid grid, string key)
     {
-        return TryComp(grid, out ShipPaBroadcastComponent? state) && state.Broadcasts.Exists(b => b.Key == key && b.IsPlaying(_timing.CurTime));
+        return TryComp(grid, out ShipPaBroadcastComponent? state) && state.Broadcasts.Exists(b => b.Key == key && b.IsActive(_timing.CurTime));
     }
 
     private void UpdateBroadcasts()
@@ -121,7 +122,7 @@ public sealed partial class ShipPaSystem
         TimeSpan? until = null;
         foreach (var broadcast in state.Broadcasts)
         {
-            if (!broadcast.IsPlaying(_timing.CurTime))
+            if (!broadcast.IsActive(_timing.CurTime))
                 continue;
 
             var end = broadcast.Loop ? TimeSpan.MaxValue : broadcast.Start + TimeSpan.FromSeconds(broadcast.Length);

@@ -238,6 +238,60 @@ public sealed class ShipPaListenerTest
         await pair.CleanReturnAsync();
     }
 
+    [Test]
+    public async Task ScheduledAnnouncementIsPreparedWithoutConsumingItsOpening()
+    {
+        await using var pair = await PoolManager.GetServerClient(new PoolSettings { Connected = true, Dirty = true });
+        var client = pair.Client;
+        var em = client.EntMan;
+        var pa = em.System<ShipPaMeshSystem>();
+        var timing = client.ResolveDependency<IGameTiming>();
+        ShipPaBroadcast broadcast = default!;
+        EntityUid voice = default;
+
+        await client.WaitAssertion(() =>
+        {
+            var maps = em.System<SharedMapSystem>();
+            maps.CreateMap(out var mapId);
+            var grid = client.ResolveDependency<IMapManager>().CreateGridEntity(mapId);
+            maps.SetTile(grid, Vector2i.Zero, new Tile(1));
+            var speaker = em.SpawnEntity(null, new EntityCoordinates(grid.Owner, 0.5f, 0.5f));
+            em.AddComponent<ShipPaSpeakerComponent>(speaker).Enabled = true;
+            em.System<SharedTransformSystem>().AnchorEntity(speaker);
+            client.ResolveDependency<IEyeManager>().CurrentEye = new FixedEye
+            {
+                Position = new MapCoordinates(new Vector2(0.5f, 0.5f), mapId),
+            };
+            broadcast = new ShipPaBroadcast
+            {
+                Id = 900, Key = "announcement", Path = "/Audio/Announcements/attention.ogg",
+                Start = timing.CurTime + TimeSpan.FromSeconds(ShipPaPlaybackPolicy.StartLeadSeconds),
+                Length = 0.91f, Priority = 30, Kind = ShipPaBroadcastKind.Announcement,
+                Params = AudioParams.Default,
+            };
+            em.AddComponent<ShipPaBroadcastComponent>(grid.Owner).Broadcasts.Add(broadcast);
+            pa.FrameUpdate(0.11f);
+            var query = em.EntityQueryEnumerator<ShipPaAudioComponent, AudioComponent>();
+            Assert.That(query.MoveNext(out voice, out _, out var audio), Is.True,
+                "The source must be prepared before the scheduled start, not after it.");
+            Assert.That(audio!.Gain, Is.Zero);
+            Assert.That(audio.PlaybackPosition, Is.Zero.Within(0.001f));
+            Assert.That(em.HasComponent<Robust.Shared.Spawners.TimedDespawnComponent>(voice), Is.False,
+                "The preparation delay must not shorten the clip's lifetime.");
+        });
+
+        await pair.RunTicksSync((int) Math.Ceiling((ShipPaPlaybackPolicy.StartLeadSeconds + 0.1f) * timing.TickRate));
+        await client.WaitAssertion(() =>
+        {
+            Assert.That(timing.CurTime, Is.GreaterThanOrEqualTo(broadcast.Start));
+            pa.FrameUpdate(0.01f);
+            Assert.That(em.GetComponent<AudioComponent>(voice).Gain, Is.GreaterThan(0.9f),
+                "A prepared announcement starts at full gain instead of fading over its first syllable.");
+            Assert.That(Voices(em), Has.Count.EqualTo(1));
+        });
+        await pair.CleanReturnAsync();
+    }
+
     private static List<ShipPaAudioComponent> Voices(IEntityManager em)
     {
         var result = new List<ShipPaAudioComponent>();

@@ -39,6 +39,9 @@ public sealed partial class ShipPaBroadcast
     [DataField] public Color Color = Color.White;
     [DataField] public TimeSpan RetainUntil;
 
+    /// <summary>Includes scheduled broadcasts that clients are preparing to play.</summary>
+    public bool IsActive(TimeSpan now) => now < Start || IsPlaying(now);
+
     public bool IsPlaying(TimeSpan now) => now >= Start && (Loop || now < Start + TimeSpan.FromSeconds(Length));
 
     public float Position(TimeSpan now)
@@ -52,6 +55,8 @@ public sealed partial class ShipPaBroadcast
 public static class ShipPaPlaybackPolicy
 {
     public const int MaxSources = 2;
+    // Give replication and listener selection time to prepare the source before the first sample.
+    public const float StartLeadSeconds = 0.5f;
     public const float FadeSeconds = 0.25f;
 
     // Require a meaningful improvement rather than oscillating between adjacent speakers.

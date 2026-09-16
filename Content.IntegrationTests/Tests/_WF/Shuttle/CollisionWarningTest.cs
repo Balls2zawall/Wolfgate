@@ -1,6 +1,8 @@
 using System.Collections.Generic;
+using System.Linq;
 using System.Numerics;
 using Content.Server._WF.ShipPa;
+using Content.Server.Power.Components;
 using Content.Server._WF.Shuttles.Systems;
 using Content.Server.Shuttles.Components;
 using Content.Shared._WF.CCVar;
@@ -13,6 +15,7 @@ using Robust.Shared.Map.Components;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics;
 using Robust.Shared.Physics.Systems;
+using Robust.Shared.Timing;
 
 namespace Content.IntegrationTests.Tests._WF.Shuttle;
 
@@ -54,6 +57,10 @@ public sealed class CollisionWarningTest
             entManager.EnsureComponent<ShuttleComponent>(ship);
             entManager.SpawnEntity("ComputerShuttle", new EntityCoordinates(ship, new Vector2(0.5f, 0.5f)));
 
+            var speaker = entManager.SpawnEntity("WallmountShipPaSpeaker",
+                new EntityCoordinates(ship, new Vector2(1.5f, 1.5f)));
+            entManager.RemoveComponent<ApcPowerReceiverComponent>(speaker);
+
             physicsSystem.SetBodyType(ship, BodyType.Dynamic);
 
             // Well inside the lookahead and past the speed the impact system does damage at.
@@ -76,6 +83,20 @@ public sealed class CollisionWarningTest
                 "Traffic inside the lookahead window should still warn.");
             Assert.That(warning!.Level, Is.EqualTo(CollisionWarningLevel.Advisory),
                 "Contact eight seconds out should only be an advisory.");
+
+            var callout = entManager.GetComponent<ShipPaBroadcastComponent>(ship).Broadcasts
+                .Single(b => b.Kind == ShipPaBroadcastKind.Announcement);
+            Assert.That(callout.Path, Is.EqualTo("/Audio/_WF/Shuttles/Tcas/traffic.ogg"));
+            Assert.That(callout.Length, Is.InRange(0.59f, 0.61f),
+                "The advisory uses the original unpadded traffic word.");
+            var now = server.ResolveDependency<IGameTiming>().CurTime;
+            Assert.That((callout.Start - now).TotalSeconds, Is.EqualTo(ShipPaPlaybackPolicy.StartLeadSeconds).Within(0.001));
+            Assert.That((warning.NextCallout - now).TotalSeconds, Is.EqualTo(1.5).Within(0.001),
+                "Scheduling playback must not lengthen the advisory cadence.");
+            warningSystem.Sweep();
+            Assert.That(entManager.GetComponent<ShipPaBroadcastComponent>(ship).Broadcasts
+                .Single(b => b.Kind == ShipPaBroadcastKind.Announcement).Id, Is.EqualTo(callout.Id),
+                "A sweep before the next callout must not replace and restart the word.");
 
             // Closing, but far too slowly for the impact to hurt these two hulls.
             xformSystem.SetWorldPosition(obstacle, new Vector2(100f, 0f));
