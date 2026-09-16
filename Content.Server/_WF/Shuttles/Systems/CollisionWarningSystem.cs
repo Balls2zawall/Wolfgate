@@ -2,14 +2,18 @@ using System.Numerics;
 using Content.Server._WF.ShipPa;
 using Content.Server.Shuttles.Components;
 using Content.Server.Shuttles.Systems;
+using Content.Shared.CCVar;
 using Content.Shared._WF.CCVar;
 using Content.Shared._WF.Shuttles;
+using Content.Shared.Maps;
 using Content.Shared.Shuttles.Components;
+using Content.Shared.Popups;
 using Robust.Shared.Audio;
 using Robust.Shared.Configuration;
 using Robust.Shared.Map;
 using Robust.Shared.Map.Components;
 using Robust.Shared.Physics.Components;
+using Robust.Shared.Prototypes;
 using Robust.Shared.Timing;
 
 namespace Content.Server._WF.Shuttles.Systems;
@@ -28,6 +32,14 @@ public sealed class CollisionWarningSystem : EntitySystem
     [Dependency] private SharedTransformSystem _xform = default!;
     [Dependency] private ShuttleSystem _shuttle = default!;
     [Dependency] private ShipPaSystem _pa = default!;
+    [Dependency] private SharedPopupSystem _popup = default!;
+    [Dependency] private IPrototypeManager _proto = default!;
+
+    /// <summary>Mass the impact system gives a plating tile; the prototype is indexed once at startup.</summary>
+    private static float PlatingMass = 1000f;
+
+    /// <summary>Shuttle mass the impact system scales its inertia multiplier around.</summary>
+    private const float BaseShuttleMass = 50f;
 
     /// <summary>Alarm loop key for the traffic advisory klaxon.</summary>
     public const string AdvisoryAlarm = "tcas-advisory";
@@ -47,15 +59,22 @@ public sealed class CollisionWarningSystem : EntitySystem
     private static readonly SoundSpecifier VoiceSound =
         new SoundPathSpecifier("/Audio/_WF/Shuttles/Tcas/traffic.ogg");
 
-    /// <summary>Speed below which a grid is not going anywhere worth predicting.</summary>
-    private const float MinimumSpeed = 0.5f;
-
     private bool _enabled;
     private float _lookahead;
     private float _imminentTime;
     private float _minimumClosingSpeed;
+    private float _impactVelocity;
+    private float _impactInertia;
+    private float _dangerRadius;
+    private float _inertiaScaling;
+    private float _tileBreakEnergy;
+
+    /// <summary>Mass the impact system is assumed to find around the contact, worked out from its own radius.</summary>
+    private float _regionMass;
+    private float _threatSpeedAllowance;
     private float _margin;
     private float _hysteresis;
+    private float _calloutInterval;
     private float _updateInterval;
 
     private EntityQuery<MapGridComponent> _gridQuery;
@@ -70,11 +89,16 @@ public sealed class CollisionWarningSystem : EntitySystem
     private readonly HashSet<EntityUid> _docked = new();
     private readonly List<EntityUid> _stale = new();
 
+    /// <summary>Hull bounds worked out this pass, so a grid seen by several ships is only measured once.</summary>
+    private readonly Dictionary<EntityUid, Box2> _bounds = new();
+
     private TimeSpan _nextUpdate;
 
     public override void Initialize()
     {
         base.Initialize();
+
+        PlatingMass = _proto.Index<ContentTileDefinition>("Plating").Mass;
 
         _gridQuery = GetEntityQuery<MapGridComponent>();
         _physicsQuery = GetEntityQuery<PhysicsComponent>();
@@ -85,10 +109,28 @@ public sealed class CollisionWarningSystem : EntitySystem
         Subs.CVar(_cfg, CollisionWarningCVars.ImminentTime, value => _imminentTime = value, true);
         Subs.CVar(_cfg, CollisionWarningCVars.MinimumClosingSpeed, value => _minimumClosingSpeed = value, true);
         Subs.CVar(_cfg, CollisionWarningCVars.Margin, value => _margin = value, true);
+
+        // The warning is only worth giving for a hit the impact system would actually act on, so it
+        // reads that system's own thresholds rather than keeping its own idea of a dangerous speed.
+        Subs.CVar(_cfg, CCVars.MinimumImpactVelocity, value => _impactVelocity = value, true);
+        Subs.CVar(_cfg, CCVars.MinimumImpactInertia, value => _impactInertia = value, true);
+        Subs.CVar(_cfg, CollisionWarningCVars.DangerRadius, value => _dangerRadius = value, true);
+        Subs.CVar(_cfg, CCVars.ImpactInertiaScaling, value => _inertiaScaling = value, true);
+        Subs.CVar(_cfg, CCVars.TileBreakEnergyMultiplier, value => _tileBreakEnergy = value, true);
+        Subs.CVar(_cfg, CCVars.ImpactRadius, value => _regionMass = RegionMass(value), true);
+        Subs.CVar(_cfg, CollisionWarningCVars.ThreatSpeedAllowance, value => _threatSpeedAllowance = value, true);
         Subs.CVar(_cfg, CollisionWarningCVars.Hysteresis, value => _hysteresis = value, true);
+        Subs.CVar(_cfg, CollisionWarningCVars.AdvisoryCalloutInterval, value => _calloutInterval = value, true);
         Subs.CVar(_cfg, CollisionWarningCVars.UpdateInterval, value => _updateInterval = value, true);
 
         SubscribeLocalEvent<CollisionWarningComponent, ComponentShutdown>(OnWarningShutdown);
+
+        // ShuttleConsoleSystem owns the open and close subscriptions for these consoles; only the
+        // toggle belongs here.
+        Subs.BuiEvents<ShuttleConsoleComponent>(ShuttleConsoleUiKey.Key, subs =>
+        {
+            subs.Event<CollisionWarningToggleMessage>(OnToggle);
+        });
     }
 
     public override void Update(float frameTime)
@@ -114,7 +156,18 @@ public sealed class CollisionWarningSystem : EntitySystem
             return;
         }
 
+        _bounds.Clear();
         CollectPilotedGrids();
+
+        // Every warning starts the pass unrenewed, and only a threat found below renews it. A ship that
+        // drops out of the sweep entirely - console destroyed, system switched off - therefore cannot
+        // leave a banner and an alarm running with nothing to stop them.
+        var running = EntityQueryEnumerator<CollisionWarningComponent>();
+
+        while (running.MoveNext(out _, out var warning))
+        {
+            warning.Threat = null;
+        }
 
         var shuttles = EntityQueryEnumerator<ShuttleComponent, TransformComponent, PhysicsComponent>();
 
@@ -123,10 +176,15 @@ public sealed class CollisionWarningSystem : EntitySystem
             if (!_pilotedGrids.Contains(uid) || !_gridQuery.TryComp(uid, out var grid))
                 continue;
 
+            // A ship with the warning switched off is left alone, warning and alarms included.
+            if (HasComp<CollisionWarningDisabledComponent>(uid))
+            {
+                RemComp<CollisionWarningComponent>(uid);
+                continue;
+            }
+
             if (FindThreat((uid, grid, xform, physics)) is { } threat)
                 Warn(uid, threat);
-            else
-                Clear(uid);
         }
 
         ExpireHeldWarnings();
@@ -146,16 +204,15 @@ public sealed class CollisionWarningSystem : EntitySystem
         var velocity = physics.LinearVelocity;
         var speed = velocity.Length();
 
-        if (speed < MinimumSpeed)
-            return null;
-
         // A hull is taken as its bounding box. Rotation is left out of the prediction, so a ship that
         // only spins into another is not warned about.
-        var ourBounds = _lookup.GetWorldAABB(uid, xform).Enlarged(_margin);
+        var ourBounds = GetBounds(uid, xform).Enlarged(_margin);
 
+        // The reach has to cover traffic closing on us as well as our own run, or a parked ship never
+        // sees the one bearing down on it. The allowance is what a threat is assumed to manage.
         _candidates.Clear();
         _mapManager.FindGridsIntersecting(xform.MapID,
-            ourBounds.Enlarged(speed * _lookahead),
+            ourBounds.Enlarged((speed + _threatSpeedAllowance) * _lookahead),
             ref _candidates,
             approx: true,
             includeMap: false);
@@ -180,18 +237,17 @@ public sealed class CollisionWarningSystem : EntitySystem
             if (!_xformQuery.TryComp(other, out var otherXform))
                 continue;
 
-            var otherVelocity = _physicsQuery.TryComp(other, out var otherPhysics)
-                ? otherPhysics.LinearVelocity
-                : Vector2.Zero;
+            _physicsQuery.TryComp(other, out var otherPhysics);
+            var otherVelocity = otherPhysics?.LinearVelocity ?? Vector2.Zero;
 
             // How the other hull moves as this ship sees it.
             var approach = otherVelocity - velocity;
             var closingSpeed = approach.Length();
 
-            if (closingSpeed < _minimumClosingSpeed)
+            if (closingSpeed < _minimumClosingSpeed || !WouldHurt(closingSpeed, physics, otherPhysics))
                 continue;
 
-            var otherBounds = _lookup.GetWorldAABB(other, otherXform);
+            var otherBounds = GetBounds(other, otherXform);
 
             if (TimeToContact(ourBounds, otherBounds, approach) is not { } time)
                 continue;
@@ -203,6 +259,47 @@ public sealed class CollisionWarningSystem : EntitySystem
         }
 
         return best;
+    }
+
+    /// <summary>
+    /// Whether contact at this speed would be worth warning about. The impact system's own gate decides
+    /// whether anything happens at all; how badly it goes is its collision energy, which is what sizes
+    /// the hull it tears out. Predicting that energy and comparing it against the damage radius the
+    /// crew care about discriminates a scrape from a crash far better than speed alone, because energy
+    /// runs with the square of the closing speed.
+    /// </summary>
+    private bool WouldHurt(float closingSpeed, PhysicsComponent ours, PhysicsComponent? other)
+    {
+        var ourMass = ours.FixturesMass;
+        var otherMass = other?.FixturesMass ?? 0f;
+
+        // Reduced mass: what the collision actually has to work with. A hull with no body of its own is
+        // immovable, which is the worst case for us.
+        var effectiveMass = otherMass > 0f
+            ? ourMass * otherMass / (ourMass + otherMass)
+            : ourMass;
+
+        // Nothing the impact system would ignore outright is ever worth a warning.
+        if (closingSpeed < _impactVelocity && closingSpeed * effectiveMass < _impactInertia)
+            return false;
+
+        // The impact system's own energy, less the mass reductions it only knows at the contact point.
+        var energy = _regionMass
+            * (closingSpeed * closingSpeed / 2f)
+            * MathF.Pow(effectiveMass / BaseShuttleMass, _inertiaScaling);
+
+        // It spends that energy as a damage radius of sqrt(energy / tileBreak / platingMass), so this is
+        // that relation turned around: the energy needed to reach the radius worth warning about.
+        return energy >= _dangerRadius * _dangerRadius * _tileBreakEnergy * PlatingMass;
+    }
+
+    /// <summary>
+    /// Mass of a solid plating disc the width of the impact system's radius. Real hulls are lighter than
+    /// this, so the prediction errs towards warning.
+    /// </summary>
+    private static float RegionMass(float impactRadius)
+    {
+        return MathF.PI * impactRadius * impactRadius * PlatingMass;
     }
 
     /// <summary>
@@ -275,11 +372,25 @@ public sealed class CollisionWarningSystem : EntitySystem
         warning.Threat = threat.Grid;
         Dirty(uid, warning);
 
-        // The callout runs through both stages, so escalating does not restart it.
-        if (!_pa.IsAlarmActive(uid, VoiceAlarm))
-            _pa.StartAlarm(uid, VoiceAlarm, VoiceSound);
+        if (level == CollisionWarningLevel.Imminent)
+        {
+            // Close in, the callout runs flat out under the klaxon.
+            if (!_pa.IsAlarmActive(uid, VoiceAlarm))
+                _pa.StartAlarm(uid, VoiceAlarm, VoiceSound);
+        }
+        else
+        {
+            // An advisory is not an emergency, so the callout only comes round every few seconds.
+            _pa.StopAlarm(uid, VoiceAlarm);
 
-        // Klaxons loop until stopped, so only a change of stage touches the PA.
+            if (_timing.CurTime >= warning.NextCallout)
+            {
+                _pa.Broadcast(uid, VoiceSound);
+                warning.NextCallout = _timing.CurTime + TimeSpan.FromSeconds(_calloutInterval);
+            }
+        }
+
+        // Klaxons loop until stopped, so only a change of stage touches them.
         if (!escalated && (_pa.IsAlarmActive(uid, AdvisoryAlarm) || _pa.IsAlarmActive(uid, ImminentAlarm)))
             return;
 
@@ -300,19 +411,10 @@ public sealed class CollisionWarningSystem : EntitySystem
     }
 
     /// <summary>
-    /// Marks a ship's warning as no longer renewed. It is dropped once the hold expires.
+    /// Drops warnings nothing renewed this pass. The hold is there to stop the banner strobing while a
+    /// ship yaws on the edge of the cone; a klaxon has no such problem, so the noise stops at once and
+    /// only the banner waits out the hold.
     /// </summary>
-    private void Clear(EntityUid uid)
-    {
-        if (!TryComp<CollisionWarningComponent>(uid, out var warning))
-            return;
-
-        warning.Threat = null;
-
-        if (_timing.CurTime >= warning.ClearTime)
-            RemComp<CollisionWarningComponent>(uid);
-    }
-
     private void ExpireHeldWarnings()
     {
         _stale.Clear();
@@ -321,7 +423,12 @@ public sealed class CollisionWarningSystem : EntitySystem
 
         while (warnings.MoveNext(out var uid, out var warning))
         {
-            if (warning.Threat == null && _timing.CurTime >= warning.ClearTime)
+            if (warning.Threat != null)
+                continue;
+
+            StopAlarms(uid);
+
+            if (_timing.CurTime >= warning.ClearTime)
                 _stale.Add(uid);
         }
 
@@ -349,13 +456,61 @@ public sealed class CollisionWarningSystem : EntitySystem
     }
 
     /// <summary>
+    /// The pilot switched the warning on or off for the whole ship. Switching it off drops any warning
+    /// already running, which takes the alarms with it.
+    /// </summary>
+    private void OnToggle(Entity<ShuttleConsoleComponent> ent, ref CollisionWarningToggleMessage args)
+    {
+        if (Transform(ent).GridUid is not { } grid)
+            return;
+
+        if (args.Enabled)
+        {
+            RemComp<CollisionWarningDisabledComponent>(grid);
+        }
+        else
+        {
+            EnsureComp<CollisionWarningDisabledComponent>(grid);
+            RemComp<CollisionWarningComponent>(grid);
+        }
+
+        _popup.PopupEntity(
+            Loc.GetString(args.Enabled ? "collision-warning-popup-on" : "collision-warning-popup-off"),
+            ent,
+            args.Actor);
+    }
+
+    /// <summary>
     /// The alarm belongs to the warning, so it stops with it however the warning ends.
     /// </summary>
     private void OnWarningShutdown(Entity<CollisionWarningComponent> ent, ref ComponentShutdown args)
     {
-        _pa.StopAlarm(ent, AdvisoryAlarm);
-        _pa.StopAlarm(ent, ImminentAlarm);
-        _pa.StopAlarm(ent, VoiceAlarm);
+        StopAlarms(ent);
+    }
+
+    /// <summary>
+    /// Silences everything this system runs on a ship's PA.
+    /// </summary>
+    private void StopAlarms(EntityUid uid)
+    {
+        _pa.StopAlarm(uid, AdvisoryAlarm);
+        _pa.StopAlarm(uid, ImminentAlarm);
+        _pa.StopAlarm(uid, VoiceAlarm);
+    }
+
+    /// <summary>
+    /// World bounds of a hull, worked out once per pass. One grid is usually a candidate for several
+    /// ships, and the lookup behind this raises an event every time.
+    /// </summary>
+    private Box2 GetBounds(EntityUid uid, TransformComponent xform)
+    {
+        if (_bounds.TryGetValue(uid, out var bounds))
+            return bounds;
+
+        bounds = _lookup.GetWorldAABB(uid, xform);
+        _bounds[uid] = bounds;
+
+        return bounds;
     }
 
     private void CollectPilotedGrids()

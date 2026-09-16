@@ -28,6 +28,9 @@ public sealed partial class CollisionWarningBanner : PanelContainer
     private static readonly Color AdvisoryColor = Color.FromHex("#ffa020");
     private static readonly Color ImminentColor = Color.FromHex("#ff4040");
 
+    /// <summary>The strip stays up in this colour whenever the warning is switched off.</summary>
+    private static readonly Color DisabledColor = Color.FromHex("#8a8a8a");
+
     private readonly StyleBoxFlat _background = new();
 
     private EntityUid? _grid;
@@ -36,6 +39,7 @@ public sealed partial class CollisionWarningBanner : PanelContainer
     private string? _threatName;
     private float _bearing;
     private float _closingSpeed;
+    private bool _disabled;
     private float _pollAccumulator;
     private float _flashAccumulator;
 
@@ -66,7 +70,7 @@ public sealed partial class CollisionWarningBanner : PanelContainer
         if (_pollAccumulator >= PollInterval)
             Poll();
 
-        if (!ContentBox.Visible)
+        if (!ContentBox.Visible || _disabled)
             return;
 
         // Advisories hold steady; only the imminent stage flashes.
@@ -86,11 +90,38 @@ public sealed partial class CollisionWarningBanner : PanelContainer
     private void Poll()
     {
         _pollAccumulator = 0f;
+
+        // Off is a state worth showing: a blank strip would look the same as a clear scope.
+        if (_entManager.HasComponent<CollisionWarningDisabledComponent>(_grid))
+        {
+            ShowDisabled();
+            return;
+        }
+
         Refresh(_entManager.TryGetComponent<CollisionWarningComponent>(_grid, out var warning) ? warning : null);
+    }
+
+    private void ShowDisabled()
+    {
+        ContentBox.Visible = true;
+        Modulate = Color.White;
+        _level = CollisionWarningLevel.Advisory;
+        _disabled = true;
+        _flashAccumulator = 0f;
+
+        _background.BorderThickness = new Thickness(2);
+        _background.BorderColor = DisabledColor;
+        _background.BackgroundColor = DisabledColor.WithAlpha(0.12f);
+
+        WarningLabel.Text = Loc.GetString("collision-warning-disabled");
+        WarningLabel.FontColorOverride = DisabledColor;
+        DetailLabel.Text = string.Empty;
     }
 
     private void Refresh(CollisionWarningComponent? warning)
     {
+        _disabled = false;
+
         if (warning == null)
         {
             ContentBox.Visible = false;

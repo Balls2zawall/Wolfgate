@@ -38,6 +38,10 @@ public sealed partial class CollisionWarningComponent : Component
     [ViewVariables]
     public TimeSpan ClearTime;
 
+    /// <summary>Server only: when the advisory callout next comes round.</summary>
+    [ViewVariables]
+    public TimeSpan NextCallout;
+
     /// <summary>Server only: the grid the current warning is about.</summary>
     [ViewVariables]
     public EntityUid? Threat;
