@@ -8,7 +8,7 @@ using Content.Client._Crescent.SpaceBiomes;
 using Robust.Client.Player;
 using Robust.Client.State;
 using Robust.Shared.Audio;
-using Robust.Shared.Audio.Components;
+using Robust.Shared.Audio.Components; // WOLFGATE
 using Robust.Shared.Audio.Systems;
 using Robust.Shared.Configuration;
 using Robust.Shared.Player;
@@ -558,7 +558,7 @@ public sealed partial class ContentAudioSystem
         {
             return;
         }
-        // Replay shutdown flushes audio entities before the UI leaves gameplay.
+        // WOLFGATE - Replay shutdown flushes audio entities before the UI leaves gameplay.
         if (TryComp<AudioComponent>(_ambientMusicStream, out var audio))
             FadeOut(_ambientMusicStream, audio);
         _ambientMusicStream = null;
