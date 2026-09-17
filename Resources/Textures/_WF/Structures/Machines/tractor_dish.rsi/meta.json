@@ -1,0 +1,7 @@
+{
+  "version": 1,
+  "license": "Custom",
+  "copyright": "User-provided tractor dish artwork. Original source: tractor dish.png; license unspecified by contributor.",
+  "size": { "x": 128, "y": 128 },
+  "states": [ { "name": "base" } ]
+}

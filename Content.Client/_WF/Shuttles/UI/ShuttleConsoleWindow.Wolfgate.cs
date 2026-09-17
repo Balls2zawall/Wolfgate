@@ -62,4 +62,9 @@ public sealed partial class ShuttleConsoleWindow
     {
         ShipContainer.UpdateStatus(message);
     }
+
+    private void WfUpdateTractorCapture(string[] sources)
+    {
+        CaptureBanner.SetSources(sources);
+    }
 }
