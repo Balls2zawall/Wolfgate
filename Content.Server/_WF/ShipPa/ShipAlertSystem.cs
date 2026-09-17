@@ -10,6 +10,7 @@ using Content.Shared.Popups;
 using Content.Shared.Shuttles.Components;
 using Content.Shared._WF.CCVar;
 using Robust.Shared.Configuration;
+using Robust.Server.Player;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Timing;
 
@@ -21,6 +22,7 @@ namespace Content.Server._WF.ShipPa;
 /// </summary>
 public sealed partial class ShipAlertSystem : EntitySystem
 {
+    [Dependency] private IPlayerManager _players = default!;
     [Dependency] private IGameTiming _timing = default!;
     [Dependency] private IPrototypeManager _proto = default!;
     [Dependency] private IAdminLogManager _adminLogger = default!;
@@ -144,7 +146,8 @@ public sealed partial class ShipAlertSystem : EntitySystem
 
         var requester = Name(args.Actor);
 
-        if (!_internetSound.PlayOverPa(null, requester, url, grid, out var error))
+        _players.TryGetSessionByEntity(args.Actor, out var recipient);
+        if (!_internetSound.PlayOverPa(null, requester, url, grid, out var error, recipient))
         {
             _popup.PopupEntity(error ?? Loc.GetString("ship-pa-sound-refused"), ent, args.Actor);
             return;

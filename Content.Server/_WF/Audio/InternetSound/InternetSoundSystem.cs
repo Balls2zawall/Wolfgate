@@ -12,6 +12,7 @@ using Content.Shared._WF.ShipPa;
 using Content.Shared.Administration;
 using Content.Shared.Database;
 using Content.Shared.GameTicking;
+using Content.Shared.Popups;
 using Robust.Shared.Enums;
 using Robust.Server.Player;
 using Robust.Shared.Asynchronous;
@@ -40,6 +41,7 @@ public sealed partial class InternetSoundSystem : EntitySystem
 {
     [Dependency] private ITransferManager _transfer = default!;
     [Dependency] private IPlayerManager _players = default!;
+    [Dependency] private SharedPopupSystem _popup = default!;
     [Dependency] private ITaskManager _task = default!;
     [Dependency] private IConfigurationManager _cfg = default!;
     [Dependency] private IAdminLogManager _adminLogger = default!;
@@ -95,6 +97,9 @@ public sealed partial class InternetSoundSystem : EntitySystem
 
         /// <summary>The admin to report progress to, if an admin started it.</summary>
         public ICommonSession? Admin;
+
+        /// <summary>The console user to notify if this request fails after being accepted.</summary>
+        public ICommonSession? ErrorRecipient;
 
         /// <summary>Clients that haven't confirmed they have the audio yet.</summary>
         public HashSet<NetUserId> Waiting = new();
@@ -200,7 +205,7 @@ public sealed partial class InternetSoundSystem : EntitySystem
     /// Fetches a link for one ship's PA on behalf of whoever asked. <paramref name="error"/> is a loc string
     /// for the caller to show when this returns false.
     /// </summary>
-    public bool PlayOverPa(ICommonSession? admin, string requester, string url, EntityUid grid, out string? error)
+    public bool PlayOverPa(ICommonSession? admin, string requester, string url, EntityUid grid, out string? error, ICommonSession? errorRecipient = null)
     {
         error = null;
 
@@ -228,7 +233,7 @@ public sealed partial class InternetSoundSystem : EntitySystem
             return false;
         }
 
-        return Begin(admin, requester, url, grid, out error);
+        return Begin(admin, requester, url, grid, out error, errorRecipient);
     }
 
     private void Begin(ICommonSession? admin, string requester, string url, EntityUid? grid)
@@ -236,7 +241,7 @@ public sealed partial class InternetSoundSystem : EntitySystem
         Begin(admin, requester, url, grid, out _);
     }
 
-    private bool Begin(ICommonSession? admin, string requester, string url, EntityUid? grid, out string? error)
+    private bool Begin(ICommonSession? admin, string requester, string url, EntityUid? grid, out string? error, ICommonSession? errorRecipient = null)
     {
         error = null;
 
@@ -281,6 +286,7 @@ public sealed partial class InternetSoundSystem : EntitySystem
             State = TrackState.Fetching,
             Fetch = fetch,
             Admin = admin,
+            ErrorRecipient = errorRecipient,
         };
 
         _tracks[id] = track;
@@ -401,7 +407,7 @@ public sealed partial class InternetSoundSystem : EntitySystem
         catch (Exception e)
         {
             Log.Error($"Internet sound \"{result.Title}\" from {url} isn't loadable audio: {e}");
-            Report(track.Admin, Loc.GetString("wf-internet-sound-error-unplayable"), true);
+            ReportError(track, Loc.GetString("wf-internet-sound-error-unplayable"));
             Drop(track);
             SendState();
             return;
@@ -478,7 +484,7 @@ public sealed partial class InternetSoundSystem : EntitySystem
         {
             if (!Exists(grid) || TerminatingOrDeleted(grid))
             {
-                Report(track.Admin, Loc.GetString("wf-internet-sound-no-ship"), true);
+                ReportError(track, Loc.GetString("wf-internet-sound-no-ship"));
                 Drop(track);
                 SendState();
                 return;
@@ -486,7 +492,7 @@ public sealed partial class InternetSoundSystem : EntitySystem
 
             if (!_shipPa.StartTrack(grid, TrackKey, sound, AudioParams.Default, track.Title))
             {
-                Report(track.Admin, Loc.GetString("wf-internet-sound-no-speakers", ("ship", _shipPa.GetShipName(grid))), true);
+                ReportError(track, Loc.GetString("wf-internet-sound-no-speakers", ("ship", _shipPa.GetShipName(grid))));
                 Drop(track);
                 SendState();
                 return;
@@ -504,7 +510,7 @@ public sealed partial class InternetSoundSystem : EntitySystem
 
             if (stream == null)
             {
-                Report(track.Admin, Loc.GetString("wf-internet-sound-error-unplayable"), true);
+                ReportError(track, Loc.GetString("wf-internet-sound-error-unplayable"));
                 Drop(track);
                 SendState();
                 return;
@@ -577,7 +583,7 @@ public sealed partial class InternetSoundSystem : EntitySystem
         if (!_tracks.TryGetValue(id, out var track) || track.Fetch != fetch)
             return;
 
-        Report(track.Admin, message, true);
+        ReportError(track, message);
         Drop(track);
         SendState();
     }
@@ -637,13 +643,26 @@ public sealed partial class InternetSoundSystem : EntitySystem
         }
     }
 
+    private void ReportError(Track track, string message)
+    {
+        // The pilot may have closed the console or changed bodies while the download was running.
+        // Route the failure to their session rather than to the console or the ship's current pilot.
+        if (track.ErrorRecipient is { Status: SessionStatus.InGame } recipient && recipient != track.Admin)
+            _popup.PopupCursor(message, recipient, PopupType.MediumCaution);
+
+        Report(track.Admin, message, true);
+    }
+
     private void Report(ICommonSession? admin, string message, bool isError)
     {
-        if (admin == null)
+        if (admin == null || admin.Status != SessionStatus.InGame)
         {
             Log.Info(message);
             return;
         }
+
+        if (isError)
+            _popup.PopupCursor(message, admin, PopupType.MediumCaution);
 
         RaiseNetworkEvent(new InternetSoundStatusEvent(message, isError), Filter.SinglePlayer(admin));
     }
