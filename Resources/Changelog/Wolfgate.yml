@@ -221,3 +221,13 @@ Entries:
   id: 100019
   time: '2026-09-15T00:00:00.0000000+00:00'
   url: https://github.com/VanguardControl/Wolfgate/pull/36
+- author: Gandalf2k15
+  changes:
+    - type: Add
+      message: >-
+        Players can now play music through the PA system via YTDL, simply paste
+        a link into the ship control panel, and hit play. It's locally played
+        through ship speakers.
+  id: 100020
+  time: '2026-09-17T18:56:09.0000000+00:00'
+  url: https://github.com/VanguardControl/Wolfgate/pull/36
