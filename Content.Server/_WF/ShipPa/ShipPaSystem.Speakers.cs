@@ -19,6 +19,25 @@ public sealed partial class ShipPaSystem
 
     private const float DamagedThreshold = 0.25f;
 
+    /// <summary>
+    /// Conservative audible reach for PA download prefetching. Only visits this grid's indexed speakers;
+    /// includes currently unpowered/fallback speakers so repairs do not cause a late download.
+    /// </summary>
+    public float GetMaximumSpeakerRange(EntityUid grid)
+    {
+        var range = 0f;
+        if (!_gridSpeakers.TryGetValue(grid, out var members))
+            return range;
+
+        foreach (var uid in members)
+        {
+            if (TryComp(uid, out ShipPaSpeakerComponent? speaker) && float.IsFinite(speaker.Range))
+                range = Math.Max(range, speaker.Range);
+        }
+
+        return range;
+    }
+
     private void InitializeSpeakers()
     {
         SubscribeLocalEvent<ShipPaSpeakerComponent, ComponentStartup>(OnSpeakerStartup);

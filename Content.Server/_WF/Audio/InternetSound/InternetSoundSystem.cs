@@ -28,14 +28,13 @@ using Robust.Shared.Timing;
 namespace Content.Server._WF.Audio.InternetSound;
 
 /// <summary>
-/// Internet sounds: fetches a link with yt-dlp, mounts the result as a resource on the server and every
-/// client, then plays it like any other sound â€” to everyone at once for admins, or out of a ship's PA
+/// Internet sounds: fetches a link with yt-dlp, mounts the result as a resource on the server and receiving
+/// clients, then plays it like any other sound â€” to everyone at once for admins, or out of a ship's PA
 /// speakers, which crew can do from the shuttle console.
 /// </summary>
 /// <remarks>
-/// Several tracks can run at once, but not many: every client holds the decoded audio of every live track
-/// whether or not it can hear it, so <see cref="InternetSoundCVars.MaxConcurrent"/> is a memory limit on
-/// players' machines rather than a load limit on the server.
+/// PA assets go only to clients aboard or near their ship, including remote views. Recipients keep them
+/// until the track ends. <see cref="InternetSoundCVars.MaxConcurrent"/> bounds retained audio and transfers.
 /// </remarks>
 public sealed partial class InternetSoundSystem : EntitySystem
 {
@@ -105,6 +104,9 @@ public sealed partial class InternetSoundSystem : EntitySystem
         /// <summary>Clients that haven't confirmed they have the audio yet.</summary>
         public HashSet<NetUserId> Waiting = new();
 
+        /// <summary>Connections already offered this asset, including queued/in-flight transfers.</summary>
+        public readonly HashSet<INetChannel> Recipients = new();
+
         public TimeSpan Deadline;
 
         /// <summary>The audio entity, for a sound played to everyone. PA tracks live in ShipPaSystem.</summary>
@@ -156,6 +158,8 @@ public sealed partial class InternetSoundSystem : EntitySystem
     public override void Update(float frameTime)
     {
         base.Update(frameTime);
+
+        UpdatePaAudience();
 
         foreach (var track in _tracks.Values.ToList())
         {
@@ -416,13 +420,20 @@ public sealed partial class InternetSoundSystem : EntitySystem
             return;
         }
 
-        var transfer = track.Transfer = new InternetSoundTransfer(Encode(id, result.Title, track.Requester, track.IsPa, result.Audio));
+        track.Transfer = new InternetSoundTransfer(Encode(id, result.Title, track.Requester, track.IsPa, result.Audio));
         track.Waiting.Clear();
 
-        foreach (var session in _players.Sessions)
+        if (track.IsPa)
         {
-            track.Waiting.Add(session.UserId);
-            Send(session.Channel, transfer);
+            SendToPaAudience(track);
+        }
+        else
+        {
+            foreach (var session in _players.Sessions)
+            {
+                track.Waiting.Add(session.UserId);
+                SendOnce(track, session);
+            }
         }
 
         track.State = TrackState.Sending;
@@ -431,11 +442,11 @@ public sealed partial class InternetSoundSystem : EntitySystem
         var megabytes = result.Audio.Length / (1024f * 1024f);
         Report(track.Admin, Loc.GetString("wf-internet-sound-sending",
             ("title", result.Title),
-            ("count", track.Waiting.Count),
+            ("count", track.Recipients.Count),
             ("size", megabytes.ToString("0.0"))), false);
 
         _adminLogger.Add(LogType.AdminCommands, LogImpact.Low,
-            $"{track.Requester} is sending internet sound \"{result.Title}\" ({url}) to {track.Waiting.Count} players");
+            $"{track.Requester} is sending internet sound \"{result.Title}\" ({url}) to {track.Recipients.Count} players");
 
         SendState();
 
@@ -446,16 +457,17 @@ public sealed partial class InternetSoundSystem : EntitySystem
 
     private void OnPlayerStatusChanged(object? sender, SessionStatusEventArgs args)
     {
-        if (args.NewStatus != SessionStatus.InGame)
-            return;
-
-        // A joining client receives current PA assets and the grid timeline independently. It starts
-        // at the current timestamp when both arrive; it never restarts the track for other listeners.
-        foreach (var track in _tracks.Values)
+        if (args.NewStatus == SessionStatus.Disconnected)
         {
-            if (track.IsPa && track.Transfer != null)
-                Send(args.Session.Channel, track.Transfer);
+            // A reconnect gets a new connection and a fresh client resource root.
+            foreach (var track in _tracks.Values)
+                track.Recipients.Remove(args.Session.Channel);
+            return;
         }
+
+        // The next audience check also covers body attachment, remote-view changes and ship movement.
+        if (args.NewStatus == SessionStatus.InGame)
+            _nextAudienceUpdate = TimeSpan.Zero;
     }
 
     private void OnClientReady(InternetSoundReadyEvent ev, EntitySessionEventArgs args)

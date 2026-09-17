@@ -22,12 +22,19 @@ public sealed class InternetSoundCVars
         CVarDef.Create("wf.internet_sound.player_requests", true, CVar.SERVERONLY);
 
     /// <summary>
-    /// How many tracks may be in play at once across the whole server. Every client holds the decoded audio
-    /// of every live track whether or not it can hear it, so this is a cap on players' memory, not the
-    /// server's: at the default rate each one costs them about 18 MB while it runs.
+    /// How many tracks may be in play at once across the whole server. PA recipients retain assets until
+    /// release, so this bounds both server transfers and client memory: a decoded seven-minute mono track
+    /// at the default rate costs about 18 MB.
     /// </summary>
     public static readonly CVarDef<int> MaxConcurrent =
         CVarDef.Create("wf.internet_sound.max_concurrent", 2, CVar.SERVERONLY);
+
+    /// <summary>
+    /// Extra tiles beyond a ship's bounds and maximum speaker range in which PA audio is prefetched.
+    /// Gives approaching listeners time to download; actual audibility is still determined by speakers.
+    /// </summary>
+    public static readonly CVarDef<float> PaPrefetchMargin =
+        CVarDef.Create("wf.internet_sound.pa_prefetch_margin", 64f, CVar.SERVERONLY);
 
     /// <summary>
     /// Seconds a ship must wait between console requests. Cutting its current track allows an immediate replacement.
