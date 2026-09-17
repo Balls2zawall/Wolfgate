@@ -1,3 +1,4 @@
+using Content.Shared._WF.ShipPa;
 using System.Numerics;
 using Content.Server._WF.ShipPa;
 using Content.Server.Shuttles.Components;
@@ -46,6 +47,12 @@ public sealed class CollisionWarningSystem : EntitySystem
 
     /// <summary>Alarm loop key for the imminent collision klaxon.</summary>
     public const string ImminentAlarm = "tcas-imminent";
+
+    /// <summary>One-shot key for the periodic advisory voice callout.</summary>
+    public const string AdvisoryCallout = "tcas-advisory-callout";
+
+    public const int AdvisoryPriority = ShipPaPlaybackPolicy.AdvisoryPriority;
+    public const int ImminentPriority = ShipPaPlaybackPolicy.ImminentPriority;
 
     private static readonly SoundSpecifier AdvisorySound =
         new SoundPathSpecifier("/Audio/_WF/Shuttles/Tcas/traffic_alarm.ogg");
@@ -376,7 +383,7 @@ public sealed class CollisionWarningSystem : EntitySystem
             // An advisory is not an emergency, so the callout only comes round every few seconds.
             if (_timing.CurTime >= warning.NextCallout)
             {
-                _pa.Broadcast(uid, VoiceSound);
+                _pa.Broadcast(uid, VoiceSound, priority: ShipPaPlaybackPolicy.AdvisoryCalloutPriority, key: AdvisoryCallout);
                 warning.NextCallout = _timing.CurTime + TimeSpan.FromSeconds(_calloutInterval);
             }
         }
@@ -388,16 +395,17 @@ public sealed class CollisionWarningSystem : EntitySystem
         if (level == CollisionWarningLevel.Imminent)
         {
             _pa.StopAlarm(uid, AdvisoryAlarm);
+            _pa.StopAlarm(uid, AdvisoryCallout);
             _pa.StartAlarm(uid, ImminentAlarm, ImminentSound,
-                message: Loc.GetString("collision-warning-pa-imminent"),
-                color: Color.Red);
+                message: Loc.GetString("collision-warning-pa-imminent"), color: Color.Red,
+                priority: ImminentPriority);
         }
         else
         {
             _pa.StopAlarm(uid, ImminentAlarm);
             _pa.StartAlarm(uid, AdvisoryAlarm, AdvisorySound,
-                message: Loc.GetString("collision-warning-pa-advisory"),
-                color: Color.Orange);
+                message: Loc.GetString("collision-warning-pa-advisory"), color: Color.Orange,
+                priority: AdvisoryPriority);
         }
     }
 
@@ -486,6 +494,7 @@ public sealed class CollisionWarningSystem : EntitySystem
     {
         _pa.StopAlarm(uid, AdvisoryAlarm);
         _pa.StopAlarm(uid, ImminentAlarm);
+        _pa.StopAlarm(uid, AdvisoryCallout);
     }
 
     /// <summary>

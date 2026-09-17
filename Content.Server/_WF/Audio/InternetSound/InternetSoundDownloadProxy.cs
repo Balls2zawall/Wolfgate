@@ -21,19 +21,30 @@ internal sealed class InternetSoundDownloadProxy : IAsyncDisposable
     private readonly List<Task> _connections = new();
     private readonly Func<string, CancellationToken, Task<IPAddress[]>> _resolve;
     private readonly Func<IPAddress, int, CancellationToken, Task<Stream>> _connect;
+    private readonly long _maxDownloadBytes;
+    private readonly Action? _onDownloadLimitExceeded;
     private string? _deniedHost;
     private int _rejectedInsecureTransport;
+    private long _downloadBytes;
+    private int _downloadLimitExceeded;
 
     public string Url { get; }
     public string? DeniedHost => Volatile.Read(ref _deniedHost);
     public bool RejectedInsecureTransport => Volatile.Read(ref _rejectedInsecureTransport) != 0;
+    public bool DownloadLimitExceeded => Volatile.Read(ref _downloadLimitExceeded) != 0;
 
     internal InternetSoundDownloadProxy(CancellationToken cancel,
         Func<string, CancellationToken, Task<IPAddress[]>>? resolve = null,
-        Func<IPAddress, int, CancellationToken, Task<Stream>>? connect = null)
+        Func<IPAddress, int, CancellationToken, Task<Stream>>? connect = null,
+        long maxDownloadBytes = 64L * 1024 * 1024,
+        Action? onDownloadLimitExceeded = null)
     {
+        if (maxDownloadBytes <= 0)
+            throw new ArgumentOutOfRangeException(nameof(maxDownloadBytes));
         _resolve = resolve ?? ((host, token) => Dns.GetHostAddressesAsync(host, token));
         _connect = connect ?? ConnectSocket;
+        _maxDownloadBytes = maxDownloadBytes;
+        _onDownloadLimitExceeded = onDownloadLimitExceeded;
         _stop = CancellationTokenSource.CreateLinkedTokenSource(cancel);
         _listener.Start();
         Url = $"socks5://127.0.0.1:{((IPEndPoint) _listener.LocalEndpoint).Port}";
@@ -137,7 +148,7 @@ internal sealed class InternetSoundDownloadProxy : IAsyncDisposable
                 using var upstream = await ConnectChecked(addresses, port, token);
                 await upstream.WriteAsync(hello, token);
                 var sending = downstream.CopyToAsync(upstream, token);
-                var receiving = upstream.CopyToAsync(downstream, token);
+                var receiving = CopyIncomingAsync(upstream, downstream, token);
                 await Task.WhenAny(sending, receiving);
                 // A failed/closed direction cannot leave the other waiting until the whole fetch times out.
                 await lifetime.CancelAsync();
@@ -148,6 +159,40 @@ internal sealed class InternetSoundDownloadProxy : IAsyncDisposable
             {
                 // Invalid requests and failed tunnels are closed; never fall back to an unchecked route.
             }
+        }
+    }
+
+    private async Task CopyIncomingAsync(Stream upstream, Stream downstream, CancellationToken token)
+    {
+        var buffer = new byte[81920];
+        while (true)
+        {
+            var read = await upstream.ReadAsync(buffer, token);
+            if (read == 0)
+                return;
+
+            var reserved = Reserve(read);
+            if (!reserved)
+            {
+                Interlocked.Exchange(ref _downloadLimitExceeded, 1);
+                _onDownloadLimitExceeded?.Invoke();
+                await _stop.CancelAsync();
+                return;
+            }
+
+            await downstream.WriteAsync(buffer.AsMemory(0, read), token);
+        }
+    }
+
+    private bool Reserve(int count)
+    {
+        while (true)
+        {
+            var current = Volatile.Read(ref _downloadBytes);
+            if (current > _maxDownloadBytes || count > _maxDownloadBytes - current)
+                return false;
+            if (Interlocked.CompareExchange(ref _downloadBytes, current + count, current) == current)
+                return true;
         }
     }
 

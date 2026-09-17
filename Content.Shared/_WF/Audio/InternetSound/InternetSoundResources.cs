@@ -1,5 +1,6 @@
 using System.Buffers.Binary;
 using System.Text;
+using System.Runtime.CompilerServices;
 using Robust.Shared.ContentPack;
 using Robust.Shared.Utility;
 
@@ -20,7 +21,7 @@ public sealed class InternetSoundResources
     /// </summary>
     public static readonly ResPath Prefix = ResPath.Root / "WFInternetSound";
 
-    private static readonly Dictionary<IResourceManager, InternetSoundResources> Mounted = new();
+    private static readonly ConditionalWeakTable<IResourceManager, InternetSoundResources> Mounted = new();
 
     private readonly MemoryContentRoot _root = new();
 
@@ -37,7 +38,10 @@ public sealed class InternetSoundResources
         lock (Mounted)
         {
             if (!Mounted.TryGetValue(resources, out var existing))
-                Mounted[resources] = existing = new InternetSoundResources(resources);
+            {
+                existing = new InternetSoundResources(resources);
+                Mounted.Add(resources, existing);
+            }
 
             return existing;
         }

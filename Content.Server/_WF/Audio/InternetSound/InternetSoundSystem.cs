@@ -29,7 +29,7 @@ namespace Content.Server._WF.Audio.InternetSound;
 
 /// <summary>
 /// Internet sounds: fetches a link with yt-dlp, mounts the result as a resource on the server and every
-/// client, then plays it like any other sound — to everyone at once for admins, or out of a ship's PA
+/// client, then plays it like any other sound â€” to everyone at once for admins, or out of a ship's PA
 /// speakers, which crew can do from the shuttle console.
 /// </summary>
 /// <remarks>
@@ -70,6 +70,7 @@ public sealed partial class InternetSoundSystem : EntitySystem
     private int _global;
 
     private int _lastId;
+    private readonly InternetSoundTransferQueue _outgoing = new();
 
     private enum TrackState
     {
@@ -109,7 +110,7 @@ public sealed partial class InternetSoundSystem : EntitySystem
         /// <summary>The audio entity, for a sound played to everyone. PA tracks live in ShipPaSystem.</summary>
         public EntityUid? Audio;
 
-        public byte[]? Payload;
+        public InternetSoundTransfer? Transfer;
 
         public bool IsPa => Grid != null;
     }
@@ -138,6 +139,7 @@ public sealed partial class InternetSoundSystem : EntitySystem
         foreach (var track in _tracks.Values)
         {
             track.Fetch?.Cancel();
+            track.Transfer?.Dispose();
         }
 
         _tracks.Clear();
@@ -307,7 +309,8 @@ public sealed partial class InternetSoundSystem : EntitySystem
             _cfg.GetCVar(InternetSoundCVars.MaxSizeMb),
             Math.Clamp(_cfg.GetCVar(InternetSoundCVars.SampleRate), 8000, 48000),
             stereo ? 2 : 1,
-            Math.Clamp(_cfg.GetCVar(InternetSoundCVars.Bitrate), 8, 192));
+            Math.Clamp(_cfg.GetCVar(InternetSoundCVars.Bitrate), 8, 192),
+            (long) Math.Max(1, _cfg.GetCVar(InternetSoundCVars.MaxDownloadMb)) * 1024 * 1024);
 
         Report(admin, Loc.GetString("wf-internet-sound-fetching", ("url", uri.AbsoluteUri)), false);
 
@@ -413,13 +416,13 @@ public sealed partial class InternetSoundSystem : EntitySystem
             return;
         }
 
-        var payload = track.Payload = Encode(id, result.Title, track.Requester, track.IsPa, result.Audio);
+        var transfer = track.Transfer = new InternetSoundTransfer(Encode(id, result.Title, track.Requester, track.IsPa, result.Audio));
         track.Waiting.Clear();
 
         foreach (var session in _players.Sessions)
         {
             track.Waiting.Add(session.UserId);
-            Send(session.Channel, payload);
+            Send(session.Channel, transfer);
         }
 
         track.State = TrackState.Sending;
@@ -450,8 +453,8 @@ public sealed partial class InternetSoundSystem : EntitySystem
         // at the current timestamp when both arrive; it never restarts the track for other listeners.
         foreach (var track in _tracks.Values)
         {
-            if (track.IsPa && track.Payload != null)
-                Send(args.Session.Channel, track.Payload);
+            if (track.IsPa && track.Transfer != null)
+                Send(args.Session.Channel, track.Transfer);
         }
     }
 
@@ -567,7 +570,8 @@ public sealed partial class InternetSoundSystem : EntitySystem
                 _global = 0;
         }
 
-        track.Payload = null;
+        track.Transfer?.Dispose();
+        track.Transfer = null;
         _tracks.Remove(track.Id);
 
         RaiseNetworkEvent(new InternetSoundStopEvent(track.Id));
@@ -629,18 +633,41 @@ public sealed partial class InternetSoundSystem : EntitySystem
         return new InternetSoundStateEvent(entries, _global != 0);
     }
 
-    private async void Send(INetChannel channel, byte[] payload)
+    private async void Send(INetChannel channel, InternetSoundTransfer transfer)
     {
         try
         {
-            await using var stream = _transfer.StartTransfer(channel, InternetSoundProtocol.TransferKey);
-            await stream.WriteAsync(payload);
+            await _outgoing.SendAsync(channel, transfer,
+                () => OpenTransfer(channel, transfer.Token));
+        }
+        catch (OperationCanceledException) when (transfer.Token.IsCancellationRequested)
+        {
+            // Cut or replacement stopped this transfer before its next chunk.
         }
         catch (Exception e)
         {
             // Usually a client that disconnected mid-transfer.
             Log.Warning($"Failed to send internet sound to {channel.UserName}: {e.Message}");
         }
+    }
+
+    private Task<Stream> OpenTransfer(INetChannel channel, CancellationToken cancel)
+    {
+        // Queued senders can resume on a worker thread; network connection state belongs to the game thread.
+        var completion = new TaskCompletionSource<Stream>(TaskCreationOptions.RunContinuationsAsynchronously);
+        _task.RunOnMainThread(() =>
+        {
+            try
+            {
+                cancel.ThrowIfCancellationRequested();
+                completion.SetResult(_transfer.StartTransfer(channel, InternetSoundProtocol.TransferKey));
+            }
+            catch (Exception e)
+            {
+                completion.SetException(e);
+            }
+        });
+        return completion.Task;
     }
 
     private void ReportError(Track track, string message)

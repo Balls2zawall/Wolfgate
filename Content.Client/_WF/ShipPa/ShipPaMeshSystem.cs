@@ -45,6 +45,7 @@ public sealed partial class ShipPaMeshSystem : EntitySystem
     private Label? _subtitle;
     private PanelContainer? _subtitlePanel;
     private TimeSpan _subtitleUntil;
+    private int _subtitlePriority;
     private string? _lastCaption;
     private TimeSpan _lastCaptionAt;
     private bool _shuttingDown;
@@ -231,6 +232,9 @@ public sealed partial class ShipPaMeshSystem : EntitySystem
         ShipPaBroadcast? caption = null;
         foreach (var broadcast in state.Broadcasts)
         {
+            // Keep urgent text visible for its full lifetime; only equal or higher priority may interrupt.
+            if (_timing.RealTime < _subtitleUntil && broadcast.Priority < _subtitlePriority)
+                continue;
             if (broadcast.Caption == null || _captioned.Contains(broadcast.Id)
                 || _released.Contains(broadcast.Path)
                 || (!broadcast.Loop && _timing.CurTime >= broadcast.RetainUntil))
@@ -429,6 +433,7 @@ public sealed partial class ShipPaMeshSystem : EntitySystem
         var title = Loc.GetString("ship-pa-subtitle-title", ("ship", Name(grid)));
         _subtitle.Text = title + "\n" + WrapCaption(broadcast.Caption!);
         _subtitle.FontColorOverride = broadcast.Color;
+        _subtitlePriority = broadcast.Priority;
         _subtitleUntil = _timing.RealTime + TimeSpan.FromSeconds(8);
     }
 

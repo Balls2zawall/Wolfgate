@@ -292,6 +292,46 @@ public sealed class ShipPaListenerTest
         await pair.CleanReturnAsync();
     }
 
+    [Test]
+    public async Task CaptionsKeepUrgentTextButAllowEscalationAndGridChanges()
+    {
+        await using var pair = await PoolManager.GetServerClient(new PoolSettings { Connected = true, Dirty = true });
+        var client = pair.Client;
+        await client.WaitAssertion(() =>
+        {
+            var em = client.EntMan;
+            var pa = em.System<ShipPaMeshSystem>();
+            var maps = em.System<SharedMapSystem>();
+            maps.CreateMap(out var mapId);
+            var grid = client.ResolveDependency<IMapManager>().CreateGridEntity(mapId);
+            maps.SetTile(grid, Vector2i.Zero, new Tile(1));
+            var eye = new FixedEye { Position = new MapCoordinates(new Vector2(0.5f, 0.5f), mapId) };
+            client.ResolveDependency<IEyeManager>().CurrentEye = eye;
+            var state = em.AddComponent<ShipPaBroadcastComponent>(grid.Owner);
+            state.Broadcasts.Add(new ShipPaBroadcast { Id = 9301, Caption = "Urgent warning", Priority = 40, Loop = true });
+            state.Broadcasts.Add(new ShipPaBroadcast { Id = 9302, Caption = "Song title", Priority = 10, Loop = true });
+            pa.FrameUpdate(0.11f);
+            var label = client.ResolveDependency<IUserInterfaceManager>().PopupRoot.Children.OfType<PanelContainer>()
+                .Single(p => p.Name == "ShipPaSubtitle").Children.OfType<Label>().Single();
+            Assert.That(label.Text, Does.Contain("Urgent warning"));
+            pa.FrameUpdate(0.11f);
+            Assert.That(label.Text, Does.Contain("Urgent warning"), "An unseen song must not displace an urgent caption on the next selection.");
+            state.Broadcasts.Add(new ShipPaBroadcast { Id = 9303, Caption = "Collision imminent", Priority = 60, Loop = true });
+            pa.FrameUpdate(0.11f);
+            Assert.That(label.Text, Does.Contain("Collision imminent"));
+
+            var other = client.ResolveDependency<IMapManager>().CreateGridEntity(mapId);
+            em.System<SharedTransformSystem>().SetWorldPosition(other.Owner, new Vector2(20, 0));
+            maps.SetTile(other, Vector2i.Zero, new Tile(1));
+            em.AddComponent<ShipPaBroadcastComponent>(other.Owner).Broadcasts.Add(new ShipPaBroadcast
+                { Id = 9304, Caption = "Other ship", Priority = 10, Loop = true });
+            eye.Position = new MapCoordinates(new Vector2(20.5f, 0.5f), mapId);
+            pa.FrameUpdate(0.11f);
+            Assert.That(label.Text, Does.Contain("Other ship"), "Changing ships must release the previous caption's priority.");
+        });
+        await pair.CleanReturnAsync();
+    }
+
     private static List<ShipPaAudioComponent> Voices(IEntityManager em)
     {
         var result = new List<ShipPaAudioComponent>();

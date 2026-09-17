@@ -23,7 +23,8 @@ public static class InternetSoundDownloader
         int MaxSizeMb,
         int SampleRate,
         int Channels,
-        int BitrateKbps);
+        int BitrateKbps,
+        long MaxDownloadBytes = 64L * 1024 * 1024);
 
     public sealed record Result(string Title, byte[] Audio);
 
@@ -44,13 +45,16 @@ public static class InternetSoundDownloader
     /// </summary>
     public static async Task<Result> Fetch(string url, Settings settings, CancellationToken cancel)
     {
+        cancel.ThrowIfCancellationRequested();
         using var timeout = CancellationTokenSource.CreateLinkedTokenSource(cancel);
         timeout.CancelAfter(TimeSpan.FromSeconds(settings.TimeoutSeconds));
 
         var uri = new Uri(url);
         if (uri.Scheme != Uri.UriSchemeHttps || uri.Port != 443)
             throw new FetchException("wf-internet-sound-error-https");
-        await using var proxy = new InternetSoundDownloadProxy(timeout.Token);
+        using var downloadCancel = CancellationTokenSource.CreateLinkedTokenSource(timeout.Token);
+        await using var proxy = new InternetSoundDownloadProxy(downloadCancel.Token,
+            maxDownloadBytes: settings.MaxDownloadBytes, onDownloadLimitExceeded: downloadCancel.Cancel);
 
         var dir = Path.Combine(Path.GetTempPath(), "wolfgate-internet-sound", Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(dir);
@@ -62,24 +66,37 @@ public static class InternetSoundDownloader
             var nativeTools = Path.Combine(dir, "native-only");
             Directory.CreateDirectory(nativeTools);
             // "--" stops the link being read as an option; the filter refuses livestreams and long videos up front.
-            var download = await Run(settings.YtDlpPath,
-                new[]
-                {
-                    "--ignore-config", "--no-plugin-dirs", "--no-remote-components", "--no-cache-dir",
-                    "--proxy", proxy.Url,
-                    "--downloader", "native", "--fixup", "never",
-                    "--ffmpeg-location", nativeTools,
-                    "--no-playlist", "--no-warnings", "--no-progress", "--no-simulate",
-                    "--match-filter", $"!is_live & duration <=? {settings.MaxDurationSeconds}",
-                    // Manifests and fragments must also pass the proxy's HTTPS gate.
-                    "-f", "bestaudio[protocol=https]/bestaudio[protocol=http_dash_segments]/bestaudio[protocol=m3u8_native]/best[protocol=https]/best[protocol=http_dash_segments]/best[protocol=m3u8_native]",
-                    "-o", Path.Combine(dir, "source.%(ext)s"),
-                    "--print", $"before_dl:{TitlePrefix}%(title)s",
-                    "--print", $"after_move:{PathPrefix}%(filepath)s",
-                    "--", url,
-                },
-                "wf-internet-sound-error-ytdlp-missing",
-                timeout.Token);
+            (int ExitCode, string Output, string Error) download;
+            try
+            {
+                download = await Run(settings.YtDlpPath,
+                    new[]
+                    {
+                        "--ignore-config", "--no-plugin-dirs", "--no-remote-components", "--no-cache-dir",
+                        "--proxy", proxy.Url,
+                        "--downloader", "native", "--fixup", "never",
+                        "--ffmpeg-location", nativeTools,
+                        "--no-playlist", "--no-warnings", "--no-progress", "--no-simulate",
+                        "--match-filter", $"!is_live & duration <=? {settings.MaxDurationSeconds}",
+                        // Manifests and fragments must also pass the proxy's HTTPS gate.
+                        "-f", "bestaudio[protocol=https]/bestaudio[protocol=http_dash_segments]/bestaudio[protocol=m3u8_native]/best[protocol=https]/best[protocol=http_dash_segments]/best[protocol=m3u8_native]",
+                        "-o", Path.Combine(dir, "source.%(ext)s"),
+                        "--print", $"before_dl:{TitlePrefix}%(title)s",
+                        "--print", $"after_move:{PathPrefix}%(filepath)s",
+                        "--", url,
+                    },
+                    "wf-internet-sound-error-ytdlp-missing",
+                    downloadCancel.Token);
+            }
+            catch (OperationCanceledException) when (proxy.DownloadLimitExceeded)
+            {
+                throw new FetchException("wf-internet-sound-error-download-too-large",
+                    DownloadMegabytes(settings.MaxDownloadBytes).ToString());
+            }
+
+            if (proxy.DownloadLimitExceeded)
+                throw new FetchException("wf-internet-sound-error-download-too-large",
+                    DownloadMegabytes(settings.MaxDownloadBytes).ToString());
 
             var lines = download.Output.Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
             var title = lines.FirstOrDefault(l => l.StartsWith(TitlePrefix))?[TitlePrefix.Length..] ?? url;
@@ -127,8 +144,13 @@ public static class InternetSoundDownloader
             if (convert.ExitCode != 0 || !File.Exists(output))
                 throw new FetchException("wf-internet-sound-error-transcode", LastLine(convert.Error));
 
+            var maxSizeBytes = checked((long) settings.MaxSizeMb * 1024 * 1024);
+            if (new FileInfo(output).Length > maxSizeBytes)
+                throw new FetchException("wf-internet-sound-error-too-large",
+                    (new FileInfo(output).Length / (1024 * 1024)).ToString());
+
             var audio = await File.ReadAllBytesAsync(output, timeout.Token);
-            if (audio.Length > settings.MaxSizeMb * 1024 * 1024)
+            if (audio.Length > maxSizeBytes)
                 throw new FetchException("wf-internet-sound-error-too-large", (audio.Length / (1024 * 1024)).ToString());
 
             return new Result(title, audio);
@@ -151,6 +173,7 @@ public static class InternetSoundDownloader
     /// </summary>
     private static async Task<(int ExitCode, string Output, string Error)> Run(string exe, IEnumerable<string> args, string missingKey, CancellationToken cancel)
     {
+        cancel.ThrowIfCancellationRequested();
         var info = new ProcessStartInfo(exe)
         {
             UseShellExecute = false,
@@ -212,4 +235,6 @@ public static class InternetSoundDownloader
         var line = text.Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).LastOrDefault() ?? string.Empty;
         return line.Length > 200 ? line[..200] : line;
     }
+
+    private static long DownloadMegabytes(long bytes) => (bytes - 1) / (1024 * 1024) + 1;
 }

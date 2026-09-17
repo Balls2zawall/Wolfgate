@@ -45,7 +45,12 @@ public sealed partial class InternetSoundSystem : EntitySystem
     /// <summary>
     /// The transfer key outlives entity systems, which are rebuilt on reconnect, so it routes to the live instance.
     /// </summary>
-    private static readonly Dictionary<ITransferManager, InternetSoundSystem?> Receivers = new();
+    private static readonly System.Runtime.CompilerServices.ConditionalWeakTable<ITransferManager, ReceiverRegistration> Receivers = new();
+
+    private sealed class ReceiverRegistration
+    {
+        public InternetSoundSystem? Receiver;
+    }
 
     private sealed record Header(int Id, string Title, string Requester, bool IsPa);
 
@@ -97,13 +102,15 @@ public sealed partial class InternetSoundSystem : EntitySystem
 
         lock (Receivers)
         {
-            if (!Receivers.ContainsKey(_transfer))
+            if (!Receivers.TryGetValue(_transfer, out var registration))
             {
                 var transfer = _transfer;
                 transfer.RegisterTransferMessage(InternetSoundProtocol.TransferKey, ev => Route(transfer, ev));
+                registration = new ReceiverRegistration();
+                Receivers.Add(transfer, registration);
             }
 
-            Receivers[_transfer] = this;
+            registration.Receiver = this;
         }
 
         SubscribeNetworkEvent<InternetSoundPlayingEvent>(OnPlaying);
@@ -137,8 +144,8 @@ public sealed partial class InternetSoundSystem : EntitySystem
 
         lock (Receivers)
         {
-            if (Receivers.TryGetValue(_transfer, out var receiver) && receiver == this)
-                Receivers[_transfer] = null;
+            if (Receivers.TryGetValue(_transfer, out var registration) && registration.Receiver == this)
+                registration.Receiver = null;
         }
     }
 
@@ -264,7 +271,7 @@ public sealed partial class InternetSoundSystem : EntitySystem
         InternetSoundSystem? receiver;
         lock (Receivers)
         {
-            Receivers.TryGetValue(transfer, out receiver);
+            receiver = Receivers.TryGetValue(transfer, out var registration) ? registration.Receiver : null;
         }
 
         Header? header = null;

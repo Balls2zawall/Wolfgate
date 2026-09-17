@@ -175,6 +175,27 @@ public sealed class InternetSoundDownloadProxyTest
     }
 
     [Test]
+    public async Task FragmentedInputSharesOneAtomicCapAcrossTunnelsAndCancelsDownload()
+    {
+        using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(5));
+        var cancelled = 0;
+        await using var proxy = new InternetSoundDownloadProxy(timeout.Token,
+            (_, _) => Task.FromResult(new[] { IPAddress.Parse("8.8.8.8") }),
+            (_, _, _) => Task.FromResult<Stream>(new FragmentedStream(new byte[6], 3)),
+            maxDownloadBytes: 8,
+            onDownloadLimitExceeded: () => Interlocked.Exchange(ref cancelled, 1));
+
+        var reads = await Task.WhenAll(
+            ReadThroughProxy(proxy.Url, "one.test", timeout.Token),
+            ReadThroughProxy(proxy.Url, "two.test", timeout.Token));
+
+        Assert.That(reads[0].Length + reads[1].Length, Is.LessThanOrEqualTo(8));
+        Assert.That(reads[0].Length + reads[1].Length, Is.GreaterThan(0));
+        Assert.That(proxy.DownloadLimitExceeded, Is.True);
+        Assert.That(Volatile.Read(ref cancelled), Is.EqualTo(1));
+    }
+
+    [Test]
     [TestCase(false)]
     [TestCase(true)]
     public async Task DisposingClosesAnIncompleteHandshake(bool beginTls)
@@ -238,7 +259,76 @@ public sealed class InternetSoundDownloadProxyTest
         return reply[1];
     }
 
+    private static async Task<byte[]> ReadThroughProxy(string proxyUrl, string host, CancellationToken token)
+    {
+        using var client = new TcpClient();
+        await client.ConnectAsync(IPAddress.Loopback, new Uri(proxyUrl).Port, token);
+        var stream = client.GetStream();
+        await stream.WriteAsync(new byte[] { 5, 1, 0 }, token);
+        var greeting = new byte[2];
+        await stream.ReadExactlyAsync(greeting, token);
+        var name = Encoding.ASCII.GetBytes(host);
+        using var request = new MemoryStream();
+        request.Write(new byte[] { 5, 1, 0, 3, (byte) name.Length });
+        request.Write(name);
+        request.Write(new byte[] { 1, 187 });
+        await stream.WriteAsync(request.ToArray(), token);
+        var reply = new byte[10];
+        await stream.ReadExactlyAsync(reply, token);
+        if (reply[1] != 0)
+            return Array.Empty<byte>();
+
+        await stream.WriteAsync(ClientHelloPrefix, token);
+        using var result = new MemoryStream();
+        var buffer = new byte[32];
+        try
+        {
+            while (true)
+            {
+                var read = await stream.ReadAsync(buffer, token);
+                if (read == 0)
+                    return result.ToArray();
+                result.Write(buffer, 0, read);
+            }
+        }
+        catch (IOException)
+        {
+            return result.ToArray();
+        }
+    }
+
     private static readonly byte[] ClientHelloPrefix = { 22, 3, 3, 0, 4, 1 };
+
+    private sealed class FragmentedStream(byte[] data, int fragmentSize) : MemoryStream()
+    {
+        private readonly byte[] _data = data;
+        private int _offset;
+
+        public override int Read(byte[] buffer, int offset, int count)
+        {
+            if (_offset == _data.Length)
+                return 0;
+            var read = Math.Min(Math.Min(count, fragmentSize), _data.Length - _offset);
+            Array.Copy(_data, _offset, buffer, offset, read);
+            _offset += read;
+            return read;
+        }
+
+        public override Task<int> ReadAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken) =>
+            Task.FromResult(Read(buffer, offset, count));
+
+        public override ValueTask<int> ReadAsync(Memory<byte> buffer, CancellationToken cancellationToken = default)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            var count = Math.Min(Math.Min(buffer.Length, fragmentSize), _data.Length - _offset);
+            _data.AsMemory(_offset, count).CopyTo(buffer);
+            _offset += count;
+            return ValueTask.FromResult(count);
+        }
+
+        public override ValueTask WriteAsync(ReadOnlyMemory<byte> buffer, CancellationToken cancellationToken = default) =>
+            ValueTask.CompletedTask;
+    }
 
     private static byte[] Response(string status, string body = "", string? location = null)
     {

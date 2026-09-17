@@ -7,9 +7,10 @@ public sealed partial class ShipPaSystem
 {
     private readonly Queue<ShipPaTrackFinishedEvent> _finishedBroadcasts = new();
     private readonly List<EntityUid> _emptyBroadcastGrids = new();
-    public void StartAlarm(EntityUid grid, string key, SoundSpecifier sound, AudioParams? audioParams = null, string? message = null, Color? color = null)
+    public void StartAlarm(EntityUid grid, string key, SoundSpecifier sound, AudioParams? audioParams = null,
+        string? message = null, Color? color = null, int priority = ShipPaPlaybackPolicy.DefaultAlarmPriority)
     {
-        StartBroadcast(grid, key, sound, true, ShipPaBroadcastKind.Alarm, 20, audioParams, message, color);
+        StartBroadcast(grid, key, sound, true, ShipPaBroadcastKind.Alarm, priority, audioParams, message, color);
     }
 
     public bool StartTrack(EntityUid grid, string key, SoundSpecifier sound, AudioParams? audioParams = null, string? message = null, Color? color = null)

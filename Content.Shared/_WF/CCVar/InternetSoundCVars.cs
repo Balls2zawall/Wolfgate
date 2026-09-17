@@ -89,6 +89,12 @@ public sealed class InternetSoundCVars
         CVarDef.Create("wf.internet_sound.max_size_mb", 8, CVar.SERVERONLY);
 
     /// <summary>
+    /// Largest encrypted input download in megabytes, shared across all HTTPS tunnels and fragments.
+    /// </summary>
+    public static readonly CVarDef<int> MaxDownloadMb =
+        CVarDef.Create("wf.internet_sound.max_download_mb", 64, CVar.SERVERONLY);
+
+    /// <summary>
     /// Seconds to wait for clients before starting a global admin sound. PA tracks do not wait;
     /// each listener joins their shared timeline when the file arrives.
     /// </summary>

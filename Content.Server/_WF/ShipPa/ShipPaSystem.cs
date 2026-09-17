@@ -56,12 +56,13 @@ public sealed partial class ShipPaSystem : EntitySystem
     }
 
     /// <summary>One ship timeline, rendered independently by each listener.</summary>
-    public int? Broadcast(EntityUid grid, SoundSpecifier sound, AudioParams? audioParams = null)
+    public int? Broadcast(EntityUid grid, SoundSpecifier sound, AudioParams? audioParams = null,
+        int priority = ShipPaPlaybackPolicy.AnnouncementPriority, string key = "announcement")
     {
         if (!Exists(grid) || CountSpeakers(grid).Online == 0)
             return null;
 
-        return StartBroadcast(grid, "announcement", sound, false, ShipPaBroadcastKind.Announcement, 30, audioParams)?.Id;
+        return StartBroadcast(grid, key, sound, false, ShipPaBroadcastKind.Announcement, priority, audioParams)?.Id;
     }
 
     public bool Announce(EntityUid grid, string message, SoundSpecifier? sound = null, string? sender = null, Color? color = null)
@@ -70,7 +71,8 @@ public sealed partial class ShipPaSystem : EntitySystem
             return false;
 
         var chime = sound ?? CompOrNull<ShipAlertComponent>(grid)?.AnnouncementChime ?? DefaultChime;
-        if (StartBroadcast(grid, "announcement", chime, false, ShipPaBroadcastKind.Announcement, 30, caption: message, color: color) == null)
+        if (StartBroadcast(grid, "announcement", chime, false, ShipPaBroadcastKind.Announcement,
+                ShipPaPlaybackPolicy.AnnouncementPriority, caption: message, color: color) == null)
             return false;
 
         // One history entry per listener; no per-speaker bubbles or periodic re-announcements.

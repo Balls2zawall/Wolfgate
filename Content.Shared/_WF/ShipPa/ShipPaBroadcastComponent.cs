@@ -55,6 +55,12 @@ public sealed partial class ShipPaBroadcast
 public static class ShipPaPlaybackPolicy
 {
     public const int MaxSources = 2;
+    public const int DefaultAlarmPriority = 20;
+    public const int AdvisoryPriority = 12;
+    public const int AdvisoryCalloutPriority = 15;
+    public const int AnnouncementPriority = 30;
+    public const int ImminentPriority = 40;
+
     // Give replication and listener selection time to prepare the source before the first sample.
     public const float StartLeadSeconds = 0.5f;
     public const float FadeSeconds = 0.25f;
