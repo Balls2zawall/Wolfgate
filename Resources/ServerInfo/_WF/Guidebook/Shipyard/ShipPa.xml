@@ -32,6 +32,12 @@
   from the same panel. Alarms take priority over PA music; the music resumes at its current position
   when the alarm is secured. Walking between speakers does not restart the broadcast.
 
+  ## Internet audio
+
+  Paste an HTTPS audio or video link into the PA panel and press Play. The link, any redirects,
+  and the audio stream must all use HTTPS; plain HTTP streams are not supported. Press Cut to
+  stop the track and allow an immediate replacement.
+
   ## Damage and repair
 
   A speaker takes damage like any structure: light damage makes its audio muffle and cut out,

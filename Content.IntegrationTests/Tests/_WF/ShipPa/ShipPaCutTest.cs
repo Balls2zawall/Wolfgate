@@ -1,6 +1,7 @@
 #nullable enable
 using Content.IntegrationTests.Tests.Interaction;
 using Content.Server.Power.Components;
+using Content.Shared._WF.CCVar;
 using Content.Shared._WF.ShipPa;
 using Content.Shared.Shuttles.Components;
 using Robust.Shared.GameObjects;
@@ -38,41 +39,50 @@ public sealed class ShipPaCutTest : InteractionTest
             var internet = SEntMan.System<Content.Server._WF.Audio.InternetSound.InternetSoundSystem>();
             var timing = Server.ResolveDependency<IGameTiming>();
 
-            // Begin() records the track and cooldown synchronously. The invalid endpoint keeps the
-            // downloader from accessing the network; its completion is queued to a later server tick.
-            const string url = "http://example.invalid:81/";
-            var request = new ShipPaInternetSoundRequestMessage(url) { Actor = SPlayer };
-            ui.RaiseUiMessage(console, ShuttleConsoleUiKey.Key, request);
+            // Begin() records the track and cooldown synchronously. A missing executable prevents
+            // network access; any fetch completion is queued to a later server tick.
+            var downloader = Server.CfgMan.GetCVar(InternetSoundCVars.YtDlpPath);
+            Server.CfgMan.SetCVar(InternetSoundCVars.YtDlpPath, "wolfgate-test-missing-yt-dlp");
+            try
+            {
+                const string url = "https://example.invalid/";
+                var request = new ShipPaInternetSoundRequestMessage(url) { Actor = SPlayer };
+                ui.RaiseUiMessage(console, ShuttleConsoleUiKey.Key, request);
 
-            Assert.That(internet.IsPlayingOn(grid), Is.True,
-                "The request handler should record a ship track before download completion.");
-            Assert.That(alert.NextInternetSound, Is.GreaterThan(timing.CurTime),
-                "A successful request should start the request cooldown.");
+                Assert.That(internet.IsPlayingOn(grid), Is.True,
+                    "The request handler should record a ship track before download completion.");
+                Assert.That(alert.NextInternetSound, Is.GreaterThan(timing.CurTime),
+                    "A successful request should start the request cooldown.");
 
-            var cut = new ShipPaInternetSoundStopMessage { Actor = SPlayer };
-            ui.RaiseUiMessage(console, ShuttleConsoleUiKey.Key, cut);
+                var cut = new ShipPaInternetSoundStopMessage { Actor = SPlayer };
+                ui.RaiseUiMessage(console, ShuttleConsoleUiKey.Key, cut);
 
-            Assert.That(internet.IsPlayingOn(grid), Is.False,
-                "A successful cut should remove the pending ship track.");
-            Assert.That(alert.NextInternetSound, Is.EqualTo(TimeSpan.Zero),
-                "A successful cut should release the request cooldown.");
+                Assert.That(internet.IsPlayingOn(grid), Is.False,
+                    "A successful cut should remove the pending ship track.");
+                Assert.That(alert.NextInternetSound, Is.EqualTo(TimeSpan.Zero),
+                    "A successful cut should release the request cooldown.");
 
-            var replacement = new ShipPaInternetSoundRequestMessage(url) { Actor = SPlayer };
-            ui.RaiseUiMessage(console, ShuttleConsoleUiKey.Key, replacement);
+                var replacement = new ShipPaInternetSoundRequestMessage(url) { Actor = SPlayer };
+                ui.RaiseUiMessage(console, ShuttleConsoleUiKey.Key, replacement);
 
-            Assert.That(internet.IsPlayingOn(grid), Is.True,
-                "A replacement request should be accepted immediately after a successful cut.");
-            Assert.That(alert.NextInternetSound, Is.GreaterThan(timing.CurTime));
+                Assert.That(internet.IsPlayingOn(grid), Is.True,
+                    "A replacement request should be accepted immediately after a successful cut.");
+                Assert.That(alert.NextInternetSound, Is.GreaterThan(timing.CurTime));
 
-            // Remove the replacement, then create cooldown state without a track. A second cut is a
-            // no-op and must not clear that cooldown.
-            ui.RaiseUiMessage(console, ShuttleConsoleUiKey.Key, cut);
-            var noOpCooldown = timing.CurTime + TimeSpan.FromSeconds(60);
-            alert.NextInternetSound = noOpCooldown;
-            ui.RaiseUiMessage(console, ShuttleConsoleUiKey.Key, cut);
+                // Remove the replacement, then create cooldown state without a track. A second cut is a
+                // no-op and must not clear that cooldown.
+                ui.RaiseUiMessage(console, ShuttleConsoleUiKey.Key, cut);
+                var noOpCooldown = timing.CurTime + TimeSpan.FromSeconds(60);
+                alert.NextInternetSound = noOpCooldown;
+                ui.RaiseUiMessage(console, ShuttleConsoleUiKey.Key, cut);
 
-            Assert.That(alert.NextInternetSound, Is.EqualTo(noOpCooldown),
-                "A no-op cut must leave the existing cooldown untouched.");
+                Assert.That(alert.NextInternetSound, Is.EqualTo(noOpCooldown),
+                    "A no-op cut must leave the existing cooldown untouched.");
+            }
+            finally
+            {
+                Server.CfgMan.SetCVar(InternetSoundCVars.YtDlpPath, downloader);
+            }
         });
     }
 }

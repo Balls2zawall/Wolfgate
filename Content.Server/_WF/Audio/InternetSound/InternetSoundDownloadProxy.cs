@@ -11,7 +11,7 @@ namespace Content.Server._WF.Audio.InternetSound;
 /// <summary>
 /// Per-download SOCKS5 tunnel. Every connection (including redirects and media fragments) is
 /// resolved here and connected to a checked IP, never resolved a second time by the socket.
-/// Only native HTTP(S) yt-dlp downloaders may use it; FFmpeg is restricted to local protocols.
+/// Only native HTTPS yt-dlp downloaders may use it; FFmpeg is restricted to local protocols.
 /// </summary>
 internal sealed class InternetSoundDownloadProxy : IAsyncDisposable
 {
@@ -22,9 +22,11 @@ internal sealed class InternetSoundDownloadProxy : IAsyncDisposable
     private readonly Func<string, CancellationToken, Task<IPAddress[]>> _resolve;
     private readonly Func<IPAddress, int, CancellationToken, Task<Stream>> _connect;
     private string? _deniedHost;
+    private int _rejectedInsecureTransport;
 
     public string Url { get; }
     public string? DeniedHost => Volatile.Read(ref _deniedHost);
+    public bool RejectedInsecureTransport => Volatile.Read(ref _rejectedInsecureTransport) != 0;
 
     internal InternetSoundDownloadProxy(CancellationToken cancel,
         Func<string, CancellationToken, Task<IPAddress[]>>? resolve = null,
@@ -106,17 +108,34 @@ internal sealed class InternetSoundDownloadProxy : IAsyncDisposable
                 }
                 var portBytes = await Read(downstream, 2, token);
                 var port = (portBytes[0] << 8) | portBytes[1];
+                if (port != 443)
+                {
+                    Interlocked.Exchange(ref _rejectedInsecureTransport, 1);
+                    await Reply(downstream, 2, token);
+                    return;
+                }
                 var addresses = IPAddress.TryParse(host, out var literal)
                     ? new[] { literal }
                     : await _resolve(host, token);
-                if (port is not (80 or 443) || addresses.Length == 0 || addresses.Any(IsNonPublic))
+                if (addresses.Length == 0 || addresses.Any(IsNonPublic))
                 {
                     Interlocked.CompareExchange(ref _deniedHost, host, null);
                     await Reply(downstream, 2, token);
                     return;
                 }
-                using var upstream = await ConnectChecked(addresses, port, token);
                 await Reply(downstream, 0, token);
+                // Port 443 alone does not imply HTTPS: redirects can use http://host:443.
+                // yt-dlp must begin TLS before any request bytes reach the remote destination.
+                // Pass TLS through unchanged; yt-dlp still authenticates the server certificate.
+                var hello = await Read(downstream, 6, token);
+                if (hello[0] != 22 || hello[1] != 3 || hello[2] is < 1 or > 3
+                    || ((hello[3] << 8) | hello[4]) < 4 || hello[5] != 1)
+                {
+                    Interlocked.Exchange(ref _rejectedInsecureTransport, 1);
+                    return;
+                }
+                using var upstream = await ConnectChecked(addresses, port, token);
+                await upstream.WriteAsync(hello, token);
                 var sending = downstream.CopyToAsync(upstream, token);
                 var receiving = upstream.CopyToAsync(downstream, token);
                 await Task.WhenAny(sending, receiving);

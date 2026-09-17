@@ -48,8 +48,8 @@ public static class InternetSoundDownloader
         timeout.CancelAfter(TimeSpan.FromSeconds(settings.TimeoutSeconds));
 
         var uri = new Uri(url);
-        if (uri.Scheme is not ("http" or "https") || uri.Port is not (80 or 443))
-            throw new FetchException("wf-internet-sound-error-host", uri.Host);
+        if (uri.Scheme != Uri.UriSchemeHttps || uri.Port != 443)
+            throw new FetchException("wf-internet-sound-error-https");
         await using var proxy = new InternetSoundDownloadProxy(timeout.Token);
 
         var dir = Path.Combine(Path.GetTempPath(), "wolfgate-internet-sound", Guid.NewGuid().ToString("N"));
@@ -71,8 +71,8 @@ public static class InternetSoundDownloader
                     "--ffmpeg-location", nativeTools,
                     "--no-playlist", "--no-warnings", "--no-progress", "--no-simulate",
                     "--match-filter", $"!is_live & duration <=? {settings.MaxDurationSeconds}",
-                    // Only protocols handled by native downloaders through the checked proxy.
-                    "-f", "bestaudio[protocol=https]/bestaudio[protocol=http]/bestaudio[protocol=http_dash_segments]/bestaudio[protocol=m3u8_native]/best[protocol=https]/best[protocol=http]/best[protocol=http_dash_segments]/best[protocol=m3u8_native]",
+                    // Manifests and fragments must also pass the proxy's HTTPS gate.
+                    "-f", "bestaudio[protocol=https]/bestaudio[protocol=http_dash_segments]/bestaudio[protocol=m3u8_native]/best[protocol=https]/best[protocol=http_dash_segments]/best[protocol=m3u8_native]",
                     "-o", Path.Combine(dir, "source.%(ext)s"),
                     "--print", $"before_dl:{TitlePrefix}%(title)s",
                     "--print", $"after_move:{PathPrefix}%(filepath)s",
@@ -85,6 +85,8 @@ public static class InternetSoundDownloader
             var title = lines.FirstOrDefault(l => l.StartsWith(TitlePrefix))?[TitlePrefix.Length..] ?? url;
             var source = lines.FirstOrDefault(l => l.StartsWith(PathPrefix))?[PathPrefix.Length..];
 
+            if (proxy.RejectedInsecureTransport)
+                throw new FetchException("wf-internet-sound-error-https");
             if (proxy.DeniedHost is { } denied)
                 throw new FetchException("wf-internet-sound-error-host", denied);
             if (download.ExitCode != 0)

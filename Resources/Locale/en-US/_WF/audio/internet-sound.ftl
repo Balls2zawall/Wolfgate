@@ -22,7 +22,7 @@ wf-internet-sound-admin-need-grid = Enter the grid entity id of the ship to play
 ## Status messages
 wf-internet-sound-server-name = The server
 wf-internet-sound-disabled = Internet sounds are disabled on this server.
-wf-internet-sound-invalid-url = That isn't an http or https link.
+wf-internet-sound-invalid-url = Use an HTTPS link on the standard port (443).
 wf-internet-sound-fetching = Fetching {$url}...
 wf-internet-sound-sending = Sending "{$title}" ({$size} MB) to {$count} players. It starts once they all have it.
 wf-internet-sound-playing = Playing "{$title}" to everyone.
@@ -43,6 +43,7 @@ wf-internet-sound-error-ytdlp-missing = yt-dlp wasn't found ({$detail}). Install
 wf-internet-sound-error-ffmpeg-missing = ffmpeg wasn't found ({$detail}). Install it or set wf.internet_sound.ffmpeg_path.
 wf-internet-sound-error-download = yt-dlp couldn't fetch that link: {$detail}
 wf-internet-sound-error-host = {$detail} is a private, local or unresolvable address, which isn't allowed.
+wf-internet-sound-error-https = The link and all download destinations must use HTTPS on port 443. Unencrypted redirects and streams are not allowed.
 wf-internet-sound-error-rejected = That link is a livestream or longer than the {$detail} second limit.
 wf-internet-sound-error-transcode = ffmpeg couldn't convert the audio: {$detail}. It needs libvorbis support.
 wf-internet-sound-error-too-large = The converted audio is {$detail} MB, over the size limit.

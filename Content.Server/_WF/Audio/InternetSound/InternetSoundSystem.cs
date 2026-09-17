@@ -257,8 +257,8 @@ public sealed partial class InternetSoundSystem : EntitySystem
             return false;
         }
 
-        // http(s) only, so yt-dlp can't be pointed at server files.
-        if (!Uri.TryCreate(url, UriKind.Absolute, out var uri) || uri.Scheme != Uri.UriSchemeHttp && uri.Scheme != Uri.UriSchemeHttps)
+        // Require encrypted links before starting a fetch or replacing an existing track.
+        if (!Uri.TryCreate(url, UriKind.Absolute, out var uri) || uri.Scheme != Uri.UriSchemeHttps || uri.Port != 443)
         {
             error = Loc.GetString("wf-internet-sound-invalid-url");
             Report(admin, error, true);
