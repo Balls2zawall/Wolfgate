@@ -30,7 +30,7 @@ public sealed class InternetSoundCVars
         CVarDef.Create("wf.internet_sound.max_concurrent", 2, CVar.SERVERONLY);
 
     /// <summary>
-    /// Seconds a ship must wait between console requests, so one person can't keep the PA to themselves.
+    /// Seconds a ship must wait between console requests. Cutting its current track allows an immediate replacement.
     /// </summary>
     public static readonly CVarDef<int> RequestCooldown =
         CVarDef.Create("wf.internet_sound.request_cooldown", 60, CVar.SERVERONLY);

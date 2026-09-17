@@ -137,7 +137,8 @@ public sealed partial class ShipAlertSystem : EntitySystem
 
         if (_timing.CurTime < alert.NextInternetSound)
         {
-            _popup.PopupEntity(Loc.GetString("ship-pa-sound-cooldown"), ent, args.Actor);
+            var seconds = (int) Math.Ceiling((alert.NextInternetSound - _timing.CurTime).TotalSeconds);
+            _popup.PopupEntity(Loc.GetString("ship-pa-sound-cooldown", ("seconds", seconds)), ent, args.Actor);
             return;
         }
 
@@ -162,6 +163,10 @@ public sealed partial class ShipAlertSystem : EntitySystem
     {
         if (GetConsoleGrid(ent) is not { } grid || !_internetSound.StopForGrid(grid))
             return;
+
+        // Cutting a track also releases its request slot, so the pilot can queue a replacement.
+        if (TryComp<ShipAlertComponent>(grid, out var alert))
+            alert.NextInternetSound = TimeSpan.Zero;
 
         _adminLogger.Add(LogType.Action, LogImpact.Medium,
             $"{ToPrettyString(args.Actor):player} stopped the internet sound on the PA of {ToPrettyString(grid):grid}");
