@@ -202,6 +202,13 @@ Entries:
   url: https://github.com/VanguardControl/Wolfgate/pull/35
 - author: Gandalf2k15
   changes:
+    - type: Fix
+      message: Fixes a zero-value debris cleanup bug
+  id: 100018
+  time: '2026-09-17T18:22:07.0000000+00:00'
+  url: https://github.com/VanguardControl/Wolfgate/pull/38
+- author: Gandalf2k15
+  changes:
     - type: Add
       message: >-
         The shuttle console's ship panel can now play a link over the ship's own
@@ -211,6 +218,6 @@ Entries:
       message: >-
         Internet sounds are sent as Ogg Vorbis instead of ADPCM, which is a good
         deal smaller, and their audio is freed once a track has finished.
-  id: 100018
+  id: 100019
   time: '2026-09-15T00:00:00.0000000+00:00'
   url: https://github.com/VanguardControl/Wolfgate/pull/36
