@@ -29,8 +29,9 @@ namespace Content.IntegrationTests.Tests._WF.ShipPa;
 [TestFixture]
 public sealed class ShipPaReplayTest
 {
-    [Test]
-    public async Task RecordedAssetsSurviveReleaseAndReplaySeeking()
+    [TestCase(10)]
+    [TestCase(0)] // Force incremental seeking even on fast machines.
+    public async Task RecordedAssetsSurviveReleaseAndReplaySeeking(int scrubBudgetMs)
     {
         await using var pair = await PoolManager.GetServerClient(new PoolSettings { Connected = false, Dirty = true });
         var server = pair.Server;
@@ -100,21 +101,22 @@ public sealed class ShipPaReplayTest
             var resources = InternetSoundResources.For(client.ResolveDependency<IResourceCache>());
             var pa = em.System<ShipPaMeshSystem>();
             var internet = em.System<Content.Client._WF.Audio.InternetSound.InternetSoundSystem>();
+            client.CfgMan.SetCVar(CVars.ReplayMaxScrubTime, scrubBudgetMs);
             client.ResolveDependency<IEyeManager>().CurrentEye = new FixedEye { Position = map.MapCoords };
-            playback.SetIndex(20);
+            SeekTo(playback, 20);
             internet.FrameUpdate(0.3f);
             pa.FrameUpdate(0.3f);
             Assert.That(resources.Has(id), Is.True);
             Assert.That(resources.Has(id + 1), Is.False, "Unused assets stay compressed in the recording.");
             Assert.That(em.EntityQuery<ShipPaAudioComponent>().Count(), Is.EqualTo(1));
 
-            playback.SetIndex(data.States.Count - 1);
+            SeekTo(playback, data.States.Count - 1);
             internet.FrameUpdate(0.3f);
             pa.FrameUpdate(0.3f);
             Assert.That(resources.Has(id), Is.False, "Seeking past the song frees its decoded audio.");
             Assert.That(em.EntityQuery<ShipPaAudioComponent>(), Is.Empty);
 
-            playback.SetIndex(20);
+            SeekTo(playback, 20);
             internet.FrameUpdate(0.3f);
             pa.FrameUpdate(0.3f);
             Assert.That(resources.Has(id), Is.True, "Rewind restores the song after release.");
@@ -138,6 +140,22 @@ public sealed class ShipPaReplayTest
         });
         await pair.CleanReturnAsync();
     }
+    private static void SeekTo(IReplayPlaybackManager playback, int index)
+    {
+        var replay = playback.Replay!;
+        // SetIndex is time-budgeted, including checkpoint restoration. Continue the pending seek
+        // as playback frames normally would, rather than asserting against a partially applied state.
+        // Even a zero budget advances at least one state per call, so the recording bounds this loop.
+        for (var attempt = 0; attempt < replay.States.Count; attempt++)
+        {
+            playback.SetIndex(index);
+            if (replay.CurrentIndex == index && playback.ScrubbingTarget == null)
+                return;
+        }
+
+        Assert.Fail($"Replay seek did not finish: expected index {index}, reached {replay.CurrentIndex}.");
+    }
+
     // The integration serializer deliberately has no mapped-string package and rejects SetPackage.
     // Read its raw-string recording directly, then use the real checkpoint generator and playback.
     private static async Task<ReplayData> ReadTestReplay(IReplayFileReader reader, ReplayLoadManager loader,
