@@ -33,7 +33,9 @@ public sealed class ShipPaReplayTest
     [TestCase(0)] // Force incremental seeking even on fast machines.
     public async Task RecordedAssetsSurviveReleaseAndReplaySeeking(int scrubBudgetMs)
     {
-        await using var pair = await PoolManager.GetServerClient(new PoolSettings { Connected = false, Dirty = true });
+        // StopReplay resets the client's prototype manager, including the pool's test-only prototypes.
+        // Ordinary dirty recycling does not reload them, so this pair must never be reused.
+        await using var pair = await PoolManager.GetServerClient(new PoolSettings { Connected = false, Destructive = true });
         var server = pair.Server;
         var client = pair.Client;
         var map = await pair.CreateTestMap();
