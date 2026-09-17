@@ -30,8 +30,7 @@ public sealed class ShipPaTest
     [Test]
     public async Task ShipPaLifecycleTest()
     {
-        // Connected: false is enough - PlayPvs spawns its audio entity server-side unconditionally
-        // (Robust.Server.Audio.AudioSystem.PlayPvs calls SetupAudio regardless of any player filter).
+        // Server-side timeline and power state do not require a connected listener.
         await using var pair = await PoolManager.GetServerClient(new PoolSettings { Connected = false, Dirty = true });
         var server = pair.Server;
         var map = await pair.CreateTestMap();
@@ -85,7 +84,7 @@ public sealed class ShipPaTest
             Assert.That(total, Is.EqualTo(2));
         });
 
-        // Step 3: a one-shot broadcast plays a tagged copy from every working speaker.
+        // Step 3: one timeline covers both speakers without any server audio sources.
         var firstId = 0;
 
         await server.WaitAssertion(() =>
@@ -94,22 +93,12 @@ public sealed class ShipPaTest
             Assert.That(id, Is.Not.Null);
             firstId = id!.Value;
 
-            var streams = CollectBroadcast(entMan, firstId);
-            Assert.That(streams, Has.Count.EqualTo(2));
-
-            var speakers = new HashSet<EntityUid>();
-
-            foreach (var (uid, audio, xform) in streams)
-            {
-                Assert.That(audio.BroadcastId, Is.EqualTo(firstId));
-                Assert.That(audio.Speaker, Is.Not.Null);
-                Assert.That(xform.ParentUid, Is.EqualTo(audio.Speaker!.Value));
-                Assert.That(audio.IsOverlay, Is.False);
-                Assert.That(entMan.HasComponent<AudioComponent>(uid), Is.True);
-                speakers.Add(audio.Speaker.Value);
-            }
-
-            Assert.That(speakers, Is.EquivalentTo(new[] { speakerA, speakerB }));
+            var broadcasts = entMan.GetComponent<ShipPaBroadcastComponent>(gridUid).Broadcasts;
+            Assert.That(broadcasts, Has.Count.EqualTo(1));
+            Assert.That(broadcasts[0].Id, Is.EqualTo(firstId));
+            Assert.That(entMan.GetComponent<ShipPaSpeakerComponent>(speakerA).Enabled, Is.True);
+            Assert.That(entMan.GetComponent<ShipPaSpeakerComponent>(speakerB).Enabled, Is.True);
+            Assert.That(CollectBroadcast(entMan, firstId), Is.Empty, "The server must not allocate per-speaker audio.");
         });
 
         // Step 4: listener filter is well-formed with nobody around, and Announce still fires.
@@ -145,10 +134,10 @@ public sealed class ShipPaTest
             secondId = id!.Value;
 
             // The earlier broadcast's audio entities may still exist or have despawned; filter by the new id.
-            var streams = CollectBroadcast(entMan, secondId);
-            Assert.That(streams, Has.Count.EqualTo(1));
-            Assert.That(streams[0].Audio.Speaker, Is.EqualTo(speakerB));
-            Assert.That(streams[0].Xform.ParentUid, Is.EqualTo(speakerB));
+            Assert.That(CollectBroadcast(entMan, secondId), Is.Empty);
+            Assert.That(entMan.GetComponent<ShipPaSpeakerComponent>(speakerA).Enabled, Is.False);
+            Assert.That(entMan.GetComponent<ShipPaSpeakerComponent>(speakerB).Enabled, Is.True);
+            Assert.That(entMan.GetComponent<ShipPaBroadcastComponent>(gridUid).Broadcasts.Exists(b => b.Id == secondId), Is.True);
         });
 
         // Step 6: full repair clears both breakage and distortion.
@@ -178,10 +167,11 @@ public sealed class ShipPaTest
 
         await pair.RunTicksSync(5);
 
-        // Step 7b: both speakers loop the alarm; breaking one should drop it out.
+        // Step 7b: the alarm timeline survives while broken speakers leave coverage.
         await server.WaitAssertion(() =>
         {
-            Assert.That(CountLoopingStreams(entMan), Is.EqualTo(2));
+            Assert.That(CountLoopingStreams(entMan), Is.EqualTo(0));
+            Assert.That(pa.IsAlarmActive(gridUid, ShipAlertSystem.GeneralQuartersAlarm), Is.True);
 
             var blunt = protoManager.Index<DamageTypePrototype>("Blunt");
             damageSys.TryChangeDamage(speakerA, new DamageSpecifier(blunt, FixedPoint2.New(70)), ignoreResistances: true);
@@ -194,7 +184,9 @@ public sealed class ShipPaTest
 
         await server.WaitAssertion(() =>
         {
-            Assert.That(CountLoopingStreams(entMan), Is.EqualTo(1));
+            Assert.That(CountLoopingStreams(entMan), Is.EqualTo(0));
+            Assert.That(entMan.GetComponent<ShipPaSpeakerComponent>(speakerA).Enabled, Is.False);
+            Assert.That(entMan.GetComponent<ShipPaSpeakerComponent>(speakerB).Enabled, Is.True);
 
             alerts.SetGeneralQuarters(gridUid, false);
             Assert.That(pa.IsAlarmActive(gridUid, ShipAlertSystem.GeneralQuartersAlarm), Is.False);

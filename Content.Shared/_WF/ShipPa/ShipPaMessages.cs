@@ -37,3 +37,19 @@ public sealed class ShipPaAnnounceRequestMessage : BoundUserInterfaceMessage
         Text = text;
     }
 }
+
+/// <summary>Pilot queued a link to play over the ship's own speakers.</summary>
+[Serializable, NetSerializable]
+public sealed class ShipPaInternetSoundRequestMessage : BoundUserInterfaceMessage
+{
+    public string Url;
+
+    public ShipPaInternetSoundRequestMessage(string url)
+    {
+        Url = url;
+    }
+}
+
+/// <summary>Pilot cut whatever the ship was playing.</summary>
+[Serializable, NetSerializable]
+public sealed class ShipPaInternetSoundStopMessage : BoundUserInterfaceMessage;

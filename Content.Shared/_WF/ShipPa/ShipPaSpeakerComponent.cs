@@ -11,6 +11,9 @@ namespace Content.Shared._WF.ShipPa;
 [RegisterComponent, NetworkedComponent, AutoGenerateComponentState]
 public sealed partial class ShipPaSpeakerComponent : Component
 {
+    /// <summary>Server-authoritative membership, anchoring, power and breakage combined.</summary>
+    [DataField, AutoNetworkedField] public bool Enabled;
+
     /// <summary>Tiles a stream from this speaker is audible over (AudioParams.MaxDistance).</summary>
     [DataField] public float Range = 14f;
 

@@ -48,6 +48,12 @@ public sealed partial class ShipAlarmPanel : BoxContainer
         AnnounceEdit.OnTextChanged += args => AnnounceButton.Disabled = string.IsNullOrWhiteSpace(args.Text);
         AnnounceButton.Disabled = true;
 
+        SoundButton.OnPressed += _ => QueueSound();
+        SoundEdit.OnTextEntered += _ => QueueSound();
+        SoundEdit.OnTextChanged += args => SoundButton.Disabled = string.IsNullOrWhiteSpace(args.Text);
+        SoundButton.Disabled = true;
+        SoundStopButton.OnPressed += _ => SoundStopRequested?.Invoke();
+
         Refresh(null);
     }
 
@@ -65,6 +71,16 @@ public sealed partial class ShipAlarmPanel : BoxContainer
     /// The pilot wants a line read out over the PA.
     /// </summary>
     public event Action<string>? AnnounceRequested;
+
+    /// <summary>
+    /// Pilot pasted a link to play over the ship's speakers.
+    /// </summary>
+    public event Action<string>? SoundRequested;
+
+    /// <summary>
+    /// Pilot cut whatever the ship is playing.
+    /// </summary>
+    public event Action? SoundStopRequested;
 
     /// <summary>
     /// The pilot switched the collision warning on or off.
@@ -189,6 +205,19 @@ public sealed partial class ShipAlarmPanel : BoxContainer
             ("online", alert.SpeakersOnline),
             ("total", alert.SpeakersTotal));
         SpeakersLabel.FontColorOverride = ReadoutColor;
+    }
+
+    private void QueueSound()
+    {
+        var url = SoundEdit.Text.Trim();
+
+        if (string.IsNullOrWhiteSpace(url))
+            return;
+
+        SoundRequested?.Invoke(url);
+
+        SoundEdit.Clear();
+        SoundButton.Disabled = true;
     }
 
     private void Announce()

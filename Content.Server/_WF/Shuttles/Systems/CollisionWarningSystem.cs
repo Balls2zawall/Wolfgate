@@ -1,3 +1,4 @@
+using Content.Shared._WF.ShipPa;
 using System.Numerics;
 using Content.Server._WF.ShipPa;
 using Content.Server.Shuttles.Components;
@@ -47,14 +48,17 @@ public sealed class CollisionWarningSystem : EntitySystem
     /// <summary>Alarm loop key for the imminent collision klaxon.</summary>
     public const string ImminentAlarm = "tcas-imminent";
 
-    /// <summary>Alarm loop key for the spoken callout, which runs under both klaxons.</summary>
-    public const string VoiceAlarm = "tcas-voice";
+    /// <summary>One-shot key for the periodic advisory voice callout.</summary>
+    public const string AdvisoryCallout = "tcas-advisory-callout";
+
+    public const int AdvisoryPriority = ShipPaPlaybackPolicy.AdvisoryPriority;
+    public const int ImminentPriority = ShipPaPlaybackPolicy.ImminentPriority;
 
     private static readonly SoundSpecifier AdvisorySound =
         new SoundPathSpecifier("/Audio/_WF/Shuttles/Tcas/traffic_alarm.ogg");
 
     private static readonly SoundSpecifier ImminentSound =
-        new SoundPathSpecifier("/Audio/_WF/Shuttles/Tcas/collision_alarm.ogg");
+        new SoundPathSpecifier("/Audio/_WF/Shuttles/Tcas/collision_warning.ogg");
 
     private static readonly SoundSpecifier VoiceSound =
         new SoundPathSpecifier("/Audio/_WF/Shuttles/Tcas/traffic.ogg");
@@ -372,20 +376,14 @@ public sealed class CollisionWarningSystem : EntitySystem
         warning.Threat = threat.Grid;
         Dirty(uid, warning);
 
-        if (level == CollisionWarningLevel.Imminent)
-        {
-            // Close in, the callout runs flat out under the klaxon.
-            if (!_pa.IsAlarmActive(uid, VoiceAlarm))
-                _pa.StartAlarm(uid, VoiceAlarm, VoiceSound);
-        }
-        else
+        // The PA renders one foreground broadcast. The imminent asset contains both the
+        // klaxon and spoken callout, so neither competes with (and silences) the other.
+        if (level == CollisionWarningLevel.Advisory)
         {
             // An advisory is not an emergency, so the callout only comes round every few seconds.
-            _pa.StopAlarm(uid, VoiceAlarm);
-
             if (_timing.CurTime >= warning.NextCallout)
             {
-                _pa.Broadcast(uid, VoiceSound);
+                _pa.Broadcast(uid, VoiceSound, priority: ShipPaPlaybackPolicy.AdvisoryCalloutPriority, key: AdvisoryCallout);
                 warning.NextCallout = _timing.CurTime + TimeSpan.FromSeconds(_calloutInterval);
             }
         }
@@ -397,16 +395,17 @@ public sealed class CollisionWarningSystem : EntitySystem
         if (level == CollisionWarningLevel.Imminent)
         {
             _pa.StopAlarm(uid, AdvisoryAlarm);
+            _pa.StopAlarm(uid, AdvisoryCallout);
             _pa.StartAlarm(uid, ImminentAlarm, ImminentSound,
-                message: Loc.GetString("collision-warning-pa-imminent"),
-                color: Color.Red);
+                message: Loc.GetString("collision-warning-pa-imminent"), color: Color.Red,
+                priority: ImminentPriority);
         }
         else
         {
             _pa.StopAlarm(uid, ImminentAlarm);
             _pa.StartAlarm(uid, AdvisoryAlarm, AdvisorySound,
-                message: Loc.GetString("collision-warning-pa-advisory"),
-                color: Color.Orange);
+                message: Loc.GetString("collision-warning-pa-advisory"), color: Color.Orange,
+                priority: AdvisoryPriority);
         }
     }
 
@@ -495,7 +494,7 @@ public sealed class CollisionWarningSystem : EntitySystem
     {
         _pa.StopAlarm(uid, AdvisoryAlarm);
         _pa.StopAlarm(uid, ImminentAlarm);
-        _pa.StopAlarm(uid, VoiceAlarm);
+        _pa.StopAlarm(uid, AdvisoryCallout);
     }
 
     /// <summary>
