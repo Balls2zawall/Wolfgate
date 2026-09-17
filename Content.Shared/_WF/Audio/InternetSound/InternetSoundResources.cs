@@ -1,6 +1,7 @@
 using System.Buffers.Binary;
 using System.Text;
-using System.Runtime.CompilerServices;
+using System.Diagnostics.CodeAnalysis;
+using System.IO;
 using Robust.Shared.ContentPack;
 using Robust.Shared.Utility;
 
@@ -12,22 +13,26 @@ namespace Content.Shared._WF.Audio.InternetSound;
 /// </summary>
 /// <remarks>
 /// Roots can only ever be added to <see cref="IResourceManager"/>, never removed, so this mounts once per
-/// process and is held in a static. Entity systems are rebuilt on reconnect; the root outlives them.
+/// resource manager. The manager owns the mounted root; the static registry only holds weak references.
+/// Entity systems are rebuilt on reconnect; the root outlives them.
 /// </remarks>
-public sealed class InternetSoundResources
+public sealed class InternetSoundResources : IContentRoot, IDisposable
 {
     /// <summary>
     /// Where the root is mounted. Nothing ships under this path, so it can't shadow a real resource.
     /// </summary>
     public static readonly ResPath Prefix = ResPath.Root / "WFInternetSound";
 
-    private static readonly ConditionalWeakTable<IResourceManager, InternetSoundResources> Mounted = new();
+    private static readonly List<WeakReference<InternetSoundResources>> Mounted = new();
+
+    private readonly WeakReference<IResourceManager> _owner;
 
     private readonly MemoryContentRoot _root = new();
 
     private InternetSoundResources(IResourceManager resources)
     {
-        resources.AddRoot(Prefix, _root);
+        _owner = new WeakReference<IResourceManager>(resources);
+        resources.AddRoot(Prefix, this);
     }
 
     /// <summary>
@@ -37,15 +42,31 @@ public sealed class InternetSoundResources
     {
         lock (Mounted)
         {
-            if (!Mounted.TryGetValue(resources, out var existing))
+            for (var i = Mounted.Count - 1; i >= 0; i--)
             {
-                existing = new InternetSoundResources(resources);
-                Mounted.Add(resources, existing);
+                if (!Mounted[i].TryGetTarget(out var existing) || !existing._owner.TryGetTarget(out var owner))
+                {
+                    Mounted.RemoveAt(i);
+                    continue;
+                }
+
+                if (ReferenceEquals(owner, resources))
+                    return existing;
             }
 
-            return existing;
+            var created = new InternetSoundResources(resources);
+            Mounted.Add(new WeakReference<InternetSoundResources>(created));
+            return created;
         }
     }
+
+    // Mount this wrapper so the resource manager keeps it alive across entity-system reconnects.
+    void IContentRoot.Mount() => _root.Mount();
+    bool IContentRoot.TryGetFile(ResPath path, [NotNullWhen(true)] out Stream? stream) => _root.TryGetFile(path, out stream);
+    bool IContentRoot.FileExists(ResPath path) => _root.FileExists(path);
+    IEnumerable<ResPath> IContentRoot.FindFiles(ResPath path) => _root.FindFiles(path);
+    IEnumerable<string> IContentRoot.GetRelativeFilePaths() => _root.GetRelativeFilePaths();
+    public void Dispose() => _root.Dispose();
 
     /// <summary>
     /// Full path of the sound with this id. Ids are never reused, because the server caches audio length

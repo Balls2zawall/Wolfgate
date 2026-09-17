@@ -45,11 +45,19 @@ public sealed partial class InternetSoundSystem : EntitySystem
     /// <summary>
     /// The transfer key outlives entity systems, which are rebuilt on reconnect, so it routes to the live instance.
     /// </summary>
-    private static readonly System.Runtime.CompilerServices.ConditionalWeakTable<ITransferManager, ReceiverRegistration> Receivers = new();
+    private static readonly List<WeakReference<ReceiverRegistration>> Receivers = new();
+
+    private ReceiverRegistration _registration = default!;
 
     private sealed class ReceiverRegistration
     {
+        public readonly WeakReference<ITransferManager> Transfer;
         public InternetSoundSystem? Receiver;
+
+        public ReceiverRegistration(ITransferManager transfer)
+        {
+            Transfer = new WeakReference<ITransferManager>(transfer);
+        }
     }
 
     private sealed record Header(int Id, string Title, string Requester, bool IsPa);
@@ -102,14 +110,29 @@ public sealed partial class InternetSoundSystem : EntitySystem
 
         lock (Receivers)
         {
-            if (!Receivers.TryGetValue(_transfer, out var registration))
+            ReceiverRegistration? registration = null;
+            for (var i = Receivers.Count - 1; i >= 0; i--)
             {
-                var transfer = _transfer;
-                transfer.RegisterTransferMessage(InternetSoundProtocol.TransferKey, ev => Route(transfer, ev));
-                registration = new ReceiverRegistration();
-                Receivers.Add(transfer, registration);
+                if (!Receivers[i].TryGetTarget(out var existing) || !existing.Transfer.TryGetTarget(out var transfer))
+                {
+                    Receivers.RemoveAt(i);
+                    continue;
+                }
+
+                if (ReferenceEquals(transfer, _transfer))
+                    registration = existing;
             }
 
+            if (registration == null)
+            {
+                registration = new ReceiverRegistration(_transfer);
+                // The transfer manager owns this registration through its callback; the static list does not.
+                var route = registration;
+                _transfer.RegisterTransferMessage(InternetSoundProtocol.TransferKey, ev => Route(route, ev));
+                Receivers.Add(new WeakReference<ReceiverRegistration>(registration));
+            }
+
+            _registration = registration;
             registration.Receiver = this;
         }
 
@@ -144,8 +167,8 @@ public sealed partial class InternetSoundSystem : EntitySystem
 
         lock (Receivers)
         {
-            if (Receivers.TryGetValue(_transfer, out var registration) && registration.Receiver == this)
-                registration.Receiver = null;
+            if (_registration.Receiver == this)
+                _registration.Receiver = null;
         }
     }
 
@@ -266,12 +289,12 @@ public sealed partial class InternetSoundSystem : EntitySystem
     /// Reads the header first so the radio shows while audio is still arriving, then mounts the track and
     /// tells the server it's ready. Nothing plays until the server says so.
     /// </summary>
-    private static async void Route(ITransferManager transfer, TransferReceivedEvent ev)
+    private static async void Route(ReceiverRegistration registration, TransferReceivedEvent ev)
     {
         InternetSoundSystem? receiver;
         lock (Receivers)
         {
-            receiver = Receivers.TryGetValue(transfer, out var registration) ? registration.Receiver : null;
+            receiver = registration.Receiver;
         }
 
         Header? header = null;
