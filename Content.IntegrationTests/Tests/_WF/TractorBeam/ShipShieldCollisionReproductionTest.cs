@@ -37,7 +37,7 @@ public sealed partial class ShipShieldCollisionReproductionTest
         TestContext.Out.WriteLine($"Physics engine: {engine.Location}; configuration: " +
             engine.GetCustomAttribute<AssemblyConfigurationAttribute>()?.Configuration);
         // The intentional Debug assertion interrupts a physics step. Never recycle that world.
-        await using var pair = await PoolManager.GetServerClient(new PoolSettings { Dirty = true });
+        await using var pair = await PoolManager.GetServerClient(new PoolSettings { Destructive = true });
         var map = await pair.CreateTestMap();
         var entities = pair.Server.ResolveDependency<IEntityManager>();
         var maps = pair.Server.ResolveDependency<IMapManager>();
