@@ -26,6 +26,8 @@ public sealed partial class TractorBeamEmitterComponent : Component
     [DataField] public float DampingRatio = 1f;
     [DataField] public float ReelSpeed = 2f;
     [DataField] public float CollectionAcceleration = 2f;
+    /// <summary>Extra field acceleration for free-floating items and mobs, excluding ship grids.</summary>
+    [DataField] public float LooseCollectionMultiplier = 50f;
     [DataField] public float CollectionStandOff = 1f;
     // User-selected replacement clips retain their original mix, with encoding headroom in the assets.
     [DataField] public SoundSpecifier? EngageSound = new SoundPathSpecifier("/Audio/_WF/TractorBeam/tractorbeam_engage.ogg");

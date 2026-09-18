@@ -1,4 +1,5 @@
 using System.Numerics;
+using Content.Server._WF.TractorBeam;
 using Content.Server.Power.Components;
 using Content.Server.Shuttles.Components;
 using Content.Shared._WF.TractorBeam;
@@ -16,6 +17,48 @@ namespace Content.IntegrationTests.Tests._WF.TractorBeam;
 public sealed class TractorBeamCollectionAccelerationTest
 {
     private const float Step = 1f / 60f;
+
+    [TestCase("SheetSteel1")]
+    [TestCase("MobHuman")]
+    public async Task LooseObjectsAndNormalMobsReceiveAmplifiedFieldPull(string prototype)
+    {
+        await using var pair = await PoolManager.GetServerClient();
+        var map = await pair.CreateTestMap();
+        var entities = pair.Server.ResolveDependency<IEntityManager>();
+        var maps = pair.Server.ResolveDependency<IMapManager>();
+        await pair.Server.WaitAssertion(() =>
+        {
+            entities.DeleteEntity(map.Grid);
+            var (source, target, emitter, _) = TractorBeamTest.CreateLock(entities, maps, map.MapId);
+            var caught = entities.SpawnEntity(prototype, new MapCoordinates(new Vector2(36, 3), map.MapId));
+            var physics = entities.System<SharedPhysicsSystem>();
+            var system = entities.System<TractorBeamSystem>();
+            var beam = entities.GetComponent<TractorBeamEmitterComponent>(emitter);
+            if (prototype == "MobHuman")
+                Assert.That(Body(entities, caught).BodyType, Is.EqualTo(BodyType.KinematicController));
+            beam.MaxForce = 10000000f; // Isolate the multiplier from force-budget saturation.
+            var multiplier = beam.LooseCollectionMultiplier;
+            beam.LooseCollectionMultiplier = 1;
+            system.UpdateBeforeSolve(false, Step);
+            var normalSpeed = Body(entities, caught).LinearVelocity.Length();
+            Assert.That(normalSpeed, Is.GreaterThan(0), "The actual mob physics type must be collected.");
+            foreach (var uid in new[] { source, target, caught })
+            {
+                physics.SetLinearVelocity(uid, Vector2.Zero);
+                physics.SetAngularVelocity(uid, 0);
+            }
+            beam.LooseCollectionMultiplier = multiplier;
+            system.UpdateBeforeSolve(false, Step);
+            Assert.That(Body(entities, caught).LinearVelocity.Length(), Is.EqualTo(normalSpeed * 50).Within(normalSpeed * 5),
+                "Unsaturated loose-body pull should be approximately fifty times its former strength.");
+            Assert.That(Vector2.Dot(Body(entities, caught).LinearVelocity,
+                Center(entities, source) - Center(entities, caught)), Is.GreaterThan(0));
+            entities.DeleteEntity(caught);
+            entities.DeleteEntity(source);
+            entities.DeleteEntity(target);
+        });
+        await pair.CleanReturnAsync();
+    }
 
     [TestCase(false, 0f)]
     [TestCase(true, 0f)]
@@ -48,9 +91,9 @@ public sealed class TractorBeamCollectionAccelerationTest
             var initialDistance = Vector2.Distance(sourceCenter, Center(entities, caught));
             var previousSpeed = initialSpeed;
 
-            // Starting well inside the fan leaves room for four seconds of approach before
-            // an intentional impact or exiting the finite cone can end collection.
-            for (var tick = 0; tick < 240; tick++)
+            // Loose objects now accelerate 50 times harder, so sample before they hit the dish.
+            // Secondary grids retain the original four-second approach window.
+            for (var tick = 0; tick < (grid ? 240 : 30); tick++)
             {
                 physics.Update(Step);
                 Assert.That(beam.Active, Is.True);
@@ -160,7 +203,9 @@ public sealed class TractorBeamCollectionAccelerationTest
             try
             {
                 var previous = new Vector2[bodies.Length];
-                for (var tick = 0; tick < 60; tick++)
+                // Measure before the amplified off-center recoil can rotate this unpowered
+                // source out of coverage. Losing that lock is valid physical behavior.
+                for (var tick = 0; tick < 15; tick++)
                 {
                     for (var i = 0; i < bodies.Length; i++)
                         previous[i] = Body(entities, bodies[i]).LinearVelocity;

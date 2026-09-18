@@ -91,6 +91,8 @@ Default per-dish tuning (prototype fields):
 - `frequency`: 0.7 Hz; `dampingRatio`: 1.
 - `idlePower`: 5 kW; `holdingPower`: 100 kW; `maxPower`: 2 MW.
 - `reelSpeed`: 2 m/s; `collectionAcceleration`: 2 m/s², sustained while in the field.
+- `looseCollectionMultiplier`: 50. Free-floating objects and mobs request 100 m/s²,
+  while secondary grids retain 2 m/s². All still share the dish's force/power budget.
 - `collectionStandOff`: 1 m of clearance when reeling the primary vessel; its minimum range also accounts for both hull sizes.
 
 Strain is the square root of demanded force divided by maximum force, making even

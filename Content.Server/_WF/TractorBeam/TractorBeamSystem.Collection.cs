@@ -42,7 +42,8 @@ public sealed partial class TractorBeamSystem
         foreach (var entity in _coneEntities)
         {
             if (entity == source || entity == target || TerminatingOrDeleted(entity) || Paused(entity) ||
-                !TryComp<PhysicsComponent>(entity, out var body) || body.BodyType != BodyType.Dynamic ||
+                !TryComp<PhysicsComponent>(entity, out var body) ||
+                body.BodyType is not (BodyType.Dynamic or BodyType.KinematicController) ||
                 !body.CanCollide || !float.IsFinite(body.Mass) || body.Mass <= 0)
                 continue;
 
@@ -178,6 +179,8 @@ public sealed partial class TractorBeamSystem
             // Apply recoil at the dish, including its lever arm, to conserve angular momentum.
             var collectionDirection = separation / distance;
             var acceleration = float.IsFinite(beam.CollectionAcceleration) ? MathF.Max(0, beam.CollectionAcceleration) : 0f;
+            if (!HasComp<MapGridComponent>(entity))
+                acceleration *= float.IsFinite(beam.LooseCollectionMultiplier) ? MathF.Max(0, beam.LooseCollectionMultiplier) : 0f;
             var mass = 1f / (1f / sourceBody.Mass + 1f / body.Mass);
             _pullRequests.Add((entity, collectionDirection * MathF.Min(beam.MaxForce, mass * acceleration),
                 dish - _predictedCenters[source]));
