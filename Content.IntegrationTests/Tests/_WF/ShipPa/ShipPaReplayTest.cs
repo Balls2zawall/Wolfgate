@@ -20,6 +20,7 @@ using Robust.Shared.Replays;
 using Robust.Shared.Log;
 using Robust.Shared.GameStates;
 using Robust.Shared.Serialization;
+using Robust.Shared.Serialization.Markdown.Value;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
 using static Robust.Shared.Replays.ReplayConstants;
@@ -29,19 +30,26 @@ namespace Content.IntegrationTests.Tests._WF.ShipPa;
 [TestFixture]
 public sealed class ShipPaReplayTest
 {
-    [TestCase(10)]
-    [TestCase(0)] // Force incremental seeking even on fast machines.
-    public async Task RecordedAssetsSurviveReleaseAndReplaySeeking(int scrubBudgetMs)
+    [TestCase(10, 30)]
+    [TestCase(0, 30)] // Force incremental seeking even on fast machines.
+    [TestCase(10, 1)]
+    [TestCase(0, 1)]
+    public async Task RecordedAssetsSurviveReleaseAndReplaySeeking(int scrubBudgetMs, int initialTickrate)
     {
         // StopReplay resets the client's prototype manager, including the pool's test-only prototypes.
         // Ordinary dirty recycling does not reload them, so this pair must never be reused.
         await using var pair = await PoolManager.GetServerClient(new PoolSettings { Connected = false, Destructive = true });
         var server = pair.Server;
         var client = pair.Client;
+        // Reproduce the slow tickrate seen on a reused CI pair and advance its clock.
+        await server.WaitPost(() => server.CfgMan.SetCVar(CVars.NetTickrate, initialTickrate));
+        await pair.RunTicksSync(60);
+        // The 20-tick seek below must land inside the short clip. A recycled pair can
+        // retain a different tickrate, so establish the recording's rate explicitly.
+        await server.WaitPost(() => server.CfgMan.SetCVar(CVars.NetTickrate, 30));
         var map = await pair.CreateTestMap();
         var recording = server.ResolveDependency<IReplayRecordingManager>();
         var directory = new VirtualWritableDirProvider();
-        var timeBase = server.ResolveDependency<IGameTiming>().TimeBase;
         ReplayRecordingFinished? finished = null;
         byte[] audio = [];
         const int id = 9201;
@@ -84,7 +92,6 @@ public sealed class ShipPaReplayTest
             archive.Position = 0;
             var zip = new ZipArchive(archive, ZipArchiveMode.Read);
             var timing = client.ResolveDependency<IGameTiming>();
-            timing.TimeBase = timeBase;
             loading = ReadTestReplay(new ReplayFileReaderZip(zip, ReplayZipFolder),
                 (ReplayLoadManager) client.ResolveDependency<IReplayLoadManager>(),
                 client.ResolveDependency<IRobustSerializer>(), timing, client.CfgMan);
@@ -187,9 +194,14 @@ public sealed class ShipPaReplayTest
                     messages.Add(message);
                 }
             }
-            timing.CurTick = states[0].ToSequence;
             using var cvarFile = reader.Open(FileCvars);
             var cvars = configuration.LoadFromTomlStream(cvarFile);
+            // Match the real loader: tickrate callbacks change TimeBase, so restore the
+            // recording's clock only AFTER loading its CVars, including on reused clients.
+            timing.CurTick = states[0].ToSequence;
+            timing.TimeBase = (
+                TimeSpan.FromTicks(long.Parse(((ValueDataNode) metadata[MetaKeyBaseTime]).Value)),
+                new GameTick(uint.Parse(((ValueDataNode) metadata[MetaKeyBaseTick]).Value)));
             var (checkpoints, times) = await loader.GenerateCheckpointsAsync(initial, cvars,
                 states, messages, (_, _, _, _) => Task.CompletedTask);
             return new ReplayData(states, messages, times, states[0].ToSequence, timing.CurTime, null,
