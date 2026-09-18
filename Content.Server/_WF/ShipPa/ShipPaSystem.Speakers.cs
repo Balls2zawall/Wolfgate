@@ -13,14 +13,34 @@ namespace Content.Server._WF.ShipPa;
 /// </summary>
 public sealed partial class ShipPaSystem
 {
-    /// <summary>Distortion at which an alarm gets a static overlay on top of it.</summary>
-    private const float StaticThreshold = 0.2f;
-
     /// <summary>Distortion at which the speaker visibly reads as damaged.</summary>
+    private readonly Dictionary<EntityUid, HashSet<EntityUid>> _gridSpeakers = new();
+    private readonly Dictionary<EntityUid, EntityUid> _speakerGrids = new();
+
     private const float DamagedThreshold = 0.25f;
+
+    /// <summary>
+    /// Conservative audible reach for PA download prefetching. Only visits this grid's indexed speakers;
+    /// includes currently unpowered/fallback speakers so repairs do not cause a late download.
+    /// </summary>
+    public float GetMaximumSpeakerRange(EntityUid grid)
+    {
+        var range = 0f;
+        if (!_gridSpeakers.TryGetValue(grid, out var members))
+            return range;
+
+        foreach (var uid in members)
+        {
+            if (TryComp(uid, out ShipPaSpeakerComponent? speaker) && float.IsFinite(speaker.Range))
+                range = Math.Max(range, speaker.Range);
+        }
+
+        return range;
+    }
 
     private void InitializeSpeakers()
     {
+        SubscribeLocalEvent<ShipPaSpeakerComponent, ComponentStartup>(OnSpeakerStartup);
         SubscribeLocalEvent<ShipPaSpeakerComponent, MapInitEvent>(OnSpeakerMapInit);
         SubscribeLocalEvent<ShipPaSpeakerComponent, ComponentShutdown>(OnSpeakerShutdown);
         SubscribeLocalEvent<ShipPaSpeakerComponent, AnchorStateChangedEvent>(OnSpeakerAnchorChanged);
@@ -32,8 +52,36 @@ public sealed partial class ShipPaSystem
         SubscribeLocalEvent<ShipPaSpeakerComponent, ExaminedEvent>(OnSpeakerExamined);
     }
 
+    private void OnSpeakerStartup(Entity<ShipPaSpeakerComponent> ent, ref ComponentStartup args)
+    {
+        IndexSpeaker(ent);
+    }
+
+    private void IndexSpeaker(EntityUid uid, bool remove = false)
+    {
+        if (_speakerGrids.Remove(uid, out var previous))
+        {
+            if (_gridSpeakers.TryGetValue(previous, out var oldMembers))
+            {
+                oldMembers.Remove(uid);
+                if (oldMembers.Count == 0)
+                    _gridSpeakers.Remove(previous);
+            }
+            QueueRefresh(previous);
+        }
+        if (remove || !TryComp(uid, out TransformComponent? xform) || !xform.Anchored
+            || xform.GridUid is not { } grid || TerminatingOrDeleted(uid))
+            return;
+        if (!_gridSpeakers.TryGetValue(grid, out var members))
+            _gridSpeakers[grid] = members = new HashSet<EntityUid>();
+        members.Add(uid);
+        _speakerGrids[uid] = grid;
+        QueueRefresh(grid);
+    }
+
     private void OnSpeakerMapInit(Entity<ShipPaSpeakerComponent> ent, ref MapInitEvent args)
     {
+        IndexSpeaker(ent);
         UpdateDamage(ent);
         UpdateAppearance(ent);
         QueueRefresh(GetSpeakerGrid(ent));
@@ -41,15 +89,16 @@ public sealed partial class ShipPaSystem
 
     private void OnSpeakerShutdown(Entity<ShipPaSpeakerComponent> ent, ref ComponentShutdown args)
     {
-        StopSpeakerStreams(ent);
-        QueueRefresh(GetSpeakerGrid(ent));
+        DisableSpeaker(ent);
+        IndexSpeaker(ent, remove: true);
     }
 
     private void OnSpeakerAnchorChanged(Entity<ShipPaSpeakerComponent> ent, ref AnchorStateChangedEvent args)
     {
+        IndexSpeaker(ent);
         // An unanchored speaker is off the network, so nothing of its ship's may keep playing.
         if (!args.Anchored)
-            StopSpeakerStreams(ent);
+            DisableSpeaker(ent);
 
         UpdateAppearance(ent);
         QueueRefresh(args.Transform.GridUid);
@@ -57,23 +106,25 @@ public sealed partial class ShipPaSystem
 
     private void OnSpeakerReAnchor(Entity<ShipPaSpeakerComponent> ent, ref ReAnchorEvent args)
     {
-        StopSpeakerStreams(ent);
+        DisableSpeaker(ent);
+        IndexSpeaker(ent);
         QueueRefresh(args.OldGrid);
         QueueRefresh(args.Grid);
     }
 
     private void OnSpeakerParentChanged(Entity<ShipPaSpeakerComponent> ent, ref EntParentChangedMessage args)
     {
-        StopSpeakerStreams(ent);
+        DisableSpeaker(ent);
+        IndexSpeaker(ent);
         QueueRefresh(args.OldParent);
         QueueRefresh(args.Transform.GridUid);
     }
 
     private void OnSpeakerPowerChanged(Entity<ShipPaSpeakerComponent> ent, ref PowerChangedEvent args)
     {
-        // Coming back on is handled by the alarm reconcile, which slots it into whatever is running.
+        // Publish loss immediately; the queued coverage refresh handles coming back online.
         if (!args.Powered)
-            StopSpeakerStreams(ent);
+            DisableSpeaker(ent);
 
         UpdateAppearance(ent);
         QueueRefresh(GetSpeakerGrid(ent));
@@ -92,7 +143,7 @@ public sealed partial class ShipPaSystem
         comp.Broken = true;
         Dirty(uid, comp);
 
-        StopSpeakerStreams(uid);
+        DisableSpeaker((uid, comp));
         UpdateAppearance((uid, comp));
         QueueRefresh(GetSpeakerGrid(uid));
     }
@@ -197,6 +248,12 @@ public sealed partial class ShipPaSystem
             speaker.BroadcastingUntil = null;
             UpdateAppearance((uid, speaker));
         }
+    }
+
+    private void DisableSpeaker(Entity<ShipPaSpeakerComponent> speaker)
+    {
+        speaker.Comp.Enabled = false;
+        Dirty(speaker);
     }
 
     private EntityUid? GetSpeakerGrid(EntityUid uid)

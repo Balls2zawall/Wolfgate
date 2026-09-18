@@ -1,3 +1,5 @@
+using System;
+using Content.Server._WF.Audio.InternetSound;
 using Content.Server.Administration.Logs;
 using Content.Server.Shuttles.Components;
 using Content.Server.Shuttles.Events;
@@ -6,6 +8,9 @@ using Content.Shared.Chat;
 using Content.Shared.Database;
 using Content.Shared.Popups;
 using Content.Shared.Shuttles.Components;
+using Content.Shared._WF.CCVar;
+using Robust.Shared.Configuration;
+using Robust.Server.Player;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Timing;
 
@@ -17,11 +22,14 @@ namespace Content.Server._WF.ShipPa;
 /// </summary>
 public sealed partial class ShipAlertSystem : EntitySystem
 {
+    [Dependency] private IPlayerManager _players = default!;
     [Dependency] private IGameTiming _timing = default!;
     [Dependency] private IPrototypeManager _proto = default!;
     [Dependency] private IAdminLogManager _adminLogger = default!;
     [Dependency] private SharedPopupSystem _popup = default!;
     [Dependency] private ShipPaSystem _pa = default!;
+    [Dependency] private InternetSoundSystem _internetSound = default!;
+    [Dependency] private IConfigurationManager _cfg = default!;
 
     /// <summary>Alarm loop key for the general quarters klaxon.</summary>
     public const string GeneralQuartersAlarm = "general-quarters";
@@ -38,6 +46,8 @@ public sealed partial class ShipAlertSystem : EntitySystem
             subs.Event<ShipAlertCodeRequestMessage>(OnCodeRequest);
             subs.Event<ShipGeneralQuartersRequestMessage>(OnGeneralQuartersRequest);
             subs.Event<ShipPaAnnounceRequestMessage>(OnAnnounceRequest);
+            subs.Event<ShipPaInternetSoundRequestMessage>(OnInternetSoundRequest);
+            subs.Event<ShipPaInternetSoundStopMessage>(OnInternetSoundStop);
         });
     }
 
@@ -104,6 +114,65 @@ public sealed partial class ShipAlertSystem : EntitySystem
 
         _adminLogger.Add(LogType.Action, LogImpact.Medium,
             $"{ToPrettyString(args.Actor):player} announced on the PA of {ToPrettyString(grid):grid}: {text}");
+    }
+
+    /// <summary>
+    /// Pilot pasted a link to play over the ship's own speakers. Everything about the link itself is the
+    /// sound system's problem; this only decides whether this ship is allowed to ask right now.
+    /// </summary>
+    private void OnInternetSoundRequest(Entity<ShuttleConsoleComponent> ent, ref ShipPaInternetSoundRequestMessage args)
+    {
+        if (GetConsoleGrid(ent) is not { } grid)
+            return;
+
+        if (!_cfg.GetCVar(InternetSoundCVars.PlayerRequests))
+        {
+            _popup.PopupEntity(Loc.GetString("ship-pa-sound-disabled"), ent, args.Actor);
+            return;
+        }
+
+        var alert = EnsureComp<ShipAlertComponent>(grid);
+        var url = args.Url.Trim();
+
+        if (url.Length == 0 || url.Length > alert.MaxUrlLength)
+            return;
+
+        if (_timing.CurTime < alert.NextInternetSound)
+        {
+            var seconds = (int) Math.Ceiling((alert.NextInternetSound - _timing.CurTime).TotalSeconds);
+            _popup.PopupEntity(Loc.GetString("ship-pa-sound-cooldown", ("seconds", seconds)), ent, args.Actor);
+            return;
+        }
+
+        var requester = Name(args.Actor);
+
+        _players.TryGetSessionByEntity(args.Actor, out var recipient);
+        if (!_internetSound.PlayOverPa(null, requester, url, grid, out var error, recipient))
+        {
+            _popup.PopupEntity(error ?? Loc.GetString("ship-pa-sound-refused"), ent, args.Actor);
+            return;
+        }
+
+        alert.NextInternetSound = _timing.CurTime + TimeSpan.FromSeconds(_cfg.GetCVar(InternetSoundCVars.RequestCooldown));
+        _popup.PopupEntity(Loc.GetString("ship-pa-sound-queued"), ent, args.Actor);
+
+        // Players can put arbitrary audio on a ship, so this wants to be findable after the fact.
+        var origin = GetSafeOrigin(url);
+        _adminLogger.Add(LogType.Action, LogImpact.High,
+            $"{ToPrettyString(args.Actor):player} queued internet sound {origin} on the PA of {ToPrettyString(grid):grid}");
+    }
+
+    private void OnInternetSoundStop(Entity<ShuttleConsoleComponent> ent, ref ShipPaInternetSoundStopMessage args)
+    {
+        if (GetConsoleGrid(ent) is not { } grid || !_internetSound.StopForGrid(grid))
+            return;
+
+        // Cutting a track also releases its request slot, so the pilot can queue a replacement.
+        if (TryComp<ShipAlertComponent>(grid, out var alert))
+            alert.NextInternetSound = TimeSpan.Zero;
+
+        _adminLogger.Add(LogType.Action, LogImpact.Medium,
+            $"{ToPrettyString(args.Actor):player} stopped the internet sound on the PA of {ToPrettyString(grid):grid}");
     }
 
     /// <summary>
@@ -206,5 +275,21 @@ public sealed partial class ShipAlertSystem : EntitySystem
             .Replace('\r', ' ')
             .Replace('\n', ' ')
             .Trim();
+    }
+
+    internal static string GetSafeOrigin(string url)
+    {
+        if (!Uri.TryCreate(url, UriKind.Absolute, out var uri) || string.IsNullOrEmpty(uri.Host))
+            return "<invalid URL>";
+
+        var builder = new UriBuilder(uri)
+        {
+            UserName = string.Empty,
+            Password = string.Empty,
+            Query = string.Empty,
+            Fragment = string.Empty,
+        };
+
+        return builder.Uri.GetLeftPart(UriPartial.Authority);
     }
 }

@@ -19,7 +19,7 @@
   ## Situation codes
 
   The pilot console's PA & Alarms panel sets a ship-wide situation code. Setting a code sounds its tone
-  over every working speaker, shows the announcement above each speaker in earshot, and posts it in chat.
+  over every working speaker, shows a brief subtitle at the top of the screen for everyone on the grid, and posts it in chat.
 
   - [color=#3fe05a]Code Green[/color] - normal operations.
   - [color=#ffd23f]Code Yellow[/color] - elevated readiness.
@@ -29,11 +29,18 @@
   ## General quarters
 
   The general quarters toggle sounds a looping klaxon on every speaker until it's secured again
-  from the same panel.
+  from the same panel. Alarms take priority over PA music; the music resumes at its current position
+  when the alarm is secured. Walking between speakers does not restart the broadcast.
+
+  ## Internet audio
+
+  Paste an HTTPS audio or video link into the PA panel and press Play. The link, any redirects,
+  and the audio stream must all use HTTPS; plain HTTP streams are not supported. Press Cut to
+  stop the track and allow an immediate replacement.
 
   ## Damage and repair
 
-  A speaker takes damage like any structure: light damage makes its audio crackle and distort,
+  A speaker takes damage like any structure: light damage makes its audio muffle and cut out,
   heavy damage breaks it silent until repaired. Fix it with a welder, or with a ship repair tool
   once it's part of a ship's hull.
 </Document>
