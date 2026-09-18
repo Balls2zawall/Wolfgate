@@ -1,13 +1,14 @@
 - type: vessel
   id: WFRoswell
   parent: BaseVesselAntag
-  name: TSF Roswell
+  name: Judge Roswell
   description: A compact arrestor and patrol vessel fitted with tractor beam equipment.
   price: 174669
   purchasable: false
   category: Medium
-  group: Security
-  access: Security
+  group: Sr
+  access: Brig
+  mapchecker_group_override: Security
   shuttlePath: /Maps/_WF/Shuttles/roswell.yml
   guidebookPage: null
   class:
@@ -23,23 +24,19 @@
   minPlayers: 0
   stations:
     WFRoswell:
-      stationProto: StandardFrontierSecurityVessel
+      stationProto: StandardFrontierVessel
       components:
       - type: StationNameSetup
-        mapNameTemplate: 'Roswell TSF{1}'
+        mapNameTemplate: 'Roswell Judge{1}'
         nameGenerator:
           !type:NanotrasenNameGenerator
           prefixCreator: '14'
-      - type: StationJobs
-        availableJobs:
-          Deputy: [0, 0]
-          TsfBorg: [0, 0]
 
 - type: entity
-  parent: ShipVoucherDagger
+  parent: ShipVoucherFrontierGuard
   id: WFShipVoucherRoswell
-  name: TSF Roswell LPC [T1]
-  description: Contains the procurement data for a Roswell-class arrestor. Redeem at a TSF security shipyard.
+  name: Judge Roswell ship voucher
+  description: Redeem for a Roswell-class arrestor at the Frontier Staff Shipyard.
   components:
   - type: ShipyardVoucher
     vessels:
