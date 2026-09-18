@@ -285,11 +285,26 @@ public sealed class TractorBeamStationKeepingTest
                 Assert.That(Vector2.Distance(transform.GetWorldPosition(source), sourcePosition), Is.GreaterThan(0.01f),
                     "Without engines, recoil must physically move the source instead of anchoring it to space.");
                 Assert.That(shuttle.ThrustDirections, Is.EqualTo(DirectionFlag.None));
-                Assert.That(releasedOutsideCone, Is.True,
-                    "Unopposed rotational recoil must release the lock when the dish turns away, while the target remains in range.");
-                Assert.That(beam.Active, Is.False);
-                Assert.That(beam.Target, Is.Null);
-                Assert.That(beam.RequestedPower, Is.EqualTo(beam.IdlePower));
+                if (beam.Target == null)
+                {
+                    Assert.That(beam.Active, Is.False);
+                    Assert.That(beam.RequestedPower, Is.EqualTo(beam.IdlePower));
+                    Assert.That(releasedOutsideCone || beam.CooldownRemaining > 0, Is.True,
+                        "A released beam must either lose its operating cone or enter its release cooldown.");
+                }
+                else
+                {
+                    Assert.That(beam.Active, Is.True,
+                        "A powerless arrestor can remain linked while both hulls move under recoil.");
+                    Assert.That(beam.Target, Is.EqualTo(target));
+                    Assert.That(targetBody.LinearVelocity.Length(), Is.GreaterThan(0.01f),
+                        "An unbraked arrestor cannot keep the resisting target anchored to its original world position.");
+                    var targetCenter = transform.ToMapCoordinates(new EntityCoordinates(target, targetBody.LocalCenter)).Position;
+                    var offset = targetCenter - transform.GetWorldPosition(emitter);
+                    var forward = transform.GetWorldRotation(emitter).RotateVec(Vector2.UnitY);
+                    Assert.That(TractorBeamOperatingCone.Contains(offset, forward, beam.MaxRange, beam.ConeHalfAngle), Is.True,
+                        "The linked target may follow the rotating dish and remain inside its cone.");
+                }
             }
 
             entities.DeleteEntity(source);

@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.Numerics;
 using Content.Server._WF.TractorBeam;
 using Content.Server.Power.Components;
+using Content.Server.Shuttles.Components;
 using Content.Shared._WF.TractorBeam;
 using Robust.Shared.Containers;
 using Robust.Shared.GameObjects;
@@ -113,6 +114,8 @@ public sealed class TractorBeamCollectionTest
             var caughtGrid = MakeGrid(entities, maps, map.MapId, 2, new Vector2(24, 0));
             var staticGrid = MakeGrid(entities, maps, map.MapId, 2, new Vector2(34, 1));
             entities.System<SharedPhysicsSystem>().SetBodyType(staticGrid, BodyType.Static);
+            var disabledGrid = MakeGrid(entities, maps, map.MapId, 2, new Vector2(39, 1));
+            entities.GetComponent<ShuttleComponent>(disabledGrid).Enabled = false;
             var cargo = entities.SpawnEntity("SheetSteel1", new EntityCoordinates(caughtGrid, new Vector2(0.5f, 0.5f)));
             var anchored = entities.SpawnEntity("SheetSteel1", new EntityCoordinates(caughtGrid, new Vector2(1.5f, 0.5f)));
             Assert.That(entities.System<SharedTransformSystem>().AnchorEntity(anchored), Is.True);
@@ -131,6 +134,8 @@ public sealed class TractorBeamCollectionTest
                 Assert.That(Body(entities, caughtGrid).LinearVelocity.X, Is.LessThan(0),
                     "A separate dynamic grid inside the fan must be pulled toward the source.");
                 Assert.That(Body(entities, staticGrid).LinearVelocity, Is.EqualTo(Vector2.Zero));
+                Assert.That(Body(entities, disabledGrid).LinearVelocity, Is.EqualTo(Vector2.Zero),
+                    "A station-anchored shuttle must not be dragged as secondary debris.");
                 Assert.That(Body(entities, cargo).LinearVelocity, Is.EqualTo(Vector2.Zero),
                     "Cargo attached to a grid must not receive a separate collection impulse.");
                 Assert.That(Body(entities, anchored).LinearVelocity, Is.EqualTo(Vector2.Zero));
@@ -139,7 +144,7 @@ public sealed class TractorBeamCollectionTest
             });
             AssertMomentumConserved(entities, source, target, caughtGrid);
 
-            foreach (var uid in new[] { holder, caughtGrid, staticGrid, source, target })
+            foreach (var uid in new[] { holder, caughtGrid, staticGrid, disabledGrid, source, target })
                 entities.DeleteEntity(uid);
         });
 
@@ -292,22 +297,7 @@ public sealed class TractorBeamCollectionTest
     private static (EntityUid Source, EntityUid Target, EntityUid Emitter) CreateLock(
         IEntityManager entities, IMapManager maps, MapId map)
     {
-        var source = MakeGrid(entities, maps, map, 4, Vector2.Zero);
-        var target = MakeGrid(entities, maps, map, 8, new Vector2(50, 0));
-        var emitter = entities.SpawnEntity("WFTractorBeamEmitter", new EntityCoordinates(source, new Vector2(0.5f, 0.5f)));
-        entities.System<SharedTransformSystem>().SetWorldRotation(emitter, Angle.FromDegrees(-90));
-        var console = entities.SpawnEntity("WFComputerTractorBeam", new EntityCoordinates(source, new Vector2(1.5f, 0.5f)));
-        entities.GetComponent<ApcPowerReceiverComponent>(console).Powered = true;
-        var beam = entities.GetComponent<TractorBeamEmitterComponent>(emitter);
-        entities.GetComponent<PowerConsumerComponent>(emitter).NetworkLoad.ReceivingPower = beam.MaxPower;
-        var transform = entities.System<SharedTransformSystem>();
-        beam.SourceGrid = source;
-        beam.Controller = console;
-        beam.Target = target;
-        beam.TargetOffset = Body(entities, target).LocalCenter;
-        beam.HoldDistance = Vector2.Distance(
-            transform.ToMapCoordinates(new EntityCoordinates(source, Body(entities, source).LocalCenter)).Position,
-            transform.ToMapCoordinates(new EntityCoordinates(target, Body(entities, target).LocalCenter)).Position);
+        var (source, target, emitter, _) = TractorBeamTest.CreateLock(entities, maps, map);
         return (source, target, emitter);
     }
 

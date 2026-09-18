@@ -3,6 +3,8 @@ using System.Linq;
 using System.Numerics;
 using Content.Server._WF.TractorBeam;
 using Content.Server.Power.Components;
+using Content.Server.Shuttles.Components;
+using Content.Shared._Crescent.ShipShields;
 using Content.Shared._WF.TractorBeam;
 using Content.Shared.Shuttles.Components;
 using Content.Shared.Shuttles.Systems;
@@ -17,6 +19,100 @@ namespace Content.IntegrationTests.Tests._WF.TractorBeam;
 
 public sealed class TractorBeamConsoleTest
 {
+    [Test]
+    public async Task ReleasedDishCannotRecaptureUntilCooldownExpires()
+    {
+        await using var pair = await PoolManager.GetServerClient();
+        var server = pair.Server;
+        var map = await pair.CreateTestMap();
+        var entities = server.ResolveDependency<IEntityManager>();
+        var maps = server.ResolveDependency<IMapManager>();
+        await server.WaitAssertion(() =>
+        {
+            entities.DeleteEntity(map.Grid);
+            var (source, target, emitter, console, actor, _) = CreateConsole(entities, maps, map.MapId);
+            var beam = entities.GetComponent<TractorBeamEmitterComponent>(emitter);
+            var controller = entities.GetComponent<TractorBeamConsoleComponent>(console);
+            var system = entities.System<TractorBeamSystem>();
+            Send(entities, console, actor, emitter, target);
+            Assert.That(beam.Target, Is.EqualTo(target));
+            Send(entities, console, actor, emitter, null);
+            Assert.That(beam.CooldownRemaining, Is.EqualTo(12));
+            for (var i = 0; i < 11; i++)
+                system.UpdateBeforeSolve(false, 1f);
+            controller.NextCommand = TimeSpan.Zero;
+            Send(entities, console, actor, emitter, target);
+            Assert.That(beam.Target, Is.Null, "The server must reject recapture even if the client bypasses disabled controls.");
+            Send(entities, console, actor, emitter, null);
+            Assert.That(beam.CooldownRemaining, Is.EqualTo(1), "Idle releases cannot restart the countdown.");
+            system.UpdateBeforeSolve(false, 1f);
+            controller.NextCommand = TimeSpan.Zero;
+            Send(entities, console, actor, emitter, target);
+            Assert.That(beam.Target, Is.EqualTo(target), "Capture must become available when the cooldown expires.");
+            entities.DeleteEntity(source);
+            entities.DeleteEntity(target);
+        });
+        await pair.CleanReturnAsync();
+    }
+
+    [Test]
+    public async Task ShieldsBlockAcquisitionButPreserveExistingCapturePinAndRangeControls()
+    {
+        await using var pair = await PoolManager.GetServerClient();
+        var server = pair.Server;
+        var map = await pair.CreateTestMap();
+        var entities = server.ResolveDependency<IEntityManager>();
+        var maps = server.ResolveDependency<IMapManager>();
+        await server.WaitAssertion(() =>
+        {
+            entities.DeleteEntity(map.Grid);
+            var (source, target, emitter, console, actor, _) = CreateConsole(entities, maps, map.MapId);
+            var beam = entities.GetComponent<TractorBeamEmitterComponent>(emitter);
+            var controller = entities.GetComponent<TractorBeamConsoleComponent>(console);
+            var system = entities.System<TractorBeamSystem>();
+
+            // The shield system owns this grid marker. Drive its boundary directly to isolate
+            // acquisition policy from the generator's separate power and recharge simulation.
+            entities.AddComponent<ShipShieldedComponent>(target);
+            Send(entities, console, actor, emitter, target);
+            Assert.That(beam.Target, Is.Null, "A raised shield must prevent a new capture.");
+
+            entities.RemoveComponent<ShipShieldedComponent>(target);
+            controller.NextCommand = TimeSpan.Zero;
+            Send(entities, console, actor, emitter, target);
+            system.UpdateBeforeSolve(false, 1f / 60f);
+            Assert.That(beam.Target, Is.EqualTo(target));
+            Assert.That(beam.Active, Is.True, "Dropping the shield must permit this same valid target to be captured.");
+            var visual = beam.Visual;
+
+            entities.AddComponent<ShipShieldedComponent>(target);
+            system.UpdateBeforeSolve(false, 1f / 60f);
+            Assert.That(beam.Active, Is.True, "Raising shields cannot sever an existing capture.");
+            Assert.That(beam.Target, Is.EqualTo(target));
+            Assert.That(beam.Visual, Is.EqualTo(visual), "The existing effect must survive without reacquisition.");
+            controller.NextCommand = TimeSpan.Zero;
+            Send(entities, console, actor, emitter, target, lockInPlace: true);
+            Assert.That(beam.LockedInPlace, Is.True, "A shield raised after capture must not block pinning.");
+
+            controller.NextCommand = TimeSpan.Zero;
+            Send(entities, console, actor, emitter, target, desiredRange: 30f);
+            Assert.That(beam.RequestedDistance, Is.EqualTo(30f));
+            Assert.That(beam.Pulling, Is.True, "The existing capture must still accept a shorter range.");
+            system.UpdateBeforeSolve(false, 1f / 60f);
+            Assert.That(beam.Active, Is.True);
+
+            Send(entities, console, actor, emitter, null);
+            Assert.That(beam.Target, Is.Null);
+            Assert.That(beam.Active, Is.False);
+            controller.NextCommand = TimeSpan.Zero;
+            Send(entities, console, actor, emitter, target);
+            Assert.That(beam.Target, Is.Null, "After release, the still-raised shield must block reacquisition.");
+            entities.DeleteEntity(source);
+            entities.DeleteEntity(target);
+        });
+        await pair.CleanReturnAsync();
+    }
+
     [TestCase(1.005f, true)]
     [TestCase(1.03f, false)]
     public async Task StoppedPinAvailabilityToleratesOnlySmallPowerAllocationLag(float demandMultiplier, bool available)
@@ -321,6 +417,8 @@ public sealed class TractorBeamConsoleTest
     [TestCase("closed-ui")]
     [TestCase("unpowered-console")]
     [TestCase("unpowered-emitter")]
+    [TestCase("static-target")]
+    [TestCase("disabled-target-shuttle")]
     public async Task ConsoleRejectsInvalidCommands(string reason)
     {
         await using var pair = await PoolManager.GetServerClient();
@@ -374,6 +472,12 @@ public sealed class TractorBeamConsoleTest
                     break;
                 case "unpowered-emitter":
                     entities.GetComponent<PowerConsumerComponent>(emitter).NetworkLoad.ReceivingPower = 0;
+                    break;
+                case "static-target":
+                    entities.System<SharedPhysicsSystem>().SetBodyType(target, BodyType.Static);
+                    break;
+                case "disabled-target-shuttle":
+                    entities.GetComponent<ShuttleComponent>(target).Enabled = false;
                     break;
                 default:
                     Assert.Fail($"Unknown invalid command: {reason}");

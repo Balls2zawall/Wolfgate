@@ -1,5 +1,6 @@
 using System.Numerics;
 using Content.Server.Power.Components;
+using Content.Server.Shuttles.Components;
 using Content.Shared._WF.TractorBeam;
 using Robust.Shared.Map.Components;
 using Robust.Shared.Physics;
@@ -98,45 +99,67 @@ public sealed partial class TractorBeamSystem
         var reducedMass = 1f / (1f / sourceBody.Mass + 1f / targetBody.Mass);
         var separationToTarget = _predictedCenters[target] - _predictedCenters[source];
         var relativeVelocity = PredictedVelocity(target, targetBody, elapsed) - PredictedVelocity(source, sourceBody, elapsed);
+        var sourceAngularVelocity = PredictedAngularVelocity(source, sourceBody, elapsed);
+        // The target's desired velocity includes the tangential motion of the source's arm.
+        relativeVelocity -= new Vector2(-separationToTarget.Y, separationToTarget.X) * sourceAngularVelocity;
+        var lateralMass = 1f / (sourceBody.InvMass + targetBody.InvMass +
+            separationToTarget.LengthSquared() * sourceBody.InvI);
+        var direction = new Angle(_predictedAngles[source] - beam.HoldSourceAngle!.Value).RotateVec(beam.HoldDirection);
         var torqueArm = MathF.Max(1f, GridRadius(target));
         var torque = 0f;
         Vector2 force;
         if (beam.LockedInPlace)
         {
-            // Source stationkeeping runs after the beam. Do not predict its recoil as actual
-            // drift before those thrusters have had the opportunity to counter it.
-            var error = _predictedCenters[target] - Center(source, sourceBody) - beam.LockedSeparation;
-            // An active arrestor servo stops the target, while its real thrusters must absorb
-            // the equal recoil. Its pose follows the source: an underpowered arrestor drifting
-            // away changes this error and pulls the target along, never anchoring it to space.
-            var targetVelocity = PredictedVelocity(target, targetBody, elapsed);
-            force = new Vector2(
-                TractorBeamPhysics.CalculateLockForce(error.X, targetVelocity.X, targetBody.Mass, dt),
-                TractorBeamPhysics.CalculateLockForce(error.Y, targetVelocity.Y, targetBody.Mass, dt));
-            if (targetBody.InvI > 0)
+            var heldSeparation = new Angle(_predictedAngles[source] - beam.LockedSourceAngle!.Value)
+                .RotateVec(beam.LockedSeparation);
+            var error = separationToTarget - heldSeparation;
+            // Restrain the relative pose: common translation is free, while real engines
+            // must counter the pair's shared momentum and the arm's reaction torque.
+            var sourceInvMass = sourceBody.InvMass;
+            var sourceInvI = sourceBody.InvI;
+            if (_brakingSources.Contains(source) && TryComp<ShuttleComponent>(source, out var shuttle))
             {
-                var angleError = _predictedAngles[target] - (float) TransformSystem.GetWorldRotation(source).Theta - beam.LockedAngle;
-                angleError = MathF.Atan2(MathF.Sin(angleError), MathF.Cos(angleError));
-                var angularVelocity = targetBody.AngularVelocity + targetBody.Torque * targetBody.InvI * elapsed;
-                torque = TractorBeamPhysics.CalculateLockForce(angleError, angularVelocity, 1f / targetBody.InvI, dt);
+                // Only treat a source axis as supported after checking its actual engines
+                // can absorb the full proposed reaction. Manual steering stays unconstrained.
+                var candidate = new Vector2(
+                    TractorBeamPhysics.CalculateLockForce(error.X, relativeVelocity.X, targetBody.Mass, dt),
+                    TractorBeamPhysics.CalculateLockForce(error.Y, relativeVelocity.Y, targetBody.Mass, dt));
+                var angularError = _predictedAngles[target] - _predictedAngles[source] - beam.LockedAngle;
+                angularError = MathF.Atan2(MathF.Sin(angularError), MathF.Cos(angularError));
+                var candidateTorque = targetBody.InvI > 0 ? TractorBeamPhysics.CalculateLockForce(angularError,
+                    PredictedAngularVelocity(target, targetBody, elapsed) - sourceAngularVelocity, 1f / targetBody.InvI, dt) : 0;
+                var reactionTorque = separationToTarget.X * candidate.Y - separationToTarget.Y * candidate.X + candidateTorque;
+                var support = _mover.PredictTractorBraking(source, shuttle, sourceBody, elapsed, candidate * dt, reactionTorque * dt);
+                if (support.LinearHeld)
+                    sourceInvMass = 0;
+                if (support.AngularHeld)
+                    sourceInvI = 0;
             }
+            var desiredAcceleration = new Vector2(
+                TractorBeamPhysics.CalculateLockForce(error.X, relativeVelocity.X, 1f, dt),
+                TractorBeamPhysics.CalculateLockForce(error.Y, relativeVelocity.Y, 1f, dt));
+            var angleError = _predictedAngles[target] - _predictedAngles[source] - beam.LockedAngle;
+            angleError = MathF.Atan2(MathF.Sin(angleError), MathF.Cos(angleError));
+            var angularVelocity = PredictedAngularVelocity(target, targetBody, elapsed) - sourceAngularVelocity;
+            var desiredAngularAcceleration = TractorBeamPhysics.CalculateLockForce(angleError, angularVelocity, 1f, dt);
+            (force, torque) = TractorBeamPhysics.CalculateArmLock(desiredAcceleration, desiredAngularAcceleration,
+                separationToTarget, sourceInvMass + targetBody.InvMass, sourceInvI, targetBody.InvI);
         }
         else
         {
             force = TractorBeamPhysics.CalculateForce(separationToTarget, relativeVelocity,
-                beam.HoldDistance, reducedMass, beam.Frequency, beam.DampingRatio, beam.MaxForce, dt, beam.HoldDirection);
+                beam.HoldDistance, reducedMass, beam.Frequency, beam.DampingRatio, beam.MaxForce, dt, direction, lateralMass);
             var inverseInertia = sourceBody.InvI + targetBody.InvI;
             if (inverseInertia > 0)
             {
                 var angleError = _predictedAngles[target] - _predictedAngles[source] - beam.HoldAngle!.Value;
-                var relativeAngularVelocity = targetBody.AngularVelocity + targetBody.Torque * targetBody.InvI * elapsed -
-                    sourceBody.AngularVelocity - sourceBody.Torque * sourceBody.InvI * elapsed;
+                var relativeAngularVelocity = PredictedAngularVelocity(target, targetBody, elapsed) - sourceAngularVelocity;
                 torque = TractorBeamPhysics.CalculateTorque(angleError, relativeAngularVelocity, 1f / inverseInertia,
                     beam.Frequency, beam.DampingRatio, beam.MaxForce * torqueArm, dt);
             }
         }
         if (PhysicsSystem.WakeBody(target, body: targetBody))
-            _pullRequests.Add((target, force, Vector2.Zero));
+            _pullRequests.Add((target, force, Center(target, targetBody) - Center(source, sourceBody)));
 
         var dish = TransformSystem.GetWorldPosition(uid) + _predictedCenters[source] - Center(source, sourceBody);
         foreach (var entity in _collectionTargets[uid])
@@ -153,10 +176,10 @@ public sealed partial class TractorBeamSystem
             // Secondary captures deliberately keep accelerating into the dish. They have no
             // speed governor or arrival brake: using heavy debris against an arrestor is possible.
             // Apply recoil at the dish, including its lever arm, to conserve angular momentum.
-            var direction = separation / distance;
+            var collectionDirection = separation / distance;
             var acceleration = float.IsFinite(beam.CollectionAcceleration) ? MathF.Max(0, beam.CollectionAcceleration) : 0f;
             var mass = 1f / (1f / sourceBody.Mass + 1f / body.Mass);
-            _pullRequests.Add((entity, direction * MathF.Min(beam.MaxForce, mass * acceleration),
+            _pullRequests.Add((entity, collectionDirection * MathF.Min(beam.MaxForce, mass * acceleration),
                 dish - _predictedCenters[source]));
         }
 

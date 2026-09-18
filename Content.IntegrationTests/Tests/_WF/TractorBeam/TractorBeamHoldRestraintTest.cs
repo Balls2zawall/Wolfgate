@@ -108,14 +108,21 @@ public sealed class TractorBeamHoldRestraintTest
             var unrestrained = initialAngularVelocity + targetBody.Torque * targetBody.InvI * Step;
             system.UpdateBeforeSolve(false, Step);
             var poweredVelocity = targetBody.AngularVelocity + targetBody.Torque * targetBody.InvI * Step;
+            var transform = entities.System<SharedTransformSystem>();
+            var sourceCenter = transform.ToMapCoordinates(new EntityCoordinates(source, sourceBody.LocalCenter)).Position;
+            var targetCenter = transform.ToMapCoordinates(new EntityCoordinates(target, targetBody.LocalCenter)).Position;
+            var sourceMomentum = sourceBody.LinearVelocity * sourceBody.Mass;
+            var targetMomentum = targetBody.LinearVelocity * targetBody.Mass;
+            var orbitalMomentum = sourceCenter.X * sourceMomentum.Y - sourceCenter.Y * sourceMomentum.X +
+                targetCenter.X * targetMomentum.Y - targetCenter.Y * targetMomentum.X;
             Assert.Multiple(() =>
             {
                 Assert.That(beam.LockedInPlace, Is.False);
                 Assert.That(sign * (poweredVelocity - unrestrained), Is.LessThan(0f));
                 Assert.That(sign * sourceBody.AngularVelocity, Is.GreaterThan(0f));
-                Assert.That(sourceBody.AngularVelocity / sourceBody.InvI + targetBody.AngularVelocity / targetBody.InvI,
+                Assert.That(sourceBody.AngularVelocity / sourceBody.InvI + targetBody.AngularVelocity / targetBody.InvI + orbitalMomentum,
                     Is.EqualTo(initialAngularMomentum).Within(MathF.Abs(initialAngularMomentum) * 0.00001f + 0.1f),
-                    "Angular restraint transfers equal and opposite angular impulse.");
+                    "Angular restraint conserves combined spin and orbital angular momentum.");
                 Assert.That(power.DrawRate, Is.GreaterThan(beam.HoldingPower));
                 Assert.That(power.DrawRate, Is.LessThanOrEqualTo(beam.MaxPower));
                 Assert.That(beam.Strain, Is.GreaterThan(0f));

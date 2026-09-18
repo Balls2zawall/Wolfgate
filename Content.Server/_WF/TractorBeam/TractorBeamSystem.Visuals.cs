@@ -1,7 +1,6 @@
 using System.Numerics;
 using Content.Shared._WF.TractorBeam;
 using Robust.Server.GameStates;
-using Robust.Shared.Map;
 using Robust.Shared.Map.Components;
 
 namespace Content.Server._WF.TractorBeam;
@@ -44,17 +43,16 @@ public sealed partial class TractorBeamSystem
 
         var effect = EnsureComp<TractorBeamVisualComponent>(visual);
         var targetBounds = Comp<MapGridComponent>(target).LocalAABB;
-        var width = GetBeamHalfWidth(target, TransformSystem.GetWorldPosition(uid),
-            TransformSystem.ToMapCoordinates(new EntityCoordinates(target, beam.TargetOffset)).Position);
+        var widthScale = float.IsFinite(beam.VisualWidthScale) ? Math.Clamp(beam.VisualWidthScale, 0.05f, 1f) : 1f;
         if (effect.Target == target && effect.TargetOffset == beam.TargetOffset && effect.Strain == beam.Strain &&
-            effect.HalfWidth == width && effect.TargetBounds == targetBounds)
+            effect.TargetBounds == targetBounds && effect.WidthScale == widthScale)
             return;
 
         effect.Target = target;
         effect.TargetOffset = beam.TargetOffset;
         effect.TargetBounds = targetBounds;
         effect.Strain = beam.Strain;
-        effect.HalfWidth = width;
+        effect.WidthScale = widthScale;
         Dirty(visual, effect);
     }
 

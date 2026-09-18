@@ -75,6 +75,7 @@ public sealed class TractorBeamOverlay : Overlay
 
             var perpendicular = new Vector2(-delta.Y, delta.X) / distance;
             var halfWidth = TractorBeamGeometry.GetTargetHalfWidth(start, end, emitter.TargetBounds, targetMatrix);
+            halfWidth *= float.IsFinite(emitter.WidthScale) ? Math.Clamp(emitter.WidthScale, 0.05f, 1f) : 1f;
             if (!float.IsFinite(halfWidth) || halfWidth <= 0f)
                 continue;
             var left = end + perpendicular * halfWidth;
@@ -147,10 +148,16 @@ public sealed class TractorBeamOverlay : Overlay
                 }
             }
 
-            handle.DrawPrimitives(DrawPrimitiveTopology.TriangleList, Texture.White,
-                new ReadOnlySpan<DrawVertexUV2DColor>(_fill, 0, fillCount));
-            handle.DrawPrimitives(DrawPrimitiveTopology.LineList, Texture.White,
-                new ReadOnlySpan<DrawVertexUV2DColor>(_lines, 0, lineCount));
+            if (fillCount > 0)
+            {
+                handle.DrawPrimitives(DrawPrimitiveTopology.TriangleList, Texture.White,
+                    new ReadOnlySpan<DrawVertexUV2DColor>(_fill, 0, fillCount));
+            }
+            if (lineCount > 0)
+            {
+                handle.DrawPrimitives(DrawPrimitiveTopology.LineList, Texture.White,
+                    new ReadOnlySpan<DrawVertexUV2DColor>(_lines, 0, lineCount));
+            }
             handle.DrawCircle(start, 0.12f + strain * 0.06f, color.WithAlpha(0.45f * flicker));
         }
 

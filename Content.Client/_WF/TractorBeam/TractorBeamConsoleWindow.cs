@@ -16,6 +16,8 @@ public sealed class TractorBeamConsoleWindow : DefaultWindow
     private readonly Label _connection;
     private readonly Label _targetDetails;
     private readonly Label _targetConeStatus;
+    private readonly Label _shieldWarning;
+    private readonly Label _powerWarning;
     private readonly Label _lockWarning;
     private readonly Label _status;
     private readonly Label _strain;
@@ -63,6 +65,18 @@ public sealed class TractorBeamConsoleWindow : DefaultWindow
         controls.AddChild(_status = new Label { ClipText = true });
         controls.AddChild(_lockWarning = new Label { ClipText = true });
         controls.AddChild(_targetConeStatus = new Label { ClipText = true });
+        controls.AddChild(_shieldWarning = new Label
+        {
+            Name = "ShieldWarning",
+            Text = Loc.GetString("tractor-beam-target-shielded"),
+            FontColorOverride = Color.Red,
+        });
+        controls.AddChild(_powerWarning = new Label
+        {
+            Name = "PowerWarning",
+            Text = Loc.GetString("tractor-beam-console-power-shortfall"),
+            FontColorOverride = Color.Red,
+        });
 
         // Keep the commands above the scrollable telemetry. Neither long ship names nor a
         // short screen should push capture controls below the bottom edge of the window.
@@ -215,9 +229,14 @@ public sealed class TractorBeamConsoleWindow : DefaultWindow
             if (emitter?.Pulling == true && emitter?.DesiredRange is { } pullingRange)
                 _status.Text = Loc.GetString("tractor-beam-console-pulling-range", ("range", pullingRange.ToString("N1")));
             var lockedName = _state?.Targets.FirstOrDefault(entry => entry.Entity == lockedEntity).Name;
-            _status.Text += $" — {lockedName ?? Loc.GetString("tractor-beam-console-unknown-target")}";
+            _status.Text += $": {lockedName ?? Loc.GetString("tractor-beam-console-unknown-target")}";
         }
         _status.ToolTip = _status.Text;
+        if (emitter is { CooldownRemaining: > 0 } cooling)
+        {
+            _status.Text = Loc.GetString("tractor-beam-console-cooldown", ("seconds", MathF.Ceiling(cooling.CooldownRemaining)));
+            _status.ToolTip = _status.Text;
+        }
         _lockWarning.Visible = false;
         if (emitter is { } lockedDish && locked is { } activeTarget && _state != null)
         {
@@ -252,8 +271,18 @@ public sealed class TractorBeamConsoleWindow : DefaultWindow
         _strainBar.Value = strain;
         _power.Text = Loc.GetString("tractor-beam-console-power", ("received", ((emitter?.ReceivedPower ?? 0) / 1000).ToString("N1")),
             ("requested", ((emitter?.RequestedPower ?? 0) / 1000).ToString("N1")));
-        var canEngage = connected && hasEmitter && emitter?.Powered == true && insideCone;
-        _lock.Disabled = !canEngage || (locked == _selectedTarget && emitter?.Pulling != true && emitter?.LockedInPlace != true);
+        // Allow the same small allocation lag tolerated by the pin control.
+        var powerShortfall = hasEmitter && emitter is { } supplied &&
+            supplied.RequestedPower > 0 && supplied.ReceivedPower * 1.01f < supplied.RequestedPower;
+        // Keep the warning row measured so power fluctuations never move the controls.
+        _powerWarning.FontColorOverride = powerShortfall ? Color.Red : Color.Transparent;
+        _power.FontColorOverride = powerShortfall ? Color.Red : null;
+        var canEngage = connected && hasEmitter && emitter?.Powered == true && insideCone && emitter?.CooldownRemaining <= 0;
+        var shieldsBlockAcquisition = _selectedTarget != null && locked != _selectedTarget && target?.Shielded == true;
+        _shieldWarning.Visible = hasEmitter && shieldsBlockAcquisition;
+        _lock.ToolTip = shieldsBlockAcquisition ? _shieldWarning.Text : null;
+        _lock.Disabled = !canEngage || shieldsBlockAcquisition ||
+            (locked == _selectedTarget && emitter?.Pulling != true && emitter?.LockedInPlace != true);
         var minimumRange = emitter?.MinimumDistance ?? 0;
         var maximumRange = MathF.Min(emitter?.Range ?? 0, MathF.Min(emitter?.CurrentDistance ?? 0, emitter?.HoldDistance ?? 0));
         if (_rangeEmitter != _selectedEmitter || _rangeTarget != locked)

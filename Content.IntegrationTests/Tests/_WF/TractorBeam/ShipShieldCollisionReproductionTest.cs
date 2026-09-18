@@ -1,3 +1,4 @@
+#nullable enable annotations
 using System.Numerics;
 using System.Reflection;
 using Content.Server._Crescent.ShipShields;

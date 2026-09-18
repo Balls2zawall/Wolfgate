@@ -39,7 +39,7 @@
         !type:CableDeviceNode
         nodeGroupID: HVPower
   - type: TractorBeamEmitter
-    maxRange: 100
+    maxRange: 200
     rangeStrainAtMaxRange: 0.6
     maxForce: 10000
     idlePower: 5000
@@ -56,6 +56,55 @@
           collection: MetalBreak
       - !type:DoActsBehavior
         acts: [ "Destruction" ]
+
+- type: entity
+  parent: WFTractorBeamEmitter
+  id: WFTractorBeamEmitterSmall
+  name: small tractor beam emitter
+  description: A compact three-tile-wide gravitic dish for debris recovery and small-craft towing. Aim its open face toward the target and connect it to medium-voltage power. Controlled through a tractor beam control computer.
+  components:
+  - type: Sprite
+    scale: 0.75, 0.75
+  - type: Fixtures
+    fixtures:
+      fix1:
+        shape:
+          !type:PhysShapeAabb
+          bounds: "-1.4,-0.5,1.4,0.5"
+        density: 300
+        mask:
+        - MachineMask
+        layer:
+        - MachineLayer
+  - type: Anchorable
+    delay: 2
+  - type: PowerConsumer
+    voltage: Medium
+    drawRate: 10000
+  - type: NodeContainer
+    nodes:
+      input:
+        !type:CableDeviceNode
+        nodeGroupID: MVPower
+  - type: TractorBeamEmitter
+    maxRange: 80
+    maxForce: 6000
+    idlePower: 10000
+    holdingPower: 30000
+    maxPower: 150000
+    visualWidthScale: 0.5
+    engageSound:
+      path: /Audio/_WF/TractorBeam/tractorbeam_engage.ogg
+      params:
+        volume: -6
+    loopSound:
+      path: /Audio/_WF/TractorBeam/tractorbeam_loop.ogg
+      params:
+        volume: -12.0206
+    disengageSound:
+      path: /Audio/_WF/TractorBeam/tractorbeam_disengage.ogg
+      params:
+        volume: -6
 
 - type: entity
   parent: BaseComputer

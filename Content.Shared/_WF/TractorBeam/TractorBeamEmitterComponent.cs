@@ -8,7 +8,9 @@ namespace Content.Shared._WF.TractorBeam;
 [RegisterComponent, NetworkedComponent, AutoGenerateComponentState]
 public sealed partial class TractorBeamEmitterComponent : Component
 {
-    [DataField] public float MaxRange = 100f;
+    [DataField] public float MaxRange = 200f;
+    /// <summary>Visual fan width relative to the target hull; does not change the operating cone.</summary>
+    [DataField] public float VisualWidthScale = 1f;
     /// <summary>Electrical strain to sustain a stationary capture at maximum range.</summary>
     [DataField] public float RangeStrainAtMaxRange = 0.6f;
     /// <summary>Forward operating half-angle in radians, measured about the dish's local +Y axis.</summary>
@@ -17,6 +19,9 @@ public sealed partial class TractorBeamEmitterComponent : Component
     [DataField] public float IdlePower = 5000f;
     [DataField] public float HoldingPower = 100000f;
     [DataField] public float MaxPower = 2000000f;
+    /// <summary>Seconds continuously at maximum displayed strain before the capture fails.</summary>
+    [DataField] public float OverloadDuration = 2f;
+    [DataField] public float RestartCooldown = 12f;
     [DataField] public float Frequency = 0.7f;
     [DataField] public float DampingRatio = 1f;
     [DataField] public float ReelSpeed = 2f;
@@ -54,15 +59,19 @@ public sealed partial class TractorBeamEmitterComponent : Component
     public float HoldDistance;
     /// <summary>Requested center-to-center distance for a controlled inward reel; retained on arrival.</summary>
     public float? RequestedDistance;
-    // World-space bearing captured at lock, preventing lateral weaving around the source.
+    // Bearing at capture; rotate by the source's change in orientation to form the rigid arm.
     public Vector2 HoldDirection;
+    public float? HoldSourceAngle;
     // Relative orientation captured once, shared by normal Hold and Pull modes.
     public float? HoldAngle;
     public Vector2 LockedSeparation;
+    public float? LockedSourceAngle;
     public float LockedAngle;
     public float RequestedPower;
     public float RequiredForce;
     // Electrical field-maintenance load, separate from resistance so distance does not trigger creaks.
     public float DistanceStrain;
+    public float OverloadTime;
+    public float CooldownRemaining;
     public TimeSpan PowerGraceUntil;
 }

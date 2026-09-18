@@ -20,20 +20,25 @@ The console board is `WFTractorBeamComputerCircuitboard`.
 Unanchor, rotate, and reanchor the dish to change its installed facing.
 
 The dish faces along its local +Y axis (north in its default placement) and operates
-inside a 90-degree forward sector, out to 100 m. Turn the arrestor or mount its dish
+inside a 90-degree forward sector, out to 200 m (80 m for the small dish). Turn the arrestor or mount its dish
 to bring a contact into that sector before capturing it. Captures release when the
 target's center leaves either the angular boundary or the maximum range, including
 when the arrestor turns away. The control display shows the selected dish's sector
 and warns during the outer 15% of its angle or range, before the lock is lost.
 
 Hold resists moving closer, farther away, sideways, and rotating, using damped
-springs about the distance, bearing, and relative angle captured at lock. A range
+springs about the distance, source-relative bearing, and relative angle captured at lock. A range
 order shortens that held distance while retaining the other restraints.
-Equal and opposite impulses and torques act on the two ships. Inward, outward,
+Turning the arrestor carries the target around its center of mass on the held arm,
+including the target's tangential velocity and relative hull orientation. Sideways
+resistance applies a lever-arm torque back to the arrestor, so either ship can turn
+the coupled pair; inertia, powered thrusters, beam strength, and electricity still
+limit authority. Turning too fast can overload the beam or lose cone coverage.
+Equal and opposite impulses and reaction torques act on the two ships. Inward, outward,
 sideways, and rotational resistance all share the same force and power limit.
 Distance adds electrical strain even without resistance: field strain is
 `0.6 × (distance / maxRange)²`, measured from the dish to the target's center.
-It uses 15% strain / 385 kW at 50 m and 60% / 1.24 MW at 100 m for a stationary
+It uses 15% strain / 385 kW at 100 m and 60% / 1.24 MW at 200 m for a stationary
 target. Mechanical strain fills the remaining headroom up to the 2 MW limit.
 The field-maintenance cost is paid before mechanical restraint: insufficient
 power weakens the beam, with no force available below that cost. A powered dish
@@ -79,7 +84,7 @@ lock it, and put loose objects between the dish and target to test collection.
 
 Default per-dish tuning (prototype fields):
 
-- `maxRange`: 100 m, measured from the dish to the target's center of mass.
+- `maxRange`: 200 m, measured from the dish to the target's center of mass.
 - `rangeStrainAtMaxRange`: 0.6, stationary electrical strain at the range limit.
 - `coneHalfAngle`: 0.7853982 radians (45 degrees either side of the dish's facing).
 - `maxForce`: 10,000 force units (50 standard thrusters).
@@ -95,13 +100,25 @@ half the requested additional power supplies only a quarter of the requested for
 The supply may take one
 second to establish a new lock, during which an underpowered beam applies no
 force. After that, supply below holding power drops the lock. Strain measures the
-current resistance rather than hull damage or a timer. Rotational restraint in every mode
+current resistance rather than hull damage. Two continuous seconds at 100% displayed
+strain break the capture, clear its effect, and return the dish to idle power, even
+with a full power supply. Dropping below 100% resets this overload timer; the duration
+is configurable with `overloadDuration`. Any release (manual, overload, power loss,
+or invalid target) starts a 12-second dish cooldown (`restartCooldown`). The console
+shows its countdown and capture is rejected server-side until it expires. Repeated
+release commands on an idle dish do not extend the cooldown. Rotational restraint in every mode
 also shares the dish's force and power budget with translation and collected debris.
 
 Server validation rejects foreign emitters, self-targets, hidden/undetected
 contacts, static grids, targets outside the operating sector and the source's own docked group.
 Locks release on power loss, console loss, unanchoring, range or firing-arc loss, grid splitting,
 target deletion, source-grid reassignment or FTL. Tractor beams do not inhibit FTL.
+Anchored or static grids, station-anchor-disabled shuttles, and ships docked to such
+grids cannot be selected or collected by the beam. Existing locks release if either
+ship becomes fixed. Loose anchored objects remain excluded from debris collection.
+Active shields prevent acquiring a new primary lock. Raising shields after capture
+does not release the tether or prevent its existing pin/range controls; reacquiring
+after release requires lowering the shields again.
 
 The dish uses the supplied 128×128 artwork at 1.5× scale (a six-tile canvas), centered
 on the emitter with its open face pointing forward (+Y), and a matching enlarged
@@ -112,6 +129,13 @@ The captured ship's helm shows the names of the ships holding it, across console
 views, and clears the warning when the last active beam releases.
 
 The user-supplied engage, loop, and disengage sounds play across both participating hulls.
+The small dish (`WFTractorBeamEmitterSmall`) uses the same controls, operating cone,
+restraint and collection physics. Its centered three-tile sprite has a 2.8 × 1 tile
+collision footprint at density 300. It reaches 80 m with 6,000 N maximum force,
+10 kW idle draw, 30 kW holding draw, and 150 kW maximum draw. It connects to MV cable
+under its center tile; the full-size dish still uses HV. Distance still adds
+strain; at maximum range an unresisted capture draws 102 kW. Its visual fan is half
+the normal target width and its engage, loop and disengage clips are 6 dB quieter.
 The loop starts alongside engagement at half playback gain, without waiting for the intro.
 The three supplied hull creaks play intermittently while the beam meets resistance,
 including attempts to translate or rotate a held ship; an idle hold does not creak.

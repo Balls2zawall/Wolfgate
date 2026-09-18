@@ -87,6 +87,8 @@ public sealed class TractorBeamDistanceLoadTest
             var power = entities.GetComponent<PowerConsumerComponent>(emitter);
             var system = entities.System<TractorBeamSystem>();
             var physics = entities.System<SharedPhysicsSystem>();
+            var transform = entities.System<SharedTransformSystem>();
+            var sourceBody = entities.GetComponent<PhysicsComponent>(source);
             var targetBody = entities.GetComponent<PhysicsComponent>(target);
             // A queued engine force persists through each beam substep. This exercises
             // sustained resistance, rather than a one-off velocity that may already stop.
@@ -98,14 +100,16 @@ public sealed class TractorBeamDistanceLoadTest
                     (beam.MaxPower - beam.HoldingPower) * (farDistanceStrain + 0.1f);
             }
 
-            PlacePinnedTarget(entities, source, target, emitter, beam.MaxRange * 0.2f);
+            PlaceRadialPinnedTarget(beam.MaxRange * 0.2f);
             system.UpdateBeforeSolve(false, Step);
             var nearPower = power.DrawRate;
             var nearForce = beam.RequiredForce;
-            var nearResidual = targetBody.LinearVelocity.X + targetBody.Force.X * targetBody.InvMass * Step;
-            PlacePinnedTarget(entities, source, target, emitter, beam.MaxRange * 0.8f);
+            var nearResidual = targetBody.LinearVelocity.X + targetBody.Force.X * targetBody.InvMass * Step -
+                sourceBody.LinearVelocity.X;
+            PlaceRadialPinnedTarget(beam.MaxRange * 0.8f);
             system.UpdateBeforeSolve(false, Step);
-            var farResidual = targetBody.LinearVelocity.X + targetBody.Force.X * targetBody.InvMass * Step;
+            var farResidual = targetBody.LinearVelocity.X + targetBody.Force.X * targetBody.InvMass * Step -
+                sourceBody.LinearVelocity.X;
 
             Assert.That(beam.Active, Is.True);
             if (partialPower)
@@ -114,14 +118,17 @@ public sealed class TractorBeamDistanceLoadTest
                 // reach maximum demand even though their delivered restraint differs.
                 Assert.That(power.DrawRate, Is.GreaterThanOrEqualTo(nearPower));
                 Assert.That(power.DrawRate, Is.LessThanOrEqualTo(beam.MaxPower));
-                Assert.That(nearResidual, Is.GreaterThan(0f));
+                Assert.That(nearResidual, Is.GreaterThanOrEqualTo(-0.0001f),
+                    "The available supply may fully restrain the nearer target, but must not reverse its resistance.");
                 Assert.That(farResidual, Is.GreaterThan(nearResidual + 0.0001f),
                     "The same supply leaves less force authority after paying the longer beam's baseline cost.");
             }
             else
             {
                 Assert.That(power.DrawRate, Is.GreaterThan(nearPower));
-                Assert.That(nearForce, Is.EqualTo(beam.MaxForce * 0.5f).Within(0.1f));
+                var expectedTransferredForce = beam.MaxForce * 0.5f * sourceBody.Mass / (sourceBody.Mass + targetBody.Mass);
+                Assert.That(nearForce, Is.EqualTo(expectedTransferredForce).Within(0.1f),
+                    "The beam shares the queued thrust between both free hulls according to their masses.");
                 Assert.That(beam.RequiredForce, Is.EqualTo(nearForce).Within(0.1f),
                     "Identical engine resistance must not acquire phantom mechanical load with distance.");
                 Assert.That(MathF.Abs(nearResidual), Is.LessThan(0.0001f));
@@ -129,6 +136,20 @@ public sealed class TractorBeamDistanceLoadTest
             }
             entities.DeleteEntity(source);
             entities.DeleteEntity(target);
+
+            void PlaceRadialPinnedTarget(float distance)
+            {
+                PlacePinnedTarget(entities, source, target, emitter, distance);
+                // Isolate electrical distance load: keep thrust exactly along the COM-to-COM
+                // axis so changing range cannot also change the rotational lever arm.
+                var sourceCenter = transform.ToMapCoordinates(new EntityCoordinates(source, sourceBody.LocalCenter)).Position;
+                var targetCenter = transform.ToMapCoordinates(new EntityCoordinates(target, targetBody.LocalCenter)).Position;
+                transform.SetWorldPosition(target, transform.GetWorldPosition(target) +
+                    new Vector2(0, sourceCenter.Y - targetCenter.Y));
+                beam.LockedSeparation = new Vector2(targetCenter.X - sourceCenter.X, 0);
+                beam.HoldDistance = beam.LockedSeparation.Length();
+                beam.HoldDirection = Vector2.UnitX;
+            }
         });
         await pair.CleanReturnAsync();
     }

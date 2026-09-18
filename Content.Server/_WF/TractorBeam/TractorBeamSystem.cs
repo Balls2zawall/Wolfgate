@@ -2,7 +2,9 @@ using System.Numerics;
 using Content.Server.Power.Components;
 using Content.Server.Physics.Controllers;
 using Content.Server.Shuttles.Systems;
+using Content.Server.Shuttles.Components;
 using Content.Shared._Mono.Detection;
+using Content.Shared._Crescent.ShipShields;
 using Content.Shared._WF.TractorBeam;
 using Content.Shared.Popups;
 using Content.Shared.Shuttles.Components;
@@ -27,6 +29,7 @@ public sealed partial class TractorBeamSystem : VirtualController
     [Dependency] private ShuttleSystem _shuttles = default!;
     [Dependency] private DetectionSystem _detection = default!;
     [Dependency] private SharedPopupSystem _popup = default!;
+    [Dependency] private MoverController _mover = default!;
 
     private TimeSpan _nextUiUpdate;
     private readonly HashSet<EntityUid> _docked = new();
@@ -34,6 +37,7 @@ public sealed partial class TractorBeamSystem : VirtualController
     private readonly Dictionary<EntityUid, Vector2> _predictedCenters = new();
     private readonly Dictionary<EntityUid, float> _predictedAngles = new();
     private readonly List<EntityUid> _bodies = new();
+    private readonly HashSet<EntityUid> _brakingSources = new();
 
     public override void Initialize()
     {
@@ -81,7 +85,27 @@ public sealed partial class TractorBeamSystem : VirtualController
 
     private bool IsMovableGrid(EntityUid uid)
     {
+        if (!IsFreeGrid(uid))
+            return false;
+
+        // A dynamic ship docked to a fixed station is not a free target either.
+        _mobilityDocked.Clear();
+        _shuttles.GetAllDockedShuttlesIgnoringFTLLock(uid, _mobilityDocked);
+        foreach (var docked in _mobilityDocked)
+        {
+            if (!IsFreeGrid(docked))
+                return false;
+        }
+        return true;
+    }
+
+    private readonly HashSet<EntityUid> _mobilityDocked = new();
+
+    private bool IsFreeGrid(EntityUid uid)
+    {
         return !TerminatingOrDeleted(uid) && !Paused(uid) && HasComp<MapGridComponent>(uid) &&
+               !Transform(uid).Anchored &&
+               (!TryComp<ShuttleComponent>(uid, out var shuttle) || shuttle.Enabled) &&
                !HasComp<FTLComponent>(uid) && TryComp<PhysicsComponent>(uid, out var body) &&
                body.BodyType == BodyType.Dynamic && float.IsFinite(body.Mass) && body.Mass > 0;
     }
@@ -149,6 +173,8 @@ public sealed partial class TractorBeamSystem : VirtualController
         if (_timing.CurTime < console.NextCommand)
             return;
         console.NextCommand = _timing.CurTime + TimeSpan.FromSeconds(0.25);
+        if (beam.CooldownRemaining > 0)
+            return;
 
         if (!TryGetEntity(args.Target.Value, out var targetUid) || targetUid is not { } target ||
             !VisibleTarget(uid, source, target) || !InRange(emitter, beam, target) ||
@@ -157,6 +183,13 @@ public sealed partial class TractorBeamSystem : VirtualController
             !TryComp<PowerConsumerComponent>(emitter, out var power) || power.ReceivedPower < beam.IdlePower)
         {
             _popup.PopupEntity(Loc.GetString("tractor-beam-lock-unavailable"), uid, args.Actor);
+            return;
+        }
+
+        // Shields block acquisition only; an existing tether survives shields coming back up.
+        if (beam.Target != target && HasComp<ShipShieldedComponent>(target))
+        {
+            _popup.PopupEntity(Loc.GetString("tractor-beam-target-shielded"), uid, args.Actor);
             return;
         }
 
@@ -198,6 +231,7 @@ public sealed partial class TractorBeamSystem : VirtualController
             if (args.LockInPlace && !beam.LockedInPlace)
             {
                 beam.LockedSeparation = Center(target) - Center(source);
+                beam.LockedSourceAngle = (float) TransformSystem.GetWorldRotation(source).Theta;
                 beam.LockedAngle = (float) (TransformSystem.GetWorldRotation(target).Theta -
                     TransformSystem.GetWorldRotation(source).Theta);
             }
@@ -215,11 +249,13 @@ public sealed partial class TractorBeamSystem : VirtualController
         beam.Target = target;
         beam.TargetOffset = Comp<PhysicsComponent>(target).LocalCenter;
         beam.HoldDistance = Vector2.Distance(Center(source), Center(target));
+        beam.HoldSourceAngle = (float) TransformSystem.GetWorldRotation(source).Theta;
         beam.HoldDirection = beam.HoldDistance > 0.001f
             ? (Center(target) - Center(source)) / beam.HoldDistance : Vector2.UnitY;
         beam.HoldAngle = (float) (TransformSystem.GetWorldRotation(target).Theta -
             TransformSystem.GetWorldRotation(source).Theta);
         beam.PowerGraceUntil = _timing.CurTime + TimeSpan.FromSeconds(1);
+        beam.OverloadTime = 0;
         beam.RequiredForce = 0;
         beam.DistanceStrain = DistanceStrain(emitter, beam, target);
         beam.RequestedPower = TractorBeamPhysics.CalculatePower(0, beam.MaxForce, beam.HoldingPower, beam.MaxPower, beam.DistanceStrain);
@@ -240,6 +276,8 @@ public sealed partial class TractorBeamSystem : VirtualController
         StopBeamAudio(uid, beam);
         DeleteVisual(beam);
         var changed = beam.Target != null || beam.Active || beam.Strain != 0;
+        if (beam.Target != null || beam.Active)
+            beam.CooldownRemaining = beam.RestartCooldown;
         beam.Target = null;
         beam.SourceGrid = null;
         beam.Controller = null;
@@ -252,7 +290,10 @@ public sealed partial class TractorBeamSystem : VirtualController
         beam.Strain = 0;
         beam.RequiredForce = 0;
         beam.DistanceStrain = 0;
+        beam.OverloadTime = 0;
         beam.HoldDirection = Vector2.Zero;
+        beam.HoldSourceAngle = null;
+        beam.LockedSourceAngle = null;
         beam.HoldAngle = null;
         beam.RequestedPower = Transform(uid).Anchored ? beam.IdlePower : 0;
         if (TryComp<PowerConsumerComponent>(uid, out var power))
@@ -270,12 +311,14 @@ public sealed partial class TractorBeamSystem : VirtualController
         _predictedCenters.Clear();
         _predictedAngles.Clear();
         _bodies.Clear();
+        _brakingSources.Clear();
         _collectionTargets.Clear();
         var query = EntityQueryEnumerator<TractorBeamEmitterComponent, PowerConsumerComponent, TransformComponent>();
         while (query.MoveNext(out var uid, out var beam, out var power, out var xform))
         {
             if (Paused(uid))
                 continue;
+            beam.CooldownRemaining = MathF.Max(0, beam.CooldownRemaining - frameTime);
             if (beam.Target is not { } target || beam.SourceGrid is not { } source ||
                 beam.Controller is not { } controller || !ConsoleReady(controller, out var consoleGrid) ||
                 consoleGrid != source || xform.GridUid != source || !xform.Anchored ||
@@ -297,6 +340,11 @@ public sealed partial class TractorBeamSystem : VirtualController
                     ? Vector2.Normalize(separation) : Vector2.UnitY;
             }
             _active.Add((uid, beam));
+            if (power.ReceivedPower >= beam.HoldingPower)
+                _brakingSources.Add(source);
+            beam.HoldSourceAngle ??= (float) TransformSystem.GetWorldRotation(source).Theta;
+            if (beam.LockedInPlace)
+                beam.LockedSourceAngle ??= beam.HoldSourceAngle;
             beam.HoldAngle ??= (float) (TransformSystem.GetWorldRotation(target).Theta -
                 TransformSystem.GetWorldRotation(source).Theta);
             if (_predictedCenters.TryAdd(source, Center(source)))
@@ -340,7 +388,7 @@ public sealed partial class TractorBeamSystem : VirtualController
                 var physics = Comp<PhysicsComponent>(body);
                 _predictedCenters[body] += PredictedVelocity(body, physics, (step + 1) * dt) * dt;
                 if (_predictedAngles.ContainsKey(body))
-                    _predictedAngles[body] += (physics.AngularVelocity + physics.Torque * physics.InvI * (step + 1) * dt) * dt;
+                    _predictedAngles[body] += PredictedAngularVelocity(body, physics, (step + 1) * dt) * dt;
             }
         }
 
@@ -352,6 +400,12 @@ public sealed partial class TractorBeamSystem : VirtualController
             var active = power.ReceivedPower >= beam.HoldingPower;
             // Quantize the visual strain to avoid sending a component state every physics tick.
             var strain = MathF.Round(TractorBeamPhysics.CalculateStrain(beam.RequiredForce, beam.MaxForce, beam.DistanceStrain) * 100f) / 100f;
+            beam.OverloadTime = strain >= 1f ? beam.OverloadTime + frameTime : 0;
+            if (beam.OverloadTime >= beam.OverloadDuration)
+            {
+                Release(uid, beam);
+                continue;
+            }
             if (beam.Active != active || beam.Strain != strain)
             {
                 beam.Active = active;
@@ -404,20 +458,23 @@ public sealed partial class TractorBeamSystem : VirtualController
                     beam.HoldDistance,
                     beam.Target is { } rangeTarget && !TerminatingOrDeleted(rangeTarget)
                         ? MinimumGridSeparation(source, rangeTarget, beam.CollectionStandOff) : 0,
-                    beam.RequestedDistance, beam.Active, pinStatus));
+                    beam.RequestedDistance, beam.Active, pinStatus, beam.CooldownRemaining));
             }
 
+            _docked.Clear();
+            _shuttles.GetAllDockedShuttlesIgnoringFTLLock(source, _docked);
             var grids = EntityQueryEnumerator<MapGridComponent, PhysicsComponent>();
             while (grids.MoveNext(out var target, out _, out var body))
             {
                 if (!VisibleTarget(uid, source, target))
                     continue;
                 var relative = Center(target, body) - center;
-                if (relative.LengthSquared() > console.Range * console.Range || SameDockedGroup(source, target))
+                if (relative.LengthSquared() > console.Range * console.Range || _docked.Contains(target))
                     continue;
                 var label = TryComp<IFFComponent>(target, out var iff) && (iff.Flags & IFFFlags.HideLabel) != 0
                     ? Loc.GetString("shuttle-console-unknown") : Name(target);
-                targets.Add(new TractorBeamTargetEntry(GetNetEntity(target), label, (-rotation).RotateVec(relative), body.Mass));
+                targets.Add(new TractorBeamTargetEntry(GetNetEntity(target), label, (-rotation).RotateVec(relative), body.Mass,
+                    HasComp<ShipShieldedComponent>(target)));
             }
         }
 
@@ -468,8 +525,17 @@ public sealed partial class TractorBeamSystem : VirtualController
 
     private Vector2 PredictedVelocity(EntityUid uid, PhysicsComponent body, float elapsed)
     {
+        if (_brakingSources.Contains(uid) && TryComp<ShuttleComponent>(uid, out var shuttle))
+            return _mover.PredictTractorBraking(uid, shuttle, body, elapsed).Linear;
         // The engine applies Force once after controllers finish. Include only the elapsed
         // substep portion here; actual impulses have already changed LinearVelocity.
         return PhysicsSystem.GetMapLinearVelocity(uid, body) + body.Force * body.InvMass * elapsed;
+    }
+
+    private float PredictedAngularVelocity(EntityUid uid, PhysicsComponent body, float elapsed)
+    {
+        if (_brakingSources.Contains(uid) && TryComp<ShuttleComponent>(uid, out var shuttle))
+            return _mover.PredictTractorBraking(uid, shuttle, body, elapsed).Angular;
+        return body.AngularVelocity + body.Torque * body.InvI * elapsed;
     }
 }

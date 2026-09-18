@@ -13,6 +13,6 @@ public sealed partial class TractorBeamVisualComponent : Component
     [AutoNetworkedField] public EntityUid? Target;
     [AutoNetworkedField] public Vector2 TargetOffset;
     [AutoNetworkedField] public Box2 TargetBounds;
-    [AutoNetworkedField] public float HalfWidth;
+    [AutoNetworkedField] public float WidthScale = 1f;
     [AutoNetworkedField] public float Strain;
 }

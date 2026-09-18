@@ -85,13 +85,14 @@ public readonly struct TractorBeamEmitterEntry
     public readonly float? DesiredRange;
     public readonly bool Active;
     public readonly TractorBeamPinStatus PinStatus;
+    public readonly float CooldownRemaining;
 
     public TractorBeamEmitterEntry(NetEntity entity, string name, NetEntity? target, bool powered,
         float strain, float requestedPower, float receivedPower, float range, bool pulling = false,
         bool lockedInPlace = false, bool canLockInPlace = false, Vector2 position = default,
         Vector2 direction = default, float coneHalfAngle = TractorBeamOperatingCone.DefaultHalfAngle,
         float currentDistance = 0, float holdDistance = 0, float minimumDistance = 0, float? desiredRange = null,
-        bool active = false, TractorBeamPinStatus pinStatus = TractorBeamPinStatus.NoTarget)
+        bool active = false, TractorBeamPinStatus pinStatus = TractorBeamPinStatus.NoTarget, float cooldownRemaining = 0)
     {
         Entity = entity;
         Name = name;
@@ -113,6 +114,7 @@ public readonly struct TractorBeamEmitterEntry
         DesiredRange = desiredRange;
         Active = active;
         PinStatus = pinStatus;
+        CooldownRemaining = cooldownRemaining;
     }
 }
 
@@ -124,12 +126,14 @@ public readonly struct TractorBeamTargetEntry
     /// <summary>Position relative to the emitting grid's center, in that grid's orientation.</summary>
     public readonly Vector2 Position;
     public readonly float Mass;
+    public readonly bool Shielded;
 
-    public TractorBeamTargetEntry(NetEntity entity, string name, Vector2 position, float mass)
+    public TractorBeamTargetEntry(NetEntity entity, string name, Vector2 position, float mass, bool shielded = false)
     {
         Entity = entity;
         Name = name;
         Position = position;
         Mass = mass;
+        Shielded = shielded;
     }
 }

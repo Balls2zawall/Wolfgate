@@ -23,11 +23,13 @@ public static class TractorBeamPhysics
         float dampingRatio,
         float maxForce,
         float frameTime,
-        Vector2 holdDirection = default)
+        Vector2 holdDirection = default,
+        float? lateralReducedMass = null)
     {
         if (!IsFinite(separation) || !IsFinite(relativeVelocity) || !IsFinite(holdDirection) ||
             !float.IsFinite(holdDistance) || holdDistance < 0f ||
             !float.IsFinite(reducedMass) || reducedMass <= 0f ||
+            (lateralReducedMass is { } lateralMass && (!float.IsFinite(lateralMass) || lateralMass <= 0f)) ||
             !float.IsFinite(frequency) || frequency <= 0f ||
             !float.IsFinite(dampingRatio) || dampingRatio < 0f ||
             !float.IsFinite(maxForce) || maxForce <= 0f ||
@@ -63,8 +65,12 @@ public static class TractorBeamPhysics
         var denominator = 1.0 + (damping * frameTime + stiffness * frameTime * frameTime) / reducedMass;
         var force = (stiffness * extension +
             (damping + stiffness * frameTime) * radialVelocity) / denominator;
+        // Sideways impulses also rotate the source through the arm's lever. Account for that
+        // extra freedom in the implicit solve instead of over-correcting and oscillating.
+        var lateralDenominator = 1.0 + (damping * frameTime + stiffness * frameTime * frameTime) /
+            (lateralReducedMass ?? reducedMass);
         var lateralForce = (stiffness * lateralDistance +
-            (damping + stiffness * frameTime) * lateralVelocity) / denominator;
+            (damping + stiffness * frameTime) * lateralVelocity) / lateralDenominator;
         if (!double.IsFinite(force) || !double.IsFinite(lateralForce))
             return Vector2.Zero;
 
@@ -179,5 +185,26 @@ public static class TractorBeamPhysics
     private static bool IsFinite(Vector2 vector)
     {
         return float.IsFinite(vector.X) && float.IsFinite(vector.Y);
+    }
+
+    /// <summary>Solve coupled translation/rotation of a rigid arm, including its reaction lever.</summary>
+    public static (Vector2 Force, float Torque) CalculateArmLock(Vector2 acceleration, float angularAcceleration,
+        Vector2 separation, float inverseMass, float sourceInverseInertia, float targetInverseInertia)
+    {
+        var arm = new Vector2(-separation.Y, separation.X);
+        var inertia = (double) sourceInverseInertia + targetInverseInertia;
+        if (inverseMass <= 0 || inertia <= 0)
+            return (inverseMass > 0 ? acceleration / inverseMass : Vector2.Zero, 0);
+        // Eliminate the angular row of the symmetric constraint matrix, then invert the
+        // remaining rank-one linear term. This prevents the two servos fighting each other.
+        var coupling = sourceInverseInertia * (double) targetInverseInertia / inertia;
+        var rhsX = acceleration.X - arm.X * sourceInverseInertia * angularAcceleration / inertia;
+        var rhsY = acceleration.Y - arm.Y * sourceInverseInertia * angularAcceleration / inertia;
+        var projection = coupling * (arm.X * rhsX + arm.Y * rhsY) /
+            (inverseMass + coupling * ((double) arm.X * arm.X + (double) arm.Y * arm.Y));
+        var x = (rhsX - arm.X * projection) / inverseMass;
+        var y = (rhsY - arm.Y * projection) / inverseMass;
+        var torque = (angularAcceleration - sourceInverseInertia * (arm.X * x + arm.Y * y)) / inertia;
+        return (new Vector2((float) x, (float) y), (float) torque);
     }
 }
