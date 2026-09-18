@@ -21,6 +21,7 @@ using Content.Shared._WF.PlanetCracker.Cracker.BUI;
 using Content.Shared._WF.PlanetCracker.Planets;
 using Content.Shared._WF.PlanetCracker.Survey;
 using Content.Server.Shuttles.Components;
+using Content.Server.Shuttles.Systems;
 using Content.Shared.Containers.ItemSlots;
 using Content.Shared.Movement.Systems;
 using Content.Shared.Power.EntitySystems;
@@ -1044,7 +1045,7 @@ public static class PlanetCrackerFixture
         return reason;
     }
 
-    /// <summary>Bolts landing thrusters onto a code-built hull, which is the only lift there is over a planet.</summary>
+    /// <summary>Bolts converted thrusters onto a hull. The legacy lift parameter is capacity; rated force is lift times 9.81.</summary>
     public static async Task<List<EntityUid>> AddLandingThrusters(TestPair pair, EntityUid hull, int count, float lift = 50f)
     {
         var server = pair.Server;
@@ -1060,7 +1061,7 @@ public static class PlanetCrackerFixture
 
                 // No cabling on a code-built hull, exactly as WFTestGridFactory.SpawnOnHull does it.
                 receiver.SetNeedsPower(uid, false);
-                entMan.GetComponent<WFLandingThrusterComponent>(uid).LiftThrust = lift;
+                server.System<ThrusterSystem>().WfSetRatedThrust(uid, lift * 9.81f);
 
                 thrusters.Add(uid);
             }
@@ -1069,6 +1070,22 @@ public static class PlanetCrackerFixture
         await server.WaitRunTicks(pair.SecondsToTicks(1f));
 
         return thrusters;
+    }
+
+    /// <summary>Isolates gravgen and converted-lift tests from the cracker's ordinary engines.</summary>
+    public static async Task RemoveOrdinaryThrusters(TestPair pair, EntityUid hull)
+    {
+        await pair.Server.WaitPost(() =>
+        {
+            var entMan = pair.Server.EntMan;
+            foreach (var uid in Children(entMan, hull))
+            {
+                if (entMan.TryGetComponent<ThrusterComponent>(uid, out var thruster)
+                    && thruster.Type == ThrusterType.Linear
+                    && !entMan.HasComponent<WFLandingThrusterComponent>(uid))
+                    entMan.DeleteEntity(uid);
+            }
+        });
     }
 
     /// <summary>The centrifuge resting on a hull, or Invalid.</summary>

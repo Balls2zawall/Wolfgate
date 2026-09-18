@@ -3,10 +3,9 @@
                       Title="{Loc 'wf-flight-confirm-title'}"
                       MinSize="420 170"
                       SetSize="420 170">
-    <!-- A fixed width: a rich text label only wraps inside a bounded width, and without one the window grew to the
-         full single-line length of the warning. -->
+    <!-- Bound the text during measurement so long names wrap and the window can grow vertically. -->
     <BoxContainer Orientation="Vertical" Margin="12" SeparationOverride="10">
-        <RichTextLabel Name="WarningLabel" HorizontalExpand="True" VerticalExpand="True" />
+        <RichTextLabel Name="WarningLabel" MaxWidth="396" HorizontalExpand="True" VerticalExpand="True" />
         <BoxContainer Orientation="Horizontal" SeparationOverride="8" HorizontalAlignment="Right">
             <Button Name="DescendButton" Text="{Loc 'wf-flight-confirm-descend'}" StyleClasses="ButtonCaution" />
             <Button Name="AbortButton" Text="{Loc 'wf-flight-confirm-abort'}" />

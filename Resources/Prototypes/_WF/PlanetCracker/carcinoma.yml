@@ -79,22 +79,101 @@
   layers:
   - !type:BiomeTileLayer
     threshold: -1
-    tile: FloorFlesh
+    tile: WFFloorFlesh
   - !type:BiomeEntityLayer
-    allowedTiles: [FloorFlesh]
+    allowedTiles: [WFFloorFlesh, FloorFlesh]
     entities: [WFFaunaCarcinoma]
     threshold: 0.97
     noise: { seed: 37, noiseType: OpenSimplex2, frequency: 3 }
   - !type:BiomeEntityLayer
-    allowedTiles: [FloorFlesh]
+    allowedTiles: [WFFloorFlesh, FloorFlesh]
     entities: [FleshBlocker]
     threshold: 0.98
     noise: { seed: 2, noiseType: OpenSimplex2, frequency: 1 }
   - !type:BiomeEntityLayer
-    allowedTiles: [FloorFlesh]
+    allowedTiles: [WFFloorFlesh, FloorFlesh]
     entities: [WallMeat]
     threshold: 0.72
     noise: { seed: 11, noiseType: OpenSimplex2, frequency: 0.025 }
+  - !type:BiomeMetaLayer
+    template: WFCarcinomaGrove
+    threshold: 0.4
+    noise: { seed: 16, noiseType: OpenSimplex2, frequency: 0.018 }
+  # Rivers win over walls/trees/fauna; they are static water effects, not spreading reagent puddles.
+  - !type:BiomeEntityLayer
+    allowedTiles: [WFFloorFlesh, FloorFlesh]
+    entities: [WFBloodRiver]
+    threshold: 0.94
+    noise: { seed: 3, noiseType: OpenSimplex2, frequency: 0.008, fractalType: Ridged, octaves: 1 }
+
+- type: biomeTemplate
+  id: WFCarcinomaGrove
+  layers:
+  - !type:BiomeEntityLayer
+    allowedTiles: [WFFloorFlesh, FloorFlesh]
+    entities: [WFFleshTree, WFFleshPolyp]
+    threshold: 0.65
+    noise: { seed: 5, noiseType: OpenSimplex2, frequency: 1 }
+
+- type: entity
+  id: WFFleshTree
+  parent: ShadowTree
+  name: flesh tree
+  description: Veined limbs reach from a trunk of living meat. Its swollen branches twitch in the wind.
+  components:
+  - type: Sprite
+    color: "#d88c92"
+  - type: Destructible
+    thresholds:
+    - trigger: !type:DamageTrigger
+        damage: 100
+      behaviors:
+      - !type:DoActsBehavior
+        acts: [Destruction]
+    - trigger: !type:DamageTrigger
+        damage: 50
+      behaviors:
+      - !type:PlaySoundBehavior
+        sound:
+          path: /Audio/Effects/gib1.ogg
+      - !type:SpawnEntitiesBehavior
+        spawn:
+          FoodMeat:
+            min: 1
+            max: 2
+      - !type:DoActsBehavior
+        acts: [Destruction]
+
+- type: entity
+  id: WFFleshPolyp
+  parent: FleshBlocker
+  name: flesh polyp
+  description: A bulbous growth rooted in the living ground.
+  components:
+  - type: Sprite
+    color: "#b87989"
+
+- type: entity
+  id: WFBloodRiver
+  parent: FloorWaterEntity
+  name: blood river
+  description: A slow current of dark blood runs through the planet's flesh.
+  components:
+  - type: Sprite
+    color: "#b81e24"
+  - type: SolutionContainerManager
+    solutions:
+      pool:
+        maxVol: 9999999
+        reagents:
+        - ReagentId: Blood
+          Quantity: 9999999
+  - type: SolutionRegeneration
+    solution: pool
+    generated:
+      reagents:
+      - ReagentId: Blood
+        Quantity: 100
 
 - type: entityTable
   id: WFFaunaCarcinoma
@@ -136,7 +215,7 @@
   parent: WFDeepVein
   components:
   - type: WFDeepVein
-    allowedTiles: [FloorFlesh]
+    allowedTiles: [WFFloorFlesh, FloorFlesh]
 
 - type: biomeMarkerLayer
   id: WFDeepVeinsCarcinoma
@@ -157,3 +236,8 @@
   yieldRange: 2000, 4500
   unsanctionedMultiplier: 2
   rate: 150
+# Exterior flesh terrain accepts weather without exposing indoor station flesh floors.
+- type: tile
+  id: WFFloorFlesh
+  parent: FloorFlesh
+  weather: true

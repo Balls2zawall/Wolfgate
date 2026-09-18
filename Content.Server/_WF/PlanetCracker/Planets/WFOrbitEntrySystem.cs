@@ -113,6 +113,8 @@ public sealed partial class WFOrbitEntrySystem : EntitySystem
         var inOrbit = false;
         var busy = false;
         var liftRatio = 0f;
+        var atmospherePower = 0f;
+        var powerDeficit = false;
         var decaySeconds = -1f;
 
         if (xform.GridUid is { } grid && HasComp<ShuttleComponent>(grid) && Transform(grid).MapUid is { } mapUid)
@@ -132,6 +134,7 @@ public sealed partial class WFOrbitEntrySystem : EntitySystem
                     // The descent decision lives on this button, so the number it is taken against is computed here
                     // rather than guessed at by the client, which cannot see a thruster's power state at all.
                     _zLevels.WfTryGetLiftRatio(grid, out liftRatio);
+                    _zLevels.WfGetAtmospherePower(grid, out atmospherePower, out powerDeficit);
 
                     // F11: the countdown is the decay system's, and this is the only sweep a console reads from.
                     if (TryComp<WFOrbitDecayComponent>(grid, out var decay) && decay.Announced)
@@ -157,6 +160,8 @@ public sealed partial class WFOrbitEntrySystem : EntitySystem
             && comp.PlanetName == planetName
             && comp.InOrbit == inOrbit
             && comp.Busy == busy
+            && MathF.Abs(comp.AtmospherePowerDemand - atmospherePower) < 1f
+            && comp.AtmospherePowerDeficit == powerDeficit
             && MathF.Abs(comp.LiftRatio - liftRatio) < LiftRatioEpsilon
             && MathF.Abs(comp.DecaySeconds - decaySeconds) < DecaySecondsEpsilon)
         {
@@ -168,6 +173,8 @@ public sealed partial class WFOrbitEntrySystem : EntitySystem
         comp.InOrbit = inOrbit;
         comp.Busy = busy;
         comp.LiftRatio = liftRatio;
+        comp.AtmospherePowerDemand = atmospherePower;
+        comp.AtmospherePowerDeficit = powerDeficit;
         comp.DecaySeconds = decaySeconds;
         Dirty(console, comp);
     }

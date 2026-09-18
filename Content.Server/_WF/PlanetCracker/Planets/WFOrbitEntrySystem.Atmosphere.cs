@@ -64,6 +64,13 @@ public sealed partial class WFOrbitEntrySystem
             return false;
         }
 
+        _zLevels.WfGetAtmospherePower(grid, out _, out var powerDeficit);
+        if (!confirmed && powerDeficit)
+        {
+            reason = Loc.GetString("wf-flight-confirm-power-deficit");
+            return false;
+        }
+
         return TryDropFromOrbit(grid, out reason);
     }
 

@@ -384,18 +384,19 @@ public sealed partial class WFFlightSystem : EntitySystem
         if (!_proto.TryIndex(code, out var proto))
             return;
 
-        var alert = EnsureComp<ShipAlertComponent>(grid);
-
-        if (alert.Code != code)
-        {
-            _alert.SetCode(grid, code);
-            return;
-        }
-
-        _pa.Announce(grid,
+        // Keep the PA's code, bubbles and normal speaker delivery, but do not let a failed PA
+        // suppress GPWS precisely when a power failure has taken the ship's lift away.
+        _alert.SetCode(grid, code, announce: false);
+        var broadcast = _pa.Announce(grid,
             Loc.GetString(proto.Announcement, ("ship", _pa.GetShipName(grid))),
             proto.Sound,
             color: proto.Color);
+
+        // The caution alarm already has its own hull-wide loop. Voice fallback is one stream,
+        // only for this hull's audience, and never duplicates a successful speaker broadcast.
+        if (!broadcast && code.Id != AlertLiftLost && proto.Sound != null)
+            _audio.PlayGlobal(proto.Sound, _audience.Aboard(grid), true);
+
     }
 
     /// <summary>One layer's worth of glide: the hull keeps its heading and picks up speed along it.</summary>

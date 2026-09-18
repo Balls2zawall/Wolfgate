@@ -5,7 +5,7 @@ using Robust.Shared.Utility;
 
 namespace Content.Client._WF.PlanetCracker.Flight;
 
-/// <summary>Asks before dropping a hull into an atmosphere it has not got the lift to climb back out of.</summary>
+/// <summary>Asks before atmospheric entry with insufficient lift or a prospective power deficit.</summary>
 [GenerateTypedNameReferences]
 public sealed partial class WFEnterAtmosphereConfirmWindow : FancyWindow
 {
@@ -27,21 +27,36 @@ public sealed partial class WFEnterAtmosphereConfirmWindow : FancyWindow
         OnClose += () => _onConfirmed = null;
     }
 
-    /// <summary>Opens the window for one descent, showing the lift the hull actually has.</summary>
+    /// <summary>Opens the window for one descent, showing prospective atmosphere lift and power risks.</summary>
     /// <param name="planet">The world below.</param>
     /// <param name="ratio">Lift over weight, as the server measured it.</param>
+    /// <param name="powerDemand">Prospective atmosphere power demand in watts.</param>
+    /// <param name="powerDeficit">Whether atmosphere power demand exceeds available power.</param>
     /// <param name="onConfirmed">Runs only if the pilot presses through.</param>
-    public void Ask(string planet, float ratio, Action onConfirmed)
+    public void Ask(string planet, float ratio, float powerDemand, bool powerDeficit, Action onConfirmed)
     {
         _onConfirmed = onConfirmed;
 
         // The same bands the nav readout uses: climbable, sinking, falling.
         var colour = ratio >= 1f ? "#30ff30" : ratio >= 0.5f ? "#ffb030" : "#ff3030";
 
-        WarningLabel.SetMessage(FormattedMessage.FromMarkupPermissive(Loc.GetString("wf-flight-confirm-text",
-            ("planet", planet),
+        var message = FormattedMessage.FromMarkupPermissive(Loc.GetString("wf-flight-confirm-text",
+            ("planet", FormattedMessage.EscapeText(planet)),
             ("ratio", ratio.ToString("F2")),
-            ("colour", colour))));
+            ("power", (powerDemand / 1000f).ToString("N0")),
+            ("colour", colour)));
+
+        if (ratio < 1f)
+        {
+            message.AddText("\n" + Loc.GetString(ratio < 0.5f
+                ? "wf-flight-confirm-falling"
+                : "wf-flight-confirm-low-lift"));
+        }
+
+        if (powerDeficit)
+            message.AddText("\n" + Loc.GetString("wf-flight-confirm-power-deficit"));
+
+        WarningLabel.SetMessage(message);
 
         OpenCentered();
     }

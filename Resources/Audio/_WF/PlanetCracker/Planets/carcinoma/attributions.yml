@@ -1,0 +1,13 @@
+# Supplied by the maintainer, 2026-09-18. Converted to stereo 44.1 kHz Vorbis.
+# Ambience beds loudness-normalized to -20 LUFS, true peak limited to -2 dB.
+# Original sources were WAV/MP3; attribution details are pending from the maintainer.
+- files:
+  - carcinoma_ambience_day_loop_2.ogg
+  - carcinoma_ambience_night_loop_1.ogg
+  - carcinoma_ambience_night_loop_2.ogg
+  - carcinoma_random_sound_1.ogg
+  - carcinoma_random_sound_2.ogg
+  - carcinoma_random_sound_3.ogg
+  license: "TODO"
+  copyright: "TODO: attribution pending from the maintainer"
+  source: "TODO"

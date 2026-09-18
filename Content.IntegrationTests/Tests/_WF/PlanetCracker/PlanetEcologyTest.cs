@@ -50,6 +50,8 @@ public sealed class PlanetEcologyTest
             var open = 0;
             var rocks = 0;
             var wildlife = 0;
+            var rivers = 0;
+            var fleshFlora = 0;
             // Widely separated regions, not just the convenient landing location.
             foreach (var offset in new[] { Vector2i.Zero, new Vector2i(4096, -4096), new Vector2i(-4096, 4096) })
             for (var x = -128; x < 128; x += 4)
@@ -60,6 +62,10 @@ public sealed class PlanetEcologyTest
                 Assert.That(tile.HasValue && !tile.Value.IsEmpty, Is.True, "Natural terrain has a hole.");
                 generator.TryGetEntity(pos, biome.Layers, tile!.Value, biome.Seed,
                     (Entity<MapGridComponent>?) null, out var feature);
+                if (feature is "FloorLavaEntity" or "FloorLiquidPlasmaEntity" or "MonoFloorWaterEntity" or "WFBloodRiver")
+                    rivers++;
+                if (feature is "WFFleshTree" or "WFFleshPolyp")
+                    fleshFlora++;
                 count++;
                 if (feature == null)
                     open++;
@@ -76,6 +82,10 @@ public sealed class PlanetEcologyTest
             Assert.That((double) rocks / count, Is.LessThan(0.15), "Ore walls should be isolated outcrops.");
             if (name == "Carcinoma")
                 Assert.That(rocks, Is.GreaterThan(0), "Biothreat terrain must contain flesh walls.");
+            TestContext.Out.WriteLine($"River samples: {rivers}, flesh flora: {fleshFlora}");
+            Assert.That(rivers, Is.GreaterThan(0), "Themed river channels vanished from this planet's generated terrain.");
+            if (name == "Carcinoma")
+                Assert.That(fleshFlora, Is.GreaterThan(0), "Carcinoma must have static flesh groves.");
             Assert.That(wildlife, Is.GreaterThan(0), "No ambient wildlife was reachable through the terrain layers.");
             Assert.That((double) wildlife / count, Is.LessThan(0.02), "Wildlife must not flood loaded regions.");
 
@@ -87,6 +97,8 @@ public sealed class PlanetEcologyTest
         await server.WaitRunTicks(2);
         await server.WaitAssertion(() =>
         {
+            server.System<WFPlanetFaunaSystem>().RefreshPopulation(new[] {
+                new EntityCoordinates(layers[0], (Vector2)wildlifeTile!.Value + new Vector2(30, 0)) });
             var query = em.EntityQueryEnumerator<MobStateComponent, TransformComponent>();
             while (query.MoveNext(out var uid, out var mob, out var xform))
             {

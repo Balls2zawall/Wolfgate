@@ -21,7 +21,7 @@ public sealed class KyphrusPlanetsTest
     [TestCase("Merak", "FloorDesertPlanet")]
     [TestCase("Aerumna", "FloorChromite")]
     [TestCase("Thrascias", "FloorSnow")]
-    [TestCase("Carcinoma", "FloorFlesh")]
+    [TestCase("Carcinoma", "WFFloorFlesh")]
     public async Task NewWorldBuildsAndItsVeinsSurvive(string name, string floor)
     {
         await using var pair = await PoolManager.GetServerClient();

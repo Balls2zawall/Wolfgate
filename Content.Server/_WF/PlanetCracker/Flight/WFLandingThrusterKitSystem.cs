@@ -2,19 +2,21 @@ using Content.Shared._WF.PlanetCracker.Flight;
 using Content.Shared.Interaction;
 using Content.Shared.Popups;
 using Content.Server.Shuttles.Components;
-using Robust.Shared.Prototypes;
+using Content.Server.Shuttles.Systems;
+using Robust.Shared.Audio;
+using Robust.Shared.Audio.Systems;
 
 namespace Content.Server._WF.PlanetCracker.Flight;
 
 /// <summary>
-/// The landing conversion kit: used on an anchored ordinary thruster it swaps the whole unit for the landing variant
-/// in place. A swap rather than a bolted-on component because a thruster only ever registers its thrust with the hull
-/// at initialisation (ThrusterSystem.EnableThruster), so the replacement has to be a fresh entity either way.
+/// Adds an atmospheric conversion to an existing linear engine without replacing its ratings or parts.
 /// </summary>
 public sealed partial class WFLandingThrusterKitSystem : EntitySystem
 {
     [Dependency] private SharedPopupSystem _popup = default!;
-    [Dependency] private SharedTransformSystem _transform = default!;
+    [Dependency] private ThrusterSystem _thrusters = default!;
+    [Dependency] private SharedAudioSystem _audio = default!;
+    private static readonly SoundSpecifier InstallSound = new SoundPathSpecifier("/Audio/Items/screwdriver.ogg");
 
     /// <inheritdoc/>
     public override void Initialize()
@@ -27,14 +29,26 @@ public sealed partial class WFLandingThrusterKitSystem : EntitySystem
     /// <summary>Converts the thruster the kit was used on, consuming the kit.</summary>
     private void OnAfterInteract(Entity<WFLandingThrusterKitComponent> ent, ref AfterInteractEvent args)
     {
-        if (args.Handled || !args.CanReach || args.Target is not { } target)
+        if (args.Handled || args.Target is not { } target)
             return;
 
         args.Handled = true;
 
-        if (!HasComp<ThrusterComponent>(target) || HasComp<WFLandingThrusterComponent>(target))
+        if (!args.CanReach)
+        {
+            _popup.PopupEntity(Loc.GetString("wf-landing-kit-out-of-reach"), args.User, args.User);
+            return;
+        }
+
+        if (!TryComp<ThrusterComponent>(target, out var thruster) || thruster.Type != ThrusterType.Linear)
         {
             _popup.PopupEntity(Loc.GetString("wf-landing-kit-wrong-target"), ent, args.User);
+            return;
+        }
+
+        if (HasComp<WFLandingThrusterComponent>(target))
+        {
+            _popup.PopupEntity(Loc.GetString("wf-landing-kit-already-converted"), target, args.User);
             return;
         }
 
@@ -46,23 +60,13 @@ public sealed partial class WFLandingThrusterKitSystem : EntitySystem
             return;
         }
 
-        var coords = xform.Coordinates;
-        var rotation = xform.LocalRotation;
-
-        // Deleted outright rather than queued: the replacement anchors onto the same tile in this very call, and the
-        // engine's snap-grid cell asserts on a second anchored entity while the old one is still queued.
-        Del(target);
-
-        var converted = Spawn(ent.Comp.Variant, coords);
-        _transform.SetLocalRotation(converted, rotation);
-
-        // The thruster prototype maps in anchored, so only a variant that somehow did not needs this; anchoring an
-        // already-anchored entity asserts on the snap-grid cell it is already in.
-        if (!Transform(converted).Anchored)
-            _transform.AnchorEntity(converted);
+        // Keep the original engine's footprint, damage, parts, ratings and power connection.
+        EnsureComp<WFLandingThrusterComponent>(target);
+        _thrusters.WfRefreshAtmosphereThruster(target, thruster);
 
         QueueDel(ent.Owner);
 
-        _popup.PopupEntity(Loc.GetString("wf-landing-kit-converted"), converted, args.User);
+        _popup.PopupEntity(Loc.GetString("wf-landing-kit-converted"), target, args.User, PopupType.Medium);
+        _audio.PlayEntity(InstallSound, args.User, target);
     }
 }

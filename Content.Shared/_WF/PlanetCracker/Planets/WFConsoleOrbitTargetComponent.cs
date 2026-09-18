@@ -27,11 +27,20 @@ public sealed partial class WFConsoleOrbitTargetComponent : Component
     public bool Busy;
 
     /// <summary>
-    /// Pooled lift over weight for this hull on the planet below, computed server-side; 1 is level flight. Only
+    /// Prospective atmosphere thrust from all working linear engines (normal: 0.5, converted: 1), divided by
+    /// hull mass, 9.81 and planetary gravity, computed server-side; 1 is level flight. Only
     /// meaningful while <see cref="InOrbit"/>, which is the one place the descent decision is taken.
     /// </summary>
     [DataField, AutoNetworkedField]
     public float LiftRatio;
+
+    /// <summary>Prospective atmosphere power demand in watts. Only meaningful while in orbit.</summary>
+    [DataField, AutoNetworkedField]
+    public float AtmospherePowerDemand;
+
+    /// <summary>True when prospective atmosphere power demand exceeds available power.</summary>
+    [DataField, AutoNetworkedField]
+    public bool AtmospherePowerDeficit;
 
     /// <summary>
     /// Seconds left before this hull's orbit decays and it is dropped into the atmosphere, or -1 while it is holding

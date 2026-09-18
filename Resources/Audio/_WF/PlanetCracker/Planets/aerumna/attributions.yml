@@ -1,0 +1,15 @@
+# Supplied by the maintainer, 2026-09-18. Converted to stereo 44.1 kHz Vorbis.
+# Ambience beds loudness-normalized to -20 LUFS, true peak limited to -2 dB.
+# Original sources were WAV/MP3; attribution details are pending from the maintainer.
+- files:
+  - aerumna_ambience_loop_1.ogg
+  - aerumna_ambience_loop_2.ogg
+  - aerumna_ambience_loop_3.ogg
+  - aerumna_ambience_loop_4.ogg
+  - aerumna_random_sound_1.ogg
+  - aerumna_random_sound_2.ogg
+  - aerumna_random_sound_3.ogg
+  - aerumna_random_sound_4.ogg
+  license: "TODO"
+  copyright: "TODO: attribution pending from the maintainer"
+  source: "TODO"

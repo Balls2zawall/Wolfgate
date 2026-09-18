@@ -157,6 +157,8 @@ public partial class ShuttleNavControl
         if (feature == null)
             return null;
         var id = feature.ToLowerInvariant();
+        if (id.Contains("bloodriver")) return 10;
+        if (id.Contains("fleshtree") || id.Contains("fleshpolyp")) return 11;
         if (id.Contains("wallmeat") || id.Contains("fleshblocker")) return 11;
         if (id.Contains("lava")) return 6;
         if (id.Contains("water")) return 1;

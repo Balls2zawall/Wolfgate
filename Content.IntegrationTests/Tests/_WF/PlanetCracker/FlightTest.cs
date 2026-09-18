@@ -34,9 +34,6 @@ namespace Content.IntegrationTests.Tests._WF.PlanetCracker;
 [TestOf(typeof(WFFlightSystem))]
 public sealed class FlightTest
 {
-    /// <summary>The landing thruster; WFThrusterLanding's own liftThrust is 50.</summary>
-    private const string LandingThruster = "WFThrusterLanding";
-
     /// <summary>The conversion kit item.</summary>
     private const string Kit = "WFLandingThrusterKit";
 
@@ -67,6 +64,70 @@ public sealed class FlightTest
     /// centrifuge is rated at 3000 against a 124.5 load, so without the exclusion the hull would read as flying.
     /// </summary>
     [Test]
+    public async Task SlowCrashKeepsMomentumAndStartsSkidding()
+    {
+        await using var pair = await PoolManager.GetServerClient();
+        var server = pair.Server;
+        var em = server.EntMan;
+        await EnableFeature(pair);
+        var layers = await BuildStandalone(pair);
+        var hull = await BuildCracker(pair, await MapIdOf(pair, layers[0]));
+        await MapInitHull(pair, hull);
+        await server.WaitAssertion(() =>
+        {
+            em.EnsureComponent<WFLiftLostComponent>(hull);
+            server.System<SharedPhysicsSystem>().SetLinearVelocity(hull, new Vector2(2f, 0f));
+            var levels = server.System<CEZLevelsSystem>();
+            levels.WfSkidAfterCrash(hull);
+            Assert.That(em.HasComponent<WFSkidComponent>(hull), Is.True);
+            Assert.That(em.GetComponent<PhysicsComponent>(hull).LinearVelocity.X, Is.EqualTo(2f));
+            em.RemoveComponent<WFSkidComponent>(hull);
+            Assert.That(levels.WfCrashSkidFriction(hull), Is.EqualTo(1f), "Ordinary landed ships retain ground grip.");
+        });
+        await Teardown(pair, layers);
+        await pair.CleanReturnAsync();
+    }
+
+    [TestCase(0)]
+    [TestCase(45)]
+    public async Task LandingClearanceRemovesNearbyWallsButPreservesDistantAndOnboardWalls(int degrees)
+    {
+        await using var pair = await PoolManager.GetServerClient();
+        var server = pair.Server;
+        var em = server.EntMan;
+        await EnableFeature(pair);
+        var layers = await BuildStandalone(pair);
+        var ground = layers[0];
+        await LayTiles(pair, ground, new Vector2i(-32, -32), new Vector2i(64, 64));
+        var hull = await BuildCracker(pair, await MapIdOf(pair, ground));
+        await MapInitHull(pair, hull);
+        var near = EntityUid.Invalid;
+        var far = EntityUid.Invalid;
+        var aboard = EntityUid.Invalid;
+        await server.WaitPost(() =>
+        {
+            var transform = server.System<SharedTransformSystem>();
+            transform.SetLocalRotation(hull, Angle.FromDegrees(degrees));
+            var matrix = transform.GetWorldMatrix(hull);
+            near = em.SpawnEntity("WallSolid", new EntityCoordinates(ground,
+                Vector2.Transform(new Vector2(-0.5f, 7.5f), matrix)));
+            far = em.SpawnEntity("WallSolid", new EntityCoordinates(ground,
+                Vector2.Transform(new Vector2(-4.5f, 7.5f), matrix)));
+            aboard = em.SpawnEntity("WallSolid", new EntityCoordinates(hull, new Vector2(4.5f, 7.5f)));
+            server.System<CEZLevelsSystem>().WfClearLandingObstacles(hull);
+        });
+        await server.WaitRunTicks(2);
+        await server.WaitAssertion(() =>
+        {
+            Assert.That(em.EntityExists(near), Is.False, "The wreck needs a clear margin outside its deck.");
+            Assert.That(em.EntityExists(far), Is.True, "Clearance must not flatten distant terrain.");
+            Assert.That(em.EntityExists(aboard), Is.True, "Clearance must not delete the ship's own walls.");
+        });
+        await Teardown(pair, layers);
+        await pair.CleanReturnAsync();
+    }
+
+    [Test]
     public async Task ThrustersLiftAndGravgensDoNotOnAPlanet()
     {
         await using var pair = await PoolManager.GetServerClient();
@@ -80,6 +141,7 @@ public sealed class FlightTest
 
         var hull = await BuildCracker(pair, airMapId);
         await MapInitHull(pair, hull);
+        await RemoveOrdinaryThrusters(pair, hull);
         await Energise(pair, hull);
 
         await server.WaitAssertion(() =>
@@ -122,6 +184,7 @@ public sealed class FlightTest
 
         var hull = await BuildCracker(pair, airMapId);
         await MapInitHull(pair, hull);
+        await RemoveOrdinaryThrusters(pair, hull);
         await AddLandingThrusters(pair, hull, 1);
 
         // The fall gate sweeps at 2 Hz and the grace period is three seconds.
@@ -150,8 +213,10 @@ public sealed class FlightTest
     /// The callouts escalate orbit-to-ground in order and the ship's own situation code comes back afterwards. The
     /// hull starts on yellow, so a restore to green would be the state machine forgetting rather than restoring.
     /// </summary>
-    [Test]
-    public async Task AlarmsEscalateAndRestoreThePriorCode()
+    [TestCase(-1)] // No PA installed.
+    [TestCase(0)] // PA lost power.
+    [TestCase(1)] // Working PA must not get a duplicate global callout.
+    public async Task AlarmsEscalateAndRestoreThePriorCode(int speakerPower)
     {
         await using var pair = await PoolManager.GetServerClient();
         var server = pair.Server;
@@ -165,6 +230,23 @@ public sealed class FlightTest
 
         var hull = await BuildCracker(pair, orbitMapId);
         await MapInitHull(pair, hull);
+
+        if (speakerPower >= 0)
+        {
+            await server.WaitPost(() =>
+            {
+                var speaker = entMan.SpawnEntity("AirAlarm", new EntityCoordinates(hull, new Vector2(7.5f, 4.5f)));
+                server.System<SharedPowerReceiverSystem>().SetNeedsPower(speaker, speakerPower == 0);
+            });
+            await server.WaitRunTicks(pair.SecondsToTicks(1f));
+        }
+        await server.WaitAssertion(() =>
+        {
+            var counts = server.System<Content.Server._WF.ShipPa.ShipPaSystem>().CountSpeakers(hull);
+            Assert.That(counts.Online, Is.EqualTo(speakerPower == 1 ? 1 : 0));
+        });
+        var heard = new HashSet<string>();
+        var voices = new[] { "dont_sink", "sink_rate", "terrain", "too_low_terrain", "pull_up" };
 
         await server.WaitPost(() => alerts.SetCode(hull, "ShipCodeYellow", announce: false));
 
@@ -187,6 +269,19 @@ public sealed class FlightTest
             {
                 if (!entMan.TryGetComponent<ShipAlertComponent>(hull, out var alert))
                     return;
+
+                var audioQuery = entMan.EntityQueryEnumerator<AudioComponent>();
+                while (audioQuery.MoveNext(out var audio))
+                {
+                    foreach (var voice in voices)
+                    {
+                        if (audio.FileName != $"/Audio/_WF/PlanetCracker/Flight/{voice}.ogg")
+                            continue;
+                        heard.Add(voice);
+                        Assert.That(audio.Global, Is.EqualTo(speakerPower != 1),
+                            "Missing PA needs a hull-wide voice; working PA must not get a duplicate global voice.");
+                    }
+                }
 
                 var code = alert.Code.Id;
 
@@ -212,6 +307,8 @@ public sealed class FlightTest
 
         Assert.That(seen, Is.EqualTo(expected),
             $"The flight alarms did not walk orbit to ground and back: {string.Join(" -> ", seen)}");
+
+        Assert.That(heard, Is.EquivalentTo(voices), "Every staged GPWS voice must actually produce audio, not just change the alert code.");
 
         await Teardown(pair, layers);
         await pair.CleanReturnAsync();
@@ -438,6 +535,24 @@ public sealed class FlightTest
             }
         });
 
+        var touchdown = Vector2.Zero;
+        await server.WaitPost(() => touchdown = server.System<SharedTransformSystem>().GetWorldPosition(hull));
+        for (var sample = 0; sample < 5; sample++)
+        {
+            await server.WaitRunTicks(pair.SecondsToTicks(0.2f));
+            await server.WaitPost(() =>
+            {
+                var body = entMan.GetComponent<PhysicsComponent>(hull);
+                TestContext.Out.WriteLine($"Skid sample {sample}: speed={body.LinearVelocity}, damping={body.LinearDamping}, skid={entMan.HasComponent<WFSkidComponent>(hull)}, grip={zLevels.GetGroundGrip(hull)}, status={body.BodyStatus}");
+            });
+        }
+        await server.WaitAssertion(() =>
+        {
+            var travelled = server.System<SharedTransformSystem>().GetWorldPosition(hull) - touchdown;
+            Assert.That(travelled.X, Is.GreaterThan(3f),
+                "An actual second of physics must carry the wreck forward, not merely leave velocity on the impact tick.");
+        });
+
         await Teardown(pair, layers);
         await pair.CleanReturnAsync();
     }
@@ -464,6 +579,7 @@ public sealed class FlightTest
 
         var hull = await BuildCracker(pair, lowAirMapId);
         await MapInitHull(pair, hull);
+        await RemoveOrdinaryThrusters(pair, hull);
 
         // Three thrusters is a ratio of 1.2, so the hull holds its layer and the wind is the only thing playing.
         var thrusters = await AddLandingThrusters(pair, hull, 3);
@@ -552,7 +668,7 @@ public sealed class FlightTest
         await pair.CleanReturnAsync();
     }
 
-    /// <summary>The kit swaps an anchored ordinary thruster for the landing variant, in place, and is consumed.</summary>
+    /// <summary>The kit marks the existing engine and consumes only the kit.</summary>
     [Test]
     public async Task KitConvertsAThruster()
     {
@@ -560,15 +676,13 @@ public sealed class FlightTest
         var server = pair.Server;
         var entMan = server.EntMan;
         var interaction = server.System<SharedInteractionSystem>();
-        var receiver = server.System<SharedPowerReceiverSystem>();
-
         var map = await pair.CreateTestMap();
         var transport = await BuildTransport(pair, map.MapId);
-
         var thruster = EntityUid.Invalid;
         var user = EntityUid.Invalid;
         var kit = EntityUid.Invalid;
         var coords = default(EntityCoordinates);
+        ThrusterComponent original = default!;
 
         await server.WaitPost(() =>
         {
@@ -578,46 +692,29 @@ public sealed class FlightTest
                     thruster = child;
             }
 
-            Assert.That(thruster, Is.Not.EqualTo(EntityUid.Invalid), "The transport carries no ordinary thruster.");
-
+            Assert.That(thruster, Is.Not.EqualTo(EntityUid.Invalid));
+            original = entMan.GetComponent<ThrusterComponent>(thruster);
             coords = entMan.GetComponent<TransformComponent>(thruster).Coordinates;
-
-            user = entMan.SpawnEntity(ViewerProto, new EntityCoordinates(transport, new Vector2(3.5f, 3.5f)));
-            kit = entMan.SpawnEntity(Kit, new EntityCoordinates(transport, new Vector2(3.5f, 3.5f)));
+            user = entMan.SpawnEntity(ViewerProto, new EntityCoordinates(transport, coords.Position + Vector2.UnitX));
+            kit = entMan.SpawnEntity(Kit, new EntityCoordinates(transport, coords.Position + Vector2.UnitX));
         });
 
         await server.WaitRunTicks(pair.SecondsToTicks(1f));
-
         await server.WaitPost(() => interaction.InteractUsing(user, kit, thruster, coords));
         await server.WaitRunTicks(pair.SecondsToTicks(1f));
 
         await server.WaitAssertion(() =>
         {
-            var landing = EntityUid.Invalid;
-            var plain = 0;
-
-            foreach (var child in Children(entMan, transport))
-            {
-                var proto = entMan.GetComponent<MetaDataComponent>(child).EntityPrototype?.ID;
-
-                if (proto == LandingThruster && entMan.GetComponent<TransformComponent>(child).Coordinates.Position == coords.Position)
-                    landing = child;
-
-                if (proto == PlainThruster)
-                    plain++;
-            }
-
+            Assert.That(entMan.EntityExists(thruster), Is.True, "Conversion replaced the engine entity.");
             using (Assert.EnterMultipleScope())
             {
-                Assert.That(landing, Is.Not.EqualTo(EntityUid.Invalid), "The kit left no landing thruster where the old one stood.");
-                Assert.That(entMan.GetComponent<TransformComponent>(landing).Anchored, Is.True,
-                    "The converted thruster is not anchored.");
-                Assert.That(plain, Is.EqualTo(3), "The old thruster was not consumed by the conversion.");
-                Assert.That(entMan.EntityExists(kit), Is.False, "The kit survived the conversion.");
+                Assert.That(entMan.GetComponent<ThrusterComponent>(thruster), Is.SameAs(original));
+                Assert.That(entMan.HasComponent<WFLandingThrusterComponent>(thruster), Is.True);
+                Assert.That(entMan.GetComponent<MetaDataComponent>(thruster).EntityPrototype?.ID, Is.EqualTo(PlainThruster));
+                Assert.That(entMan.GetComponent<TransformComponent>(thruster).Coordinates, Is.EqualTo(coords));
+                Assert.That(entMan.GetComponent<TransformComponent>(thruster).Anchored, Is.True);
+                Assert.That(entMan.EntityExists(kit), Is.False);
             }
-
-            // Silences the unused-variable warning on a helper the test keeps for symmetry with the factory.
-            Assert.That(receiver, Is.Not.Null);
         });
 
         await pair.CleanReturnAsync();
@@ -700,6 +797,7 @@ public sealed class FlightTest
 
         var hull = await BuildCracker(pair, orbitMapId);
         await MapInitHull(pair, hull);
+        await RemoveOrdinaryThrusters(pair, hull);
 
         // A charged gravity generator's whole effect on the pilot gate is the grid's own gravity; Inherent pins it on
         // the way a working generator holds it, with no charge-up to sit through.

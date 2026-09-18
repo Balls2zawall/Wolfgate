@@ -79,7 +79,8 @@ public sealed partial class CEZGroundFrictionController : VirtualController
         if (speed <= 0f)
             return;
 
-        var drop = MathF.Min(CEZLevelsSystem.GroundSkidDecel * grip * frameTime, speed);
+        // WOLFGATE: crash skids slide before regaining ordinary parked-hull grip.
+        var drop = MathF.Min(CEZLevelsSystem.GroundSkidDecel * _zLevels.WfCrashSkidFriction(uid) * grip * frameTime, speed);
 
         // Back out the force that produces exactly that change in velocity over this step.
         var force = predicted / speed * -drop / (body.InvMass * frameTime);

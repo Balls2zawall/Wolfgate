@@ -65,9 +65,12 @@ public sealed partial class WFOrbitButton : BoxContainer
         _atmosphereButton.StyleClasses.Add("ButtonSquare");
         _atmosphereButton.OnPressed += OnAtmospherePressed;
 
+        // Keep the original row budget; demand and mode details live in the tooltip.
         _liftLabel = new Label
         {
             Align = Label.AlignMode.Center,
+            ClipText = true,
+            MouseFilter = MouseFilterMode.Pass,
             Visible = false,
         };
 
@@ -138,12 +141,26 @@ public sealed partial class WFOrbitButton : BoxContainer
         _atmosphereButton.Disabled = target.Busy;
         _atmosphereButton.Text = Loc.GetString("wf-shuttle-console-enter-atmosphere", ("planet", planet));
 
-        _liftLabel.Text = Loc.GetString("wf-shuttle-console-lift-ratio", ("ratio", target.LiftRatio.ToString("F2")));
-        _liftLabel.FontColorOverride = target.LiftRatio >= FullLift
-            ? LiftGood
-            : target.LiftRatio >= PartialLift
-                ? LiftMarginal
-                : LiftBad;
+        var lift = Loc.GetString("wf-shuttle-console-lift-ratio", ("ratio", target.LiftRatio.ToString("F2")));
+        var power = Loc.GetString("wf-shuttle-console-atmosphere-power",
+            ("power", (target.AtmospherePowerDemand / 1000f).ToString("N0")));
+        var tooltip = lift + "\n" + power;
+        if (target.AtmospherePowerDeficit)
+            tooltip += "\n" + Loc.GetString("wf-shuttle-console-atmosphere-power-deficit");
+        tooltip += "\n" + Loc.GetString("wf-shuttle-console-atmosphere-mode-tooltip");
+        _liftLabel.ToolTip = tooltip;
+        _atmosphereButton.ToolTip = tooltip;
+
+        _liftLabel.Text = target.AtmospherePowerDeficit
+            ? Loc.GetString("wf-shuttle-console-lift-power-deficit", ("ratio", target.LiftRatio.ToString("F2")))
+            : lift;
+        _liftLabel.FontColorOverride = target.AtmospherePowerDeficit
+            ? LiftBad
+            : target.LiftRatio >= FullLift
+                ? LiftGood
+                : target.LiftRatio >= PartialLift
+                    ? LiftMarginal
+                    : LiftBad;
     }
 
     /// <summary>Asks the server for the hop; every gate is re-checked there, so a stale button can only be refused.</summary>
@@ -171,7 +188,7 @@ public sealed partial class WFOrbitButton : BoxContainer
     }
 
     /// <summary>
-    /// Drops out of orbit. A hull that cannot hold itself up is asked first; the server refuses an unconfirmed
+    /// Drops out of orbit. Low lift or a prospective power deficit asks for confirmation first; the server refuses an unconfirmed
     /// descent on its own account, so the dialog is the explanation rather than the gate.
     /// </summary>
     private void OnAtmospherePressed(BaseButton.ButtonEventArgs args)
@@ -186,14 +203,14 @@ public sealed partial class WFOrbitButton : BoxContainer
 
         var netConsole = _entMan.GetNetEntity(console);
 
-        if (target.LiftRatio >= FullLift)
+        if (target.LiftRatio >= FullLift && !target.AtmospherePowerDeficit)
         {
             _ui.ClientSendUiMessage(console, ShuttleConsoleUiKey.Key, new WFEnterAtmosphereMessage(netConsole, false));
             return;
         }
 
         _confirm ??= new WFEnterAtmosphereConfirmWindow();
-        _confirm.Ask(target.PlanetName, target.LiftRatio,
+        _confirm.Ask(target.PlanetName, target.LiftRatio, target.AtmospherePowerDemand, target.AtmospherePowerDeficit,
             () => _ui.ClientSendUiMessage(console, ShuttleConsoleUiKey.Key, new WFEnterAtmosphereMessage(netConsole, true)));
     }
 }

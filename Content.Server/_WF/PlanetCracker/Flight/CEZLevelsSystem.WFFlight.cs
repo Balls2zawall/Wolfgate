@@ -2,6 +2,7 @@ using System.Numerics;
 using Content.Server._CE.ZLevels.Core.Components;
 using Content.Server._WF.PlanetCracker.Flight;
 using Content.Server.Shuttles.Components;
+using Content.Server.Shuttles.Systems;
 using Content.Shared._CE.ZLevels.Core.Components;
 using Content.Shared._WF.PlanetCracker.Flight;
 using Content.Shared._WF.PlanetCracker.Planets;
@@ -14,14 +15,15 @@ namespace Content.Server._CE.ZLevels.Core;
 
 /// <summary>
 /// Atmospheric flight (F10): what holds a hull up over a planet, how fast it comes down when nothing does, and what a
-/// touchdown at the bottom of that costs. CE's own lift is a gravity generator; on a planet layer it is landing
-/// thrusters and nothing else, so every hook here is reached from a marked line in the CE gravity, pilot and wall
+/// touchdown at the bottom of that costs. CE's own lift is a gravity generator; on a planet layer it is
+/// thrusters (ordinary engines at reduced efficiency), so every hook here is reached from a marked line in the CE gravity, pilot and wall
 /// passes rather than duplicating them.
 /// </summary>
 public sealed partial class CEZLevelsSystem
 {
     [Dependency] private SharedDestructibleSystem _wfDestructible = default!;
     [Dependency] private WFFlightSystem _wfFlight = default!;
+    [Dependency] private ThrusterSystem _wfThrusters = default!;
 
     /// <summary>
     /// Lift ratio at or above which a hull flies exactly as CE flies one today. Below it the hull is in lift lost.
@@ -100,18 +102,26 @@ public sealed partial class CEZLevelsSystem
     public float WfGetLandingThrust(EntityUid grid)
     {
         var lift = 0f;
-        var query = EntityQueryEnumerator<WFLandingThrusterComponent, ThrusterComponent, TransformComponent>();
-
-        while (query.MoveNext(out var uid, out var landing, out var thruster, out var xform))
+        var children = Transform(grid).ChildEnumerator;
+        while (children.MoveNext(out var uid))
         {
-            if (xform.ParentUid != grid || !thruster.Enabled || !thruster.IsOn)
-                continue;
-
-            // A broken thruster still carries its components; CE reads the same "is it actually running" flag.
-            lift += landing.LiftThrust;
+            if (TryComp<ThrusterComponent>(uid, out var thruster))
+                lift += _wfThrusters.WfAtmosphericForce(uid, thruster) / ThrusterSystem.WfStandardGravity;
         }
-
         return lift;
+    }
+
+    /// <summary>Fraction of thrust left for manoeuvres after supporting the ship's weight.</summary>
+    public float WfManeuveringFactor(EntityUid grid)
+    {
+        if (!_wfThrusters.WfInAtmosphere(grid) || !WfTryGetLiftRatio(grid, out var ratio))
+            return 1f;
+        return ratio <= 1f ? 0f : Math.Clamp(1f - 1f / ratio, 0f, 1f);
+    }
+
+    public void WfGetAtmospherePower(EntityUid grid, out float demand, out bool deficit)
+    {
+        _wfThrusters.WfAtmospherePower(CollectRigidSet(grid), out demand, out deficit);
     }
 
     /// <summary>
@@ -166,19 +176,14 @@ public sealed partial class CEZLevelsSystem
     /// </summary>
     private void WfAddLandingThrusterCapacity(Dictionary<EntityUid, float> capacity)
     {
-        var query = EntityQueryEnumerator<WFLandingThrusterComponent, ThrusterComponent, TransformComponent>();
-
-        while (query.MoveNext(out _, out var landing, out var thruster, out var xform))
+        var query = EntityQueryEnumerator<ThrusterComponent, TransformComponent>();
+        while (query.MoveNext(out var uid, out var thruster, out var xform))
         {
-            if (!thruster.Enabled || !thruster.IsOn)
-                continue;
-
             var grid = xform.ParentUid;
-
             if (!_mapGridQuery.HasComp(grid) || !WfTryGetPlanetGravity(grid, out var gravity) || gravity <= 0f)
                 continue;
-
-            capacity[grid] = capacity.GetValueOrDefault(grid) + landing.LiftThrust / gravity;
+            capacity[grid] = capacity.GetValueOrDefault(grid)
+                + _wfThrusters.WfAtmosphericForce(uid, thruster) / (ThrusterSystem.WfStandardGravity * gravity);
         }
     }
 
@@ -326,11 +331,17 @@ public sealed partial class CEZLevelsSystem
         var crashSpeed = body.LinearVelocity.Length();
 
         // A NaN is not a speed worth skidding on, and it is under no threshold: the comparison alone would let it in.
-        if (!float.IsFinite(crashSpeed) || crashSpeed <= WFFlightSystem.SkidRamSpeed)
+        if (!float.IsFinite(crashSpeed) || crashSpeed <= WFFlightSystem.SkidStopSpeed)
             return;
 
         // No thud: the crash was the noise this landing made, and one crash is one bang (CrashGrid).
         _wfFlight.BeginSkid(grid, thud: false);
+    }
+
+    /// <summary>Sliding wrecks shed momentum over distance; stopped ships retain the normal static ground grip.</summary>
+    public float WfCrashSkidFriction(EntityUid grid)
+    {
+        return HasComp<WFSkidComponent>(grid) ? 0.05f : 1f;
     }
 
     /// <summary>Re-arms a grid's ordinary z-gravity after it has been taken off an orbit layer by hand.</summary>

@@ -200,7 +200,7 @@
   orbitRange: 2000
   buildAtRoundStart: true
   sanctioned: true
-  gravity: 0.95
+  gravity: 3
   seed: 20260916
   veins: WFVeinTableAerumna
   faction: Xenos

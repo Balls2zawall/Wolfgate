@@ -586,3 +586,36 @@ Deviations and limits:
 - **Every existing hull in orbit is now on a 60-second clock unless something aboard is running.** That is the design, but it means a mapper's derelict parked on an orbit layer needs `ForceAnchorComponent` (or a longer `Grace` on the component) if it is meant to stay put.
 
 Tests: `Content.IntegrationTests/Tests/_WF/PlanetCracker/OrbitDecayTest.cs` and `PlanetDragTest.cs`.
+
+
+### Atmospheric thruster revision (2026-09-18)
+
+Ordinary linear engines now provide atmospheric lift from their actual thrust ratings.
+Below orbit, including the surface and transit gaps, they run at 50% thrust and draw
+three times their normal APC power continuously while enabled. Landing-converted
+engines retain full thrust and normal draw. Orbit and open space restore the normal
+ratings; repeated transitions do not stack modifiers. Gyroscopes do not provide lift.
+
+Lift capacity is effective force / 9.81; the existing pooled hull mass, virtual anchor
+cargo mass and planet gravity determine the lift ratio. The same calculation is used
+by the console, fall gate and takeoff. Hover consumes part of the thrust budget, with
+the remaining fraction available for planar manoeuvring and climbing. Power loss
+removes an engine's lift immediately; recovery needs two seconds of stable power.
+
+The landing kit upgrades an engine in place, preserving damage, parts, model, size
+and electrical connection. It no longer replaces a large engine with a small one.
+The obsolete fixed liftThrust field is removed from the landing marker.
+
+The orbit console reports estimated atmospheric engine demand and warns if the
+connected APC networks lack headroom. Descent requires confirmation for either
+insufficient lift or a forecast power deficit. This is a current network-capacity
+estimate, not a guarantee that batteries or fuel will last for the whole flight.
+Aerumna is 3 g. SHIP_LANDING_ASSESSMENT.md lists the measured stock vessel limits.
+
+Content-only upstream hooks: ThrusterSystem update and part refresh; MoverController
+planar force; CEZLevelsSystem vertical acceleration. No RobustToolbox source edits.
+
+GPWS voice warnings retain normal PA delivery when a speaker can broadcast. If the
+PA has no working speakers, the voice uses one hull-audience emergency stream, so
+a brownout or missing PA cannot silence terrain/pull-up warnings while the separate
+lift-lost alarm continues. The fallback never duplicates a successful PA broadcast.

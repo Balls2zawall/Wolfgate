@@ -173,7 +173,8 @@ public sealed partial class CEZLevelsSystem
         if (thrust <= 0f || mass <= 0f)
             return 0f;
 
-        return Math.Clamp(thrust / mass * VerticalThrustScale, 0f, MaxVerticalAccel);
+        return Math.Clamp(thrust / mass * VerticalThrustScale, 0f, MaxVerticalAccel)
+            * WfManeuveringFactor(grid); // WOLFGATE: only thrust left after hovering can climb.
     }
 
     private void UpdateTakeoffSpool()

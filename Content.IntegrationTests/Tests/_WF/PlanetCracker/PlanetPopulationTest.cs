@@ -9,6 +9,9 @@ using Content.Shared.Mobs.Components;
 using Content.Shared.Parallax.Biomes;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Map;
+using Robust.Shared.Maths;
+using Robust.Shared.Map.Components;
+using Content.Shared.Maps;
 using Robust.Shared.Prototypes;
 using static Content.IntegrationTests.Tests._WF.PlanetCracker.PlanetCrackerFixture;
 
@@ -61,25 +64,43 @@ public sealed class PlanetPopulationTest
                 return result;
             }
 
-            // Saturate each planet, then the global limit. No ticks/AI are needed to test admission.
+            var visitors = new List<EntityCoordinates>();
+            var maps = server.System<SharedMapSystem>();
+            var tileId = server.ResolveDependency<ITileDefinitionManager>()["FloorFlesh"].TileId;
+            var ecology = server.System<WFPlanetFaunaSystem>();
+            // Terrain discovery registers sites without filling the entire cap at the arrival location.
             foreach (var ground in grounds)
             {
+                var grid = em.GetComponent<MapGridComponent>(ground);
                 for (var i = 0; i < WFPlanetFaunaSystem.MaxPerPlanet + 5; i++)
-                    em.SpawnEntity("WFFaunaAsclepiu", new EntityCoordinates(ground, new Vector2(i * 3, 0)));
-                Assert.That(Animals(ground).Count, Is.LessThanOrEqualTo(WFPlanetFaunaSystem.MaxPerPlanet));
+                {
+                    var pos = new Vector2(i * 128, 0);
+                    maps.SetTile(ground, grid, new Vector2i(i * 128, 0), new Tile(tileId));
+                    em.SpawnEntity("WFFaunaAsclepiu", new EntityCoordinates(ground, pos));
+                    visitors.Add(new EntityCoordinates(ground, pos + new Vector2(30, 0)));
+                }
             }
+            Assert.That(Animals(), Is.Empty, "Discovery alone (including orbital views) must not spawn fauna.");
+            for (var i = 0; i < 100; i++)
+                ecology.RefreshPopulation(visitors);
             var animals = Animals();
             Assert.That(animals, Has.Count.EqualTo(WFPlanetFaunaSystem.MaxTotal));
+            foreach (var ground in grounds)
+                Assert.That(Animals(ground).Count, Is.LessThanOrEqualTo(WFPlanetFaunaSystem.MaxPerPlanet));
 
-            // Moving wildlife off its birth planet must not open another global slot.
+            // Capturing an animal must not free a slot. Parent changes also permanently protect it from retirement.
+            var origin = em.GetComponent<WFPlanetWildlifeComponent>(animals[0]).Ground;
+            var destination = origin == grounds[0] ? grounds[1] : grounds[0];
             server.System<SharedTransformSystem>().SetCoordinates(animals[0],
-                new EntityCoordinates(grounds[^1], new Vector2(200, 0)));
-            em.SpawnEntity("WFFaunaAsclepiu", new EntityCoordinates(grounds[0], new Vector2(201, 0)));
+                new EntityCoordinates(destination, new Vector2(200, 0)));
+            ecology.RefreshPopulation(visitors);
             Assert.That(Animals(), Has.Count.EqualTo(WFPlanetFaunaSystem.MaxTotal));
+            Assert.That(em.GetComponent<WFPlanetWildlifeComponent>(animals[0]).Protected, Is.True);
 
-            // Deleted animals release budget; blocked attempts must not leak it.
+            // Deleted animals release budget; blocked attempts do not leak slots.
             em.DeleteEntity(animals[0]);
-            em.SpawnEntity("WFFaunaAsclepiu", new EntityCoordinates(grounds[0], new Vector2(204, 0)));
+            for (var i = 0; i < 10; i++)
+                ecology.RefreshPopulation(visitors);
             Assert.That(Animals(), Has.Count.EqualTo(WFPlanetFaunaSystem.MaxTotal));
 
             var body = em.SpawnEntity(null, new EntityCoordinates(grounds[^1], Vector2.Zero));

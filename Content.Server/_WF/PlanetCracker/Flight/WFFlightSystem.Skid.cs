@@ -122,6 +122,7 @@ public sealed partial class WFFlightSystem
             // Anything standing where the hull is going gets the same treatment an FTL arrival gives it. On the bite
             // interval rather than every tick: the crush gibs and deletes everything under the footprint, each of
             // which is its own networked sound, and a capital hull's footprint is a lot of them.
+            _zLevels.WfClearLandingObstacles(grid);
             _shuttle.Smimsh(grid);
 
             if (speed <= SkidRamSpeed)
@@ -198,7 +199,8 @@ public sealed partial class WFFlightSystem
         if (lost == 0)
             return;
 
-        var cost = SkidTileSpeedCost * lost;
+        // A wide ship can lose a whole row in one bite. Do not turn that width into an instant stop.
+        var cost = MathF.Min(SkidTileSpeedCost * lost, speed * 0.1f);
 
         _physics.SetLinearVelocity(grid.Owner,
             speed <= cost ? Vector2.Zero : heading * (speed - cost),

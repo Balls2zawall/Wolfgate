@@ -197,6 +197,28 @@ public sealed partial class WFPlanetNetworkSystem : EntitySystem
             Dirty(layer, marker);
         }
 
+        WFPlanetAmbiencePrototype? ambience = null;
+        foreach (var candidate in _proto.EnumeratePrototypes<WFPlanetAmbiencePrototype>())
+        {
+            if (candidate.PlanetType != surface.PlanetType)
+                continue;
+
+            ambience = candidate;
+            break;
+        }
+
+        if (ambience != null)
+        {
+            var orbitDepth = layers.Count - 1;
+            for (var depth = 0; depth < layers.Count; depth++)
+            {
+                var layerAmbience = EnsureComp<WFPlanetAmbienceComponent>(layers[depth]);
+                layerAmbience.Profile = ambience.ID;
+                layerAmbience.VolumeOffset = WFPlanetAmbience.LayerVolumeOffset(depth, orbitDepth);
+                Dirty(layers[depth], layerAmbience);
+            }
+        }
+
         _atmos.SetMapAtmosphere(ground, false, groundProto.Atmosphere);
 
         if (surface.GroundComponents is { } groundComponents)
@@ -256,6 +278,7 @@ public sealed partial class WFPlanetNetworkSystem : EntitySystem
         comp.Layers = layers;
         comp.Surface = surface.ID;
         comp.Centre = centre;
+        EntityManager.System<WFPlanetWeatherSystem>().Configure(network, surface, displayName);
 
         return network.Owner;
     }

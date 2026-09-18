@@ -5,13 +5,12 @@
   parent: Thruster
   name: landing thruster
   suffix: Landing
-  description: A thruster canted to fire straight down as well as back. Rated to hold its own share of a hull against one gee, which is the only thing keeping anything in the air over a planet.
+  description: An atmospheric-rated thruster that maintains full thrust and normal power consumption below orbit.
   components:
   # Planet layers have air in them, and the stock thruster refuses to fire outside vacuum.
   - type: Thruster
     requireSpace: false
   - type: WFLandingThruster
-    liftThrust: 50
 
 - type: entity
   id: WFLandingThrusterKit
@@ -25,6 +24,5 @@
     state: icon
   - type: Item
   - type: WFLandingThrusterKit
-    variant: WFThrusterLanding
   - type: StaticPrice
     price: 400

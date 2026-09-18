@@ -99,6 +99,7 @@ public sealed partial class ThrusterSystem : EntitySystem
         using (args.PushGroup(nameof(ThrusterComponent)))
         {
             args.PushMarkup(enabled);
+            WfExamineAtmosphere(uid, args); // WOLFGATE: show atmospheric rating and conversion status.
 
             if (component.Type == ThrusterType.Linear &&
                 EntityManager.TryGetComponent(uid, out TransformComponent? xform) &&
@@ -514,6 +515,8 @@ public sealed partial class ThrusterSystem : EntitySystem
     {
         base.Update(frameTime);
 
+        WfUpdateAtmosphereThrusters(); // WOLFGATE: atmospheric efficiency and continuous power demand.
+
         var query = EntityQueryEnumerator<ThrusterComponent>();
         var curTime = _timing.CurTime;
 
@@ -649,6 +652,7 @@ public sealed partial class ThrusterSystem : EntitySystem
         var thrustRating = args.PartRatings[component.MachinePartThrust];
 
         component.Thrust = component.BaseThrust * MathF.Pow(component.PartRatingThrustMultiplier, thrustRating - 1);
+        WfRefreshAtmosphereRating(uid, component); // WOLFGATE: preserve upgraded rating across atmosphere transitions.
 
         if (component.Enabled && CanEnable(uid, component))
             EnableThruster(uid, component);

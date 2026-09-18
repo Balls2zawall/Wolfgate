@@ -406,6 +406,8 @@ public sealed partial class CEZLevelsSystem
             if (!TryComp<MapGridComponent>(landedUid, out var landedGrid) || !TryComp<CEZGridFallerComponent>(landedUid, out var landedFaller))
                 continue;
 
+            WfClearLandingObstacles(landedUid); // WOLFGATE: leave clearance around planetary impact wrecks.
+
             // WOLFGATE: a lift-lost hull that touched down slowly enough lands hard and skids instead of exploding (F10).
             if (WfTryHardLanding((landedUid, landedGrid, landedFaller), impact))
                 continue;
