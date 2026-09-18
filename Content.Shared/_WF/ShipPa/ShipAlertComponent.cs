@@ -47,4 +47,10 @@ public sealed partial class ShipAlertComponent : Component
 
     /// <summary>Server only.</summary>
     [ViewVariables] public TimeSpan NextAnnouncement;
+
+    /// <summary>Longest link the console will take, so a pasted wall of text never reaches yt-dlp.</summary>
+    [DataField] public int MaxUrlLength = 512;
+
+    /// <summary>Server only. When this ship may next queue an internet sound from its console.</summary>
+    [ViewVariables] public TimeSpan NextInternetSound;
 }

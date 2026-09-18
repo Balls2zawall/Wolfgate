@@ -1,13 +1,9 @@
-using System.Numerics;
-using Content.Server.Chat.Managers;
 using Content.Server.Chat.Systems;
 using Content.Shared._WF.ShipPa;
-using Content.Shared.Chat;
 using Robust.Shared.Audio;
 using Robust.Shared.Audio.Systems;
 using Robust.Shared.Player;
 using Robust.Shared.Timing;
-using Robust.Shared.Utility;
 
 namespace Content.Server._WF.ShipPa;
 
@@ -23,20 +19,6 @@ public sealed partial class ShipPaSystem : EntitySystem
     [Dependency] private SharedTransformSystem _xform = default!;
     [Dependency] private SharedAppearanceSystem _appearance = default!;
     [Dependency] private ChatSystem _chat = default!;
-    [Dependency] private IChatManager _chatManager = default!;
-
-    /// <summary>Distance at which a stream is still at full volume.</summary>
-    private const float ReferenceDistance = 3f;
-
-    /// <summary>How sharply a stream falls off past <see cref="ReferenceDistance"/>.</summary>
-    private const float RolloffFactor = 1.5f;
-
-    /// <summary>
-    /// Speakers one broadcast may run a copy on at once. A hull with no dedicated speakers carries its PA on every
-    /// air alarm aboard, and a capital ship has dozens; one copy each is dozens of OpenAL sources on every client
-    /// aboard, per callout, which is what emptied the client's source pool during a landing.
-    /// </summary>
-    public const int MaxSpeakerStreams = 8;
 
     /// <summary>How often expired broadcasts and queued speaker counts are cleaned up.</summary>
     private static readonly TimeSpan UpdateInterval = TimeSpan.FromSeconds(0.25);
@@ -46,11 +28,8 @@ public sealed partial class ShipPaSystem : EntitySystem
     /// <summary>Grids whose speaker counts changed this tick, refreshed in bulk so power flicker is cheap.</summary>
     private readonly HashSet<EntityUid> _pendingCounts = new();
 
-    /// <summary>Reused by <see cref="Broadcast"/> so a one-shot doesn't allocate.</summary>
+    /// <summary>Reused when updating all speakers' broadcast indicators.</summary>
     private readonly List<Entity<ShipPaSpeakerComponent>> _speakerBuffer = new();
-
-    /// <summary>Grid-local positions of the speakers <see cref="SelectCarriers"/> is spreading a broadcast over.</summary>
-    private readonly List<Vector2> _carrierPositions = new();
 
     private TimeSpan _nextUpdate;
     private int _nextBroadcastId = 1;
@@ -73,124 +52,50 @@ public sealed partial class ShipPaSystem : EntitySystem
 
         ClearExpiredBroadcasts();
         FlushPendingCounts();
-        UpdateAlarms();
+        UpdateBroadcasts();
     }
 
-    /// <summary>
-    /// Plays a one-shot through every working speaker on the grid. Null when nothing could play.
-    /// </summary>
-    public int? Broadcast(EntityUid grid, SoundSpecifier sound, AudioParams? audioParams = null)
+    /// <summary>One ship timeline, rendered independently by each listener.</summary>
+    public int? Broadcast(EntityUid grid, SoundSpecifier sound, AudioParams? audioParams = null,
+        int priority = ShipPaPlaybackPolicy.AnnouncementPriority, string key = "announcement")
     {
-        if (!Exists(grid))
+        if (!Exists(grid) || CountSpeakers(grid).Online == 0)
             return null;
 
-        var resolved = _audio.ResolveSound(sound);
-
-        if (string.IsNullOrEmpty(_audio.GetAudioPath(resolved)))
-            return null;
-
-        var baseParams = audioParams ?? sound.Params;
-        var id = NextBroadcastId();
-        var now = _timing.CurTime;
-        var played = false;
-        TimeSpan? length = null;
-
-        // Every copy goes out in the same tick, which is what keeps them in phase.
-        _speakerBuffer.Clear();
-        GatherSpeakers(grid, _speakerBuffer);
-        SelectCarriers(_speakerBuffer);
-
-        foreach (var speaker in _speakerBuffer)
-        {
-            var stream = _audio.PlayPvs(resolved, speaker.Owner, BuildParams(speaker, baseParams));
-
-            if (stream == null)
-                continue;
-
-            TagStream(stream.Value.Entity, id, speaker.Owner, speaker.Comp.Distortion, false);
-
-            length ??= _audio.GetAudioLength(resolved);
-            speaker.Comp.BroadcastingUntil = now + length.Value;
-            UpdateAppearance(speaker);
-            played = true;
-        }
-
-        _speakerBuffer.Clear();
-
-        return played ? id : null;
+        return StartBroadcast(grid, key, sound, false, ShipPaBroadcastKind.Announcement, priority, audioParams)?.Id;
     }
 
-    /// <summary>
-    /// Tone through the speakers, the text in a bubble over each one, and one chat line for everyone in
-    /// earshot of a working speaker. False when no speaker could carry it.
-    /// </summary>
     public bool Announce(EntityUid grid, string message, SoundSpecifier? sound = null, string? sender = null, Color? color = null)
     {
-        if (!Exists(grid))
+        if (!Exists(grid) || CountSpeakers(grid).Online == 0)
             return false;
 
         var chime = sound ?? CompOrNull<ShipAlertComponent>(grid)?.AnnouncementChime ?? DefaultChime;
-
-        if (Broadcast(grid, chime) == null)
+        if (StartBroadcast(grid, "announcement", chime, false, ShipPaBroadcastKind.Announcement,
+                ShipPaPlaybackPolicy.AnnouncementPriority, caption: message, color: color) == null)
             return false;
 
-        Bubble(grid, message, color);
-
-        // DispatchFilteredAnnouncement escapes the text itself when it builds the wrapped message.
-        _chat.DispatchFilteredAnnouncement(
-            GetListeners(grid),
-            message,
-            source: grid,
-            sender: sender ?? GetShipName(grid),
-            playSound: false,
-            announcementSound: null,
-            colorOverride: color);
-
+        // One history entry per listener; no per-speaker bubbles or periodic re-announcements.
+        _chat.DispatchFilteredAnnouncement(GetListeners(grid), message, source: grid,
+            sender: sender ?? GetShipName(grid), playSound: false, announcementSound: null, colorOverride: color);
         return true;
     }
 
-    /// <summary>
-    /// Puts the text in a speech bubble over every working speaker on the grid, for players within its
-    /// range. Hidden from the chat log, so several speakers in earshot don't repeat the line there.
-    /// </summary>
+    /// <summary>Legacy callers get one subtitle per listener instead of a bubble at every speaker.</summary>
     public void Bubble(EntityUid grid, string message, Color? color = null)
     {
         if (!Exists(grid))
             return;
 
-        var wrapped = WrapBubble(grid, message, color);
-
-        _speakerBuffer.Clear();
-        GatherSpeakers(grid, _speakerBuffer);
-
-        foreach (var speaker in _speakerBuffer)
+        var state = EnsureComp<ShipPaBroadcastComponent>(grid);
+        state.Broadcasts.RemoveAll(b => b.Key == "caption");
+        state.Broadcasts.Add(new ShipPaBroadcast
         {
-            if (IsFunctional(speaker))
-                SpeakerBubble(speaker, message, wrapped);
-        }
-
-        _speakerBuffer.Clear();
-    }
-
-    private string WrapBubble(EntityUid grid, string message, Color? color)
-    {
-        return Loc.GetString("ship-pa-bubble",
-            ("sender", Loc.GetString("ship-pa-sender", ("ship", GetShipName(grid)))),
-            ("color", (color ?? Color.White).ToHex()),
-            ("message", FormattedMessage.EscapeText(message)));
-    }
-
-    /// <summary>
-    /// One speaker's bubble. Local channel gives the client a say bubble; hideChat keeps it out of the log.
-    /// </summary>
-    private void SpeakerBubble(Entity<ShipPaSpeakerComponent> speaker, string message, string wrapped)
-    {
-        var filter = Filter.Empty().AddInRange(_xform.GetMapCoordinates(speaker.Owner), speaker.Comp.Range);
-
-        if (filter.Count == 0)
-            return;
-
-        _chatManager.ChatMessageToManyFiltered(filter, ChatChannel.Local, message, wrapped, speaker.Owner, hideChat: true, recordReplay: false, colorOverride: null);
+            Id = NextBroadcastId(), Key = "caption", Start = _timing.CurTime,
+            Caption = message, Color = color ?? Color.White, Kind = ShipPaBroadcastKind.Announcement, Priority = 30,
+            RetainUntil = _timing.CurTime + TimeSpan.FromSeconds(8),
+        });
+        Dirty(grid, state);
     }
 
     /// <summary>
@@ -262,6 +167,9 @@ public sealed partial class ShipPaSystem : EntitySystem
         if (!Exists(grid) || TerminatingOrDeleted(grid))
             return;
 
+        RefreshCoverage(grid);
+        if (TryComp(grid, out ShipPaBroadcastComponent? broadcast))
+            UpdateBroadcastLights(grid, broadcast);
         var (online, total, fallback) = CountSpeakers(grid);
 
         if (!TryComp(grid, out ShipAlertComponent? alert))
@@ -296,8 +204,7 @@ public sealed partial class ShipPaSystem : EntitySystem
 
     /// <summary>
     /// Fills the list with the speakers carrying the grid's PA: every dedicated speaker anchored to it,
-    /// or, when there is none at all, its fallback units (air alarms). No grid-indexed query exists, so
-    /// this sweeps the speaker query like ShuttleConsoleSystem does.
+    /// or, when there is none at all, its fallback units (air alarms). Membership is indexed by grid.
     /// </summary>
     private void GatherSpeakers(EntityUid grid, List<Entity<ShipPaSpeakerComponent>> into)
     {
@@ -306,11 +213,13 @@ public sealed partial class ShipPaSystem : EntitySystem
 
         var first = into.Count;
         var dedicated = false;
-        var query = EntityQueryEnumerator<ShipPaSpeakerComponent, TransformComponent>();
+        if (!_gridSpeakers.TryGetValue(grid, out var members))
+            return;
 
-        while (query.MoveNext(out var uid, out var speaker, out var xform))
+        foreach (var uid in members)
         {
-            if (!xform.Anchored || xform.GridUid != grid)
+            if (!TryComp(uid, out ShipPaSpeakerComponent? speaker) || TerminatingOrDeleted(uid)
+                || !TryComp(uid, out TransformComponent? xform) || !xform.Anchored || xform.GridUid != grid)
                 continue;
 
             dedicated |= !speaker.Fallback;
@@ -328,117 +237,29 @@ public sealed partial class ShipPaSystem : EntitySystem
     }
 
     /// <summary>
-    /// Narrows a gathered speaker list down to the ones that will actually carry a stream: everything working while
-    /// the ship's PA is small, and past <see cref="MaxSpeakerStreams"/> a spread of that many picked furthest apart,
-    /// so a hull running on dozens of air alarms still covers itself without costing every client aboard a source per
-    /// alarm. Deterministic for a given set, so a running loop keeps its carriers instead of re-cutting them.
+    /// Replicate power and fallback membership, including dedicated speakers outside the client's PVS.
     /// </summary>
-    private void SelectCarriers(List<Entity<ShipPaSpeakerComponent>> speakers)
+    private void RefreshCoverage(EntityUid grid)
     {
-        for (var i = speakers.Count - 1; i >= 0; i--)
-        {
-            if (!IsFunctional(speakers[i]))
-                speakers.RemoveAt(i);
-        }
-
-        if (speakers.Count <= MaxSpeakerStreams)
+        if (!_gridSpeakers.TryGetValue(grid, out var members))
             return;
-
-        // They are all anchored to the one grid, so local space is the right space to spread over.
-        _carrierPositions.Clear();
-
-        foreach (var speaker in speakers)
+        var dedicated = false;
+        foreach (var uid in members)
         {
-            _carrierPositions.Add(Transform(speaker.Owner).LocalPosition);
+            if (TryComp(uid, out ShipPaSpeakerComponent? speaker) && !speaker.Fallback && !TerminatingOrDeleted(uid))
+                dedicated = true;
         }
 
-        var seed = 0;
-
-        for (var i = 1; i < speakers.Count; i++)
+        foreach (var uid in members)
         {
-            if (Precedes(_carrierPositions[i], _carrierPositions[seed]))
-                seed = i;
+            if (!TryComp(uid, out ShipPaSpeakerComponent? speaker) || TerminatingOrDeleted(uid))
+                continue;
+            var enabled = (!dedicated || !speaker.Fallback) && IsFunctional((uid, speaker));
+            if (speaker.Enabled == enabled)
+                continue;
+            speaker.Enabled = enabled;
+            Dirty(uid, speaker);
         }
-
-        SwapCarriers(speakers, 0, seed);
-
-        for (var chosen = 1; chosen < MaxSpeakerStreams; chosen++)
-        {
-            var best = chosen;
-            var bestDistance = -1f;
-
-            for (var i = chosen; i < speakers.Count; i++)
-            {
-                var distance = float.MaxValue;
-
-                for (var j = 0; j < chosen; j++)
-                {
-                    distance = Math.Min(distance, (_carrierPositions[i] - _carrierPositions[j]).LengthSquared());
-                }
-
-                if (distance < bestDistance)
-                    continue;
-
-                // The corner-most of a tie, so the same speakers win every time this is run on the same set.
-                if (distance > bestDistance || Precedes(_carrierPositions[i], _carrierPositions[best]))
-                {
-                    best = i;
-                    bestDistance = distance;
-                }
-            }
-
-            SwapCarriers(speakers, chosen, best);
-        }
-
-        speakers.RemoveRange(MaxSpeakerStreams, speakers.Count - MaxSpeakerStreams);
-        _carrierPositions.Clear();
-    }
-
-    private void SwapCarriers(List<Entity<ShipPaSpeakerComponent>> speakers, int a, int b)
-    {
-        if (a == b)
-            return;
-
-        (speakers[a], speakers[b]) = (speakers[b], speakers[a]);
-        (_carrierPositions[a], _carrierPositions[b]) = (_carrierPositions[b], _carrierPositions[a]);
-    }
-
-    /// <summary>Corner-most ordering, so a tie in the spread is broken the same way every time.</summary>
-    private static bool Precedes(Vector2 a, Vector2 b)
-    {
-        return a.X < b.X || (a.X == b.X && a.Y < b.Y);
-    }
-
-    /// <summary>
-    /// Speaker range, trim and damage distortion folded into the caller's params.
-    /// </summary>
-    private AudioParams BuildParams(Entity<ShipPaSpeakerComponent> speaker, AudioParams baseParams)
-    {
-        var result = baseParams
-            .WithMaxDistance(speaker.Comp.Range)
-            .WithReferenceDistance(ReferenceDistance)
-            .WithRolloffFactor(RolloffFactor)
-            .AddVolume(speaker.Comp.Volume);
-
-        var distortion = speaker.Comp.Distortion;
-
-        if (distortion > 0f)
-            result = result.WithPitchScale(result.Pitch * (1f - 0.15f * distortion)).AddVolume(-6f * distortion);
-
-        return result;
-    }
-
-    /// <summary>
-    /// Marks an audio entity as one copy of a broadcast so the client mesh can duck the rest.
-    /// </summary>
-    private void TagStream(EntityUid audio, int broadcastId, EntityUid speaker, float distortion, bool overlay)
-    {
-        var comp = EnsureComp<ShipPaAudioComponent>(audio);
-        comp.BroadcastId = broadcastId;
-        comp.Speaker = speaker;
-        comp.Distortion = distortion;
-        comp.IsOverlay = overlay;
-        Dirty(audio, comp);
     }
 
     private int NextBroadcastId()

@@ -56,7 +56,8 @@ public sealed class ShipPaFallbackTest
 
             var id = pa.Broadcast(grid, Chime);
             Assert.That(id, Is.Not.Null, "The air alarm should carry a broadcast.");
-            Assert.That(StreamsFor(entMan, id!.Value), Is.EquivalentTo(new[] { alarm }));
+            Assert.That(StreamsFor(entMan, id!.Value), Is.Empty);
+            Assert.That(entMan.GetComponent<ShipPaSpeakerComponent>(alarm).Enabled, Is.True);
 
             speaker = entMan.SpawnEntity("WallmountShipPaSpeaker", map.GridCoords);
             entMan.GetComponent<ApcPowerReceiverComponent>(speaker).NeedsPower = false;
@@ -76,8 +77,9 @@ public sealed class ShipPaFallbackTest
 
             var id = pa.Broadcast(grid, Chime);
             Assert.That(id, Is.Not.Null);
-            Assert.That(StreamsFor(entMan, id!.Value), Is.EquivalentTo(new[] { speaker }),
-                "Broadcasts should now come only from the dedicated speaker.");
+            Assert.That(StreamsFor(entMan, id!.Value), Is.Empty);
+            Assert.That(entMan.GetComponent<ShipPaSpeakerComponent>(alarm).Enabled, Is.False);
+            Assert.That(entMan.GetComponent<ShipPaSpeakerComponent>(speaker).Enabled, Is.True);
 
             // Losing the only speaker puts the ship back on its air alarms.
             entMan.DeleteEntity(speaker);
@@ -90,6 +92,7 @@ public sealed class ShipPaFallbackTest
             var counts = pa.CountSpeakers(grid);
             Assert.That(counts.Fallback, Is.True, "Without any speaker the air alarms should take over again.");
             Assert.That(entMan.GetComponent<ShipAlertComponent>(grid).SpeakersFallback, Is.True);
+            Assert.That(entMan.GetComponent<ShipPaSpeakerComponent>(alarm).Enabled, Is.True);
         });
 
         await pair.CleanReturnAsync();
