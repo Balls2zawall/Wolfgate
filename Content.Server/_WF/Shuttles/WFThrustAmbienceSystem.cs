@@ -1,4 +1,5 @@
 using Content.Server._WF.PlanetCracker.Planets;
+using Content.Server._WF.PlanetCracker.Flight;
 using Content.Server.Shuttles.Components;
 using Content.Shared.Shuttles.Components;
 using Robust.Shared.Audio;
@@ -47,12 +48,13 @@ public sealed partial class WFThrustAmbienceSystem : EntitySystem
         _thrusting.Clear();
 
         var thrusters = EntityQueryEnumerator<ThrusterComponent, TransformComponent>();
-        while (thrusters.MoveNext(out _, out var thruster, out var xform))
+        while (thrusters.MoveNext(out var uid, out var thruster, out var xform))
         {
             if (thruster.Type != ThrusterType.Linear || !thruster.Enabled || !thruster.IsOn || !thruster.Firing)
                 continue;
 
-            if (xform.GridUid is { } grid && HasComp<ShuttleComponent>(grid))
+            if (xform.GridUid is { } grid && (HasComp<ShuttleComponent>(grid) ||
+                TryComp<WFCrashThrustComponent>(uid, out var crashThrust) && crashThrust.Detached))
                 _thrusting.Add(grid);
         }
 

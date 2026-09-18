@@ -14,7 +14,7 @@ public sealed partial class CEZLevelsSystem
     public const float WFLandingClearance = 1f;
 
     /// <summary>Clear a tile of breathing room around an impacting hull, without touching other grids or occupants.</summary>
-    public void WfClearLandingObstacles(EntityUid hull)
+    public void WfClearLandingObstacles(EntityUid hull, bool reportImpacts = false)
     {
         if (HasComp<WFPlanetChunkComponent>(hull) || !WfHasSkidGround(hull)
             || !TryComp<MapGridComponent>(hull, out var hullGrid)
@@ -55,6 +55,8 @@ public sealed partial class CEZLevelsSystem
             reserved.Clear();
             _wfLandingBiome.ReserveTiles(ground,
                 new Box2(min, min + new Vector2(groundGrid.TileSize)), reserved, mapGrid: groundGrid);
+            if (reportImpacts)
+                _wfFlight.GroundObstacleImpact(hull, _transform.GetWorldPosition(obstacle));
             _wfDestructible.BreakEntity(obstacle);
             if (!TerminatingOrDeleted(obstacle))
                 QueueDel(obstacle);

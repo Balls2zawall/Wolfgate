@@ -17,6 +17,10 @@ public sealed partial class WFSkidComponent : Component
     [DataField]
     public EntityUid? Loop;
 
+    public EntityUid? ImpactStream;
+    public TimeSpan NextImpactSound;
+    public TimeSpan NextLoopRefresh;
+
     /// <summary>When the leading edge is next chewed on; the sweep is throttled rather than run every tick.</summary>
     [DataField]
     public TimeSpan NextBite;
@@ -27,4 +31,11 @@ public sealed partial class WFSkidComponent : Component
     /// </summary>
     [DataField]
     public TimeSpan NextPlough;
+
+    /// <summary>Ground cells already scarred during this skid, preventing repeated terrain edits and decals.</summary>
+    public HashSet<Vector2i> ScarredTiles = new();
+    public EntityUid? ScarMap;
+
+    /// <summary>Detached wreckage slides and scars terrain without recursive explosive hull grinding.</summary>
+    public bool Debris;
 }

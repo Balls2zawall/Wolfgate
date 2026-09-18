@@ -480,6 +480,8 @@ public sealed partial class ThrusterSystem : EntitySystem
     {
         if (!component.Enabled)
             return false;
+        if (WfCooling(uid)) // WOLFGATE: atmospheric overload recovery must survive power-change callbacks.
+            return false;
 
         if (component.LifeStage > ComponentLifeStage.Running)
             return false;
@@ -516,6 +518,7 @@ public sealed partial class ThrusterSystem : EntitySystem
         base.Update(frameTime);
 
         WfUpdateAtmosphereThrusters(); // WOLFGATE: atmospheric efficiency and continuous power demand.
+        WfUpdateCrashThrust(); // WOLFGATE: severed engines retain their last firing command while powered.
 
         var query = EntityQueryEnumerator<ThrusterComponent>();
         var curTime = _timing.CurTime;

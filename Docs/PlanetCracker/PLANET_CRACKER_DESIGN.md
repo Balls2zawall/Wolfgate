@@ -619,3 +619,40 @@ GPWS voice warnings retain normal PA delivery when a speaker can broadcast. If t
 PA has no working speakers, the voice uses one hull-audience emergency stream, so
 a brownout or missing PA cannot silence terrain/pull-up warnings while the separate
 lift-lost alarm continues. The fallback never duplicates a successful PA broadcast.
+
+
+### Planetary crash breakup
+
+Ship crashes on planetary ground now cut narrow structural seams instead of queuing an explosion over every hull tile. The planner checks real tile connectivity, aims for two to four substantial sections, and severs at most one eighth of the original floor footprint. After the grids separate, those seam cells are restored as exposed lattice owned by an adjacent wreck section, preferring the largest side of the tear. The lattice moves with its section without reconnecting the grids or creating loose lattice-only fragments. Small or unsuitable hulls can remain in one piece rather than producing tiny fragments. At most eight small, silent explosions (up to four along fractures and one inside each section) accompany the existing single crash sound. Above-deck, unshaded explosion animations make the blasts visible over the overlapping terrain grid; machinery destroyed at the seams may still cause ordinary secondary damage. Extracted planet chunks retain their previous drop/crater behavior.
+
+Touchdown delivers one blunt-impact shock and knockdown to living crew aboard, including occupants away from a fracture. Severity and planar speed increase injury; buckling halves the shock damage. A one-second per-grid latch prevents duplicate injury from repeated callbacks. This does not make fracture-line occupants safe from local explosions or destroyed equipment.
+
+Wreck sections retain their momentum through the existing grid split. Detached fragments inherit crash-skid friction and one positional grinding loop each. Every sliding section clears nearby obstacles and leaves a dirt trail. Small mass-balanced outward impulses separate the sections. Fractures prefer diagonals where connectivity allows, vary from 15 to 90 percent across the footprint, and can shear off smaller ends or sides rather than always bisecting the hull. Skid resistance and per-bite speed loss were increased by 25 percent from the previous long-slide tuning, targeting approximately 20 percent shorter travel rather than a guaranteed distance on every terrain. Existing dirt scars and clearance remain.
+
+### Atmospheric overload retries
+
+Ordinary atmospheric thrusters now forecast full demand on their actual APC network before the next power solve. When full demand exceeds supply, they rest at a one-watt standby load for two seconds, then retry full atmospheric draw for one second. Cooling disables actual thrust and blocks power-change callbacks from restarting engines early, while preserving the player's enabled switch. Adequate supply, leaving atmosphere, or conversion removes the limiter. Converted landing thrusters retain normal continuous operation.
+
+The retry never supplies free power: the real network still determines whether thrusters, lights and consoles have power. Bursts can brown out an overloaded ship; rest periods release engine demand so the rest of the grid can recover. Missing generation, disconnected cabling or insufficient non-engine supply can still leave equipment off.
+
+### Jagged seams and damaged crash power
+
+Fracture boundaries wander by about one tile and retain the torn seam as exposed lattice on one separated grid. Impact audio is a single +8 dB broadcast to the hull audience and the footprint radius plus 32 metres, rather than many overlapping positional sources.
+
+A crash while ordinary engines are overload-limited damages their supplying onboard APC regulators. Each damaged APC interrupts its actual output independently, with randomized 2-5 second dropouts and 1.2-3.2 second powered stretches. The fault persists until a three-second multitool (Pulsing) repair; examination explains the fault and repair gives feedback. Repair preserves the main-breaker setting and does not invent power. Grounded wrecks revert to normal engine demand; an ascent command restores atmospheric demand and its overload protection. The grounded check is cached per grid per tick.
+
+### Severed engine commands
+
+A linear engine firing at impact retains that command if the split leaves it on a section without an anchored shuttle console. Actual power, enable state and nozzle checks still gate thrust. A dropout stops the burn without erasing the command; power recovery resumes it. The existing thrust loop follows firing engines on each separated section and stops during a blackout, with one stream per section. Manual engine shutdown, unanchoring or adding a console clears the retained command. Detached engines are removed from the original ship's thrust bank, so the surviving pilot cannot command remote wreckage.
+
+Powered console-less sections receive their engines' directional force, limited to 2 metres/second squared and 12 metres/second along the force direction to keep wreckage from becoming streaming-speed projectiles. They retain terrain scars while sliding. Sections with a console receive normal shuttle controls instead; no extra crash sound loops are created.
+
+Crash burst tuning: each small blast uses total intensity 15 (previously 12), slope 3 and maximum tile intensity 3.5. Visible flashes are scaled to 1.2, with a 3.5-metre light radius; the eight-burst limit and no floor removal remain. Atmospheric power forecasts tolerate freed electrical nodes while the power network rebuilds after destruction.
+
+### Ground grinding and rock contacts
+
+Every moving grounded wreck section plays the supplied ground_grind_loop at +6 dB, audible up to 80 metres beyond its half-diagonal. The positional loop follows the section; it stops on rest, takeoff or removal, and refreshes its audience every ten seconds without stacking streams. Touchdown and rock/terrain-obstacle contacts randomly use crash10, crash11, crash12, crash3 or crash4. Obstacle impacts allow one contact per section per 0.75 seconds and replace any previous contact stream.
+
+Soil abrasion affects up to four leading-edge tiles per quarter second, at 0.15 damage per metre/second per second (maximum 0.5 per update). Rock contact applies 0.5-3 blunt damage to up to four nearby tiles and their anchored structures, as already-reduced wear (bypassing flat armour subtraction) and excluding living occupants. The stronger hull clears the obstacle; worn floor exposes lattice at 40 accumulated damage instead of recursively fragmenting or exploding. All sections retain their terrain trails. ground_impact_2 was superseded by the five crash variants and is not imported.
+
+Crash detachment now also unlocks section rotation and applies alternating randomized angular kicks of 0.2-0.35 rad/s, scaled by relative mass (0.65-1.5x). Inherited spin is retained, with the initial result capped at +/-0.65 rad/s. Crash-skid friction also scales angular drag, so the kick remains visible before settling. A section rotating against the ground keeps its grind loop and wear even when its centre is barely translating.

@@ -17,3 +17,9 @@
   license: "TODO"
   copyright: "TODO: attribution pending from the maintainer"
   source: "TODO"
+
+# Supplied by the maintainer, 2026-09-18; converted to mono Vorbis.
+- files: ["ground_grind_loop.ogg", "crash10.ogg", "crash11.ogg", "crash12.ogg", "crash3.ogg", "crash4.ogg"]
+  license: "TODO"
+  copyright: "TODO: attribution pending from the maintainer"
+  source: "TODO"

@@ -412,6 +412,9 @@ public sealed partial class CEZLevelsSystem
             if (WfTryHardLanding((landedUid, landedGrid, landedFaller), impact))
                 continue;
 
+            if (WfTryStructuralCrash((landedUid, landedGrid, landedFaller), impact)) // WOLFGATE: survivable ship breakup.
+                continue;
+
             CrashGrid((landedUid, landedGrid, landedFaller));
 
             WfSkidAfterCrash(landedUid); // WOLFGATE: a crash with planar speed left ploughs on instead of stopping dead (F10).

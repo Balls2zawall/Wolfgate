@@ -1,4 +1,7 @@
 using System.Numerics;
+using Robust.Shared.Map;
+using Robust.Shared.Map.Components;
+using Robust.Server.GameObjects;
 using Content.Server._CE.ZLevels.Core;
 using Content.Server._CE.ZLevels.Core.Components;
 using Content.Server._WF.ShipPa;
@@ -86,11 +89,11 @@ public sealed partial class WFFlightSystem : EntitySystem
 
     /// <summary>Played once at touchdown of a hard landing.</summary>
     public static readonly SoundSpecifier HardLandingSound =
-        new SoundPathSpecifier("/Audio/_WF/PlanetCracker/Crack/grid_crash_effect.ogg");
+        new SoundCollectionSpecifier("WFGroundCrashImpacts");
 
     /// <summary>The scrape, looped on the hull for as long as it is still moving.</summary>
     public static readonly SoundSpecifier SkidSound =
-        new SoundPathSpecifier("/Audio/_WF/PlanetCracker/Flight/skid.ogg");
+        new SoundPathSpecifier("/Audio/_WF/PlanetCracker/Flight/ground_grind_loop.ogg");
 
     private readonly List<EntityUid> _liftLostScan = new();
     private readonly List<EntityUid> _skidScan = new();
@@ -102,6 +105,24 @@ public sealed partial class WFFlightSystem : EntitySystem
 
         // The only directed subscription in the whole flight family; nothing else subscribes this pair.
         SubscribeLocalEvent<WFLiftLostComponent, ComponentShutdown>(OnLiftLostShutdown);
+        SubscribeLocalEvent<WFSkidComponent, ComponentShutdown>(OnSkidShutdown);
+        SubscribeLocalEvent<GridSplitEvent>(OnSkidGridSplit);
+    }
+
+    private void OnSkidGridSplit(ref GridSplitEvent args)
+    {
+        if (!HasComp<WFSkidComponent>(args.Grid)
+            && !(TryComp<WFCrashImpactComponent>(args.Grid, out var impact) && _timing.CurTime < impact.NextImpact))
+            return;
+        foreach (var fragment in args.NewGrids)
+        {
+            EnsureComp<WFSkidComponent>(fragment).Debris = true;
+            if (TryComp<WFCrashImpactComponent>(args.Grid, out var parentImpact))
+                EnsureComp<WFCrashImpactComponent>(fragment).NextImpact = parentImpact.NextImpact;
+        }
+        RestoreCrashLattice(args.Grid, args.NewGrids);
+        SeparateCrashSections(args.Grid, args.NewGrids);
+        _crashThrusters.WfDetachCrashThrust(args.Grid, args.NewGrids);
     }
 
     /// <inheritdoc/>
@@ -229,10 +250,15 @@ public sealed partial class WFFlightSystem : EntitySystem
 
         var skid = AddComp<WFSkidComponent>(grid);
 
-        if (thud)
-            _audio.PlayPvs(HardLandingSound, grid);
+        if (thud && TryComp<MapGridComponent>(grid, out var hull))
+        {
+            var centre = _transform.ToMapCoordinates(new EntityCoordinates(grid, hull.LocalAABB.Center));
+            var radius = hull.LocalAABB.Size.Length() * 0.5f + 32f;
+            _audio.PlayGlobal(HardLandingSound, _audience.Aboard(grid).AddInRange(centre, radius),
+                true, AudioParams.Default.WithVolume(8f));
+        }
 
-        skid.Loop = _audio.PlayPvs(SkidSound, grid, AudioParams.Default.WithLoop(true))?.Entity;
+        // The moving-ground sweep starts one positional grind loop per section.
     }
 
     /// <summary>Walks every falling hull's callouts and glide forward, and drops the ones that are done.</summary>

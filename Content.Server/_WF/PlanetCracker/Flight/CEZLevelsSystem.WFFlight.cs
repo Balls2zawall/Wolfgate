@@ -21,6 +21,11 @@ namespace Content.Server._CE.ZLevels.Core;
 /// </summary>
 public sealed partial class CEZLevelsSystem
 {
+    /// <summary>Crashed hulls stop paying hover power while grounded; an ascent command restores full demand.</summary>
+    public bool WfWreckResting(EntityUid grid) =>
+        HasComp<WFCrashImpactComponent>(grid) && WfHasSkidGround(grid) &&
+        _pilotVerticalInput.GetValueOrDefault(grid) <= 0f;
+
     [Dependency] private SharedDestructibleSystem _wfDestructible = default!;
     [Dependency] private WFFlightSystem _wfFlight = default!;
     [Dependency] private ThrusterSystem _wfThrusters = default!;
@@ -338,10 +343,21 @@ public sealed partial class CEZLevelsSystem
         _wfFlight.BeginSkid(grid, thud: false);
     }
 
+    /// <summary>Planetary ship crashes use structural breakup; extracted chunks retain their original drop.</summary>
+    public bool WfTryStructuralCrash(Entity<MapGridComponent, CEZGridFallerComponent> ent, float impact)
+    {
+        if (!WfHasSkidGround(ent.Owner)
+            || HasComp<Content.Shared._WF.PlanetCracker.Chunk.WFPlanetChunkComponent>(ent.Owner))
+            return false;
+        var reference = WfGetFreeFallSpeed(ent.Comp2);
+        _wfFlight.StructuralCrash((ent.Owner, ent.Comp1), reference > 0f ? impact / reference : 1f);
+        return true;
+    }
+
     /// <summary>Sliding wrecks shed momentum over distance; stopped ships retain the normal static ground grip.</summary>
     public float WfCrashSkidFriction(EntityUid grid)
     {
-        return HasComp<WFSkidComponent>(grid) ? 0.05f : 1f;
+        return HasComp<WFSkidComponent>(grid) ? 0.0125f : 1f;
     }
 
     /// <summary>Re-arms a grid's ordinary z-gravity after it has been taken off an orbit layer by hand.</summary>
@@ -384,6 +400,7 @@ public sealed partial class CEZLevelsSystem
 
         foreach (var ent in _wfPloughed)
         {
+            _wfFlight.GroundObstacleImpact(grid, _transform.GetWorldPosition(ent));
             _wfDestructible.BreakEntity(ent);
 
             if (!TerminatingOrDeleted(ent))
@@ -392,7 +409,7 @@ public sealed partial class CEZLevelsSystem
 
         var velocity = body.LinearVelocity;
         var speed = velocity.Length();
-        var cost = WFPloughSpeedCost * _wfPloughed.Count;
+        var cost = MathF.Min(WFPloughSpeedCost * _wfPloughed.Count, speed * 0.03125f);
 
         // Non-finite is neither over nor under the cost, so it has to be named: dividing it back out would write a
         // NaN position onto the hull and onto everything parented to it.

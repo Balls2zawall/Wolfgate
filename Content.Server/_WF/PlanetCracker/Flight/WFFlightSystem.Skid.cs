@@ -22,11 +22,11 @@ public sealed partial class WFFlightSystem
     /// <summary>Speed (m/s) under which the hull has stopped and the skid is over.</summary>
     public const float SkidStopSpeed = 0.5f;
 
-    /// <summary>Speed (m/s) over which the leading edge is grinding itself off rather than just sliding.</summary>
+    /// <summary>Reference rock-impact speed (m/s) for one point of contact damage.</summary>
     public const float SkidRamSpeed = 4f;
 
     /// <summary>Damage a leading-edge tile takes per second, per metre per second of hull speed.</summary>
-    public const float SkidTileDamageRate = 3f;
+    public const float SkidTileDamageRate = 0.15f;
 
     /// <summary>Accumulated damage at which a leading-edge tile is torn off the hull.</summary>
     public const float SkidTileThreshold = 40f;
@@ -52,9 +52,6 @@ public sealed partial class WFFlightSystem
 
     private const float SkidTileSlope = 2f;
     private const float SkidTileMaxIntensity = 2f;
-
-    /// <summary>Speed (m/s) the hull loses for each tile it leaves behind.</summary>
-    private const float SkidTileSpeedCost = 0.5f;
 
     /// <summary>
     /// How often the leading edge is chewed on. The footprint walk is not a per-tick job, and neither is anything else
@@ -104,14 +101,24 @@ public sealed partial class WFFlightSystem
             // threshold - so it would slide past the stop test, be divided into a NaN heading and written straight
             // back into the hull, and from there into every child transform and every sound played on it. The hull
             // is stopped instead, which is what a skid ends in anyway.
-            if (!TryHeading(body.LinearVelocity, out var heading, out var speed) || speed <= SkidStopSpeed)
+            TryHeading(body.LinearVelocity, out var heading, out var speed);
+            if (!float.IsFinite(body.LinearVelocity.LengthSquared()))
+                _physics.SetLinearVelocity(grid, Vector2.Zero, body: body);
+            if (!float.IsFinite(body.AngularVelocity))
+                _physics.SetAngularVelocity(grid, 0f, body: body);
+            var rotatingSpeed = MathF.Abs(body.AngularVelocity) * gridComp.LocalAABB.Size.Length() * 0.5f;
+            if (speed <= SkidStopSpeed && rotatingSpeed <= SkidStopSpeed)
             {
-                if (!float.IsFinite(body.LinearVelocity.LengthSquared()))
-                    _physics.SetLinearVelocity(grid, Vector2.Zero, body: body);
-
                 EndSkid(grid, skid);
                 continue;
             }
+            if (speed <= SkidStopSpeed)
+            {
+                heading = _transform.GetWorldRotation(grid).ToWorldVec();
+                speed = rotatingSpeed;
+            }
+
+            EnsureGroundGrind((grid, gridComp), skid);
 
             if (_timing.CurTime < skid.NextBite)
                 continue;
@@ -122,13 +129,14 @@ public sealed partial class WFFlightSystem
             // Anything standing where the hull is going gets the same treatment an FTL arrival gives it. On the bite
             // interval rather than every tick: the crush gibs and deletes everything under the footprint, each of
             // which is its own networked sound, and a capital hull's footprint is a lot of them.
-            _zLevels.WfClearLandingObstacles(grid);
+            _zLevels.WfClearLandingObstacles(grid, reportImpacts: true);
+            ScarSkidGround((grid, gridComp), skid);
+            WearSlidingHull((grid, gridComp), skid, Math.Clamp(speed * SkidTileDamageRate * elapsed, 0f, 0.5f), heading);
+            if (skid.Debris)
+                continue; // Every section wears; only the main hull runs the occupant crush pass.
             _shuttle.Smimsh(grid);
 
-            if (speed <= SkidRamSpeed)
-                continue;
 
-            GrindLeadingEdge((grid, gridComp), skid, body, heading, speed, elapsed);
         }
     }
 
@@ -139,6 +147,8 @@ public sealed partial class WFFlightSystem
     /// </summary>
     public void HardLanding(Entity<MapGridComponent> grid, float severity)
     {
+        if (!ImpactCrew(grid.Owner, severity))
+            return;
         BeginSkid(grid.Owner);
 
         if (!TryComp<WFSkidComponent>(grid.Owner, out var skid))
@@ -179,32 +189,6 @@ public sealed partial class WFFlightSystem
         speed = MathF.Sqrt(lengthSquared);
         heading = velocity / speed;
         return true;
-    }
-
-    /// <summary>
-    /// Damages the tiles actually taking the impact - the ones furthest along the direction of travel - and tears off
-    /// the ones that have had enough. Measured by projection rather than by a bounding edge so a hull sliding in
-    /// corner-first loses its corner, which is what it is leading with.
-    /// </summary>
-    private void GrindLeadingEdge(
-        Entity<MapGridComponent> grid,
-        WFSkidComponent skid,
-        PhysicsComponent body,
-        Vector2 heading,
-        float speed,
-        float elapsed)
-    {
-        var lost = BiteTiles(grid, skid, SkidTileDamageRate * speed * elapsed, heading);
-
-        if (lost == 0)
-            return;
-
-        // A wide ship can lose a whole row in one bite. Do not turn that width into an instant stop.
-        var cost = MathF.Min(SkidTileSpeedCost * lost, speed * 0.1f);
-
-        _physics.SetLinearVelocity(grid.Owner,
-            speed <= cost ? Vector2.Zero : heading * (speed - cost),
-            body: body);
     }
 
     /// <summary>
@@ -282,9 +266,7 @@ public sealed partial class WFFlightSystem
     /// <summary>Stops the scrape and lets the hull be an ordinary grid again.</summary>
     private void EndSkid(EntityUid grid, WFSkidComponent skid)
     {
-        if (skid.Loop is { } loop)
-            _audio.Stop(loop);
-
+        StopGroundSounds(skid);
         RemComp<WFSkidComponent>(grid);
     }
 }

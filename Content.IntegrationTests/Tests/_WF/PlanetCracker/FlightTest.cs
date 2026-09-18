@@ -1,6 +1,10 @@
 #nullable enable
 using System.Collections.Generic;
 using System.Numerics;
+using System.Linq;
+using Content.Server.Decals;
+using Content.Server.Parallax;
+using Content.Shared.Parallax.Biomes;
 using Content.IntegrationTests.Pair;
 using Content.Server._CE.ZLevels.Core;
 using Content.Server._CE.ZLevels.Core.Components;
@@ -63,6 +67,54 @@ public sealed class FlightTest
     /// A gravity generator lifts nothing over a planet and landing thrusters lift everything. The cracker's own
     /// centrifuge is rated at 3000 against a 124.5 load, so without the exclusion the hull would read as flying.
     /// </summary>
+    [Test]
+    public async Task SkidScarsStayBehindAndDoNotStackOrFillHolesAndRivers()
+    {
+        await using var pair = await PoolManager.GetServerClient();
+        var server = pair.Server;
+        var em = server.EntMan;
+        await EnableFeature(pair);
+        var layers = await BuildStandalone(pair);
+        var ground = layers[0];
+        await LayTiles(pair, ground, new Vector2i(-8, -8), new Vector2i(64, 64));
+        var hull = await BuildCracker(pair, await MapIdOf(pair, ground));
+        await MapInitHull(pair, hull);
+        await server.WaitAssertion(() =>
+        {
+            var map = server.System<SharedMapSystem>();
+            var groundGrid = em.GetComponent<MapGridComponent>(ground);
+            var grid = em.GetComponent<MapGridComponent>(hull);
+            var flight = server.System<WFFlightSystem>();
+            var skid = em.EnsureComponent<WFSkidComponent>(hull);
+            var hole = new Vector2i(2, 2);
+            var river = new Vector2i(3, 3);
+            map.SetTile(ground, groundGrid, hole, Tile.Empty);
+            em.SpawnEntity("WFBloodRiver", new EntityCoordinates(ground, new Vector2(3.5f, 3.5f)));
+            var riverTile = map.GetTileRef(ground, groundGrid, river).Tile;
+            var untouched = map.GetTileRef(ground, groundGrid, new Vector2i(45, 45)).Tile;
+            flight.ScarSkidGround((hull, grid), skid);
+            var scar = map.GetTileRef(ground, groundGrid, new Vector2i(7, 7)).Tile;
+            Assert.That(scar.TypeId, Is.EqualTo(server.ResolveDependency<ITileDefinitionManager>()["FloorPlanetDirt"].TileId));
+            Assert.That(map.GetTileRef(ground, groundGrid, hole).Tile.IsEmpty, Is.True);
+            Assert.That(map.GetTileRef(ground, groundGrid, river).Tile, Is.EqualTo(riverTile));
+            var decals = server.System<DecalSystem>();
+            var bounds = new Box2(-8, -8, 64, 64);
+            var count = decals.GetDecalsIntersecting(ground, bounds).Count();
+            Assert.That(count, Is.GreaterThan(0));
+            flight.ScarSkidGround((hull, grid), skid);
+            Assert.That(decals.GetDecalsIntersecting(ground, bounds).Count(), Is.EqualTo(count));
+            server.System<SharedTransformSystem>().SetWorldPosition(hull, new Vector2(20f, 0f));
+            flight.ScarSkidGround((hull, grid), skid);
+            Assert.That(map.GetTileRef(ground, groundGrid, new Vector2i(7, 7)).Tile, Is.EqualTo(scar));
+            Assert.That(map.GetTileRef(ground, groundGrid, new Vector2i(27, 7)).Tile, Is.EqualTo(scar));
+            Assert.That(map.GetTileRef(ground, groundGrid, new Vector2i(45, 45)).Tile, Is.EqualTo(untouched));
+            var biome = em.GetComponent<BiomeComponent>(ground);
+            Assert.That(server.System<BiomeSystem>().WfIsPinned((ground, biome), new Vector2i(7, 7)), Is.True);
+        });
+        await Teardown(pair, layers);
+        await pair.CleanReturnAsync();
+    }
+
     [Test]
     public async Task SlowCrashKeepsMomentumAndStartsSkidding()
     {
@@ -549,7 +601,7 @@ public sealed class FlightTest
         await server.WaitAssertion(() =>
         {
             var travelled = server.System<SharedTransformSystem>().GetWorldPosition(hull) - touchdown;
-            Assert.That(travelled.X, Is.GreaterThan(3f),
+            Assert.That(travelled.X, Is.GreaterThan(5f),
                 "An actual second of physics must carry the wreck forward, not merely leave velocity on the impact tick.");
         });
 

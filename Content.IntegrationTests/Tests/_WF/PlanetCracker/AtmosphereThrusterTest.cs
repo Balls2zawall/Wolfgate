@@ -5,6 +5,7 @@ using Content.IntegrationTests.Pair;
 using Content.Server._CE.ZLevels.Core;
 using Content.Server._WF.PlanetCracker.Flight;
 using Content.Server.Power.Components;
+using Content.Server.Power.EntitySystems;
 using Content.Server.Shuttles.Components;
 using Content.Server.Shuttles.Systems;
 using Content.Shared._CE.ZLevels.Core.Components;
@@ -25,10 +26,169 @@ public sealed class AtmosphereThrusterTest
 {
     private const float Gravity = 9.81f;
 
+    [Test]
+    public async Task OverloadRestReleasesDemandAndRetryRequiresRealPower()
+    {
+        await using var pair = await PoolManager.GetServerClient();
+        var server = pair.Server;
+        var em = server.EntMan;
+        await EnableFeature(pair);
+        var layers = await BuildStandalone(pair);
+        var hull = await BuildCracker(pair, await MapIdOf(pair, layers[0]));
+        await MapInitHull(pair, hull);
+        await RemoveOrdinaryThrusters(pair, hull);
+        var engine = await AddPaidEngine(pair, hull, 981f);
+        await server.WaitAssertion(() =>
+        {
+            var system = server.System<ThrusterSystem>();
+            var thruster = em.GetComponent<ThrusterComponent>(engine);
+            system.WfRefreshAtmosphereThruster(engine, thruster);
+            var state = em.GetComponent<WFAtmosphereThrusterComponent>(engine);
+            var receiver = em.GetComponent<ApcPowerReceiverComponent>(engine);
+            system.WfSetPowerPulse(state, true);
+            system.WfRefreshAtmosphereThruster(engine, thruster);
+            Assert.That(receiver.Load, Is.EqualTo(1f));
+            Assert.That(thruster.Enabled, Is.True, "The regulator must not alter the player's enable switch.");
+            Assert.That(thruster.IsOn, Is.False);
+            Assert.That(system.CanEnable(engine, thruster), Is.False);
+            Assert.That(system.WfAtmosphericForce(engine, thruster), Is.Zero);
+            state.PulseAt = TimeSpan.Zero;
+            system.WfSetPowerPulse(state, true);
+            system.WfRefreshAtmosphereThruster(engine, thruster);
+            Assert.That(receiver.Load, Is.EqualTo(state.RatedLoad * 3f));
+            Assert.That(thruster.IsOn, Is.True);
+            Assert.That(system.WfAtmosphericForce(engine, thruster), Is.GreaterThan(0f));
+            state.PulseAt = TimeSpan.Zero;
+            system.WfSetPowerPulse(state, true);
+            system.WfRefreshAtmosphereThruster(engine, thruster);
+            Assert.That(thruster.IsOn, Is.False, "Sustained overload must rest again, not resume permanent full draw.");
+            server.System<SharedPowerReceiverSystem>().SetNeedsPower(engine, true);
+            system.WfSetPowerPulse(state, false);
+            system.WfRefreshAtmosphereThruster(engine, thruster);
+
+        });
+        await server.WaitRunTicks(pair.SecondsToTicks(0.75f));
+        await server.WaitAssertion(() =>
+        {
+            var thruster = em.GetComponent<ThrusterComponent>(engine);
+            Assert.That(server.System<ThrusterSystem>().CanEnable(engine, thruster), Is.False, "A retry cannot create power.");
+            Assert.That(thruster.IsOn, Is.False);
+        });
+        await Teardown(pair, layers);
+        await pair.CleanReturnAsync();
+    }
+
+
+    [Test]
+    public async Task RealApcOverloadPulsesAndImprovedSupplyRestoresContinuousOperation()
+    {
+        await using var pair = await PoolManager.GetServerClient();
+        var server = pair.Server;
+        var em = server.EntMan;
+        await EnableFeature(pair);
+        var layers = await BuildStandalone(pair);
+        var hull = await BuildCracker(pair, await MapIdOf(pair, layers[0]));
+        await MapInitHull(pair, hull);
+        await RemoveOrdinaryThrusters(pair, hull);
+        var engine = await AddPaidEngine(pair, hull, 981f);
+        var apc = EntityUid.Invalid;
+        await server.WaitPost(() =>
+        {
+            var coordinates = em.GetComponent<TransformComponent>(engine).Coordinates;
+            em.SpawnEntity("CableApcExtension", coordinates);
+            apc = em.SpawnEntity("APCBasic", coordinates);
+            var batteries = server.System<BatterySystem>();
+            batteries.SetMaxCharge(apc, 1000000f);
+            batteries.SetCharge(apc, 1000000f);
+            var supply = em.GetComponent<PowerNetworkBatteryComponent>(apc);
+            supply.MaxSupply = em.GetComponent<WFAtmosphereThrusterComponent>(engine).RatedLoad * 2f;
+            supply.SupplyRampTolerance = 100000f;
+            supply.SupplyRampRate = 100000f;
+            server.System<SharedPowerReceiverSystem>().SetNeedsPower(engine, true);
+        });
+        var rests = 0;
+        var retries = 0;
+        for (var i = 0; i < 32; i++)
+        {
+            await server.WaitRunTicks(pair.SecondsToTicks(0.25f));
+            await server.WaitAssertion(() =>
+            {
+                var state = em.GetComponent<WFAtmosphereThrusterComponent>(engine);
+                var receiver = em.GetComponent<ApcPowerReceiverComponent>(engine);
+                if (!state.PowerLimited) return; // Allow node attachment and first power solve.
+                if (state.Cooling)
+                {
+                    rests++;
+                    Assert.That(receiver.Load, Is.EqualTo(1f));
+                    Assert.That(em.GetComponent<ThrusterComponent>(engine).IsOn, Is.False);
+                }
+                else
+                {
+                    retries++;
+                    Assert.That(receiver.Load, Is.EqualTo(state.RatedLoad * 3f));
+                }
+            });
+        }
+        await server.WaitAssertion(() =>
+        {
+            Assert.That(em.GetComponent<ApcPowerReceiverComponent>(engine).Provider, Is.Not.Null);
+            Assert.That(rests, Is.GreaterThan(2));
+            Assert.That(retries, Is.GreaterThan(1));
+            server.System<WFCrashApcFaultSystem>().DamageOverloadedApcs(hull);
+            Assert.That(em.HasComponent<WFCrashApcFaultComponent>(apc), Is.True, "An overloaded crash must damage its supplying APC.");
+            em.RemoveComponent<WFCrashApcFaultComponent>(apc);
+            em.GetComponent<PowerNetworkBatteryComponent>(apc).MaxSupply = 100000f;
+        });
+        await server.WaitRunTicks(pair.SecondsToTicks(3f));
+        await server.WaitAssertion(() =>
+        {
+            Assert.That(em.GetComponent<WFAtmosphereThrusterComponent>(engine).PowerLimited, Is.False);
+            Assert.That(em.GetComponent<ThrusterComponent>(engine).IsOn, Is.True);
+            // Crash destruction frees the battery before network membership is rebuilt.
+            em.DeleteEntity(apc);
+            Assert.DoesNotThrow(() => server.System<CEZLevelsSystem>().WfGetAtmospherePower(hull, out _, out _));
+        });
+        await server.WaitRunTicks(pair.SecondsToTicks(1f));
+        await Teardown(pair, layers);
+        await pair.CleanReturnAsync();
+    }
+
     /// <summary>
     /// The real directional bank and APC demand must follow the engine, including idle hover.
     /// Repeated refreshes and re-entry must always use the original rating, never compound it.
     /// </summary>
+    [Test]
+    public async Task GroundedWreckStopsHoverDrawAndAscentRestoresIt()
+    {
+        await using var pair = await PoolManager.GetServerClient();
+        var server = pair.Server;
+        var em = server.EntMan;
+        await EnableFeature(pair);
+        var layers = await BuildStandalone(pair);
+        await LayTiles(pair, layers[0], new Vector2i(-8, -8), new Vector2i(32, 32));
+        var hull = await BuildCracker(pair, await MapIdOf(pair, layers[0]));
+        await MapInitHull(pair, hull);
+        await RemoveOrdinaryThrusters(pair, hull);
+        var engine = await AddPaidEngine(pair, hull, 4000f);
+        await server.WaitPost(() => em.EnsureComponent<WFCrashImpactComponent>(hull));
+        await server.WaitRunTicks(pair.SecondsToTicks(0.5f));
+        await server.WaitAssertion(() =>
+        {
+            var state = em.GetComponent<WFAtmosphereThrusterComponent>(engine);
+            Assert.That(state.PowerLimited, Is.False);
+            Assert.That(em.GetComponent<ApcPowerReceiverComponent>(engine).Load, Is.EqualTo(state.RatedLoad));
+        });
+        await HoldVertical(pair, hull, Content.Shared.Movement.Systems.ShuttleButtons.AscendZ);
+        await server.WaitRunTicks(pair.SecondsToTicks(0.5f));
+        await server.WaitAssertion(() =>
+        {
+            var state = em.GetComponent<WFAtmosphereThrusterComponent>(engine);
+            Assert.That(em.GetComponent<ApcPowerReceiverComponent>(engine).Load, Is.EqualTo(state.RatedLoad * 3f));
+        });
+        await Teardown(pair, layers);
+        await pair.CleanReturnAsync();
+    }
+
     [Test]
     public async Task RepeatedAirGroundTransitOrbitAndSpaceTransitionsRestoreThrustAndLoad()
     {

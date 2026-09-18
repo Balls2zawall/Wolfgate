@@ -61,6 +61,7 @@ public sealed class CrashAudioTest
         var seen = new HashSet<EntityUid>();
         var clips = new Dictionary<string, int>();
         var crashed = false;
+        var peakAudio = 0;
 
         // The fall gate holds a fresh grid for its three second grace, then plummets it; a full gap at 0.15 levels/s²
         // is another three and a half. Sampling every other tick catches every audio entity: the shortest explosion
@@ -70,13 +71,16 @@ public sealed class CrashAudioTest
             await server.WaitRunTicks(2);
             await server.WaitPost(() =>
             {
+                var alive = 0;
                 var query = entMan.EntityQueryEnumerator<AudioComponent>();
                 while (query.MoveNext(out var uid, out var audio))
                 {
+                    alive++;
                     if (seen.Add(uid))
                         clips[audio.FileName] = clips.GetValueOrDefault(audio.FileName) + 1;
                 }
 
+                peakAudio = Math.Max(peakAudio, alive);
                 if (entMan.GetComponent<TransformComponent>(hull).MapUid == ground)
                     crashed = true;
             });
@@ -101,14 +105,15 @@ public sealed class CrashAudioTest
                     "The hull never reached the ground layer, so no crash was measured at all.");
                 // A free fall arrives above the hard-landing threshold, so this really is the crash path; without the
                 // bang there would be nothing here to keep a budget on (FlightTest.FreeFallCrashes...).
-                Assert.That(bangs, Is.GreaterThanOrEqualTo(1),
-                    "A hull that fell a whole gap onto terrain made no bang at all, so it never crashed.");
+                Assert.That(clips.Where(c => c.Key.StartsWith("/Audio/_WF/PlanetCracker/Flight/crash")).Sum(c => c.Value), Is.EqualTo(1),
+                    "Structural breakup must play one impact sound, not a ship-wide explosion.");
                 Assert.That(bangs, Is.LessThanOrEqualTo(ExplosionBudget),
                     $"One hull crash played {bangs} explosion clips. Every hull tile queues its own crater and each " +
                     $"blast that sounds costs two OpenAL sources on every client that can hear it, which is what killed " +
                     $"the live client. Everything heard: {breakdown}");
-                Assert.That(seen, Has.Count.LessThanOrEqualTo(TotalBudget),
-                    $"One hull crash created {seen.Count} audio entities in total. Everything heard: {breakdown}");
+                // Concurrent sources exhaust the client; successive ambient loops do not.
+                Assert.That(peakAudio, Is.LessThanOrEqualTo(TotalBudget),
+                    $"One hull crash peaked at {peakAudio} concurrent audio entities ({seen.Count} over the whole test). Everything heard: {breakdown}");
             }
         });
 

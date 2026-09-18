@@ -1,4 +1,5 @@
 using Content.Shared._CE.ZLevels.Core.Components;
+using Content.Server._CE.ZLevels.Core;
 using Content.Server._WF.PlanetCracker.Flight;
 using Content.Server.Power.Components;
 using Content.Server.Power.EntitySystems;
@@ -20,7 +21,22 @@ public sealed partial class ThrusterSystem
     public const float WfStandardGravity = 9.81f;
     public static readonly TimeSpan WfPowerRecoveryDelay = TimeSpan.FromSeconds(2);
     private TimeSpan _wfNextAtmosphereUpdate;
+    private TimeSpan _wfRestingAt;
+    private readonly Dictionary<EntityUid, bool> _wfResting = new();
+
+    private bool WfRestingWreck(EntityUid grid)
+    {
+        if (_wfRestingAt != _timing.CurTime)
+        {
+            _wfRestingAt = _timing.CurTime;
+            _wfResting.Clear();
+        }
+        if (!_wfResting.TryGetValue(grid, out var resting))
+            _wfResting[grid] = resting = _wfFlightLevels.WfWreckResting(grid);
+        return resting;
+    }
     [Dependency] private PowerNetSystem _wfPowerNet = default!;
+    [Dependency] private CEZLevelsSystem _wfFlightLevels = default!;
 
     private void WfExamineAtmosphere(EntityUid uid, ExaminedEvent args)
     {
@@ -46,6 +62,7 @@ public sealed partial class ThrusterSystem
         if (_timing.CurTime < _wfNextAtmosphereUpdate)
             return;
         _wfNextAtmosphereUpdate = _timing.CurTime + TimeSpan.FromSeconds(0.25);
+        WfUpdatePowerPulses();
         var query = EntityQueryEnumerator<ThrusterComponent>();
         while (query.MoveNext(out var uid, out var thruster))
         {
@@ -82,9 +99,14 @@ public sealed partial class ThrusterSystem
             thruster.Thrust = thrust;
         }
         state.Atmospheric = inAtmosphere;
-        thruster.OriginalLoad = state.RatedLoad * (penalized ? WfAtmospherePowerMultiplier : 1f);
+        var hoverPower = penalized && (xform.GridUid is not { } restingGrid || !WfRestingWreck(restingGrid));
+        thruster.OriginalLoad = state.RatedLoad * (hoverPower ? WfAtmospherePowerMultiplier : 1f);
         if (TryComp<ApcPowerReceiverComponent>(uid, out var receiver))
-            receiver.Load = thruster.Enabled ? thruster.OriginalLoad : 1f;
+            receiver.Load = thruster.Enabled && !state.Cooling ? thruster.OriginalLoad : 1f;
+        if (state.Cooling)
+            DisableThruster(uid, thruster);
+        else if (!thruster.IsOn && CanEnable(uid, thruster))
+            EnableThruster(uid, thruster);
 
         // Lost power removes lift immediately. Returning power must stay up for two seconds before lifting again.
         if (inAtmosphere && !thruster.IsOn && state.WasPowered)
@@ -124,7 +146,7 @@ public sealed partial class ThrusterSystem
         var rating = thruster.Thrust;
         if (TryComp<WFAtmosphereThrusterComponent>(uid, out var state))
         {
-            if (state.Atmospheric && _timing.CurTime < state.RecoverAt)
+            if (state.Cooling || (state.Atmospheric && !state.PowerLimited && _timing.CurTime < state.RecoverAt))
                 return 0f;
             rating = state.RatedThrust;
         }
@@ -162,8 +184,7 @@ public sealed partial class ThrusterSystem
         }
         foreach (var (net, extra) in extraByNet)
         {
-            var stats = _wfPowerNet.GetNetworkStatistics(net);
-            if (stats.Consumption + extra > stats.SupplyCurrent + 1f)
+            if (!WfTryGetPowerStatistics(net, out var stats) || stats.Consumption + extra > stats.SupplyCurrent + 1f)
                 deficit = true;
         }
     }

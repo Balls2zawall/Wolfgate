@@ -69,3 +69,6 @@ wf-alert-orbit-decay-countdown = Orbit decaying: station-keeping lost, { $second
 
 wf-landing-kit-already-converted = This thruster already has a landing conversion.
 wf-landing-kit-out-of-reach = Move closer to install the landing conversion.
+
+wf-crash-apc-fault-examine = The power regulator is damaged and intermittently cuts out. Recalibrate it with a multitool.
+wf-crash-apc-fault-repaired = You recalibrate the damaged APC regulator. Its output is stable again.

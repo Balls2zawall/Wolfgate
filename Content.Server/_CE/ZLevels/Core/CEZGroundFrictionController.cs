@@ -101,7 +101,8 @@ public sealed partial class CEZGroundFrictionController : VirtualController
         if (spin <= 0f)
             return;
 
-        var drop = MathF.Min(CEZLevelsSystem.GroundSkidAngularDecel * grip * frameTime, spin);
+        // WOLFGATE: detached crash sections can yaw while skidding, then regain normal parked grip.
+        var drop = MathF.Min(CEZLevelsSystem.GroundSkidAngularDecel * _zLevels.WfCrashSkidFriction(uid) * grip * frameTime, spin);
 
         var torque = -MathF.Sign(predicted) * drop / (body.InvI * frameTime);
         PhysicsSystem.ApplyTorque(uid, torque, body: body);
