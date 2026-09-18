@@ -230,6 +230,12 @@ public sealed partial class WFPlanetNetworkSystem : EntitySystem
         orbitLayer.MaxSpeed = surface.OrbitMaxSpeed;
         orbitLayer.LinearDamping = surface.OrbitDamping;
         orbitLayer.Network = networkNet;
+        orbitLayer.RadarGround = GetNetEntity(ground);
+        if (TryComp<BiomeComponent>(ground, out var radarBiome))
+        {
+            orbitLayer.RadarLayers = new(radarBiome.Layers);
+            orbitLayer.RadarSeed = radarBiome.Seed;
+        }
         Dirty(orbit, orbitLayer);
 
         _meta.SetEntityName(orbit, Loc.GetString(surface.OrbitMapName, ("planet", displayName)));

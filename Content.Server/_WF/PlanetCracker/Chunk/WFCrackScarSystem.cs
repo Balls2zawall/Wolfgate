@@ -2,6 +2,8 @@ using System.Numerics;
 using Content.Server.Parallax;
 using Content.Server.Shuttles.Events;
 using Content.Shared._WF.PlanetCracker.Chunk;
+using Content.Shared._WF.PlanetCracker.Planets;
+using Content.Server._WF.PlanetCracker.Planets;
 using Content.Shared.Parallax.Biomes;
 using Robust.Shared.Map;
 using Robust.Shared.Map.Components;
@@ -50,6 +52,15 @@ public sealed partial class WFCrackScarSystem : EntitySystem
     public void RecordScar(EntityUid groundMap, Vector2 centre, float radius)
     {
         EnsureComp<WFCrackScarComponent>(groundMap).Scars.Add(new WFCrackScar { Centre = centre, Radius = radius });
+        if (TryComp<WFPlanetLayerComponent>(groundMap, out var layer)
+            && layer.Network is { } networkId
+            && TryGetEntity(networkId, out var network)
+            && TryComp<WFPlanetNetworkComponent>(network, out var planet)
+            && TryComp<WFOrbitLayerComponent>(planet.OrbitMap, out var orbit))
+        {
+            orbit.RadarScars.Add(new Vector3(centre, radius));
+            Dirty(planet.OrbitMap, orbit);
+        }
     }
 
     /// <summary>

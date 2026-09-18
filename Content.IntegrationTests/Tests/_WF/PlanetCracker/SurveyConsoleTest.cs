@@ -37,8 +37,8 @@ public sealed class SurveyConsoleTest
 {
     /// <summary>
     /// A second surface, so the console has a world that is unsanctioned and rolls no veins to show beside Asclepiu.
-    /// PlanetThrascias is a SystemKyphrus body that ships no surface of its own, so this neither collides with
-    /// WFSurfaceAsclepiu in WFPlanetRegistrySystem's per-type map nor changes any shipped world.
+    /// The test surface is explicitly applied to Thrascias after registry initialization; it does not replace
+    /// the registry entry or change the shipped planet definition.
     /// </summary>
     [TestPrototypes]
     public const string Prototypes = @"
@@ -101,12 +101,13 @@ public sealed class SurveyConsoleTest
                     "The rows are not named after the bodies' own PlanetTypePrototype names.");
                 Assert.That(Row(state, AsclepiuType, proto).HasSurface, Is.True,
                     "The one shipped crackable world is not flagged as having crackable ground.");
-                Assert.That(Row(state, "PlanetFervidus", proto).HasSurface, Is.False,
-                    "A body with no Wolfgate surface is flagged as having crackable ground.");
-                Assert.That(Row(state, "PlanetMerak", proto).HasSurface, Is.False,
-                    "A body with no Wolfgate surface is flagged as having crackable ground.");
-                Assert.That(Row(state, "PlanetAerumna", proto).HasSurface, Is.False,
-                    "A body with no Wolfgate surface is flagged as having crackable ground.");
+                Assert.That(Row(state, "PlanetFervidus", proto).HasSurface, Is.True,
+                    "A shipped planet surface is missing from the survey.");
+                Assert.That(Row(state, "PlanetMerak", proto).HasSurface, Is.True,
+                    "A shipped planet surface is missing from the survey.");
+                Assert.That(Row(state, "PlanetAerumna", proto).HasSurface, Is.True,
+                    "A shipped planet surface is missing from the survey.");
+                Assert.That(Row(state, "PlanetCarcinoma", proto).Sanctioned, Is.False);
             }
         });
 

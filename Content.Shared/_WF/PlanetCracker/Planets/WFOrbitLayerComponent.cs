@@ -1,4 +1,6 @@
 using Robust.Shared.GameStates;
+using System.Numerics;
+using Content.Shared.Parallax.Biomes.Layers;
 
 namespace Content.Shared._WF.PlanetCracker.Planets;
 
@@ -8,6 +10,20 @@ namespace Content.Shared._WF.PlanetCracker.Planets;
 [RegisterComponent, NetworkedComponent, AutoGenerateComponentState, UnsavedComponent]
 public sealed partial class WFOrbitLayerComponent : Component
 {
+    /// <summary>Terrain recipe, carried on orbit so radar works outside ground PVS without loading chunks.</summary>
+    [DataField, AutoNetworkedField]
+    public List<IBiomeLayer> RadarLayers = new();
+
+    [DataField, AutoNetworkedField]
+    public int RadarSeed;
+
+    [DataField, AutoNetworkedField]
+    public NetEntity? RadarGround;
+
+    /// <summary>World-space cut circles (XY centre, Z radius); these override procedural terrain.</summary>
+    [DataField, AutoNetworkedField]
+    public List<Vector3> RadarScars = new();
+
     /// <summary>The sector body this layer orbits, used by the inbound FTL range gate.</summary>
     [DataField, AutoNetworkedField]
     public NetEntity? Planet;

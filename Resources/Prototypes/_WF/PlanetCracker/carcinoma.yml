@@ -1,0 +1,159 @@
+# The first unsanctioned Kyphrus world. Static biomass avoids unbounded kudzu growth.
+- type: planetPalette
+  id: WFPaletteCarcinoma
+  color1: '#281013'
+  color2: '#772B36'
+  color3: '#C17A73'
+  color4: '#D8ACA0'
+
+- type: planetType
+  id: PlanetCarcinoma
+  name: Carcinoma
+  shader: RockyPlanet
+  earthMass: 1.0
+  rotation: 0.8
+  palette: WFPaletteCarcinoma
+  atmosphere: StandardAtmosphere
+  customData:
+    floats:
+      terrainScale: 1.0
+      macroFrequency: 3.75
+      macroAmplitude: 0.75
+      ridgeFrequency: 1.0
+      ridgeAmplitude: 3.0
+      detailFrequency: 7.5
+      detailAmplitude: 0.25
+      polarCapColor: 0.875
+      polarCapCoverage: 0.0
+
+- type: wfPlanetSurface
+  id: WFSurfaceCarcinoma
+  planetType: PlanetCarcinoma
+  ground: WFCarcinomaSurface
+  airLayers: 3
+  cloudLayer: false
+  orbitRange: 2000
+  buildAtRoundStart: true
+  sanctioned: false
+  gravity: 1
+  seed: 20260918
+  veins: WFVeinTableCarcinoma
+  faction: WFCarcinomaThreats
+  unsanctionedFaction: WFCarcinomaThreats
+  networkComponents:
+  - type: MapAtmosphere
+    space: false
+    mixture:
+      volume: 2500
+      immutable: true
+      temperature: 310.15
+      moles: [21.824879, 82.10312]
+  groundComponents:
+  - type: CEZLevelRoof
+  - type: CEZGroundLayer
+  airComponents:
+  - type: MapLight
+    ambientLightColor: "#b47c78"
+  - type: Gravity
+    enabled: true
+    inherent: true
+  orbitComponents:
+  - type: MapLight
+    ambientLightColor: "#2a3340"
+
+- type: planet
+  id: WFCarcinomaSurface
+  biome: WFBiomeCarcinoma
+  mapName: wf-planet-carcinoma-surface
+  mapLight: "#c88f87"
+  atmosphere:
+    volume: 2500
+    immutable: true
+    temperature: 310.15
+    moles: [21.824879, 82.10312]
+  biomeMarkerLayers:
+  - WFDeepVeinsCarcinoma
+
+- type: biomeTemplate
+  id: WFBiomeCarcinoma
+  layers:
+  - !type:BiomeTileLayer
+    threshold: -1
+    tile: FloorFlesh
+  - !type:BiomeEntityLayer
+    allowedTiles: [FloorFlesh]
+    entities: [WFFaunaCarcinoma]
+    threshold: 0.97
+    noise: { seed: 37, noiseType: OpenSimplex2, frequency: 3 }
+  - !type:BiomeEntityLayer
+    allowedTiles: [FloorFlesh]
+    entities: [FleshBlocker]
+    threshold: 0.98
+    noise: { seed: 2, noiseType: OpenSimplex2, frequency: 1 }
+  - !type:BiomeEntityLayer
+    allowedTiles: [FloorFlesh]
+    entities: [WallMeat]
+    threshold: 0.72
+    noise: { seed: 11, noiseType: OpenSimplex2, frequency: 0.025 }
+
+- type: entityTable
+  id: WFFaunaCarcinoma
+  table: !type:GroupSelector
+    children:
+    - id: MobLetoferolBeast
+      weight: 9
+    - id: MobLetoferolHorror
+      weight: 1
+
+- type: entity
+  id: WFFaunaCarcinoma
+  parent: MarkerBase
+  name: quarantined biothreat spawner
+  categories: [HideSpawnMenu]
+  components:
+  - type: WFPlanetFaunaSpawner
+    table: WFFaunaCarcinoma
+
+# Direct mob entries let the existing fissure code enforce its cumulative spawn cap.
+- type: salvageFaction
+  id: WFCarcinomaThreats
+  desc: wf-planet-carcinoma-faction
+  cost: 1
+  groups:
+  - entries:
+    - id: MobLetoferolBeast
+      amount: 1
+      maxAmount: 1
+    prob: 0.9
+  - entries:
+    - id: MobLetoferolHorror
+      amount: 1
+      maxAmount: 1
+    prob: 0.1
+
+- type: entity
+  id: WFDeepVeinCarcinoma
+  parent: WFDeepVein
+  components:
+  - type: WFDeepVein
+    allowedTiles: [FloorFlesh]
+
+- type: biomeMarkerLayer
+  id: WFDeepVeinsCarcinoma
+  prototype: WFDeepVeinCarcinoma
+  size: 128
+  radius: 12
+  maxCount: 93
+  minGroupSize: 1
+  maxGroupSize: 1
+
+- type: wfVeinTable
+  id: WFVeinTableCarcinoma
+  ores:
+    OreSteel: { weight: 3, value: 1 }
+    OreSpaceQuartz: { weight: 2, value: 2 }
+    OrePlasma: { weight: 4, value: 7 }
+    OreUranium: { weight: 2, value: 9 }
+  yieldRange: 2000, 4500
+  unsanctionedMultiplier: 2
+  rate: 150

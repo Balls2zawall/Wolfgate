@@ -4,8 +4,8 @@
   id: WFBiomeAsclepiu
   layers:
   - !type:BiomeMetaLayer
-    template: Grasslands
-    threshold: -0.5
+    template: WFTemperatePlains
+    threshold: -1
     noise:
       frequency: 0.001
       noiseType: OpenSimplex2
@@ -13,16 +13,16 @@
       octaves: 2
       lacunarity: 2
   - !type:BiomeMetaLayer
-    template: MonoOcean
-    threshold: 0.25
+    template: WFCoastalOcean
+    threshold: 0.45
     noise:
-      frequency: 0.01
+      frequency: 0.002
       noiseType: OpenSimplex2
       fractalType: FBm
       octaves: 2
       lacunarity: 2
   - !type:BiomeMetaLayer
-    template: Snow
+    template: WFTemperateSnow
     threshold: 0.5
     noise:
       frequency: 0.001
