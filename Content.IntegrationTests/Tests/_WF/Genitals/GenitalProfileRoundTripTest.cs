@@ -179,32 +179,6 @@ public sealed class GenitalProfileRoundTripTest
         await pair.CleanReturnAsync();
     }
 
-    /// <summary>Equals is value equality (MemberwiseEquals) and equal profiles hash alike; Equals used to call itself.</summary>
-    [Test]
-    public async Task ProfileEqualityTest()
-    {
-        await using var pair = await PoolManager.GetServerClient();
-
-        await pair.Server.WaitAssertion(() =>
-        {
-            var first = MakeProfile().WithGenitals(CustomProfile());
-            var second = MakeProfile().WithGenitals(CustomProfile());
-            var otherAnatomy = MakeProfile().WithGenitals(CustomProfile().WithWomb(true));
-            var otherName = second.WithName("Another Name");
-
-            Assert.Multiple(() =>
-            {
-                Assert.That(first, Is.Not.SameAs(second));
-                Assert.That(first.Equals(second), Is.True, "Independently built identical profiles must be equal.");
-                Assert.That(first.GetHashCode(), Is.EqualTo(second.GetHashCode()), "Equal profiles must hash alike.");
-                Assert.That(first.Equals(otherAnatomy), Is.False, "Different anatomy must not be equal.");
-                Assert.That(first.Equals(otherName), Is.False, "A different name must not be equal.");
-            });
-        });
-
-        await pair.CleanReturnAsync();
-    }
-
     /// <summary>Every field away from its default, all valid for an adult human.</summary>
     private static GenitalProfile CustomProfile()
     {

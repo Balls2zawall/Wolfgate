@@ -184,6 +184,16 @@ public sealed class GenitalConsentGateTest
 
         Assert.Multiple(() =>
         {
+            var serverSystems = server.ResolveDependency<IEntitySystemManager>();
+            var clientSystems = pair.Client.ResolveDependency<IEntitySystemManager>();
+            foreach (var systems in new[] { serverSystems, clientSystems })
+            {
+                Assert.That(systems.GetEntitySystemTypes().Count(t => typeof(SharedGenitalsSystem).IsAssignableFrom(t)), Is.EqualTo(1));
+                Assert.That(systems.GetEntitySystemTypes().Count(t => typeof(GenitalConsentSystem).IsAssignableFrom(t)), Is.EqualTo(1));
+            }
+
+            Assert.That(server.System<SharedGenitalsSystem>(), Is.TypeOf<GenitalsSystem>());
+            Assert.That(pair.Client.System<SharedGenitalsSystem>(), Is.TypeOf<ClientGenitalsSystem>());
             Assert.That(server.System<GenitalConsentSystem>(), Is.TypeOf<ServerGenitalConsentSystem>());
             Assert.That(pair.Client.System<GenitalConsentSystem>(), Is.TypeOf<ClientGenitalConsentSystem>());
         });

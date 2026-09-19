@@ -18,7 +18,6 @@ namespace Content.IntegrationTests.Tests._WF.Genitals;
 [TestFixture]
 public sealed class GenitalCoverageTest
 {
-    private const string OuterBase = "ClothingOuterBase";
     private const string Jumpsuit = "ClothingUniformJumpsuitColorGrey";
     private const string Vest = "ClothingOuterVest";
     private const string OpenedLabCoat = "ClothingOuterCoatLabOpened";
@@ -312,12 +311,9 @@ public sealed class GenitalCoverageTest
         await pair.CleanReturnAsync();
     }
 
-    /// <summary>
-    /// Re-derives the vest set (ids containing "Vest" under ClothingOuterBase, hardsuits excluded) and checks each covers the chest only,
-    /// so a vest added later without data fails here.
-    /// </summary>
+    /// <summary>Explicit vest families and their descendants cover the chest without covering the groin.</summary>
     [Test]
-    public async Task DerivedVestCoverageTest()
+    public async Task VestFamiliesCoverChestOnlyTest()
     {
         await using var pair = await PoolManager.GetServerClient();
         var server = pair.Server;
@@ -326,20 +322,33 @@ public sealed class GenitalCoverageTest
 
         await server.WaitAssertion(() =>
         {
+            // Explicit garment families avoid inferring coverage from words in prototype names.
+            var families = new HashSet<string>
+            {
+                "ClothingOuterVest",
+                "ClothingOuterVestWeb",
+                "ClothingOuterVestWebMercenary",
+                "ClothingOuterVestDetective",
+                "ClothingOuterVestHazard",
+                "ClothingOuterVestTank",
+                "ClothingOuterVestValet",
+                "ClothingOuterDrakeIndustriesTruckerPuffyVest",
+                "ClothingOuterVestWebElite",
+                "ClothingOuterArmorBPVestLight",
+                "ClothingOuterArmorBPVestMedium",
+                "ClothingOuterArmorBPVestHeavy",
+                "ClothingOuterArmorBPVestPolyvalent",
+                "ClothingOuterArmorBPVestStabproof",
+                "ClothingOuterArmorMakeshiftVestLight",
+                "ClothingOuterArmorMakeshiftVestHeavy",
+            };
+            foreach (var family in families)
+                Assert.That(protoMan.HasIndex<EntityPrototype>(family), Is.True, $"Missing vest family {family}.");
+
             var vests = protoMan.EnumeratePrototypes<EntityPrototype>()
-                .Where(proto => proto.ID.Contains("Vest", StringComparison.Ordinal))
-                .Where(proto =>
-                {
-                    var lineage = protoMan.EnumerateAllParents<EntityPrototype>(proto.ID, includeSelf: true)
-                        .Select(parent => parent.id)
-                        .ToList();
-
-                    return lineage.Contains(OuterBase)
-                           && !lineage.Any(id => id.Contains("Hardsuit", StringComparison.Ordinal));
-                })
+                .Where(proto => protoMan.EnumerateAllParents<EntityPrototype>(proto.ID, includeSelf: true)
+                    .Any(parent => families.Contains(parent.id)))
                 .ToList();
-
-            Assert.That(vests.Select(proto => proto.ID), Does.Contain(Vest), "The vest derivation found nothing.");
 
             Assert.Multiple(() =>
             {

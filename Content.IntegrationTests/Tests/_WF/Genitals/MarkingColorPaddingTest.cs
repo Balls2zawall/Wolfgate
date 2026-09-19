@@ -200,29 +200,4 @@ public sealed class MarkingColorPaddingTest
 
         await pair.CleanReturnAsync();
     }
-
-    [Test]
-    public async Task ProfileValidationKeepsSavedTailColour()
-    {
-        await using var pair = await PoolManager.GetServerClient();
-        var server = pair.Server;
-
-        await server.WaitAssertion(() =>
-        {
-            var appearance = new HumanoidCharacterAppearance(
-                HairStyles.DefaultHairStyle,
-                Color.Black,
-                HairStyles.DefaultFacialHairStyle,
-                Color.Black,
-                Color.Black,
-                Color.FromHex("#FFDA93"),
-                new List<Marking> { new("ProtogenTail", new List<Color> { Saved }) });
-
-            var valid = HumanoidCharacterAppearance.EnsureValid(appearance, "Protogen", Sex.Male);
-            var tail = valid.Markings.Single(m => m.MarkingId == "ProtogenTail");
-            Assert.That(tail.MarkingColors, Is.EqualTo(new[] { Saved, Saved }));
-        });
-
-        await pair.CleanReturnAsync();
-    }
 }

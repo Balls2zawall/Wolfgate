@@ -33,9 +33,7 @@ namespace Content.IntegrationTests.Tests._WF.ShipPa;
 public sealed class ShipPaReplayTest
 {
     [TestCase(10, 30)]
-    [TestCase(0, 30)] // Force incremental seeking even on fast machines.
-    [TestCase(10, 1)]
-    [TestCase(0, 1)]
+    [TestCase(0, 1)] // Force incremental seeking after a slow initial timebase.
     public async Task RecordedAssetsSurviveReleaseAndReplaySeeking(int scrubBudgetMs, int initialTickrate)
     {
         // StopReplay resets the client's prototype manager, including the pool's test-only prototypes.

@@ -42,40 +42,6 @@ public sealed class ShipPaInternetSoundTest
     private const string SpeakerProto = "WallmountShipPaSpeaker";
 
     [Test]
-    public async Task AMountedTrackIsAnOrdinarySound()
-    {
-        await using var pair = await PoolManager.GetServerClient(new PoolSettings { Connected = false, Dirty = true });
-        var server = pair.Server;
-
-        await server.WaitAssertion(() =>
-        {
-            var resourceManager = server.ResolveDependency<IResourceManager>();
-            var resources = InternetSoundResources.For(resourceManager);
-            var audio = server.System<SharedAudioSystem>();
-
-            const int id = 9001;
-            resources.Store(id, Read(resourceManager, SourceSound));
-
-            var path = InternetSoundResources.PathFor(id);
-
-            Assert.That(resourceManager.ContentFileExists(new ResPath(path)), Is.True,
-                "A stored track should resolve through the mounted content root.");
-
-            // This is the whole point of mounting it: the server can read it like any shipped sound, so
-            // PlayPvs and the PA's phase maths work without knowing it arrived at runtime.
-            Assert.That(audio.GetAudioLength(path), Is.GreaterThan(TimeSpan.Zero),
-                "The server should be able to read the length of a track mounted at runtime.");
-
-            resources.Remove(id);
-
-            Assert.That(resourceManager.ContentFileExists(new ResPath(path)), Is.False,
-                "Removing a track should take it back out of the content root.");
-        });
-
-        await pair.CleanReturnAsync();
-    }
-
-    [Test]
     public async Task ATrackHasOneTimelineAndClearsItself()
     {
         await using var pair = await PoolManager.GetServerClient(new PoolSettings { Connected = false, Dirty = true });
@@ -98,6 +64,11 @@ public sealed class ShipPaInternetSoundTest
             const int id = 9002;
             resources.Store(id, Read(resourceManager, SourceSound));
             path = InternetSoundResources.PathFor(id);
+
+            Assert.That(resourceManager.ContentFileExists(new ResPath(path)), Is.True,
+                "A stored track should resolve through the mounted content root.");
+            Assert.That(server.System<SharedAudioSystem>().GetAudioLength(path), Is.GreaterThan(TimeSpan.Zero),
+                "The audio system must decode a track mounted at runtime.");
 
             var mapSys = entMan.System<SharedMapSystem>();
 
@@ -149,13 +120,18 @@ public sealed class ShipPaInternetSoundTest
                 "Idle grids must leave the broadcast update query.");
             Assert.That(pa.IsAlarmActive(grid, InternetSoundSystem.TrackKey), Is.False,
                 "A finished track should leave its PA slot free for the next one.");
+
+            var resourceManager = server.ResolveDependency<IResourceManager>();
+            InternetSoundResources.For(resourceManager).Remove(9002);
+            Assert.That(resourceManager.ContentFileExists(new ResPath(path)), Is.False,
+                "Removing a track should take it back out of the content root.");
         });
 
         await pair.CleanReturnAsync();
     }
 
     [Test]
-    public async Task ABigShipStaysInsideTheClientSourceBudget()
+    public async Task ManySpeakersShareOneServerBroadcast()
     {
         await using var pair = await PoolManager.GetServerClient(new PoolSettings { Connected = false, Dirty = true });
         var server = pair.Server;

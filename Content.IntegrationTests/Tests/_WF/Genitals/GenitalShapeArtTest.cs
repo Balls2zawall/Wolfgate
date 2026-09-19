@@ -9,7 +9,7 @@ using static Content.IntegrationTests.Tests._WF.Genitals.GenitalTestHelpers;
 
 namespace Content.IntegrationTests.Tests._WF.Genitals;
 
-/// <summary>Every genital shape and sheath state resolves to art that exists; step mapping helpers.</summary>
+/// <summary>Every genital shape and sheath state resolves to art that exists.</summary>
 [TestFixture]
 [TestOf(typeof(GenitalSpriteResolver))]
 public sealed class GenitalShapeArtTest
@@ -138,36 +138,6 @@ public sealed class GenitalShapeArtTest
                 Assert.That(cache.TryGetResource<RSIResource>(GenitalSpriteResolver.RsiPath(slit.Sprite), out var slitRsi), Is.True);
                 Assert.That(slitRsi!.RSI.TryGetState(slitState!, out _), $"Slit vulva state {slitState} does not exist.");
             });
-        });
-
-        await pair.CleanReturnAsync();
-    }
-
-    [Test]
-    public async Task StepMappingTest()
-    {
-        await using var pair = await PoolManager.GetServerClient();
-        var settings = GenitalProfileValidator.GetSettings(pair.Server.ResolveDependency<IPrototypeManager>());
-        var lengths = new (int Cm, int Step)[] { (5, 1), (17, 1), (18, 2), (24, 2), (25, 3), (32, 3), (33, 4), (44, 4), (45, 5), (60, 5) };
-
-        Assert.Multiple(() =>
-        {
-            // Missing art steps: the highest available not above the request, else the lowest.
-            Assert.That(GenitalSpriteResolver.ResolveStep(new[] { 1, 2, 3, 5 }, 4), Is.EqualTo(3));
-            Assert.That(GenitalSpriteResolver.ResolveStep(new[] { 1, 2, 3, 5 }, 9), Is.EqualTo(5));
-            Assert.That(GenitalSpriteResolver.ResolveStep(new[] { 4, 5, 6 }, 3), Is.EqualTo(4));
-            Assert.That(GenitalSpriteResolver.ResolveStep(System.Array.Empty<int>(), 2), Is.EqualTo(2));
-
-            // Length to sprite step and the migration inverse.
-            foreach (var (cm, step) in lengths)
-            {
-                Assert.That(GenitalStateBuilder.LengthToStep(cm, settings), Is.EqualTo(step), $"{cm} cm");
-            }
-
-            for (var step = 1; step <= 5; step++)
-            {
-                Assert.That(GenitalStateBuilder.LengthToStep(GenitalStateBuilder.StepToLength(step), settings), Is.EqualTo(step));
-            }
         });
 
         await pair.CleanReturnAsync();

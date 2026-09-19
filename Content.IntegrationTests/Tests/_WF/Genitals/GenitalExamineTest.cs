@@ -9,7 +9,9 @@ using Content.Shared.Examine;
 using Content.Shared.Humanoid;
 using Content.Shared.Humanoid.Markings;
 using Content.Shared.Inventory;
+using Content.Shared.IdentityManagement;
 using Robust.Shared.GameObjects;
+using Robust.Shared.Localization;
 using Robust.Shared.Map;
 using Robust.Shared.Prototypes;
 using static Content.IntegrationTests.Tests._WF.Genitals.GenitalTestHelpers;
@@ -230,10 +232,19 @@ public sealed class GenitalExamineTest
             var text = Examine(examine, target, target);
             Assert.Multiple(() =>
             {
-                Assert.That(text, Does.Contain("Your penis is exposed: knotted, approximately 21 cm when erect, flaccid."));
-                Assert.That(text, Does.Contain("Your testicles are exposed: large."));
-                Assert.That(text, Does.Contain("Your vulva is exposed: slit-shaped."));
-                Assert.That(text, Does.Contain("Your breasts are exposed: a pair of breasts, cup D, lactating."));
+                Assert.That(text, Does.Contain(Loc.GetString("wf-genitals-examine-self-penis",
+                    ("shape", Loc.GetString("wf-genitals-shape-penis-knotted-examine")),
+                    ("length", 21),
+                    ("state", Loc.GetString("wf-genitals-state-flaccid")))));
+                Assert.That(text, Does.Contain(Loc.GetString("wf-genitals-examine-self-testicles",
+                    ("size", Loc.GetString("wf-genitals-testicles-size-3")))));
+                Assert.That(text, Does.Contain(Loc.GetString("wf-genitals-examine-self-vagina",
+                    ("shape", Loc.GetString("wf-genitals-shape-vagina-slit-examine")),
+                    ("aroused", "no"))));
+                Assert.That(text, Does.Contain(Loc.GetString("wf-genitals-examine-self-breasts",
+                    ("shape", Loc.GetString("wf-genitals-shape-breasts-pair-examine")),
+                    ("cup", Loc.GetString("wf-genitals-cup-letter", ("letter", "D"))),
+                    ("lactating", "yes"))));
                 Assert.That(text, Does.Not.Contain("womb"));
             });
 
@@ -242,10 +253,18 @@ public sealed class GenitalExamineTest
             text = Examine(examine, target, target);
             Assert.Multiple(() =>
             {
-                Assert.That(text, Does.Contain("Your penis is covered."), "Self-examine lists covered organs.");
-                Assert.That(text, Does.Contain("Your testicles are covered."));
-                Assert.That(text, Does.Contain("Your breasts are covered."));
-                Assert.That(text, Does.Contain("Your vulva is hidden from others by your visibility setting."));
+                Assert.That(text, Does.Contain(Loc.GetString("wf-genitals-examine-self-covered",
+                    ("organ", Loc.GetString("wf-genitals-examine-organ-penis")),
+                    ("plural", "no"))), "Self-examine lists covered organs.");
+                Assert.That(text, Does.Contain(Loc.GetString("wf-genitals-examine-self-covered",
+                    ("organ", Loc.GetString("wf-genitals-examine-organ-testicles")),
+                    ("plural", "yes"))));
+                Assert.That(text, Does.Contain(Loc.GetString("wf-genitals-examine-self-covered",
+                    ("organ", Loc.GetString("wf-genitals-examine-organ-breasts")),
+                    ("plural", "yes"))));
+                Assert.That(text, Does.Contain(Loc.GetString("wf-genitals-examine-self-hidden",
+                    ("organ", Loc.GetString("wf-genitals-examine-organ-vagina")),
+                    ("plural", "no"))));
                 Assert.That(text, Does.Not.Contain("exposed"));
                 Assert.That(text, Does.Not.Contain("womb"));
             });
@@ -254,9 +273,9 @@ public sealed class GenitalExamineTest
         await pair.CleanReturnAsync();
     }
 
-    /// <summary>Wording: sheath and slit states follow arousal, the vulva clause needs full arousal, the nondescript shape and oversize cups.</summary>
+    /// <summary>Descriptions: sheath and slit states follow arousal, the vulva clause needs full arousal, the nondescript shape and oversize cups.</summary>
     [Test]
-    public async Task LineWordingTest()
+    public async Task DescriptionFollowsAnatomyStateTest()
     {
         await using var pair = await PoolManager.GetServerClient();
         var server = pair.Server;
@@ -277,42 +296,82 @@ public sealed class GenitalExamineTest
             var text = Examine(examine, sheathed, examiner);
             Assert.Multiple(() =>
             {
-                Assert.That(text, Does.Contain("genital sheath is exposed; the penis is retracted."));
-                Assert.That(text, Does.Contain("testicles are exposed: average-sized."));
-                Assert.That(text, Does.Contain("vulva is exposed."), "The human vulva has no shape word.");
-                Assert.That(text, Does.Contain("breasts are exposed: a pair of breasts, cup C."));
+                Assert.That(text, Does.Contain(Loc.GetString("wf-genitals-examine-penis-sheathed",
+                    ("target", Identity.Entity(sheathed, entMan)),
+                    ("sheath", Loc.GetString("wf-genitals-sheath-word-sheath")),
+                    ("state", Loc.GetString("wf-genitals-sheath-state-retracted")))));
+                Assert.That(text, Does.Contain(Loc.GetString("wf-genitals-examine-testicles",
+                    ("target", Identity.Entity(sheathed, entMan)),
+                    ("size", Loc.GetString("wf-genitals-testicles-size-2")))));
+                Assert.That(text, Does.Contain(Loc.GetString("wf-genitals-examine-vagina",
+                    ("target", Identity.Entity(sheathed, entMan)),
+                    ("shape", "none"),
+                    ("aroused", "no"))), "The human vulva has no shape word.");
+                Assert.That(text, Does.Contain(Loc.GetString("wf-genitals-examine-breasts",
+                    ("target", Identity.Entity(sheathed, entMan)),
+                    ("shape", Loc.GetString("wf-genitals-shape-breasts-pair-examine")),
+                    ("cup", Loc.GetString("wf-genitals-cup-letter", ("letter", "C"))),
+                    ("lactating", "no"))));
             });
 
             SetArousal(entMan, sheathed, 50);
             text = Examine(examine, sheathed, examiner);
             Assert.Multiple(() =>
             {
-                Assert.That(text, Does.Contain("the penis is partly extended."));
-                Assert.That(text, Does.Contain("vulva is exposed."), "Partial arousal adds no vulva clause (vaginaArousedFrom: Full).");
-                Assert.That(text, Does.Not.Contain("visibly aroused"));
+                Assert.That(text, Does.Contain(Loc.GetString("wf-genitals-examine-penis-sheathed",
+                    ("target", Identity.Entity(sheathed, entMan)),
+                    ("sheath", Loc.GetString("wf-genitals-sheath-word-sheath")),
+                    ("state", Loc.GetString("wf-genitals-sheath-state-partial")))));
+                Assert.That(text, Does.Contain(Loc.GetString("wf-genitals-examine-vagina",
+                    ("target", Identity.Entity(sheathed, entMan)),
+                    ("shape", "none"),
+                    ("aroused", "no"))), "Partial arousal adds no vulva clause (vaginaArousedFrom: Full).");
+                Assert.That(text, Does.Not.Contain(Loc.GetString("wf-genitals-examine-vagina",
+                    ("target", Identity.Entity(sheathed, entMan)),
+                    ("shape", "none"),
+                    ("aroused", "yes"))));
             });
 
             SetArousal(entMan, sheathed, 80);
             text = Examine(examine, sheathed, examiner);
             Assert.Multiple(() =>
             {
-                Assert.That(text, Does.Contain("the penis is extended and erect."));
-                Assert.That(text, Does.Contain("vulva is exposed, visibly aroused."));
+                Assert.That(text, Does.Contain(Loc.GetString("wf-genitals-examine-penis-sheathed",
+                    ("target", Identity.Entity(sheathed, entMan)),
+                    ("sheath", Loc.GetString("wf-genitals-sheath-word-sheath")),
+                    ("state", Loc.GetString("wf-genitals-sheath-state-full")))));
+                Assert.That(text, Does.Contain(Loc.GetString("wf-genitals-examine-vagina",
+                    ("target", Identity.Entity(sheathed, entMan)),
+                    ("shape", "none"),
+                    ("aroused", "yes"))));
             });
 
-            Assert.That(Examine(examine, slit, examiner), Does.Contain("genital slit is exposed; the penis is retracted."));
+            Assert.That(Examine(examine, slit, examiner), Does.Contain(Loc.GetString("wf-genitals-examine-penis-sheathed",
+                    ("target", Identity.Entity(slit, entMan)),
+                    ("sheath", Loc.GetString("wf-genitals-sheath-word-slit")),
+                    ("state", Loc.GetString("wf-genitals-sheath-state-retracted")))));
 
             SetArousal(entMan, plain, 40);
             text = Examine(examine, plain, examiner);
             Assert.Multiple(() =>
             {
-                Assert.That(text, Does.Contain("penis is exposed: approximately 15 cm when erect, partially erect."),
+                Assert.That(text, Does.Contain(Loc.GetString("wf-genitals-examine-penis-noshape",
+                    ("target", Identity.Entity(plain, entMan)),
+                    ("length", 15),
+                    ("state", Loc.GetString("wf-genitals-state-partial")))),
                     "The nondescript shape has no shape word.");
-                Assert.That(text, Does.Contain("breasts are exposed: a pair of breasts, oversize grade 2."));
+                Assert.That(text, Does.Contain(Loc.GetString("wf-genitals-examine-breasts",
+                    ("target", Identity.Entity(plain, entMan)),
+                    ("shape", Loc.GetString("wf-genitals-shape-breasts-pair-examine")),
+                    ("cup", Loc.GetString("wf-genitals-cup-oversize", ("grade", 2))),
+                    ("lactating", "no"))));
             });
 
             SetArousal(entMan, plain, 70);
-            Assert.That(Examine(examine, plain, examiner), Does.Contain("approximately 15 cm when erect, erect."));
+            Assert.That(Examine(examine, plain, examiner), Does.Contain(Loc.GetString("wf-genitals-examine-penis-noshape",
+                    ("target", Identity.Entity(plain, entMan)),
+                    ("length", 15),
+                    ("state", Loc.GetString("wf-genitals-state-erect")))));
         });
 
         await pair.CleanReturnAsync();

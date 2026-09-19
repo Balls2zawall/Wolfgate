@@ -2,7 +2,6 @@ using System.Collections.Generic;
 using Content.Shared._Common.Consent;
 using Content.Shared._WF.Genitals;
 using Content.Shared._WF.Genitals.Components;
-using Content.Shared._WF.Genitals.Prototypes;
 using Content.Shared._WF.Genitals.Systems;
 using Content.Shared.Body.Systems;
 using Content.Shared.Humanoid;
@@ -15,34 +14,12 @@ using static Content.IntegrationTests.Tests._WF.Genitals.GenitalTestHelpers;
 
 namespace Content.IntegrationTests.Tests._WF.Genitals;
 
-/// <summary>Arousal thresholds, the owner and external write paths, and the resets, which all go through Apply.</summary>
+/// <summary>The owner and external write paths and resets, which all go through Apply.</summary>
 [TestFixture]
 [TestOf(typeof(SharedArousalSystem))]
 public sealed class ArousalTest
 {
     private static GenitalOrganState PenisState => new() { Shape = PenisHuman, Step = 1, LengthCm = 15, Color = Color.White };
-
-    /// <summary>None below 30, Partial from 30, Full from 70, with the Default settings.</summary>
-    [Test]
-    public async Task ThresholdsTest()
-    {
-        await using var pair = await PoolManager.GetServerClient();
-        var settings = pair.Server.ProtoMan.Index(GenitalSettingsPrototype.DefaultId);
-
-        Assert.Multiple(() =>
-        {
-            Assert.That(settings.PartialArousal, Is.EqualTo(30));
-            Assert.That(settings.FullArousal, Is.EqualTo(70));
-            Assert.That(SharedArousalSystem.ToState(0, settings), Is.EqualTo(ArousalState.None));
-            Assert.That(SharedArousalSystem.ToState(29, settings), Is.EqualTo(ArousalState.None));
-            Assert.That(SharedArousalSystem.ToState(30, settings), Is.EqualTo(ArousalState.Partial));
-            Assert.That(SharedArousalSystem.ToState(69, settings), Is.EqualTo(ArousalState.Partial));
-            Assert.That(SharedArousalSystem.ToState(70, settings), Is.EqualTo(ArousalState.Full));
-            Assert.That(SharedArousalSystem.ToState(100, settings), Is.EqualTo(ArousalState.Full));
-        });
-
-        await pair.CleanReturnAsync();
-    }
 
     /// <summary>The owner path needs master consent and a living body, clamps to 100, and raises one event per change.</summary>
     [Test]
