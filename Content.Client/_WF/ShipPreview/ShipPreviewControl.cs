@@ -54,7 +54,7 @@ public sealed partial class ShipPreviewControl : Control
     private EntityUid _grid;
     private Box2 _bounds;
     private bool _hasGrid;
-    private bool _acquired;
+    private ShipPreviewHandle? _handle;
 
     private float _zoom = 1f;
     private float _minZoom = AbsoluteMinZoom;
@@ -161,11 +161,11 @@ public sealed partial class ShipPreviewControl : Control
     {
         ClearPreview("wf-ship-preview-no-vessel");
 
-        if (!_acquired)
+        if (_handle == null)
             return;
 
-        _acquired = false;
-        _entMan.System<ShipPreviewSystem>().Release();
+        _entMan.System<ShipPreviewSystem>().Release(_handle);
+        _handle = null;
     }
 
     protected override void FrameUpdate(FrameEventArgs args)
@@ -194,13 +194,9 @@ public sealed partial class ShipPreviewControl : Control
     {
         var system = _entMan.System<ShipPreviewSystem>();
 
-        if (!_acquired)
-        {
-            system.Acquire();
-            _acquired = true;
-        }
+        _handle ??= system.Acquire();
 
-        if (!system.TryLoad(vessel, out var preview))
+        if (!system.TryLoad(_handle, vessel, out var preview))
         {
             ClearPreview("wf-ship-preview-failed");
             PreviewUpdated?.Invoke();
@@ -215,7 +211,7 @@ public sealed partial class ShipPreviewControl : Control
         GridSize = preview.SizeInTiles;
 
         _status.Visible = false;
-        _eye.Position = new MapCoordinates(_bounds.Center, system.PreviewMap);
+        _eye.Position = new MapCoordinates(_bounds.Center, _handle.PreviewMap);
 
         FitToGrid();
         MarkDirty(LoadRenderFrames);
@@ -224,9 +220,9 @@ public sealed partial class ShipPreviewControl : Control
 
     private void ClearPreview(string status)
     {
-        // Only drop the system's grid if it is the one we put there.
-        if (_hasGrid)
-            _entMan.System<ShipPreviewSystem>().Clear();
+        // The handle is ours alone, so this can never touch another previewer's grid.
+        if (_hasGrid && _handle != null)
+            _entMan.System<ShipPreviewSystem>().Clear(_handle);
 
         _vessel = null;
         _grid = EntityUid.Invalid;

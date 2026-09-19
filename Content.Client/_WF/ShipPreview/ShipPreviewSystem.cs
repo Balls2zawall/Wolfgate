@@ -10,7 +10,7 @@ using Robust.Shared.Utility;
 namespace Content.Client._WF.ShipPreview;
 
 /// <summary>
-/// A grid loaded into the preview map, with the numbers a previewer wants to show next to it.
+/// A grid loaded into a preview map, with the numbers a previewer wants to show next to it.
 /// </summary>
 public readonly record struct ShipPreviewGrid(
     Entity<MapGridComponent> Grid,
@@ -19,12 +19,28 @@ public readonly record struct ShipPreviewGrid(
     int TileCount);
 
 /// <summary>
-/// Loads ship grids onto a single client-side preview map so UI can render them without touching the server or the
-/// player's own view. The map is created on first use and deleted once the last previewer releases it.
+/// One previewer's private preview map and the grid loaded on it. Handed out by <see cref="ShipPreviewSystem.Acquire"/>.
+/// </summary>
+public sealed class ShipPreviewHandle
+{
+    internal MapId MapId = MapId.Nullspace;
+    internal EntityUid MapUid = EntityUid.Invalid;
+    internal ResPath? LoadedPath;
+    internal ShipPreviewGrid? Loaded;
+
+    /// <summary>
+    /// This previewer's map, or nullspace until its first load.
+    /// </summary>
+    public MapId PreviewMap => MapId;
+}
+
+/// <summary>
+/// Loads ship grids onto client-side preview maps so UI can render them without touching the server or the
+/// player's own view. Every previewer gets its own map, so two open previews never replace or clear each other.
 /// </summary>
 /// <remarks>
-/// The map is created without map-init and stays paused, so spawners, atmos and timers on the loaded grid never run.
-/// Client map ids are negative, so the map can never collide with a server-allocated one arriving in a game state.
+/// Maps are created without map-init and stay paused, so spawners, atmos and timers on the loaded grid never run.
+/// Client map ids are negative, so they can never collide with a server-allocated one arriving in a game state.
 /// </remarks>
 public sealed partial class ShipPreviewSystem : EntitySystem
 {
@@ -33,83 +49,79 @@ public sealed partial class ShipPreviewSystem : EntitySystem
     [Dependency] private MetaDataSystem _meta = default!;
     [Dependency] private SharedTransformSystem _xform = default!;
 
-    private MapId _mapId = MapId.Nullspace;
-    private EntityUid _mapUid = EntityUid.Invalid;
-    private int _users;
-
-    private ResPath? _loadedPath;
-    private ShipPreviewGrid? _loaded;
-
-    /// <summary>
-    /// The preview map, or nullspace while no previewer holds it.
-    /// </summary>
-    public MapId PreviewMap => _mapId;
-
-    /// <summary>
-    /// The currently previewed grid, if one is loaded and still alive.
-    /// </summary>
-    public ShipPreviewGrid? Current => _loaded is { } loaded && Exists(loaded.Grid.Owner) ? loaded : null;
+    private readonly List<ShipPreviewHandle> _handles = new();
 
     public override void Shutdown()
     {
         base.Shutdown();
 
-        _users = 0;
-        DestroyMap();
+        foreach (var handle in _handles)
+        {
+            DestroyMap(handle);
+        }
+
+        _handles.Clear();
     }
 
     /// <summary>
-    /// Takes a reference on the preview map. Every call must be matched by a <see cref="Release"/>.
+    /// Hands out a private preview slot. Every call must be matched by a <see cref="Release"/>.
     /// </summary>
-    public void Acquire()
+    public ShipPreviewHandle Acquire()
     {
-        _users++;
+        var handle = new ShipPreviewHandle();
+        _handles.Add(handle);
+        return handle;
     }
 
     /// <summary>
-    /// Drops a reference taken by <see cref="Acquire"/>, deleting the map and everything on it when the last one goes.
+    /// Deletes the handle's map and everything on it.
     /// </summary>
-    public void Release()
+    public void Release(ShipPreviewHandle handle)
     {
-        _users--;
-        if (_users > 0)
-            return;
-
-        _users = 0;
-        DestroyMap();
+        DestroyMap(handle);
+        _handles.Remove(handle);
     }
 
     /// <summary>
-    /// Loads a vessel's grid, replacing whatever was previewed before. Loading the vessel that is already shown
+    /// The handle's previewed grid, if one is loaded and still alive.
+    /// </summary>
+    public ShipPreviewGrid? GetCurrent(ShipPreviewHandle handle)
+    {
+        return handle.Loaded is { } loaded && Exists(loaded.Grid.Owner) ? loaded : null;
+    }
+
+    /// <summary>
+    /// Loads a vessel's grid, replacing whatever the handle previewed before. Loading the vessel that is already
+    /// shown does nothing.
+    /// </summary>
+    public bool TryLoad(ShipPreviewHandle handle, VesselPrototype vessel, out ShipPreviewGrid preview)
+    {
+        return TryLoad(handle, vessel.ShuttlePath, vessel.Name, out preview);
+    }
+
+    /// <summary>
+    /// Loads a grid file, replacing whatever the handle previewed before. Loading the file that is already shown
     /// does nothing.
     /// </summary>
-    public bool TryLoad(VesselPrototype vessel, out ShipPreviewGrid preview)
-    {
-        return TryLoad(vessel.ShuttlePath, vessel.Name, out preview);
-    }
-
-    /// <summary>
-    /// Loads a grid file, replacing whatever was previewed before. Loading the file that is already shown does nothing.
-    /// </summary>
-    public bool TryLoad(ResPath path, string? name, out ShipPreviewGrid preview)
+    public bool TryLoad(ShipPreviewHandle handle, ResPath path, string? name, out ShipPreviewGrid preview)
     {
         preview = default;
 
-        if (Current is { } current && _loadedPath == path)
+        if (GetCurrent(handle) is { } current && handle.LoadedPath == path)
         {
             preview = current;
             return true;
         }
 
-        if (!EnsureMap())
+        if (!EnsureMap(handle))
             return false;
 
-        Clear();
+        Clear(handle);
 
         Entity<MapGridComponent>? grid;
         try
         {
-            if (!_loader.TryLoadGrid(_mapId, path, out grid, new DeserializationOptions
+            if (!_loader.TryLoadGrid(handle.MapId, path, out grid, new DeserializationOptions
                 {
                     InitializeMaps = false,
                     PauseMaps = true,
@@ -147,69 +159,72 @@ public sealed partial class ShipPreviewSystem : EntitySystem
         }
 
         preview = new ShipPreviewGrid(grid.Value, bounds, size, tiles);
-        _loaded = preview;
-        _loadedPath = path;
+        handle.Loaded = preview;
+        handle.LoadedPath = path;
         return true;
     }
 
     /// <summary>
-    /// Deletes the previewed grid, leaving the map in place for the next load.
+    /// Deletes the handle's previewed grid, leaving its map in place for the next load.
     /// </summary>
-    public void Clear()
+    public void Clear(ShipPreviewHandle handle)
     {
-        if (_loaded is { } loaded && Exists(loaded.Grid.Owner))
+        if (handle.Loaded is { } loaded && Exists(loaded.Grid.Owner))
             Del(loaded.Grid.Owner);
 
-        _loaded = null;
-        _loadedPath = null;
+        handle.Loaded = null;
+        handle.LoadedPath = null;
     }
 
     /// <summary>
-    /// Creates the preview map if it is missing. Also recovers from an entity flush (disconnect, round restart)
+    /// Creates the handle's map if it is missing. Also recovers from an entity flush (disconnect, round restart)
     /// silently taking the old map away.
     /// </summary>
-    private bool EnsureMap()
+    private bool EnsureMap(ShipPreviewHandle handle)
     {
-        if (_mapId != MapId.Nullspace
-            && Exists(_mapUid)
-            && _map.TryGetMap(_mapId, out var existing)
-            && existing == _mapUid)
-        {
+        if (MapAlive(handle))
             return true;
-        }
 
         // Stale ids after a flush; a new map may well have taken the old id.
-        _mapId = MapId.Nullspace;
-        _mapUid = EntityUid.Invalid;
-        _loaded = null;
-        _loadedPath = null;
+        handle.MapId = MapId.Nullspace;
+        handle.MapUid = EntityUid.Invalid;
+        handle.Loaded = null;
+        handle.LoadedPath = null;
 
         try
         {
-            _mapUid = _map.CreateMap(out var mapId, runMapInit: false);
-            _mapId = mapId;
+            handle.MapUid = _map.CreateMap(out var mapId, runMapInit: false);
+            handle.MapId = mapId;
         }
         catch (Exception e)
         {
             Log.Error($"Ship preview failed to create its map: {e}");
-            _mapUid = EntityUid.Invalid;
-            _mapId = MapId.Nullspace;
+            handle.MapUid = EntityUid.Invalid;
+            handle.MapId = MapId.Nullspace;
             return false;
         }
 
-        _meta.SetEntityName(_mapUid, "Wolfgate ship preview");
+        _meta.SetEntityName(handle.MapUid, "Wolfgate ship preview");
         return true;
     }
 
-    private void DestroyMap()
+    private bool MapAlive(ShipPreviewHandle handle)
     {
-        _loaded = null;
-        _loadedPath = null;
+        return handle.MapId != MapId.Nullspace
+               && Exists(handle.MapUid)
+               && _map.TryGetMap(handle.MapId, out var existing)
+               && existing == handle.MapUid;
+    }
 
-        if (_mapId != MapId.Nullspace && Exists(_mapUid) && _map.TryGetMap(_mapId, out var existing) && existing == _mapUid)
-            Del(_mapUid);
+    private void DestroyMap(ShipPreviewHandle handle)
+    {
+        handle.Loaded = null;
+        handle.LoadedPath = null;
 
-        _mapId = MapId.Nullspace;
-        _mapUid = EntityUid.Invalid;
+        if (MapAlive(handle))
+            Del(handle.MapUid);
+
+        handle.MapId = MapId.Nullspace;
+        handle.MapUid = EntityUid.Invalid;
     }
 }
