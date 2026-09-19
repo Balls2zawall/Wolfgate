@@ -41,6 +41,7 @@ public sealed partial class WFPlanetAmbienceSystem : EntitySystem
     private TimeSpan _nextLoop;
     private EntityUid? _oneShot;
     private string? _profileId;
+    private string? _accentKey;
     private float _loopVolume = WFPlanetAmbience.SilentVolume;
     private float _oneShotVolume = WFPlanetAmbience.SilentVolume;
     private float _sliderVolume;
@@ -92,7 +93,7 @@ public sealed partial class WFPlanetAmbienceSystem : EntitySystem
         var oneShotTarget = ClampVolume(profile.OneShotVolume + commonOffset);
 
         UpdateLoop(profile, night, loopTarget, frameTime);
-        UpdateOneShot(profile, oneShotTarget, frameTime);
+        UpdateOneShot(profile, night, oneShotTarget, frameTime);
     }
 
     private bool TryGetContext(out WFPlanetAmbiencePrototype profile, out float layerOffset, out bool night)
@@ -179,8 +180,17 @@ public sealed partial class WFPlanetAmbienceSystem : EntitySystem
         }
     }
 
-    private void UpdateOneShot(WFPlanetAmbiencePrototype profile, float target, float frameTime)
+    private void UpdateOneShot(WFPlanetAmbiencePrototype profile, bool night, float target, float frameTime)
     {
+        var sounds = profile.GetOneShots(night);
+        var phase = profile.DayOneShots.Count == 0 && profile.NightOneShots.Count == 0 ? "all" : night ? "night" : "day";
+        var key = profile.ID + "/" + phase;
+        if (_accentKey != key)
+        {
+            _oneShot = StopStream(_oneShot);
+            _accentKey = key;
+            _awaitingFirstAccent = true;
+        }
         if (target <= WFPlanetAmbience.SilentVolume + AudibleMargin)
             _awaitingFirstAccent = true;
         else if (_awaitingFirstAccent)
@@ -204,14 +214,14 @@ public sealed partial class WFPlanetAmbienceSystem : EntitySystem
         if (_timing.CurTime < _nextOneShot)
             return;
 
-        if (target <= WFPlanetAmbience.SilentVolume + AudibleMargin || profile.OneShots.Count == 0)
+        if (target <= WFPlanetAmbience.SilentVolume + AudibleMargin || sounds.Count == 0)
         {
             ScheduleOneShot(profile);
             return;
         }
 
         _oneShotVolume = target;
-        var sound = _random.Pick(profile.OneShots);
+        var sound = _random.Pick(sounds);
         _oneShot = _audio.PlayGlobal(
             sound,
             Filter.Local(),
@@ -282,6 +292,7 @@ public sealed partial class WFPlanetAmbienceSystem : EntitySystem
         _nextLoop = TimeSpan.Zero;
         _oneShot = StopStream(_oneShot);
         _profileId = null;
+        _accentKey = null;
         _loopVolume = WFPlanetAmbience.SilentVolume;
         _oneShotVolume = WFPlanetAmbience.SilentVolume;
         _nextOneShot = TimeSpan.Zero;

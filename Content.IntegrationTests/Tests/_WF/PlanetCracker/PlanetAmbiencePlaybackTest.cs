@@ -21,6 +21,56 @@ namespace Content.IntegrationTests.Tests._WF.PlanetCracker;
 public sealed class PlanetAmbiencePlaybackTest
 {
     [Test]
+    public async Task CarcinomaAccentsFollowNightAndDay()
+    {
+        await using var pair = await PoolManager.GetServerClient(new PoolSettings { Connected = true });
+        await EnableFeature(pair);
+        var server = pair.Server;
+        var client = pair.Client;
+        var layers = new List<EntityUid>();
+        await server.WaitPost(() =>
+        {
+            var profile = server.ResolveDependency<Robust.Shared.Prototypes.IPrototypeManager>().Index<WFPlanetSurfacePrototype>("WFSurfaceCarcinoma");
+            var network = server.System<WFPlanetNetworkSystem>().BuildNetwork(profile, Vector2.Zero, "Carcinoma", null)!.Value;
+            layers.AddRange(server.EntMan.GetComponent<WFPlanetNetworkComponent>(network).Layers);
+            server.System<BiomeSystem>().SetEnabled((layers[0], server.EntMan.GetComponent<BiomeComponent>(layers[0])), false);
+        });
+        var viewer = await AttachViewer(pair, layers[0], Vector2.Zero);
+        await server.WaitPost(() => server.EntMan.RemoveComponent<CEZPhysicsComponent>(viewer));
+        foreach (var hour in new[] { 0.5, 12.0 })
+        {
+            await server.WaitPost(() =>
+            {
+                var network = server.EntMan.GetComponent<CEZMapComponent>(layers[0]).NetworkUid;
+                var state = server.EntMan.GetComponent<WFPlanetWeatherComponent>(network);
+                var weather = server.ResolveDependency<Robust.Shared.Prototypes.IPrototypeManager>().Index(state.Profile);
+                state.Epoch = server.ResolveDependency<IGameTiming>().CurTime -
+                    TimeSpan.FromSeconds((hour - weather.InitialHour) / 24 * weather.DaySeconds);
+            });
+            await pair.RunTicksSync(pair.SecondsToTicks(3));
+            var heard = false;
+            for (var seconds = 0; seconds < 16; seconds++)
+            {
+                await pair.RunTicksSync(pair.SecondsToTicks(1));
+                await client.WaitAssertion(() =>
+                {
+                    var clips = client.EntMan.EntityQueryEnumerator<AudioComponent>();
+                    while (clips.MoveNext(out _, out var clip))
+                    {
+                        var filename = clip.FileName;
+                        if (!filename.Contains("carcinoma_random_sound_")) continue;
+                        Assert.That(filename.Contains("_night_"), Is.EqualTo(hour < 6), "Wrong time-of-day accent survived the transition.");
+                        heard = true;
+                    }
+                });
+            }
+            Assert.That(heard, Is.True, $"No accent played at local hour {hour}.");
+        }
+        await Teardown(pair, layers);
+        await pair.CleanReturnAsync();
+    }
+
+    [Test]
     public async Task MovingBetweenWorldsChangesBedsAndPlaysTheirRandomAccents()
     {
         await using var pair = await PoolManager.GetServerClient(new PoolSettings { Connected = true });

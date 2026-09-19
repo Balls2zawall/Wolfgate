@@ -1,4 +1,5 @@
 using Robust.Shared.Physics;
+using Robust.Shared.Audio;
 using Robust.Shared.Serialization.TypeSerializers.Implementations.Custom;
 
 namespace Content.Server._WF.PlanetCracker.Infestation;
@@ -17,4 +18,5 @@ public sealed partial class WFCarcinomaInfestationComponent : Component
 public sealed partial class WFCarcinomaTendrilComponent : Component
 {
     public EntityUid? Hull;
+    [DataField] public SoundSpecifier? DeploySound;
 }

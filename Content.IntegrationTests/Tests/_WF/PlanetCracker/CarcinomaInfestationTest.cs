@@ -80,6 +80,12 @@ public sealed class CarcinomaInfestationTest
             Assert.That(server.System<WFPlanetBiomassSystem>().HullCount(hull), Is.GreaterThan(0), "Open door must admit real chimera biomass.");
             Assert.That(state.Tendrils.Count, Is.EqualTo(WFCarcinomaInfestationSystem.MaxTendrils));
             Assert.That(em.GetComponent<PhysicsComponent>(hull).BodyType, Is.EqualTo(BodyType.Static));
+            Assert.That(em.EntityExists(door), Is.True, "Tendrils must not replace exterior doors.");
+            var walls = em.EntityQueryEnumerator<MetaDataComponent, TransformComponent>();
+            var meatWalls = 0;
+            while (walls.MoveNext(out _, out var metadata, out var transform))
+                if (transform.GridUid == hull && metadata.EntityPrototype?.ID == "WallMeat") meatWalls++;
+            Assert.That(meatWalls, Is.GreaterThan(0), "Tendrils must convert nearby hull walls to meat.");
             var attempt = new WFLiftoffAttemptEvent();
             em.EventBus.RaiseLocalEvent(hull, ref attempt);
             Assert.That(attempt.Cancelled, Is.True);

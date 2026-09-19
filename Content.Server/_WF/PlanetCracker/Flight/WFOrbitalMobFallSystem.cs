@@ -1,4 +1,7 @@
 using System.Linq;
+using Content.Server.Chat.Systems;
+using Robust.Shared.Audio;
+using Robust.Shared.Audio.Systems;
 using Content.Server._WF.PlanetCracker.Planets;
 using Content.Shared._CE.ZLevels.Core.Components;
 using Content.Shared._CE.ZLevels.Core.EntitySystems;
@@ -24,6 +27,9 @@ public sealed partial class WFOrbitalMobFallSystem : EntitySystem
     [Dependency] private DamageableSystem _damage = default!;
     [Dependency] private MobThresholdSystem _thresholds = default!;
     [Dependency] private IRobustRandom _random = default!;
+    [Dependency] private ChatSystem _chat = default!;
+    [Dependency] private SharedAudioSystem _audio = default!;
+    private static readonly SoundSpecifier Splat = new SoundPathSpecifier("/Audio/Effects/gib1.ogg");
 
     public override void Initialize()
     {
@@ -43,6 +49,7 @@ public sealed partial class WFOrbitalMobFallSystem : EntitySystem
             || !TryComp<WFPlanetNetworkComponent>(network, out var planet))
             return;
         EnsureComp<WFOrbitalMobFallComponent>(ent).Ground = planet.GroundMap;
+        _chat.TryEmoteWithChat(ent, "Scream");
     }
 
     private bool IsSurfaceImpact(EntityUid uid, WFOrbitalMobFallComponent fall)
@@ -66,6 +73,7 @@ public sealed partial class WFOrbitalMobFallSystem : EntitySystem
             || !TryComp<DamageableComponent>(ent, out var damageable))
             return;
 
+        _audio.PlayPvs(Splat, ent);
         SeverOne(ent, BodyPartType.Arm);
         SeverOne(ent, BodyPartType.Leg);
         if (_thresholds.TryGetThresholdForState(ent, MobState.Critical, out var critical))

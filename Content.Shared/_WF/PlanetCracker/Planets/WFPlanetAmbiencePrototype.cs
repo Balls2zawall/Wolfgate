@@ -29,8 +29,16 @@ public sealed partial class WFPlanetAmbiencePrototype : IPrototype
     }
 
     /// <summary>Environmental accents selected at random. These are never allowed to overlap each other.</summary>
-    [DataField(required: true)]
+    [DataField]
     public List<SoundSpecifier> OneShots = new();
+    [DataField] public List<SoundSpecifier> DayOneShots = new();
+    [DataField] public List<SoundSpecifier> NightOneShots = new();
+
+    public List<SoundSpecifier> GetOneShots(bool night)
+    {
+        var specific = night ? NightOneShots : DayOneShots;
+        return specific.Count > 0 ? specific : OneShots;
+    }
 
     [DataField]
     public float LoopVolume = -18f;

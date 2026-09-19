@@ -36,10 +36,10 @@ public sealed class PlanetAmbiencePrototypeTest
             var profiles = prototypes.EnumeratePrototypes<WFPlanetAmbiencePrototype>().ToList();
             Assert.That(profiles, Has.Count.EqualTo(Worlds.Length));
             var imported = new HashSet<string>();
-            foreach (var sound in profiles.SelectMany(p => p.Loops.Concat(p.DayLoops).Concat(p.NightLoops).Concat(p.OneShots)))
+            foreach (var sound in profiles.SelectMany(p => p.Loops.Concat(p.DayLoops).Concat(p.NightLoops).Concat(p.OneShots).Concat(p.DayOneShots).Concat(p.NightOneShots)))
                 if (sound is SoundPathSpecifier path && path.Path.ToString().StartsWith("/Audio/_WF/PlanetCracker/Planets/"))
                     imported.Add(path.Path.ToString());
-            Assert.That(imported.Count, Is.EqualTo(24), "Every supplied bed and random accent must be referenced.");
+            Assert.That(imported.Count, Is.EqualTo(27), "Every supplied bed and random accent must be referenced.");
 
             foreach (var world in Worlds)
             {
@@ -49,7 +49,8 @@ public sealed class PlanetAmbiencePrototypeTest
                 {
                     Assert.That(profile.ID, Is.EqualTo($"WFPlanetAmbience{world}"));
                     Assert.That(profile.PlanetType, Is.EqualTo(surface.PlanetType));
-                    Assert.That(profile.OneShots, Is.Not.Empty, $"{world} has no environmental accents.");
+                    Assert.That(profile.GetOneShots(false), Is.Not.Empty, $"{world} has no daytime accents.");
+                    Assert.That(profile.GetOneShots(true), Is.Not.Empty, $"{world} has no night accents.");
                     Assert.That(profile.MinInterval, Is.GreaterThan(0f));
                     Assert.That(profile.MaxInterval, Is.GreaterThanOrEqualTo(profile.MinInterval));
                     Assert.That(profile.LoopVolume, Is.InRange(WFPlanetAmbience.SilentVolume, 0f));
@@ -61,7 +62,7 @@ public sealed class PlanetAmbiencePrototypeTest
                     foreach (var sound in profile.Loops.Concat(profile.DayLoops).Concat(profile.NightLoops))
                         AssertSoundExists(sound, resources, world);
 
-                    foreach (var sound in profile.OneShots)
+                    foreach (var sound in profile.GetOneShots(false).Concat(profile.GetOneShots(true)))
                         AssertSoundExists(sound, resources, world);
                 });
             }

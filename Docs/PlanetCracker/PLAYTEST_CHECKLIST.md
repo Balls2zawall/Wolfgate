@@ -339,3 +339,30 @@ Do not report these.
 - Leave a stationary hull on Carcinoma for 45–75 seconds. Large flesh tendrils begin appearing around its perimeter, at most four; cut or attack every tendril to release the hull. The last tendril grants at least 45 seconds to launch before another can grow. A tendril on a docked hull also blocks departure.
 - Sealed hulls exclude biomass. Open an exterior door and wait for growth: actual chimera flesh enters and spreads across connected hull tiles. It cannot spread onto planet terrain, extracted chunks, or through a dock onto another grid. Growth is capped at 256 biomass entities per hull.
 - Supplied original audio is attributed to Gandalf under CC0-1.0. Existing borrowed audio retains its prior attribution.
+
+### Fall and tendril effects
+
+- An unprotected orbital fall triggers the species' scream emote once as the fall begins; surface impact plays a single wet gib splat while retaining the one-arm/one-leg critical-injury outcome.
+- Each anchoring tendril plays the supplied quiet, positional loop (8-tile range, -12 dB). Removing the tendril removes its loop.
+- A newly grown tendril converts existing walls in its immediate 3x3 hull neighborhood to meat walls. Doors are preserved, and terrain walls beneath the ship are unaffected.
+
+- Carcinoma random accents now follow the same local day/night phase as its lighting and ambience beds. Night uses `carcinoma_random_sound_night_1`–`3`; dawn stops any remaining night accent. Other planets can optionally define separate day/night accent playlists, with their existing all-day lists as fallback.
+- Tendril growth randomly plays `tendril_deploy_1`–`3` once, alongside its quiet persistent loop. Imported one-shots have trailing silence trimmed and are normalized to match the existing planet accents.
+
+## Flesh ticks and pustule traps
+
+- Spawn a flesh tick (`WFMobFleshTick`) near a non-Chimera humanoid. It should jump, remain visibly attached, and play one bite sound when it successfully latches. Confirm recurring damage affects the attachment site, blood declines, and Natural Letoferol accumulates gradually.
+- Click the attached tick to remove it. Feeding must stop immediately on removal or death; removal must not leave a hidden attached entity. Chimera allies should not be attacked.
+- An unlatched wandering tick occasionally plays a hunt vocalization. Death plays one death sound, without leaving a vocalization loop running.
+- Approach an intact flesh pustule as a non-Chimera character. It should burst once, release exactly three ticks and a Natural Letoferol spill, then remain visibly popped. Repeated approaches must not release more ticks.
+- Use the Chimera planting action on hive biomass, then try bare ground, an occupied trap tile, and an inaccessible location. Only the valid biomass location should accept a new pustule.
+- Explore Carcinoma to find sparse generated pustules. Leaving and returning to a triggered site must not reset it into a new supply of ticks.
+
+- Flesh ticks also chase and bite at close range. Each successful bite attempts to latch; at most three can attach to one host, while additional ticks can still bite. Attached ticks only use their feeding pulse. After manual removal, allow four seconds before another attack.
+
+## Carcinoma regional ecology
+
+- Explore widely for dormant tendon forests, assimilation sacks, and broad blood oceans; existing flesh groves and blood rivers remain. Tendons can be cut, but do not grow, damage walkers, or tether ships.
+- Ambient encounters include the native aberrant flesh roster (Jared, golems, clamps, lovers, newborn variants and rare assimilated miners) alongside Chimera. They use the existing capped encounter system rather than spawning uncounted NPCs from markers.
+- Assimilation sacks produce a newborn encounter at most once per four minutes while visitors are nearby and population capacity is available. They share the 4-nearby / 32-per-planet / 128-total wildlife limits. Destroying a sack stops its spawning; no independent endless spawner runs on it.
+- With a hull held by tendrils, pressing Liftoff displays the remaining tendril count and the instruction to cut/destroy them. This is an attempted-liftoff popup, not a persistent cockpit warning.

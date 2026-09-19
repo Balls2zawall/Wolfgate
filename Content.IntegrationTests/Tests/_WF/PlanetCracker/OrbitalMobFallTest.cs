@@ -9,6 +9,7 @@ using Content.Shared.Damage;
 using Content.Shared.Mobs;
 using Content.Shared.Mobs.Components;
 using Robust.Shared.GameObjects;
+using Robust.Shared.Audio.Components;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using static Content.IntegrationTests.Tests._WF.PlanetCracker.PlanetCrackerFixture;
@@ -52,6 +53,11 @@ public sealed class OrbitalMobFallTest
             Assert.That(body.GetBodyChildrenOfType(mob, BodyPartType.Arm).Count(), Is.EqualTo(1));
             Assert.That(body.GetBodyChildrenOfType(mob, BodyPartType.Leg).Count(), Is.EqualTo(1));
             Assert.That(em.HasComponent<WFOrbitalMobFallComponent>(mob), Is.False);
+            var audio = em.EntityQueryEnumerator<AudioComponent>();
+            var splats = 0;
+            while (audio.MoveNext(out _, out var clip))
+                if (clip.FileName == "/Audio/Effects/gib1.ogg") splats++;
+            Assert.That(splats, Is.EqualTo(1), "One orbital impact should play one grotesque splat.");
         });
         await pair.RunTicksSync(2);
         await pair.Server.WaitAssertion(() =>

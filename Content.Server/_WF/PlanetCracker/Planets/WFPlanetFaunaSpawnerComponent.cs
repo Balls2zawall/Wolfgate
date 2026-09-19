@@ -9,4 +9,8 @@ public sealed partial class WFPlanetFaunaSpawnerComponent : Component
 {
     [DataField(required: true)]
     public ProtoId<EntityTablePrototype> Table;
+
+    /// <summary>Living nests remain visible and stop producing encounters when destroyed.</summary>
+    [DataField] public bool KeepEntity;
+    [DataField] public float SpawnDelay = 180f;
 }

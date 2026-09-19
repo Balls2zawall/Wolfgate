@@ -52,6 +52,9 @@ public sealed class PlanetEcologyTest
             var wildlife = 0;
             var rivers = 0;
             var fleshFlora = 0;
+            var tendons = 0;
+            var sacks = 0;
+            var bloodOcean = 0;
             // Widely separated regions, not just the convenient landing location.
             foreach (var offset in new[] { Vector2i.Zero, new Vector2i(4096, -4096), new Vector2i(-4096, 4096) })
             for (var x = -128; x < 128; x += 4)
@@ -66,6 +69,9 @@ public sealed class PlanetEcologyTest
                     rivers++;
                 if (feature is "WFFleshTree" or "WFFleshPolyp")
                     fleshFlora++;
+                if (feature == "WFCarcinomaTendons") tendons++;
+                if (feature == "WFCarcinomaAssimilationSack") sacks++;
+                if (feature == "WFBloodOcean") bloodOcean++;
                 count++;
                 if (feature == null)
                     open++;
@@ -86,6 +92,13 @@ public sealed class PlanetEcologyTest
             Assert.That(rivers, Is.GreaterThan(0), "Themed river channels vanished from this planet's generated terrain.");
             if (name == "Carcinoma")
                 Assert.That(fleshFlora, Is.GreaterThan(0), "Carcinoma must have static flesh groves.");
+            if (name == "Carcinoma")
+            {
+                Assert.That(tendons, Is.GreaterThan(0), "Missing tendon forest regions.");
+                Assert.That(sacks, Is.GreaterThan(0), "Missing assimilation sacks.");
+                Assert.That(bloodOcean, Is.GreaterThan(0), "Missing blood ocean regions.");
+                TestContext.Out.WriteLine($"Tendons {tendons}, sacks {sacks}, blood ocean {bloodOcean}");
+            }
             Assert.That(wildlife, Is.GreaterThan(0), "No ambient wildlife was reachable through the terrain layers.");
             Assert.That((double) wildlife / count, Is.LessThan(0.02), "Wildlife must not flood loaded regions.");
 

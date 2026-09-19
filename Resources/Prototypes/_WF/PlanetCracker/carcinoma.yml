@@ -99,12 +99,33 @@
     template: WFCarcinomaGrove
     threshold: 0.4
     noise: { seed: 16, noiseType: OpenSimplex2, frequency: 0.018 }
+  - !type:BiomeMetaLayer
+    template: WFCarcinomaTendonForest
+    threshold: 0.45
+    noise: { seed: 51, noiseType: OpenSimplex2, frequency: 0.012 }
+  - !type:BiomeEntityLayer
+    allowedTiles: [WFFloorFlesh, FloorFlesh]
+    entities: [WFCarcinomaAssimilationSack]
+    threshold: 0.985
+    noise: { seed: 57, noiseType: OpenSimplex2, frequency: 0.6 }
+  # One-shot nests stay sparse. The later river layer wins on overlapping cells, keeping them out of blood channels.
+  - !type:BiomeEntityLayer
+    allowedTiles: [WFFloorFlesh, FloorFlesh]
+    entities: [WFFleshPustule]
+    threshold: 0.985
+    noise: { seed: 43, noiseType: OpenSimplex2, frequency: 0.35 }
   # Rivers win over walls/trees/fauna; they are static water effects, not spreading reagent puddles.
   - !type:BiomeEntityLayer
     allowedTiles: [WFFloorFlesh, FloorFlesh]
     entities: [WFBloodRiver]
     threshold: 0.94
     noise: { seed: 3, noiseType: OpenSimplex2, frequency: 0.008, fractalType: Ridged, octaves: 1 }
+
+  # Broad seas override all terrestrial features, as on Asclepiu.
+  - !type:BiomeMetaLayer
+    template: WFCarcinomaBloodOcean
+    threshold: 0.45
+    noise: { seed: 61, frequency: 0.002, noiseType: OpenSimplex2, fractalType: FBm, octaves: 2, lacunarity: 2 }
 
 - type: biomeTemplate
   id: WFCarcinomaGrove
@@ -179,6 +200,12 @@
   id: WFFaunaCarcinoma
   table: !type:GroupSelector
     children:
+    - !type:NestedSelector
+      tableId: WFCarcinomaAberrantFlesh
+      weight: 5
+    - !type:NestedSelector
+      tableId: WFCarcinomaNewbornFlesh
+      weight: 2
     - id: MobLetoferolBeast
       weight: 9
     - id: MobLetoferolHorror

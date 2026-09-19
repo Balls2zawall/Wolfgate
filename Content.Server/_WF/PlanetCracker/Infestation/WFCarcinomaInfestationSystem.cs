@@ -1,4 +1,5 @@
 using System.Linq;
+using Robust.Shared.Audio.Systems;
 using Content.Server._CE.ZLevels.Core;
 using Content.Server._NF.Shuttles.Components;
 using Content.Server.Atmos.Components;
@@ -8,6 +9,8 @@ using Content.Shared._WF.PlanetCracker.Flight;
 using Content.Shared._WF.PlanetCracker.Planets;
 using Content.Shared.Damage;
 using Content.Shared.Examine;
+using Content.Shared.Tag;
+using Content.Shared.Doors.Components;
 using Robust.Shared.Map;
 using Robust.Shared.Map.Components;
 using Robust.Shared.Physics;
@@ -28,6 +31,10 @@ public sealed partial class WFCarcinomaInfestationSystem : EntitySystem
     [Dependency] private SharedPhysicsSystem _physics = default!;
     [Dependency] private CEZLevelsSystem _z = default!;
     [Dependency] private WFPlanetBiomassSystem _biomass = default!;
+    [Dependency] private TagSystem _tags = default!;
+    private static readonly ProtoId<TagPrototype> WallTag = "Wall";
+    private static readonly EntProtoId MeatWall = "WallMeat";
+    [Dependency] private SharedAudioSystem _audio = default!;
     public const int MaxTendrils = 4;
     private static readonly EntProtoId Tendril = "WFCarcinomaHullTendril";
     private static readonly EntProtoId Flesh = "ChimeraFleshKudzu";
@@ -135,6 +142,29 @@ public sealed partial class WFCarcinomaInfestationSystem : EntitySystem
             _physics.SetBodyType(hull, state.PreviousBodyType, body: body);
     }
 
+    /// <summary>Convert only the immediate 3x3 hull neighborhood, never the terrain underneath.</summary>
+    private void ConvertNearbyWalls(EntityUid hull, MapGridComponent grid, Vector2i centre)
+    {
+        var walls = new HashSet<EntityUid>();
+        for (var x = -1; x <= 1; x++)
+        for (var y = -1; y <= 1; y++)
+        {
+            var anchored = _map.GetAnchoredEntitiesEnumerator(hull, grid, centre + new Vector2i(x, y));
+            while (anchored.MoveNext(out var entity))
+            {
+                if (entity is { } wall && _tags.HasTag(wall, WallTag) && !HasComp<DoorComponent>(wall)
+                    && MetaData(wall).EntityPrototype?.ID != MeatWall.Id)
+                    walls.Add(wall);
+            }
+        }
+        // Finish enumeration before replacing anchored entities. Keep the opening sealed with its new wall.
+        foreach (var wall in walls)
+        {
+            Spawn(MeatWall, Transform(wall).Coordinates);
+            Del(wall);
+        }
+    }
+
     private void Grow(EntityUid hull, MapGridComponent grid, WFCarcinomaInfestationComponent state)
     {
         var perimeter = _map.GetAllTiles(hull, grid).Where(tile => !tile.Tile.IsEmpty
@@ -150,6 +180,8 @@ public sealed partial class WFCarcinomaInfestationSystem : EntitySystem
             var tendril = Spawn(Tendril, _map.GridTileToLocal(hull, grid, tile.GridIndices));
             Comp<WFCarcinomaTendrilComponent>(tendril).Hull = hull;
             state.Tendrils.Add(tendril);
+            _audio.PlayPvs(Comp<WFCarcinomaTendrilComponent>(tendril).DeploySound, tendril);
+            ConvertNearbyWalls(hull, grid, tile.GridIndices);
             if (!state.Held && TryComp<PhysicsComponent>(hull, out var physics))
             {
                 state.PreviousBodyType = physics.BodyType;

@@ -34,4 +34,21 @@
       behaviors:
       - !type:DoActsBehavior
         acts: [Destruction]
+  - type: AmbientSound
+    enabled: true
+    sound:
+      path: /Audio/_WF/PlanetCracker/Planets/carcinoma/anchoring_tendril_loop.ogg
+    range: 8
+    volume: -12
   - type: WFCarcinomaTendril
+    deploySound:
+      collection: WFTendrilDeploy
+      params:
+        volume: -6
+
+- type: soundCollection
+  id: WFTendrilDeploy
+  files:
+  - /Audio/_WF/PlanetCracker/Planets/carcinoma/tendril_deploy_1.ogg
+  - /Audio/_WF/PlanetCracker/Planets/carcinoma/tendril_deploy_2.ogg
+  - /Audio/_WF/PlanetCracker/Planets/carcinoma/tendril_deploy_3.ogg

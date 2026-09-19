@@ -97,10 +97,14 @@
   nightLoops:
   - path: /Audio/_WF/PlanetCracker/Planets/carcinoma/carcinoma_ambience_night_loop_1.ogg
   - path: /Audio/_WF/PlanetCracker/Planets/carcinoma/carcinoma_ambience_night_loop_2.ogg
-  oneShots:
+  dayOneShots:
   - path: /Audio/_WF/PlanetCracker/Planets/carcinoma/carcinoma_random_sound_1.ogg
   - path: /Audio/_WF/PlanetCracker/Planets/carcinoma/carcinoma_random_sound_2.ogg
   - path: /Audio/_WF/PlanetCracker/Planets/carcinoma/carcinoma_random_sound_3.ogg
+  nightOneShots:
+  - path: /Audio/_WF/PlanetCracker/Planets/carcinoma/carcinoma_random_sound_night_1.ogg
+  - path: /Audio/_WF/PlanetCracker/Planets/carcinoma/carcinoma_random_sound_night_2.ogg
+  - path: /Audio/_WF/PlanetCracker/Planets/carcinoma/carcinoma_random_sound_night_3.ogg
   loopVolume: -8
   oneShotVolume: -8
   hullVolumeOffset: -8

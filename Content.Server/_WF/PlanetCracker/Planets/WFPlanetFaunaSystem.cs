@@ -39,6 +39,8 @@ public sealed partial class WFPlanetFaunaSystem : EntitySystem
         public readonly EntityCoordinates Coordinates = coordinates;
         public readonly ProtoId<EntityTablePrototype> Table = table;
         public TimeSpan NextSpawn;
+        public EntityUid? Source;
+        public TimeSpan Cooldown = SiteCooldown;
         public LinkedListNode<(EntityUid, Vector2i)>? Order;
     }
 
@@ -72,14 +74,20 @@ public sealed partial class WFPlanetFaunaSystem : EntitySystem
 
     private void OnMapInit(Entity<WFPlanetFaunaSpawnerComponent> ent, ref MapInitEvent args)
     {
-        QueueDel(ent);
+        if (!ent.Comp.KeepEntity)
+            QueueDel(ent);
         var xform = Transform(ent);
         if (xform.MapUid is not { } ground || !HasComp<BiomeComponent>(ground))
             return;
         var coordinates = _transform.WithEntityId(xform.Coordinates, ground);
         var cell = new Vector2i((int)MathF.Floor(coordinates.X / 8), (int)MathF.Floor(coordinates.Y / 8));
-        if (_sites.ContainsKey((ground, cell)))
-            return;
+        if (_sites.TryGetValue((ground, cell), out var existing))
+        {
+            if (!ent.Comp.KeepEntity || existing.Source != null)
+                return;
+            if (existing.Order != null) _siteOrder.Remove(existing.Order);
+            _sites.Remove((ground, cell));
+        }
         if (_sites.Count >= MaxSites)
         {
             // Oldest discovered site yields to newly explored terrain; no terrain is loaded here.
@@ -90,6 +98,12 @@ public sealed partial class WFPlanetFaunaSystem : EntitySystem
             }
         }
         var site = new Site(coordinates, ent.Comp.Table);
+        if (ent.Comp.KeepEntity)
+        {
+            site.Source = ent.Owner;
+            site.Cooldown = TimeSpan.FromSeconds(ent.Comp.SpawnDelay);
+            site.NextSpawn = _timing.CurTime + site.Cooldown;
+        }
         site.Order = _siteOrder.AddLast((ground, cell));
         _sites.Add((ground, cell), site);
     }
@@ -153,7 +167,9 @@ public sealed partial class WFPlanetFaunaSystem : EntitySystem
         foreach (var uid in _expired)
             _living.Remove(uid);
         foreach (var key in new List<(EntityUid, Vector2i)>(_sites.Keys))
-            if (TerminatingOrDeleted(key.Item1))
+            if (TerminatingOrDeleted(key.Item1) ||
+                _sites[key].Source is { } source &&
+                (TerminatingOrDeleted(source) || Transform(source).ParentUid != key.Item1))
             {
                 if (_sites[key].Order is { } order)
                     _siteOrder.Remove(order);
@@ -164,7 +180,7 @@ public sealed partial class WFPlanetFaunaSystem : EntitySystem
         foreach (var site in _sites.Values)
         {
             if (site.NextSpawn <= _timing.CurTime && NearObserver(site.Coordinates, visitors, 64) &&
-                !NearObserver(site.Coordinates, observers, 24))
+                (site.Source != null || !NearObserver(site.Coordinates, observers, 24)))
                 candidates.Add(site);
         }
         var spawned = 0;
@@ -189,16 +205,33 @@ public sealed partial class WFPlanetFaunaSystem : EntitySystem
             }
             if (_living.Count >= MaxTotal || local >= MaxPerPlanet || nearby >= MaxNearby)
                 continue;
-            var tile = _turf.GetTileRef(site.Coordinates);
+            var spawnCoordinates = site.Coordinates;
+            // A sack occupies its own tile. Try a bounded ring beside it, never inside a wall.
+            if (site.Source != null)
+            {
+                var found = false;
+                for (var i = 0; i < 8; i++)
+                {
+                    var angle = i * MathF.Tau / 8;
+                    var candidate = site.Coordinates.Offset(new Vector2(MathF.Cos(angle), MathF.Sin(angle)) * 2);
+                    if (_turf.GetTileRef(candidate) is not { } nearbyTile || nearbyTile.GridUid != ground ||
+                        nearbyTile.Tile.IsEmpty || _turf.IsTileBlocked(nearbyTile, CollisionGroup.MobMask)) continue;
+                    spawnCoordinates = candidate;
+                    found = true;
+                    break;
+                }
+                if (!found) continue;
+            }
+            var tile = _turf.GetTileRef(spawnCoordinates);
             if (tile is not { } turf || turf.GridUid != ground || turf.Tile.IsEmpty ||
                 _turf.IsTileBlocked(turf, CollisionGroup.MobMask))
                 continue;
-            site.NextSpawn = _timing.CurTime + SiteCooldown;
+            site.NextSpawn = _timing.CurTime + site.Cooldown;
             foreach (var prototype in _tables.GetSpawns(_proto.Index(site.Table).Table))
             {
                 if (_living.Count >= MaxTotal || local >= MaxPerPlanet || nearby >= MaxNearby || spawned >= 4)
                     break;
-                var uid = EntityManager.CreateEntityUninitialized(prototype, site.Coordinates);
+                var uid = EntityManager.CreateEntityUninitialized(prototype, spawnCoordinates);
                 RemComp<GhostRoleComponent>(uid);
                 RemComp<GhostTakeoverAvailableComponent>(uid);
                 EntityManager.InitializeAndStartEntity(uid);

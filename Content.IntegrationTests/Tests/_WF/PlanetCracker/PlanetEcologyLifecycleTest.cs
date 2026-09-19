@@ -25,6 +25,52 @@ namespace Content.IntegrationTests.Tests._WF.PlanetCracker;
 public sealed class PlanetEcologyLifecycleTest
 {
     [Test]
+    public async Task AssimilationSacksShareFaunaCapsAndStopWhenDestroyed()
+    {
+        await using var pair = await PoolManager.GetServerClient();
+        await EnableFeature(pair);
+        var layers = await BuildStandalone(pair);
+        var server = pair.Server;
+        var em = server.EntMan;
+        EntityUid sack = default;
+        var offspring = new List<EntityUid>();
+        var ground = layers[0];
+        await server.WaitAssertion(() =>
+        {
+            var maps = server.System<SharedMapSystem>();
+            var grid = em.GetComponent<MapGridComponent>(ground);
+            var tile = server.ResolveDependency<ITileDefinitionManager>()["WFFloorFlesh"].TileId;
+            for (var x = -5; x <= 5; x++)
+            for (var y = -5; y <= 5; y++)
+                maps.SetTile(ground, grid, new Vector2i(x, y), new Tile(tile));
+            sack = em.CreateEntityUninitialized("WFCarcinomaAssimilationSack", new EntityCoordinates(ground, new Vector2(0.5f)));
+            var spawner = em.GetComponent<WFPlanetFaunaSpawnerComponent>(sack);
+            Assert.That(spawner.SpawnDelay, Is.EqualTo(240));
+            // Accelerate only this fixture; production nests wait four minutes between attempts.
+            spawner.SpawnDelay = 0;
+            em.InitializeAndStartEntity(sack);
+            Assert.That(em.HasComponent<Content.Server.Spawners.Components.TimedSpawnerComponent>(sack), Is.False);
+            var forest = em.SpawnEntity("WFCarcinomaTendons", new EntityCoordinates(ground, new Vector2(4.5f)));
+            Assert.That(em.HasComponent<Content.Server.Spreader.KudzuComponent>(forest), Is.False);
+            var viewers = new[] { new EntityCoordinates(ground, new Vector2(10, 0)) };
+            for (var i = 0; i < 12; i++) server.System<WFPlanetFaunaSystem>().RefreshPopulation(viewers);
+            var query = em.EntityQueryEnumerator<WFPlanetWildlifeComponent>();
+            while (query.MoveNext(out var uid, out var wild))
+                if (wild.Ground == ground) offspring.Add(uid);
+            Assert.That(offspring.Count, Is.EqualTo(WFPlanetFaunaSystem.MaxNearby));
+            Assert.That(em.EntityExists(sack), Is.True, "Registering a persistent nest must not delete it.");
+            em.DeleteEntity(sack);
+            foreach (var uid in offspring) em.DeleteEntity(uid);
+            server.System<WFPlanetFaunaSystem>().RefreshPopulation(viewers);
+            var remaining = em.EntityQueryEnumerator<WFPlanetWildlifeComponent>();
+            while (remaining.MoveNext(out _, out var wild))
+                Assert.That(wild.Ground, Is.Not.EqualTo(ground), "Destroyed sack still spawned wildlife.");
+        });
+        await Teardown(pair, layers);
+        await pair.CleanReturnAsync();
+    }
+
+    [Test]
     public async Task ExplorationReplenishesDistantWildlifeButPreservesTouchedAnimals()
     {
         await using var pair = await PoolManager.GetServerClient();
