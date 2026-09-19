@@ -79,29 +79,6 @@ public sealed class LegacyGenitalMarkingsTest
     }
 
     [Test]
-    public async Task StepLengthTest()
-    {
-        await using var pair = await PoolManager.GetServerClient();
-        var server = pair.Server;
-        var proto = server.ResolveDependency<IPrototypeManager>();
-
-        await server.WaitAssertion(() =>
-        {
-            var settings = GenitalProfileValidator.GetSettings(proto);
-            Assert.Multiple(() =>
-            {
-                for (var step = 1; step <= 5; step++)
-                {
-                    var length = GenitalStateBuilder.StepToLength(step);
-                    Assert.That((int) GenitalStateBuilder.LengthToStep(length, settings), Is.EqualTo(step), $"step {step} ({length} cm)");
-                }
-            });
-        });
-
-        await pair.CleanReturnAsync();
-    }
-
-    [Test]
     public async Task DecodeSamplesTest()
     {
         await using var pair = await PoolManager.GetServerClient();

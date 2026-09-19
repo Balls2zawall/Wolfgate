@@ -17,7 +17,9 @@ public sealed class InternetSoundResourcesTest
     public void RegistryDoesNotKeepDiscardedResourceManagersAlive()
     {
         var manager = new Mock<IResourceManager>().Object;
-        Assert.That(InternetSoundResources.For(manager), Is.SameAs(InternetSoundResources.For(manager)),
+        var mounted = InternetSoundResources.For(manager);
+        var reused = InternetSoundResources.For(manager);
+        Assert.That(reused, Is.SameAs(mounted),
             "A live manager must reuse its mounted root across reconnects.");
         var discarded = CreateDiscardedManager();
         GC.Collect();

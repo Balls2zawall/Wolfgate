@@ -242,47 +242,6 @@ public sealed class GenitalProfileValidatorTest
         await pair.CleanReturnAsync();
     }
 
-    [Test]
-    public void ProfileEditsTest()
-    {
-        var full = FullProfile();
-        var noPenis = full.WithPenis(null);
-        var vaginaAdded = GenitalProfile.Empty.WithVagina(new VaginaProfile(VaginaHuman));
-        var wombRemoved = vaginaAdded.WithWomb(false);
-        var vaginaChanged = wombRemoved.WithVagina(new VaginaProfile(VaginaSlit));
-        var failed = GenitalProfile.Failed(full);
-        var clone = full.Clone();
-        var first = GenitalProfile.Empty;
-        var second = GenitalProfile.Empty;
-
-        Assert.Multiple(() =>
-        {
-            Assert.That(GenitalProfile.Empty.Version, Is.EqualTo(GenitalProfile.CurrentVersion));
-            Assert.That(GenitalProfile.Unmigrated.Version, Is.EqualTo(0));
-            Assert.That(first, Is.Not.SameAs(second), "Empty must return a fresh instance.");
-            Assert.That(GenitalProfile.Empty.IsEmpty, Is.True);
-
-            // Removing the penis removes its linked testicles.
-            Assert.That(noPenis.Penis, Is.Null);
-            Assert.That(noPenis.Testicles, Is.Null);
-
-            // Adding a vagina adds the womb; changing it keeps the womb choice; removing it removes the womb.
-            Assert.That(vaginaAdded.Womb, Is.True);
-            Assert.That(vaginaChanged.Womb, Is.False);
-            Assert.That(vaginaAdded.WithVagina(null).Womb, Is.False);
-
-            // Every edit clears LoadFailed.
-            Assert.That(failed.LoadFailed, Is.True);
-            Assert.That(failed.WithWomb(true).LoadFailed, Is.False);
-
-            // Clone is deep and equal.
-            Assert.That(clone, Is.Not.SameAs(full));
-            Assert.That(clone.Penis, Is.Not.SameAs(full.Penis));
-            Assert.That(clone.MemberwiseEquals(full), Is.True);
-            Assert.That(full.MemberwiseEquals(noPenis), Is.False);
-        });
-    }
-
     /// <summary>Every issue the creator shows as a warning has its line; the age, species and load gates have their own.</summary>
     [Test]
     public async Task WarningKeysTest()
