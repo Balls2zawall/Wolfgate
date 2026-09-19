@@ -366,3 +366,10 @@ Do not report these.
 - Ambient encounters include the native aberrant flesh roster (Jared, golems, clamps, lovers, newborn variants and rare assimilated miners) alongside Chimera. They use the existing capped encounter system rather than spawning uncounted NPCs from markers.
 - Assimilation sacks produce a newborn encounter at most once per four minutes while visitors are nearby and population capacity is available. They share the 4-nearby / 32-per-planet / 128-total wildlife limits. Destroying a sack stops its spawning; no independent endless spawner runs on it.
 - With a hull held by tendrils, pressing Liftoff displays the remaining tendril count and the instruction to cut/destroy them. This is an attempted-liftoff popup, not a persistent cockpit warning.
+
+## Imported flesh trees and harvested pustules
+
+- Normal flesh trees choose randomly from the twelve replacement ordinary 64x64 frames. Pustule trees use frame 10 before harvest and frame 11 afterwards; the old shadow-tree recolour is no longer used.
+- Click a pustule tree with an empty hand: receive exactly one flesh pustule and hear pustule_pop. Repeat harvesting gives nothing. Harvested terrain is pinned so leaving/re-entering cannot refill it.
+- Eat the item for 15 units Natural Letoferol and 5 Nutriment in one bite. Click clear ground within two tiles to plant a normal nest, or throw it to trigger the usual nest-breaking sound, Letoferol spill and three ticks on impact. Merely dropping it does not pop it.
+- Impact bursts still pop at the population cap, but omit tick spawning when capacity is exhausted; they never leave an armed grenade behind or bypass the cap.

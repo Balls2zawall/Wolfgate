@@ -177,10 +177,10 @@
             min: 1
             max: 2
 
-# Preserve the riverbed's indestructible terrain using the existing red-sand artwork.
+# Preserve the riverbed's indestructible terrain using the visually verified rust-red iron-sand artwork.
 - type: tile
   id: WFBloodOceanSeabed
-  parent: FloorAsteroidSandRed
+  parent: FloorAsteroidIronsand
   indestructible: true
   footstepSounds:
     collection: FootstepWater

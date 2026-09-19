@@ -52,6 +52,8 @@ public sealed class PlanetEcologyTest
             var wildlife = 0;
             var rivers = 0;
             var fleshFlora = 0;
+            var pustuleTrees = 0;
+            var ordinaryTrees = 0;
             var tendons = 0;
             var sacks = 0;
             var bloodOcean = 0;
@@ -67,8 +69,10 @@ public sealed class PlanetEcologyTest
                     (Entity<MapGridComponent>?) null, out var feature);
                 if (feature is "FloorLavaEntity" or "FloorLiquidPlasmaEntity" or "MonoFloorWaterEntity" or "WFBloodRiver")
                     rivers++;
-                if (feature is "WFFleshTree" or "WFFleshPolyp")
+                if (feature is "WFFleshTree" or "WFFleshPustuleTree" or "WFFleshPolyp")
                     fleshFlora++;
+                if (feature == "WFFleshPustuleTree") pustuleTrees++;
+                if (feature == "WFFleshTree") ordinaryTrees++;
                 if (feature == "WFCarcinomaTendons") tendons++;
                 if (feature == "WFCarcinomaAssimilationSack") sacks++;
                 if (feature == "WFBloodOcean") bloodOcean++;
@@ -94,6 +98,10 @@ public sealed class PlanetEcologyTest
                 Assert.That(fleshFlora, Is.GreaterThan(0), "Carcinoma must have static flesh groves.");
             if (name == "Carcinoma")
             {
+                Assert.That(pustuleTrees, Is.GreaterThan(0), "Harvestable trees must be reachable through the terrain layers.");
+                TestContext.Out.WriteLine($"Ordinary trees: {ordinaryTrees}, pustule trees: {pustuleTrees}");
+                Assert.That((double) pustuleTrees / (ordinaryTrees + pustuleTrees), Is.LessThan(0.15),
+                    "Harvestable trees should be a rare minority of the grove.");
                 Assert.That(tendons, Is.GreaterThan(0), "Missing tendon forest regions.");
                 Assert.That(sacks, Is.GreaterThan(0), "Missing assimilation sacks.");
                 Assert.That(bloodOcean, Is.GreaterThan(0), "Missing blood ocean regions.");

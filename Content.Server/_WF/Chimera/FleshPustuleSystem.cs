@@ -105,13 +105,14 @@ public sealed partial class WFFleshPustuleSystem : EntitySystem
     }
 
     /// <summary>Burst once and create exactly three ticks, or wait intact while the population guard is full.</summary>
-    public bool TryBurst(Entity<WFFleshPustuleComponent> ent)
+    public bool TryBurst(Entity<WFFleshPustuleComponent> ent, bool forceImpact = false)
     {
         if (ent.Comp.Bursted)
             return false;
 
         var ground = PopulationRoot(ent);
-        if (!HasTickCapacity(ground))
+        var hasCapacity = HasTickCapacity(ground);
+        if (!hasCapacity && !forceImpact)
             return false;
 
         ent.Comp.Bursted = true;
@@ -126,7 +127,7 @@ public sealed partial class WFFleshPustuleSystem : EntitySystem
             out _);
 
         var coordinates = Transform(ent).Coordinates;
-        for (var i = 0; i < TicksPerBurst; i++)
+        for (var i = 0; hasCapacity && i < TicksPerBurst; i++)
         {
             var tick = Spawn(TickPrototype, coordinates);
             EnsureComp<WFFleshPustuleSpawnedTickComponent>(tick).Ground = ground;

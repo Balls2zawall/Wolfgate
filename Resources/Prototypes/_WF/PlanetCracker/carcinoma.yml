@@ -132,18 +132,36 @@
   layers:
   - !type:BiomeEntityLayer
     allowedTiles: [WFFloorFlesh, FloorFlesh]
-    entities: [WFFleshTree, WFFleshPolyp]
-    threshold: 0.65
+    entities: [WFFleshTree]
+    threshold: 0.84
     noise: { seed: 5, noiseType: OpenSimplex2, frequency: 1 }
+  # Independent placement keeps harvestable trees from being lost in the noise-based variant selection.
+  - !type:BiomeEntityLayer
+    allowedTiles: [WFFloorFlesh, FloorFlesh]
+    entities: [WFFleshPustuleTree]
+    threshold: 0.98
+    noise: { seed: 73, noiseType: OpenSimplex2, frequency: 1 }
+  - !type:BiomeEntityLayer
+    allowedTiles: [WFFloorFlesh, FloorFlesh]
+    entities: [WFFleshPolyp]
+    threshold: 0.96
+    noise: { seed: 74, noiseType: OpenSimplex2, frequency: 1 }
 
 - type: entity
-  id: WFFleshTree
-  parent: ShadowTree
+  id: WFFleshTreeBase
+  abstract: true
+  parent: BaseTree
   name: flesh tree
   description: Veined limbs reach from a trunk of living meat. Its swollen branches twitch in the wind.
   components:
+  - type: Transform
+    anchored: true
   - type: Sprite
-    color: "#d88c92"
+    sprite: _WF/PlanetCracker/Structures/flesh_trees.rsi
+    offset: 0,0.5
+    layers:
+    - state: tree01
+      map: ["tree"]
   - type: Destructible
     thresholds:
     - trigger: !type:DamageTrigger
