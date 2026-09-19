@@ -133,6 +133,14 @@ public sealed class TailSplitFunctionalityTest
                 }
             });
 
+            // Protogen profiles must also retain the color saved before their tail gained a linked half.
+            var protogen = MakeProfile("Protogen");
+            var protogenAppearance = protogen.Appearance.WithMarkings(
+                new List<Marking> { new("ProtogenTail", new List<Color> { Palette[0] }) });
+            var validProtogen = HumanoidCharacterAppearance.EnsureValid(protogenAppearance, "Protogen", protogen.Sex);
+            Assert.That(validProtogen.Markings.Single(m => m.MarkingId == "ProtogenTail").MarkingColors,
+                Is.EqualTo(new[] { Palette[0], Palette[0] }));
+
             // The profile and humanoid path: one saved colour on a split tail reaches every layer of the loaded mob.
             var chosen = LiveSplitTail(pair, proto);
             Assert.That(chosen, Is.Not.Null, $"No split tail marking is allowed on {TestSpecies}.");
