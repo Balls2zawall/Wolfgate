@@ -322,6 +322,19 @@ public sealed class FlightTest
                 if (!entMan.TryGetComponent<ShipAlertComponent>(hull, out var alert))
                     return;
 
+                // Working PA now replicates a timeline for client-side playback instead of server audio entities.
+                if (speakerPower == 1 && entMan.TryGetComponent<ShipPaBroadcastComponent>(hull, out var broadcasts))
+                {
+                    foreach (var broadcast in broadcasts.Broadcasts)
+                    foreach (var voice in voices)
+                    {
+                        if (broadcast.Path != $"/Audio/_WF/PlanetCracker/Flight/{voice}.ogg")
+                            continue;
+                        Assert.That(broadcast.Length, Is.GreaterThan(0f), "PA voice must resolve playable audio.");
+                        heard.Add(voice);
+                    }
+                }
+
                 var audioQuery = entMan.EntityQueryEnumerator<AudioComponent>();
                 while (audioQuery.MoveNext(out var audio))
                 {
@@ -360,7 +373,7 @@ public sealed class FlightTest
         Assert.That(seen, Is.EqualTo(expected),
             $"The flight alarms did not walk orbit to ground and back: {string.Join(" -> ", seen)}");
 
-        Assert.That(heard, Is.EquivalentTo(voices), "Every staged GPWS voice must actually produce audio, not just change the alert code.");
+        Assert.That(heard, Is.EquivalentTo(voices), "Every staged GPWS voice must schedule PA playback or produce fallback audio, not just change the alert code.");
 
         await Teardown(pair, layers);
         await pair.CleanReturnAsync();
