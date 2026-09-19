@@ -27,6 +27,17 @@ public sealed partial class WFConsoleOrbitTargetComponent : Component
     public bool Busy;
 
     /// <summary>
+    /// True while this hull is grounded on a planet layer. This is only presentation state: blockers are deliberately
+    /// not folded into it, so pressing the available button can return the authoritative refusal.
+    /// </summary>
+    [DataField, AutoNetworkedField]
+    public bool LiftoffAvailable;
+
+    /// <summary>True while the server is feeding latched upward input to this hull.</summary>
+    [DataField, AutoNetworkedField]
+    public bool LiftoffActive;
+
+    /// <summary>
     /// Prospective atmosphere thrust from all working linear engines (normal: 0.5, converted: 1), divided by
     /// hull mass, 9.81 and planetary gravity, computed server-side; 1 is level flight. Only
     /// meaningful while <see cref="InOrbit"/>, which is the one place the descent decision is taken.

@@ -1,6 +1,7 @@
 using System.Diagnostics.CodeAnalysis;
 using Content.Server.Shuttles.Components;
 using Content.Server.Shuttles.Systems;
+using Content.Server._WF.PlanetCracker.Flight;
 using Content.Shared._CE.ZLevels.Core.Components;
 using Content.Shared._WF.CCVar;
 using Content.Shared._WF.PlanetCracker.Flight;
@@ -46,6 +47,7 @@ public sealed partial class WFOrbitEntrySystem : EntitySystem
             subs.Event<WFEnterPlanetOrbitMessage>(OnEnterOrbitMessage);
             subs.Event<WFLeavePlanetOrbitMessage>(OnLeaveOrbitMessage);
             subs.Event<WFEnterAtmosphereMessage>(OnEnterAtmosphereMessage);
+            subs.Event<WFLiftoffMessage>(OnLiftoffMessage);
         });
     }
 
@@ -83,20 +85,6 @@ public sealed partial class WFOrbitEntrySystem : EntitySystem
             }
         }
 
-        // Nothing to offer anywhere: sweep only what is already stamped rather than every console in the sector.
-        // A standalone dev network has no sector body, so its orbit layer offers no climb out either.
-        if (_bodies.Count == 0)
-        {
-            var stale = AllEntityQuery<WFConsoleOrbitTargetComponent>();
-
-            while (stale.MoveNext(out var uid, out _))
-            {
-                RemCompDeferred<WFConsoleOrbitTargetComponent>(uid);
-            }
-
-            return;
-        }
-
         var consoles = AllEntityQuery<ShuttleConsoleComponent, TransformComponent>();
 
         while (consoles.MoveNext(out var uid, out _, out var xform))
@@ -112,6 +100,8 @@ public sealed partial class WFOrbitEntrySystem : EntitySystem
         var planetName = string.Empty;
         var inOrbit = false;
         var busy = false;
+        var liftoffAvailable = false;
+        var liftoffActive = false;
         var liftRatio = 0f;
         var atmospherePower = 0f;
         var powerDeficit = false;
@@ -120,6 +110,8 @@ public sealed partial class WFOrbitEntrySystem : EntitySystem
         if (xform.GridUid is { } grid && HasComp<ShuttleComponent>(grid) && Transform(grid).MapUid is { } mapUid)
         {
             busy = HasComp<FTLComponent>(grid);
+            liftoffAvailable = _zLevels.WfCanOfferLiftoff(grid);
+            liftoffActive = HasComp<WFLiftoffComponent>(grid);
 
             if (TryComp<WFOrbitLayerComponent>(mapUid, out var orbit))
             {
@@ -131,24 +123,31 @@ public sealed partial class WFOrbitEntrySystem : EntitySystem
                     planet = netPlanet;
                     planetName = Name(body.Value);
 
-                    // The descent decision lives on this button, so the number it is taken against is computed here
-                    // rather than guessed at by the client, which cannot see a thruster's power state at all.
-                    _zLevels.WfTryGetLiftRatio(grid, out liftRatio);
-                    _zLevels.WfGetAtmospherePower(grid, out atmospherePower, out powerDeficit);
-
                     // F11: the countdown is the decay system's, and this is the only sweep a console reads from.
                     if (TryComp<WFOrbitDecayComponent>(grid, out var decay) && decay.Announced)
                         decaySeconds = MathF.Max(0f, (float) (decay.DecayAt - _timing.CurTime).TotalSeconds);
                 }
+            }
+            else if ((liftoffAvailable || liftoffActive) && TryGetLiftoffPlanet(mapUid, out var liftoffPlanet))
+            {
+                planet = GetNetEntity(liftoffPlanet);
+                planetName = Name(liftoffPlanet);
             }
             else if (TryGetNearestBody(grid, mapUid, out var nearest))
             {
                 planet = GetNetEntity(nearest.Value);
                 planetName = Name(nearest.Value);
             }
+
+            if (inOrbit || liftoffAvailable || liftoffActive)
+            {
+                // Both atmosphere entry and liftoff make their decision against this server-side reading.
+                _zLevels.WfTryGetLiftRatio(grid, out liftRatio);
+                _zLevels.WfGetAtmospherePower(grid, out atmospherePower, out powerDeficit);
+            }
         }
 
-        if (planet is null && !inOrbit)
+        if (planet is null && !inOrbit && !liftoffAvailable && !liftoffActive)
         {
             RemCompDeferred<WFConsoleOrbitTargetComponent>(console);
             return;
@@ -160,6 +159,8 @@ public sealed partial class WFOrbitEntrySystem : EntitySystem
             && comp.PlanetName == planetName
             && comp.InOrbit == inOrbit
             && comp.Busy == busy
+            && comp.LiftoffAvailable == liftoffAvailable
+            && comp.LiftoffActive == liftoffActive
             && MathF.Abs(comp.AtmospherePowerDemand - atmospherePower) < 1f
             && comp.AtmospherePowerDeficit == powerDeficit
             && MathF.Abs(comp.LiftRatio - liftRatio) < LiftRatioEpsilon
@@ -172,6 +173,8 @@ public sealed partial class WFOrbitEntrySystem : EntitySystem
         comp.PlanetName = planetName;
         comp.InOrbit = inOrbit;
         comp.Busy = busy;
+        comp.LiftoffAvailable = liftoffAvailable;
+        comp.LiftoffActive = liftoffActive;
         comp.LiftRatio = liftRatio;
         comp.AtmospherePowerDemand = atmospherePower;
         comp.AtmospherePowerDeficit = powerDeficit;

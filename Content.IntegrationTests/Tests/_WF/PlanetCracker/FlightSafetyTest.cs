@@ -1,10 +1,12 @@
 #nullable enable
+using Content.Shared.Shuttles.Components;
 using System.Numerics;
 using System.Collections.Generic;
 using Content.IntegrationTests.Pair;
 using Content.Server._CE.ZLevels.Core;
 using Content.Server._CE.ZLevels.Core.Components;
 using Content.Server._WF.PlanetCracker.Flight;
+using Content.Server.Shuttles.Components;
 using Content.Shared.Gravity;
 using Content.Shared._CE.ZLevels.Core.EntitySystems;
 using Content.Shared.Movement.Systems;
@@ -42,7 +44,21 @@ public sealed class FlightSafetyTest
             gravity.Enabled = true;
             gravity.Inherent = true;
         });
-        await HoldVertical(pair, hull, ShuttleButtons.AscendZ);
+        var pilot = await HoldVertical(pair, hull, ShuttleButtons.None);
+        var console = FindShuttleConsole(entMan, hull);
+        var levels = server.System<CEZLevelsSystem>();
+        var started = true;
+        string? reason = null;
+        await server.WaitPost(() => started = levels.WfTryBeginLiftoff(hull, console, pilot, out reason));
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(started, Is.False, "The Liftoff button accepted a hull without sufficient landing lift.");
+            Assert.That(reason, Is.Not.Null, "The rejected Liftoff request did not explain the insufficient lift.");
+            Assert.That(entMan.HasComponent<WFLiftoffComponent>(hull), Is.False,
+                "A rejected Liftoff request still latched ascent.");
+        }
+
+        await server.WaitPost(() => entMan.GetComponent<PilotComponent>(pilot).HeldButtons = ShuttleButtons.AscendZ);
         for (var second = 0; second < 6; second++)
         {
             await server.WaitRunTicks(pair.SecondsToTicks(1));

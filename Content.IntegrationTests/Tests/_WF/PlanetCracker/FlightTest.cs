@@ -884,12 +884,12 @@ public sealed class FlightTest
     }
 
     /// <summary>
-    /// A hull with the lift to fly climbs from the ground all the way into orbit on the held ascend key alone: every
-    /// air layer, the cloud layer, and the last gap into orbit. A pilot who lifted off and then hung in a gap, unable
-    /// to reach orbit or steer, is what this guards against.
+    /// A hull with the lift to fly climbs from the ground all the way into orbit on one latched Liftoff request: every
+    /// air layer, the cloud layer, and the last gap into orbit. A pilot whose latch stopped feeding the normal CE
+    /// ascent path in a gap, unable to reach orbit, is what this guards against.
     /// </summary>
     [Test]
-    public async Task HeldAscendClimbsFromGroundToOrbit()
+    public async Task LatchedLiftoffClimbsFromGroundToOrbit()
     {
         await using var pair = await PoolManager.GetServerClient();
         var server = pair.Server;
@@ -902,15 +902,23 @@ public sealed class FlightTest
         var orbit = layers[^1];
         var groundMapId = await MapIdOf(pair, ground);
 
+        await LayTiles(pair, ground, new Vector2i(-8, -8), new Vector2i(24, 24));
         var hull = await BuildCracker(pair, groundMapId);
         await MapInitHull(pair, hull);
         await AddLandingThrusters(pair, hull, 3);
-        await HoldVertical(pair, hull, ShuttleButtons.AscendZ);
+        var pilot = await HoldVertical(pair, hull, ShuttleButtons.None);
+        var console = FindShuttleConsole(entMan, hull);
+        var levels = server.System<CEZLevelsSystem>();
+        var started = false;
+        string? reason = null;
+
+        await server.WaitPost(() => started = levels.WfTryBeginLiftoff(hull, console, pilot, out reason));
+        Assert.That(started, Is.True, $"The grounded Liftoff request was refused: {reason}");
 
         var trail = new List<string>();
         var reached = false;
 
-        // The key stays held the whole way: letting go always settled the hull up into orbit, holding on pinned it.
+        // The latch stays engaged the whole way and feeds the same input the old held key did.
         for (var second = 0; second < 45 && !reached; second++)
         {
             await server.WaitRunTicks(pair.SecondsToTicks(1f));
@@ -924,7 +932,7 @@ public sealed class FlightTest
             });
         }
 
-        Assert.That(reached, Is.True, "The hull never reached orbit on a held ascend: " + string.Join(" | ", trail));
+        Assert.That(reached, Is.True, "The hull never reached orbit on latched liftoff: " + string.Join(" | ", trail));
 
         await Teardown(pair, layers);
         await pair.CleanReturnAsync();
@@ -973,7 +981,13 @@ public sealed class FlightTest
         var before = Vector2.Zero;
         await server.WaitPost(() => before = transform.GetWorldPosition(hull));
 
-        await HoldVertical(pair, hull, ShuttleButtons.AscendZ | ShuttleButtons.StrafeRight);
+        var pilot = await HoldVertical(pair, hull, ShuttleButtons.StrafeRight);
+        var console = FindShuttleConsole(entMan, hull);
+        var levels = server.System<CEZLevelsSystem>();
+        var started = false;
+        string? reason = null;
+        await server.WaitPost(() => started = levels.WfTryBeginLiftoff(hull, console, pilot, out reason));
+        Assert.That(started, Is.True, $"The landed hull's Liftoff request was refused: {reason}");
         await server.WaitRunTicks(pair.SecondsToTicks(6f));
 
         await server.WaitAssertion(() =>

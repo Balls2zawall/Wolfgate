@@ -93,7 +93,7 @@ public sealed partial class CEZLevelsSystem
         _pilotVerticalInput.Clear();
 
         var query = EntityQueryEnumerator<PilotComponent>();
-        while (query.MoveNext(out _, out var pilot))
+        while (query.MoveNext(out var pilotUid, out var pilot))
         {
             if (pilot.Console is not { } console || TerminatingOrDeleted(console))
                 continue;
@@ -110,6 +110,10 @@ public sealed partial class CEZLevelsSystem
             if (vertical == 0f)
                 continue;
 
+            // WOLFGATE: grounded planet ascent is a latched console action; airborne input keeps CE's normal control.
+            if (WfHandleLiftoffPilotInput(pilotUid, console, grid, vertical))
+                continue;
+
             // WOLFGATE: an orbit layer is left through the console's enter-atmosphere button, never on the keys (F10).
             if (WfRefusesOrbitInput(grid, vertical))
                 continue;
@@ -117,6 +121,8 @@ public sealed partial class CEZLevelsSystem
             _pilotVerticalInput[grid] =
                 Math.Clamp(_pilotVerticalInput.GetValueOrDefault(grid) + vertical, -1f, 1f);
         }
+
+        WfCollectLiftoffInputs(); // WOLFGATE: a console latch feeds the same CE takeoff spool and flight integrator.
     }
 
     /// <summary>

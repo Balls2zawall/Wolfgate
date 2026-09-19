@@ -178,7 +178,13 @@ public sealed class AtmosphereThrusterTest
             Assert.That(state.PowerLimited, Is.False);
             Assert.That(em.GetComponent<ApcPowerReceiverComponent>(engine).Load, Is.EqualTo(state.RatedLoad));
         });
-        await HoldVertical(pair, hull, Content.Shared.Movement.Systems.ShuttleButtons.AscendZ);
+        var pilot = await HoldVertical(pair, hull, Content.Shared.Movement.Systems.ShuttleButtons.None);
+        var console = FindShuttleConsole(em, hull);
+        var levels = server.System<CEZLevelsSystem>();
+        var started = false;
+        string? reason = null;
+        await server.WaitPost(() => started = levels.WfTryBeginLiftoff(hull, console, pilot, out reason));
+        Assert.That(started, Is.True, $"The wreck's Liftoff request was refused: {reason}");
         await server.WaitRunTicks(pair.SecondsToTicks(0.5f));
         await server.WaitAssertion(() =>
         {

@@ -1,3 +1,4 @@
+#nullable enable
 using System;
 using System.Collections.Generic;
 using System.Numerics;
@@ -6,6 +7,7 @@ using Content.Client.Shuttles.UI;
 using Content.IntegrationTests.Pair;
 using Content.Server._WF.PlanetCracker.Planets;
 using Content.Shared._WF.PlanetCracker.Planets;
+using Content.Shared._CE.ZLevels.Core.Components;
 using Robust.Client.GameObjects;
 using Robust.Client.Graphics;
 using Robust.Shared.GameObjects;
@@ -25,6 +27,8 @@ public sealed class PlanetRadarDrawingTest
         var layers = new List<EntityUid>();
         var netOrbit = default(NetEntity);
         var netAir = default(NetEntity);
+        var netLayers = new List<NetEntity>();
+
         await pair.Server.WaitAssertion(() =>
         {
             var server = pair.Server;
@@ -33,7 +37,12 @@ public sealed class PlanetRadarDrawingTest
             layers.AddRange(server.EntMan.GetComponent<WFPlanetNetworkComponent>(network!.Value).Layers);
             netOrbit = server.EntMan.GetNetEntity(layers[^1]);
             netAir = server.EntMan.GetNetEntity(layers[^2]);
-            server.System<Robust.Server.GameStates.PvsOverrideSystem>().AddGlobalOverride(layers[^2]);
+            foreach (var layer in layers)
+            {
+                netLayers.Add(server.EntMan.GetNetEntity(layer));
+                server.System<Robust.Server.GameStates.PvsOverrideSystem>().AddGlobalOverride(layer);
+            }
+
         });
         await AttachViewer(pair, layers[^1], Vector2.Zero);
         await pair.RunSeconds(2);
@@ -52,6 +61,29 @@ public sealed class PlanetRadarDrawingTest
             Assert.That(handle.VisibleVertices, Is.GreaterThan(0), "Terrain geometry is outside the viewport.");
             Assert.That(handle.Colours.Count, Is.GreaterThan(1), "Basalt alone hides the planet: lava and formations must be sampled too.");
             Assert.That(handle.Brightness, Is.GreaterThan(0.02f), "Terrain is effectively black after colour conversion.");
+            // A fresh radar must draw from every altitude, without cached orbit geometry.
+            foreach (var netMap in netLayers)
+            {
+                using var descendedRadar = new ShuttleNavControl();
+                descendedRadar.Measure(new Vector2(800));
+                descendedRadar.Arrange(new UIBox2(Vector2.Zero, new Vector2(800)));
+                using var descendedHandle = new TerrainHandle();
+                typeof(ShuttleNavControl).GetMethod("DrawWfTerrain", BindingFlags.Instance | BindingFlags.NonPublic)!
+                    .Invoke(descendedRadar, new object?[] { descendedHandle, matrix, pair.Client.EntMan.GetEntity(netMap) });
+                Assert.That(descendedHandle.VisibleVertices, Is.GreaterThan(0), $"No terrain on layer {netMap}.");
+                Assert.That(descendedHandle.Colours.Count, Is.GreaterThan(1));
+            }
+            // Exercise a transit map's replicated endpoint references without the server
+            // deleting an intentionally empty gap before the client can render it.
+            var gap = pair.Client.EntMan.GetEntity(netAir);
+            var transit = pair.Client.EntMan.AddComponent<CEZTransitMapComponent>(gap);
+            transit.LowerMap = pair.Client.EntMan.GetEntity(netLayers[0]);
+            transit.UpperMap = pair.Client.EntMan.GetEntity(netLayers[1]);
+            pair.Client.EntMan.RemoveComponent<WFPlanetLayerComponent>(gap);
+            using var gapHandle = new TerrainHandle();
+            typeof(ShuttleNavControl).GetMethod("DrawWfTerrain", BindingFlags.Instance | BindingFlags.NonPublic)!
+                .Invoke(radar, new object?[] { gapHandle, matrix, gap });
+            Assert.That(gapHandle.VisibleVertices, Is.GreaterThan(0), "Transit gap lost its planet recipe.");
             var flags = BindingFlags.Instance | BindingFlags.NonPublic;
             var air = pair.Client.EntMan.GetEntity(netAir);
             radar.SetMatrix(new Robust.Shared.Map.EntityCoordinates(air, Vector2.Zero), Angle.Zero);

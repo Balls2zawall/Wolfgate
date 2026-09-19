@@ -24,7 +24,7 @@ public sealed partial class CEZLevelsSystem
     /// <summary>Crashed hulls stop paying hover power while grounded; an ascent command restores full demand.</summary>
     public bool WfWreckResting(EntityUid grid) =>
         HasComp<WFCrashImpactComponent>(grid) && WfHasSkidGround(grid) &&
-        _pilotVerticalInput.GetValueOrDefault(grid) <= 0f;
+        !HasComp<WFLiftoffComponent>(grid) && _pilotVerticalInput.GetValueOrDefault(grid) <= 0f;
 
     [Dependency] private SharedDestructibleSystem _wfDestructible = default!;
     [Dependency] private WFFlightSystem _wfFlight = default!;

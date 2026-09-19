@@ -1,10 +1,8 @@
 # Sourced by the maintainer (2026-09-14), converted to mono 44.1 kHz Vorbis on import.
-# TODO: licence, author and source per file are still to be filled in; the generator in
-# Tools/_WF/PlanetCracker/gen_flight_placeholders.py only stands in when a file is missing.
 - files: ["lift_lost.ogg", "dont_sink.ogg", "sink_rate.ogg", "terrain.ogg", "too_low_terrain.ogg", "pull_up.ogg", "hard_landing.ogg", "skid.ogg"]
-  license: "TODO"
-  copyright: "TODO: attribution pending from the maintainer"
-  source: "TODO"
+  license: CC0-1.0
+  copyright: "Original audio by Gandalf; dedicated to the public domain under CC0."
+  source: https://github.com/VanguardControl/Wolfgate/tree/Planets-and-cracking/Resources/Audio/_WF/PlanetCracker/Flight
 
 # The tree's own weather wind loop, kept as the permanent atmosphere airflow bed.
 - files: ["atmo_wind.ogg"]
@@ -14,12 +12,12 @@
 
 # Sourced by the maintainer (2026-09-14), converted to mono 44.1 kHz Vorbis on import.
 - files: ["fall_rumble.ogg"]
-  license: "TODO"
-  copyright: "TODO: attribution pending from the maintainer"
-  source: "TODO"
+  license: CC0-1.0
+  copyright: "Original audio by Gandalf; dedicated to the public domain under CC0."
+  source: https://github.com/VanguardControl/Wolfgate/tree/Planets-and-cracking/Resources/Audio/_WF/PlanetCracker/Flight
 
 # Supplied by the maintainer, 2026-09-18; converted to mono Vorbis.
 - files: ["ground_grind_loop.ogg", "crash10.ogg", "crash11.ogg", "crash12.ogg", "crash3.ogg", "crash4.ogg"]
-  license: "TODO"
-  copyright: "TODO: attribution pending from the maintainer"
-  source: "TODO"
+  license: CC0-1.0
+  copyright: "Original audio by Gandalf; dedicated to the public domain under CC0."
+  source: https://github.com/VanguardControl/Wolfgate/tree/Planets-and-cracking/Resources/Audio/_WF/PlanetCracker/Flight

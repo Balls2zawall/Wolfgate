@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Numerics;
 using Content.Shared._WF.PlanetCracker.Planets;
+using Content.Shared._CE.ZLevels.Core.Components;
 using Robust.Client.Graphics;
 using Robust.Client.UserInterface.Controls;
 using Robust.Shared.Map;
@@ -66,6 +67,28 @@ public partial class ShuttleNavControl
         Color.FromHex("#9A5963"), // flesh walls
     };
 
+    private WFOrbitLayerComponent? GetWfTerrainRecipe(EntityUid? map)
+    {
+        if (EntManager.TryGetComponent<WFOrbitLayerComponent>(map, out var orbit))
+            return orbit;
+
+        // Transit maps sit between two permanent layers of the same world.
+        if (EntManager.TryGetComponent<CEZTransitMapComponent>(map, out var transit))
+            map = transit.LowerMap ?? transit.UpperMap;
+        if (EntManager.TryGetComponent<WFOrbitLayerComponent>(map, out orbit))
+            return orbit;
+        if (!EntManager.TryGetComponent<WFPlanetLayerComponent>(map, out var layer) || layer.Network == null)
+            return null;
+
+        var query = EntManager.EntityQueryEnumerator<WFOrbitLayerComponent>();
+        while (query.MoveNext(out var candidate))
+        {
+            if (candidate.Network == layer.Network)
+                return candidate;
+        }
+        return null;
+    }
+
     private void DrawWfTerrain(DrawingHandleScreen handle, Matrix3x2 worldToView, EntityUid? map)
     {
         if (!ShowPlanetTerrain)
@@ -73,7 +96,8 @@ public partial class ShuttleNavControl
             ReportWfTerrain("Terrain disabled by toggle.");
             return;
         }
-        if (!EntManager.TryGetComponent<WFOrbitLayerComponent>(map, out var orbit) || orbit.RadarLayers.Count == 0)
+        var orbit = GetWfTerrainRecipe(map);
+        if (orbit == null || orbit.RadarLayers.Count == 0)
         {
             ReportWfTerrain($"No terrain recipe: map={map}, orbit={orbit != null}, layers={orbit?.RadarLayers.Count}.");
             return;

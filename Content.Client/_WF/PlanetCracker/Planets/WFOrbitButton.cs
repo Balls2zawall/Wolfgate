@@ -22,6 +22,7 @@ public sealed partial class WFOrbitButton : BoxContainer
 
     private readonly SharedUserInterfaceSystem _ui;
 
+    private readonly Button _liftoffButton;
     private readonly Button _orbitButton;
     private readonly Button _atmosphereButton;
     private readonly Label _liftLabel;
@@ -49,6 +50,14 @@ public sealed partial class WFOrbitButton : BoxContainer
         Orientation = LayoutOrientation.Vertical;
         // Stays visible: Control.DoFrameUpdateRecursive skips hidden controls, so a container that hid itself here
         // would never get the FrameUpdate that shows it again. The children hide instead; an empty box takes no space.
+
+        _liftoffButton = new Button
+        {
+            TextAlign = Label.AlignMode.Center,
+            Visible = false,
+        };
+        _liftoffButton.StyleClasses.Add("ButtonSquare");
+        _liftoffButton.OnPressed += OnLiftoffPressed;
 
         _orbitButton = new Button
         {
@@ -80,6 +89,7 @@ public sealed partial class WFOrbitButton : BoxContainer
             Visible = false,
         };
 
+        AddChild(_liftoffButton);
         AddChild(_orbitButton);
         AddChild(_atmosphereButton);
         AddChild(_liftLabel);
@@ -99,10 +109,28 @@ public sealed partial class WFOrbitButton : BoxContainer
 
         if (!_entMan.TryGetComponent<WFConsoleOrbitTargetComponent>(_console, out var target))
         {
+            _liftoffButton.Visible = false;
             _orbitButton.Visible = false;
             _atmosphereButton.Visible = false;
             _liftLabel.Visible = false;
             _decayLabel.Visible = false;
+            return;
+        }
+
+        var liftoffVisible = target.LiftoffAvailable || target.LiftoffActive;
+        _liftoffButton.Visible = liftoffVisible;
+        _liftoffButton.Disabled = target.Busy;
+        _liftoffButton.Text = Loc.GetString(target.LiftoffActive
+            ? "wf-shuttle-console-cancel-liftoff"
+            : "wf-shuttle-console-liftoff");
+
+        if (liftoffVisible)
+        {
+            _orbitButton.Visible = false;
+            _atmosphereButton.Visible = false;
+            _decayLabel.Visible = false;
+            _liftLabel.Visible = true;
+            UpdateLiftDisplay(target);
             return;
         }
 
@@ -141,6 +169,12 @@ public sealed partial class WFOrbitButton : BoxContainer
         _atmosphereButton.Disabled = target.Busy;
         _atmosphereButton.Text = Loc.GetString("wf-shuttle-console-enter-atmosphere", ("planet", planet));
 
+        UpdateLiftDisplay(target);
+    }
+
+    /// <summary>Updates the lift row shared by atmospheric entry and grounded liftoff.</summary>
+    private void UpdateLiftDisplay(WFConsoleOrbitTargetComponent target)
+    {
         var lift = Loc.GetString("wf-shuttle-console-lift-ratio", ("ratio", target.LiftRatio.ToString("F2")));
         var power = Loc.GetString("wf-shuttle-console-atmosphere-power",
             ("power", (target.AtmospherePowerDemand / 1000f).ToString("N0")));
@@ -157,10 +191,26 @@ public sealed partial class WFOrbitButton : BoxContainer
         _liftLabel.FontColorOverride = target.AtmospherePowerDeficit
             ? LiftBad
             : target.LiftRatio >= FullLift
-                ? LiftGood
-                : target.LiftRatio >= PartialLift
-                    ? LiftMarginal
-                    : LiftBad;
+                    ? LiftGood
+                    : target.LiftRatio >= PartialLift
+                        ? LiftMarginal
+                        : LiftBad;
+    }
+
+    /// <summary>Engages or cancels the server-side ascent latch.</summary>
+    private void OnLiftoffPressed(BaseButton.ButtonEventArgs args)
+    {
+        if (_console is not { } console
+            || !_entMan.TryGetComponent<WFConsoleOrbitTargetComponent>(console, out var target)
+            || target.Busy
+            || (!target.LiftoffAvailable && !target.LiftoffActive))
+        {
+            return;
+        }
+
+        _ui.ClientSendUiMessage(console,
+            ShuttleConsoleUiKey.Key,
+            new WFLiftoffMessage(_entMan.GetNetEntity(console)));
     }
 
     /// <summary>Asks the server for the hop; every gate is re-checked there, so a stale button can only be refused.</summary>

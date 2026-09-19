@@ -22,7 +22,8 @@ public sealed partial class WFThrustAmbienceSystem : EntitySystem
     public static readonly SoundSpecifier ThrustLoop = new SoundPathSpecifier("/Audio/_WF/Shuttle/thrust_loop.ogg");
 
     /// <summary>Loop gain in dB; a touch under the file's own level, which read loud over the rest of the hull.</summary>
-    private const float ThrustVolume = -6f;
+    // 60% of the previous gain: -6 dB + 20 * log10(0.6).
+    private const float ThrustVolume = -10.44f;
 
     private static readonly TimeSpan SweepInterval = TimeSpan.FromSeconds(0.1);
     private static readonly TimeSpan RecutInterval = TimeSpan.FromSeconds(10);

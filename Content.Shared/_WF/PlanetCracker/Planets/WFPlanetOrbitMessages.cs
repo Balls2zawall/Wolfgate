@@ -31,3 +31,16 @@ public sealed class WFLeavePlanetOrbitMessage : BoundUserInterfaceMessage
         Console = console;
     }
 }
+
+/// <summary>Sent by the shuttle console to engage or cancel its grounded planet liftoff latch.</summary>
+[Serializable, NetSerializable]
+public sealed class WFLiftoffMessage : BoundUserInterfaceMessage
+{
+    /// <summary>The console the request came from; the server re-resolves the hull and current pilot from it.</summary>
+    public NetEntity Console;
+
+    public WFLiftoffMessage(NetEntity console)
+    {
+        Console = console;
+    }
+}
