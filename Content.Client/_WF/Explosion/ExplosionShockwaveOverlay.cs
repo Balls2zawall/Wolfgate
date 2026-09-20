@@ -43,28 +43,38 @@ public sealed class ExplosionShockwaveOverlay : Overlay
         if (args.Viewport.Eye == null)
             return false;
 
+        // Metres to fragment pixels.
+        var scale = EyeManager.PixelsPerMeter * (args.Viewport.RenderScale * args.Viewport.Eye.Scale).X;
+
+        if (scale <= 0f)
+            return false;
+
+        var bounds = args.WorldAABB;
+
         foreach (var wave in _system.Shockwaves)
         {
             if (wave.Position.MapId != args.MapId || wave.Strength <= 0f)
                 continue;
 
-            // Skip waves whose band is nowhere near the visible area.
             var centre = wave.Position.Position;
-            var reach = wave.Radius + wave.Width;
 
-            if ((centre - args.WorldAABB.ClosestPoint(centre)).LengthSquared() > reach * reach)
+            // The band the shader really touches, allowing for the one pixel floor the width gets below.
+            var width = MathF.Max(wave.Width, 1f / scale);
+
+            // Slots are few and taken in order, so drop waves that cannot touch a visible pixel: ones still too
+            // small to have reached the viewport, and ones that have already swept past its far corner.
+            var nearest = (centre - bounds.ClosestPoint(centre)).Length();
+
+            if (nearest > wave.Radius + width || FarthestDistance(centre, bounds) < wave.Radius - width)
                 continue;
 
             // Inside-viewport pixels, so specifically not IViewportControl.WorldToScreen.
             var coords = args.Viewport.WorldToLocal(centre);
             coords.Y = args.Viewport.Size.Y - coords.Y; // Local space to fragment space.
 
-            // Metres to fragment pixels.
-            var scale = EyeManager.PixelsPerMeter * (args.Viewport.RenderScale * args.Viewport.Eye.Scale).X;
-
             _positions[_count] = coords;
             _radii[_count] = wave.Radius * scale;
-            _widths[_count] = MathF.Max(wave.Width * scale, 1f);
+            _widths[_count] = width * scale;
             _strengths[_count] = wave.Strength * scale;
             _count++;
 
@@ -73,6 +83,15 @@ public sealed class ExplosionShockwaveOverlay : Overlay
         }
 
         return _count > 0;
+    }
+
+    /// <summary>Distance from a point to the furthest corner of a box.</summary>
+    private static float FarthestDistance(Vector2 point, Box2 box)
+    {
+        var x = MathF.Max(MathF.Abs(point.X - box.Left), MathF.Abs(point.X - box.Right));
+        var y = MathF.Max(MathF.Abs(point.Y - box.Bottom), MathF.Abs(point.Y - box.Top));
+
+        return MathF.Sqrt(x * x + y * y);
     }
 
     protected override void Draw(in OverlayDrawArgs args)

@@ -104,10 +104,14 @@ public sealed class ExplosionShockwavePushSystem : EntitySystem
         if (reach <= 0f)
             return;
 
-        var peakSpeed = Math.Clamp(
-            reach * _cfg.GetCVar(ShockwaveCVars.PushSpeedPerTile),
-            MinSpeed,
-            _cfg.GetCVar(ShockwaveCVars.PushMaxSpeed));
+        // An operator can set the ceiling below MinSpeed, or to nothing at all to turn the shove off, so fold the
+        // floor into it rather than handing Math.Clamp a maximum under its minimum, which throws.
+        var maxSpeed = MathF.Max(_cfg.GetCVar(ShockwaveCVars.PushMaxSpeed), 0f);
+        var speedPerTile = MathF.Max(_cfg.GetCVar(ShockwaveCVars.PushSpeedPerTile), 0f);
+        var peakSpeed = Math.Clamp(reach * speedPerTile, MathF.Min(MinSpeed, maxSpeed), maxSpeed);
+
+        if (!float.IsFinite(peakSpeed) || peakSpeed <= 0f)
+            return;
 
         _targets.Clear();
         _lookup.GetEntitiesInRange(args.Epicenter.MapId, args.Epicenter.Position, reach, _targets,
@@ -129,10 +133,11 @@ public sealed class ExplosionShockwavePushSystem : EntitySystem
             if (speed <= 0f)
                 continue;
 
-            // Anything at the epicentre itself goes whichever way the blast felt like.
+            // Anything at the epicentre itself goes whichever way the blast felt like. An angle rather than a random
+            // vector, since a random vector can come out zero length and normalise to NaN.
             var direction = distance > 0.01f
                 ? delta / distance
-                : _random.NextVector2().Normalized();
+                : _random.NextAngle().ToVec();
 
             if (!_interaction.InRangeUnobstructed(args.Epicenter, uid, reach, Cover))
                 continue;
