@@ -1,4 +1,3 @@
-# WOLFGATE: Monolith #4558 xenoborg recipe prices and basic engineer module.
 # xenoborgs
 - type: latheRecipe
   id: BorgChassisSelectableXenoborg

@@ -32,7 +32,6 @@
         - 1.025689525 # oxygen
         - 1.025689525 # nitrogen
 
-# WOLFGATE: Monolith #4558 self-recharging xenoborg jetpack.
 - type: entity
   id: JetpackXenoborgRechargable
   parent: JetpackADM

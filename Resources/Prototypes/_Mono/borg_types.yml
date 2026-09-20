@@ -175,7 +175,7 @@
     - BorgModuleXenoborgEngineer
   defaultModules:
   - XenoborgModuleBasic
-  - XenoborgModuleToolBasic # WOLFGATE: Monolith #4558
+  - XenoborgModuleToolBasic
   - BorgModuleCable
   - XenoborgModuleDefense
   - XenoborgModuleAccessBreaker

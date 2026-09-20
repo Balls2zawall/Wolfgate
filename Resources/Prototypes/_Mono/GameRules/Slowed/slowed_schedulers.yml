@@ -34,7 +34,6 @@
       min: 5400 # 90 minutes between events
       max: 10800 # 180 minutes between events
 
-# WOLFGATE: Monolith #4558 xenoborg scheduler for mixed rounds.
 - type: entity
   id: MonoXenoBorgShuttleSpawnerSchedulerSlow
   parent: BaseGameRule

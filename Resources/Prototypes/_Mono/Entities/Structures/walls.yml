@@ -573,7 +573,6 @@
       - !type:DoActsBehavior
         acts: [ "Destruction" ]
 
-# WOLFGATE: Monolith #4558 xenoborg shuttle walls.
 - type: entity
   id: WallNanolaminateXorgDiagonal # Mono
   name: nanolaminate wall # Mono

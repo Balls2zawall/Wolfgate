@@ -17,7 +17,6 @@
     - id: BoxFolderNuclearCodes
       amount: 1
 
-# WOLFGATE: Monolith #4558 xenoborg starter crates.
 - type: entity
   parent: CrateBaseWeldable
   id: CrateXenoBase

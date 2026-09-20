@@ -169,7 +169,7 @@
   - MonoMonolithicEventsScheduler
   - ManualPortstrikeTsfPdv
   - StarSystemKyphrus
-  - MonoXenoBorgShuttleSpawnerSchedulerSlow # WOLFGATE: Monolith #4558
+  - MonoXenoBorgShuttleSpawnerSchedulerSlow
 
 - type: gamePreset
   id: MonoAllAtOnce
@@ -192,7 +192,7 @@
   - RoundEndRuleHour3
   - ManualPortstrikeTsfPdv
   - StarSystemKyphrus
-  - MonoXenoBorgShuttleSpawnerSchedulerSlow # WOLFGATE: Monolith #4558
+  - MonoXenoBorgShuttleSpawnerSchedulerSlow
 
 - type: gamePreset
   id: MonoRogueTSFHyperwar
@@ -208,7 +208,6 @@
   - PortstrikeAnnounceRuleHour2
   - StarSystemKyphrus
 
-# WOLFGATE: Monolith #4558; retain Wolfgate's manual TSF/PDV portstrikes.
 - type: gamePreset
   id: MonoXeno
   name: mono-Xeno-title

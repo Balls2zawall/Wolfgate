@@ -2026,7 +2026,6 @@
   itemDrop: FloorTileItemXenoborg
   heatCapacity: 10000
 
-# WOLFGATE: Monolith #4558 xenoborg shuttle floors.
 - type: tile
   id: FloorBlueCircuitXenoborg
   name: tiles-Malicous-blue-circuit-floor

@@ -31,7 +31,6 @@ mono-chimera-pdv-description = After successfully driving off the Federation, th
 mono-allatonce-title = Apocalypse (ALL, 3hr)
 mono-allatonce-description = A battleground between PDV, and TSF forces alike, with ancient ADS systems and Chimera bioweapons seeping in.
 
-# WOLFGATE: Monolith #4558.
 mono-Xeno-title = Reclamation (TSF|PDV)
 mono-Xeno-description = Native PDV imperials threaten TSF colonial expansion into the sector, while Xenoborgs have begun their assault on the sector.
 

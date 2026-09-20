@@ -17,6 +17,5 @@ id-card-access-level-mieyo = Mieyo
 id-card-access-level-mieyo-security = Mieyo Security
 id-card-access-level-mieyo-liason = Mieyo Liason
 
-# WOLFGATE: Monolith #4558.
 id-card-access-level-basic-xenoborg = Xenoborg
 id-card-access-level-basic-mothership = Mothership

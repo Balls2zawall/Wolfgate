@@ -71,7 +71,6 @@
       min: 420 # 7 minutes between events
       max: 1200 # 20 minutes between events
 
-# WOLFGATE: Monolith #4558 xenoborg scheduler.
 - type: entity
   id: MonoXenoborgShuttleSpawnerScheduler
   parent: BaseGameRule

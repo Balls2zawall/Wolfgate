@@ -136,7 +136,6 @@ tiles-xeno-steel = xeno steel tile
 tiles-xeno-steel-corner = xeno steel corner tile
 tiles-xeno-maint = xeno techmaint
 tiles-dark-squiggly = dark steel squiggly tile
-# WOLFGATE: Monolith #4558.
 tiles-xenoborg-floor = xenoborg tile
 tiles-Malicous-blue-circuit-floor = malicous blue circuit tile
 tiles-Mono-XenoBorg = xenoborg mono-tile
