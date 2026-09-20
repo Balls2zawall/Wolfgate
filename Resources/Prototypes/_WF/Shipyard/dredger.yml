@@ -1,0 +1,29 @@
+- type: vessel
+  id: WFDredger
+  parent: BaseVessel
+  name: WG Dredger
+  description: An armed mining and salvage vessel with an ore processor, salvage radar, tractor beam and a pinch generator. Carries four autocannons and two M25 turrets to hold its claim.
+  price: 150000 # ~50% over the 99833 appraisal
+  category: Medium
+  group: Shipyard
+  shuttlePath: /Maps/_WF/Shuttles/dredger.yml
+  guidebookPage: null
+  class:
+  - Salvage
+  engine:
+  - Plasma
+
+- type: gameMap
+  id: WFDredger
+  mapName: Dredger
+  mapPath: /Maps/_WF/Shuttles/dredger.yml
+  minPlayers: 0
+  stations:
+    WFDredger:
+      stationProto: StandardFrontierVessel
+      components:
+      - type: StationNameSetup
+        mapNameTemplate: 'Dredger CIV{1}'
+        nameGenerator:
+          !type:NanotrasenNameGenerator
+          prefixCreator: '14'
