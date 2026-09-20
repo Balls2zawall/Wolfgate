@@ -71,6 +71,9 @@ jobs:
         ) &
         trap 'kill $! 2>/dev/null || true' EXIT
         export DOTNET_gcServer=1
+        # Wolfgate: server GC let the test host grow past the runner's 16 GB and the job got cancelled.
+        # Hex bytes, 10 GiB: the host needs about 1.5 GB beyond its heap and the runner about 2 GB.
+        export DOTNET_GCHeapHardLimit=280000000
         dotnet test --no-build --configuration DebugOpt Content.IntegrationTests/Content.IntegrationTests.csproj --filter "FullyQualifiedName!~ShipyardTest" --logger "console;verbosity=normal" -- NUnit.ConsoleOut=0 NUnit.MapWarningTo=Failed NUnit.TestOutputXml="logs" NUnit.WorkDirectory="$(pwd)/test_results"
 
     - name: Archive NUnit3 test results.
