@@ -52,11 +52,26 @@ jobs:
       shell: pwsh
       run: dotnet test --no-build --configuration DebugOpt Content.Tests/Content.Tests.csproj -- NUnit.ConsoleOut=0 NUnit.TestOutputXml="logs" NUnit.WorkDirectory="$(pwd)/test_results"
 
+    # Wolfgate: bash with a resource sampler and per-test results. This step keeps getting cancelled with
+    # nothing in the log, and a cancel skips the upload below, so the step log is the only evidence left.
     - name: Run Content.IntegrationTests
-      shell: pwsh
+      shell: bash
       run: |
-        $env:DOTNET_gcServer=1
-        dotnet test --no-build --configuration DebugOpt Content.IntegrationTests/Content.IntegrationTests.csproj --filter "FullyQualifiedName!~ShipyardTest" -- NUnit.ConsoleOut=0 NUnit.MapWarningTo=Failed NUnit.TestOutputXml="logs" NUnit.WorkDirectory="$(pwd)/test_results"
+        (
+          seen=0
+          while sleep 20; do
+            echo "[res] $(date -u +%T) $(free -m | awk '/^Mem:/{printf "used=%sM avail=%sM", $3, $7} /^Swap:/{printf " swap=%sM", $3}') load=$(cut -d' ' -f1-3 /proc/loadavg) disk=$(df -h --output=avail / | tail -1 | tr -d ' ') top=$(ps -eo rss,comm --sort=-rss | awk 'NR>1 && NR<=4{printf "%s:%dM ", $2, $1/1024}')"
+            oom=$(sudo dmesg 2>/dev/null | grep -i -E "out of memory|oom-kill|killed process" || true)
+            count=$(printf '%s' "$oom" | grep -c . || true)
+            if [ "$count" -gt "$seen" ]; then
+              printf '%s\n' "$oom" | tail -n $((count - seen)) | sed 's/^/[oom] /'
+              seen=$count
+            fi
+          done
+        ) &
+        trap 'kill $! 2>/dev/null || true' EXIT
+        export DOTNET_gcServer=1
+        dotnet test --no-build --configuration DebugOpt Content.IntegrationTests/Content.IntegrationTests.csproj --filter "FullyQualifiedName!~ShipyardTest" --logger "console;verbosity=normal" -- NUnit.ConsoleOut=0 NUnit.MapWarningTo=Failed NUnit.TestOutputXml="logs" NUnit.WorkDirectory="$(pwd)/test_results"
 
     - name: Archive NUnit3 test results.
       if: always()
