@@ -2382,13 +2382,11 @@ namespace Content.Server.Database.Migrations.Sqlite
                 {
                     b.Navigation("Antags");
 
-<<<<<<< HEAD
-                    b.Navigation("ConsentSettings");
-=======
                     b.Navigation("Components");
 
+                    b.Navigation("ConsentSettings");
+
                     b.Navigation("Items");
->>>>>>> 2b7a01e27e (Persistence: Also Known As Admin Fuckery (#4577))
 
                     b.Navigation("Jobs");
 
