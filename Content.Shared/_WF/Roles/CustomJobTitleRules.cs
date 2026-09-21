@@ -13,6 +13,7 @@ namespace Content.Shared._WF.Roles;
 public static class CustomJobTitleRules
 {
     private const string AllowedPunctuation = " -'.,&/()";
+    private static readonly char[] WordSeparators = AllowedPunctuation.ToCharArray();
 
     /// <summary>Trims and collapses runs of whitespace.</summary>
     public static string Clean(string title)
@@ -20,17 +21,86 @@ public static class CustomJobTitleRules
         return string.Join(' ', title.Split((char[]?) null, StringSplitOptions.RemoveEmptyEntries));
     }
 
-    /// <summary>Lower-case letters and digits only, so spacing and punctuation can't dodge a match.</summary>
+    /// <summary>
+    /// Lower-case letters and digits only, with look-alike digits folded (1 and l read as i, 0 as o...),
+    /// so spacing, punctuation and "P1lot" can't dodge a match. For comparing only, never for display.
+    /// </summary>
     public static string Normalize(string text)
     {
         var builder = new StringBuilder(text.Length);
         foreach (var c in text)
         {
             if (char.IsLetterOrDigit(c))
-                builder.Append(char.ToLowerInvariant(c));
+                builder.Append(Fold(char.ToLowerInvariant(c)));
         }
 
         return builder.ToString();
+    }
+
+    private static char Fold(char c)
+    {
+        return c switch
+        {
+            '0' => 'o',
+            '1' or 'l' => 'i',
+            '3' => 'e',
+            '4' => 'a',
+            '5' => 's',
+            '7' => 't',
+            '8' => 'b',
+            _ => c,
+        };
+    }
+
+    /// <summary>Normalized words. Runs of single letters join up, so "A D M I N" and "A.D.M.I.N" read as one word.</summary>
+    private static List<string> Words(string text)
+    {
+        var words = new List<string>();
+        var letters = new StringBuilder();
+        foreach (var part in text.Split(WordSeparators, StringSplitOptions.RemoveEmptyEntries))
+        {
+            var word = Normalize(part);
+            if (word.Length == 1)
+            {
+                letters.Append(word);
+                continue;
+            }
+
+            if (letters.Length > 0)
+            {
+                words.Add(letters.ToString());
+                letters.Clear();
+            }
+
+            if (word.Length > 0)
+                words.Add(word);
+        }
+
+        if (letters.Length > 0)
+            words.Add(letters.ToString());
+
+        return words;
+    }
+
+    /// <summary>True if the phrase's words appear back to back in the title's words.</summary>
+    private static bool ContainsPhrase(List<string> words, List<string> phrase)
+    {
+        if (phrase.Count == 0)
+            return false;
+
+        for (var i = 0; i + phrase.Count <= words.Count; i++)
+        {
+            var match = true;
+            for (var j = 0; j < phrase.Count && match; j++)
+            {
+                match = words[i + j] == phrase[j];
+            }
+
+            if (match)
+                return true;
+        }
+
+        return false;
     }
 
     /// <summary>Checks a cleaned title against the role's rules. Empty is valid and means the job's own name.</summary>
@@ -56,12 +126,13 @@ public static class CustomJobTitleRules
             return false;
         }
 
-        var normalized = Normalize(title);
-        if (!normalized.Any(char.IsAsciiLetter))
+        if (!title.Any(char.IsAsciiLetter))
         {
             reason = Loc.GetString("custom-job-title-no-letters");
             return false;
         }
+
+        var normalized = Normalize(title);
 
         foreach (var job in protoManager.EnumeratePrototypes<JobPrototype>())
         {
@@ -81,10 +152,10 @@ public static class CustomJobTitleRules
             return false;
         }
 
-        var words = title.Split(AllowedPunctuation.ToCharArray()).Select(Normalize).ToHashSet();
+        var words = Words(title);
         foreach (var word in rules.BlockedWords)
         {
-            if (!words.Contains(Normalize(word)))
+            if (!ContainsPhrase(words, Words(word)))
                 continue;
 
             reason = Loc.GetString("custom-job-title-blocked-word", ("word", word));

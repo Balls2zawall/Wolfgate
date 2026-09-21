@@ -17,7 +17,10 @@ public sealed partial class CustomJobTitlePrototype : IPrototype
     [DataField]
     public List<string> BlockedTitles = new();
 
-    /// <summary>Whole words rejected anywhere in the title, so "admin" doesn't catch "badminton".</summary>
+    /// <summary>
+    /// Whole words or phrases rejected anywhere in the title, so "admin" doesn't catch "badminton"
+    /// and "head of" catches "Head of Mining".
+    /// </summary>
     [DataField]
     public List<string> BlockedWords = new();
 }
