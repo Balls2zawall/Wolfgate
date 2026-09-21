@@ -6,10 +6,11 @@ meta:
   forkVersion: ""
   time: 09/21/2026 16:34:32
   entityCount: 845
-maps:
+maps: []
 grids:
 - 1
-orphans: []
+orphans:
+- 1
 nullspace: []
 tilemap:
   0: Space
@@ -5730,5 +5731,4 @@ entities:
     - type: Transform
       pos: -0.5,4.5
       parent: 1
-      rot: 3.141592653589793 rad
 ...
