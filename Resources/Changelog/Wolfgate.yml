@@ -276,3 +276,10 @@ Entries:
   id: 100025
   time: '2026-09-21T05:35:29.0000000+00:00'
   url: https://github.com/VanguardControl/Wolfgate/pull/49
+- author: Gandalf2k15
+  changes:
+    - type: Add
+      message: Custom job name for vagrants!
+  id: 100026
+  time: '2026-09-21T19:38:44.0000000+00:00'
+  url: https://github.com/VanguardControl/Wolfgate/pull/58
