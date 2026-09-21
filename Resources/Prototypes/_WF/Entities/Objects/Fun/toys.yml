@@ -1,6 +1,6 @@
 ## Plushies
 
-    - type: entity
+- type: entity
   parent: BasePlushieMoff
   id: PlushieMedMoth #We love you Arcana
   name: med moth plushie
