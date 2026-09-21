@@ -25133,3 +25133,12 @@ Entries:
   id: 2742
   time: '2026-09-21T01:59:14.0000000+00:00'
   url: https://github.com/Monolith-Station/Monolith/pull/4704
+- author: eris-webserv
+  changes:
+    - type: Add
+      message: >-
+        Some items might stick with you if you can make it to the end of a
+        shift.
+  id: 2743
+  time: '2026-09-21T02:48:04.0000000+00:00'
+  url: https://github.com/Monolith-Station/Monolith/pull/4577
