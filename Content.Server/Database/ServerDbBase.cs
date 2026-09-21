@@ -286,21 +286,9 @@ namespace Content.Server.Database
                 antags.ToHashSet(),
                 traits.ToHashSet(),
                 loadouts,
-<<<<<<< HEAD
                 company,
                 profile.CustomSpeciesName ?? string.Empty, // WOLFGATE
-                genitals, // WOLFGATE
-                // Mono start
-                profile.Flags,
-                profile.Components.Select(component => new PersistentProfileComponent(
-                    component.Data,
-                    component.Sticky)),
-                profile.Items.Select(item => new PersistentProfileItem(
-                    item.Data,
-                    item.Sticky))); // Mono end
-=======
-                company);
->>>>>>> e970302f87 (Revert "Persistence: Also Known As Admin Fuckery" (#4742))
+                genitals); // WOLFGATE
         }
 
         private static Profile ConvertProfiles(HumanoidCharacterProfile humanoid, int slot, Profile? profile = null)
@@ -335,30 +323,11 @@ namespace Content.Server.Database
             profile.Slot = slot;
             profile.PreferenceUnavailable = (DbPreferenceUnavailableMode) humanoid.PreferenceUnavailable;
             profile.Company = humanoid.Company;
-<<<<<<< HEAD
             profile.CustomSpeciesName = humanoid.CustomSpeciesName; // WOLFGATE
 
             // WOLFGATE - anatomy JSON; an unreadable column is kept as it is until the player edits anatomy.
             if (!(existingRow && humanoid.Genitals.LoadFailed))
                 profile.Genitals = GenitalProfileJson.Serialize(humanoid.Genitals);
-
-            // Mono start
-            profile.Flags = [..humanoid.Flags];
-            profile.Components.Clear();
-            profile.Components.AddRange(humanoid.Components.Select(component => new ProfileComponent
-            {
-                Data = component.Data,
-                Sticky = component.Sticky,
-            }));
-            profile.Items.Clear();
-            profile.Items.AddRange(humanoid.Items.Select(item => new ProfileItem
-            {
-                Data = item.Data,
-                Sticky = item.Sticky,
-            }));
-            // Mono end
-=======
->>>>>>> e970302f87 (Revert "Persistence: Also Known As Admin Fuckery" (#4742))
 
             profile.Jobs.Clear();
             profile.Jobs.AddRange(

@@ -145,7 +145,6 @@ namespace Content.Shared.Preferences
         [DataField]
         public string Company { get; private set; } = "None";
 
-<<<<<<< HEAD
         /// <summary>
         /// WOLFGATE - shown instead of the species name wherever the species is displayed. Empty means
         /// the species' own name is used.
@@ -161,19 +160,6 @@ namespace Content.Shared.Preferences
         [DataField]
         public GenitalProfile Genitals { get; private set; } = GenitalProfile.Unmigrated;
 
-        // Mono start
-        [DataField]
-        public List<string> Flags { get; private set; } = [];
-
-        [DataField]
-        public List<PersistentProfileComponent> Components { get; private set; } = [];
-
-        [DataField]
-        public List<PersistentProfileItem> Items { get; private set; } = [];
-        // Mono end
-
-=======
->>>>>>> e970302f87 (Revert "Persistence: Also Known As Admin Fuckery" (#4742))
         public HumanoidCharacterProfile(
             string name,
             string flavortext,
@@ -189,16 +175,9 @@ namespace Content.Shared.Preferences
             HashSet<ProtoId<AntagPrototype>> antagPreferences,
             HashSet<ProtoId<TraitPrototype>> traitPreferences,
             Dictionary<string, RoleLoadout> loadouts,
-<<<<<<< HEAD
             string company = "None",
             string customSpeciesName = "",
-            GenitalProfile? genitals = null, // WOLFGATE
-            IEnumerable<string>? flags = null, // Mono
-            IEnumerable<PersistentProfileComponent>? components = null, // Mono
-            IEnumerable<PersistentProfileItem>? items = null) // Mono
-=======
-            string company = "None")
->>>>>>> e970302f87 (Revert "Persistence: Also Known As Admin Fuckery" (#4742))
+            GenitalProfile? genitals = null) // WOLFGATE
         {
             Name = name;
             FlavorText = flavortext;
@@ -215,17 +194,8 @@ namespace Content.Shared.Preferences
             _traitPreferences = traitPreferences;
             _loadouts = loadouts;
             Company = company;
-<<<<<<< HEAD
             CustomSpeciesName = customSpeciesName;
             Genitals = genitals ?? GenitalProfile.Unmigrated; // WOLFGATE
-
-            // Mono start
-            Flags = flags is null ? [] : [..flags];
-            Components = components is null ? [] : [..components];
-            Items = items is null ? [] : [..items];
-            // Mono end
-=======
->>>>>>> e970302f87 (Revert "Persistence: Also Known As Admin Fuckery" (#4742))
         }
 
         /// <summary>Copy constructor but with overridable references (to prevent useless copies)</summary>
@@ -236,13 +206,8 @@ namespace Content.Shared.Preferences
             HashSet<ProtoId<TraitPrototype>> traitPreferences,
             Dictionary<string, RoleLoadout> loadouts)
             : this(other.Name, other.FlavorText, other.Species, other.Age, other.Sex, other.Gender, other.BankBalance, other.Appearance, other.SpawnPriority,
-<<<<<<< HEAD
                 jobPriorities, other.PreferenceUnavailable, antagPreferences, traitPreferences, loadouts, other.Company, other.CustomSpeciesName,
-                other.Genitals, // WOLFGATE - GenitalProfile is immutable, so copies share it
-                other.Flags, other.Components, other.Items) // Mono
-=======
-                jobPriorities, other.PreferenceUnavailable, antagPreferences, traitPreferences, loadouts, other.Company)
->>>>>>> e970302f87 (Revert "Persistence: Also Known As Admin Fuckery" (#4742))
+                other.Genitals) // WOLFGATE - GenitalProfile is immutable, so copies share it
         {
         }
 
@@ -262,16 +227,9 @@ namespace Content.Shared.Preferences
                 new HashSet<ProtoId<AntagPrototype>>(other.AntagPreferences),
                 new HashSet<ProtoId<TraitPrototype>>(other.TraitPreferences),
                 new Dictionary<string, RoleLoadout>(other.Loadouts),
-<<<<<<< HEAD
                 other.Company,
                 other.CustomSpeciesName,
-                other.Genitals.Clone(), // WOLFGATE
-                other.Flags, // Mono
-                other.Components, // Mono
-                other.Items) // Mono
-=======
-                other.Company)
->>>>>>> e970302f87 (Revert "Persistence: Also Known As Admin Fuckery" (#4742))
+                other.Genitals.Clone()) // WOLFGATE
         {
         }
 
@@ -590,15 +548,8 @@ namespace Content.Shared.Preferences
             if (SpawnPriority != other.SpawnPriority) return false;
             if (Species != other.Species) return false;
             if (Company != other.Company) return false;
-<<<<<<< HEAD
             if (CustomSpeciesName != other.CustomSpeciesName) return false; // WOLFGATE
             if (!Genitals.MemberwiseEquals(other.Genitals)) return false; // WOLFGATE
-
-            if (!Flags.SequenceEqual(other.Flags)) return false; // Mono
-            if (!Components.SequenceEqual(other.Components)) return false; // Mono
-            if (!Items.SequenceEqual(other.Items)) return false; // Mono
-=======
->>>>>>> e970302f87 (Revert "Persistence: Also Known As Admin Fuckery" (#4742))
             if (!_jobPriorities.SequenceEqual(other._jobPriorities)) return false;
             if (!_antagPreferences.SequenceEqual(other._antagPreferences)) return false;
             if (!_traitPreferences.SequenceEqual(other._traitPreferences)) return false;

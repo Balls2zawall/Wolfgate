@@ -13,11 +13,7 @@ using Content.Client.Players.PlayTimeTracking;
 using Content.Client.Sprite;
 using Content.Client.UserInterface.Systems.Guidebook;
 using Content.Client.UserInterface.Controls;
-<<<<<<< HEAD
 using Content.Client._WF.UserInterface.Controls; // WOLFGATE
-using Content.Shared._Mono.Persistence; // Mono
-=======
->>>>>>> e970302f87 (Revert "Persistence: Also Known As Admin Fuckery" (#4742))
 using Content.Shared._Mono.Company;
 using Content.Shared.CCVar;
 using Content.Shared.Clothing;
@@ -1725,18 +1721,8 @@ namespace Content.Client.Lobby.UI
 
             _loadoutWindow?.Dispose();
             _loadoutWindow = null;
-<<<<<<< HEAD
             _anatomySaveConfirm?.Close(); // WOLFGATE
             _anatomySaveConfirm = null; // WOLFGATE
-
-            // Mono start
-            foreach (var entity in _savedItemEntities)
-                _entManager.DeleteEntity(entity);
-
-            _savedItemEntities.Clear();
-            // Mono end
-=======
->>>>>>> e970302f87 (Revert "Persistence: Also Known As Admin Fuckery" (#4742))
         }
 
         protected override void EnteredTree()
