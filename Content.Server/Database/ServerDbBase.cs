@@ -54,8 +54,6 @@ namespace Content.Server.Database
                 .Include(p => p.Profiles).ThenInclude(h => h.Jobs)
                 .Include(p => p.Profiles).ThenInclude(h => h.Antags)
                 .Include(p => p.Profiles).ThenInclude(h => h.Traits)
-                .Include(p => p.Profiles).ThenInclude(h => h.Components) // Mono
-                .Include(p => p.Profiles).ThenInclude(h => h.Items) // Mono
                 .Include(p => p.Profiles)
                     .ThenInclude(h => h.Loadouts)
                     .ThenInclude(l => l.Groups)
@@ -108,8 +106,6 @@ namespace Content.Server.Database
                 .Include(p => p.Jobs)
                 .Include(p => p.Antags)
                 .Include(p => p.Traits)
-                .Include(p => p.Components) // Mono
-                .Include(p => p.Items) // Mono
                 .Include(p => p.Loadouts)
                     .ThenInclude(l => l.Groups)
                     .ThenInclude(group => group.Loadouts)
@@ -290,6 +286,7 @@ namespace Content.Server.Database
                 antags.ToHashSet(),
                 traits.ToHashSet(),
                 loadouts,
+<<<<<<< HEAD
                 company,
                 profile.CustomSpeciesName ?? string.Empty, // WOLFGATE
                 genitals, // WOLFGATE
@@ -301,6 +298,9 @@ namespace Content.Server.Database
                 profile.Items.Select(item => new PersistentProfileItem(
                     item.Data,
                     item.Sticky))); // Mono end
+=======
+                company);
+>>>>>>> e970302f87 (Revert "Persistence: Also Known As Admin Fuckery" (#4742))
         }
 
         private static Profile ConvertProfiles(HumanoidCharacterProfile humanoid, int slot, Profile? profile = null)
@@ -335,6 +335,7 @@ namespace Content.Server.Database
             profile.Slot = slot;
             profile.PreferenceUnavailable = (DbPreferenceUnavailableMode) humanoid.PreferenceUnavailable;
             profile.Company = humanoid.Company;
+<<<<<<< HEAD
             profile.CustomSpeciesName = humanoid.CustomSpeciesName; // WOLFGATE
 
             // WOLFGATE - anatomy JSON; an unreadable column is kept as it is until the player edits anatomy.
@@ -356,6 +357,8 @@ namespace Content.Server.Database
                 Sticky = item.Sticky,
             }));
             // Mono end
+=======
+>>>>>>> e970302f87 (Revert "Persistence: Also Known As Admin Fuckery" (#4742))
 
             profile.Jobs.Clear();
             profile.Jobs.AddRange(
