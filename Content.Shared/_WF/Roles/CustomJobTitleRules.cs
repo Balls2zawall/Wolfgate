@@ -1,6 +1,8 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Text;
+using Content.Shared.Clothing;
+using Content.Shared.Preferences;
 using Content.Shared.Preferences.Loadouts;
 using Content.Shared.Roles;
 using Robust.Shared.Prototypes;
@@ -90,6 +92,24 @@ public static class CustomJobTitleRules
         }
 
         return true;
+    }
+
+    /// <summary>The profile's valid custom title for a job, or null to keep the job's own name.</summary>
+    public static string? GetTitle(HumanoidCharacterProfile profile, string? jobId, IPrototypeManager protoManager)
+    {
+        if (string.IsNullOrEmpty(jobId)
+            || !profile.Loadouts.TryGetValue(LoadoutSystem.GetJobPrototype(jobId), out var loadout))
+            return null;
+
+        return Sanitize(loadout.CustomJobTitle, loadout.Role, protoManager);
+    }
+
+    /// <summary>Job name for the join menu, e.g. "Vagrant (Bounty Hunter)".</summary>
+    public static string JoinMenuName(JobPrototype job, HumanoidCharacterProfile profile, IPrototypeManager protoManager)
+    {
+        return GetTitle(profile, job.ID, protoManager) is { } title
+            ? Loc.GetString("custom-job-title-join-name", ("job", job.LocalizedName), ("title", title))
+            : job.LocalizedName;
     }
 
     /// <summary>Returns the cleaned title if the role allows one and it passes the rules, otherwise null.</summary>

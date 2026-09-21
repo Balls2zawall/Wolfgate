@@ -13,3 +13,5 @@ custom-job-title-no-letters = needs at least one letter.
 custom-job-title-matches-job = that's the { $job } job.
 custom-job-title-blocked = that title is reserved.
 custom-job-title-blocked-word = "{ $word }" isn't allowed in job titles.
+
+custom-job-title-join-name = { $job } ({ $title })

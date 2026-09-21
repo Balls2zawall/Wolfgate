@@ -2,10 +2,8 @@ using Content.Server.Access.Systems;
 using Content.Server.Administration.Logs;
 using Content.Server.StationRecords.Systems;
 using Content.Shared._WF.Roles;
-using Content.Shared.Clothing;
 using Content.Shared.Database;
 using Content.Shared.GameTicking;
-using Content.Shared.Preferences;
 using Robust.Shared.Prototypes;
 
 namespace Content.Server._WF.Roles;
@@ -28,7 +26,7 @@ public sealed class CustomJobTitleSystem : EntitySystem
 
     private void OnPlayerSpawnComplete(PlayerSpawnCompleteEvent ev)
     {
-        if (GetTitle(ev.Profile, ev.JobId) is not { } title
+        if (CustomJobTitleRules.GetTitle(ev.Profile, ev.JobId, _prototype) is not { } title
             || !_idCard.TryFindIdCard(ev.Mob, out var card))
             return;
 
@@ -40,20 +38,10 @@ public sealed class CustomJobTitleSystem : EntitySystem
     /// <summary>Covers both the station record and the sector-wide one.</summary>
     private void OnGeneralRecordCreated(AfterGeneralRecordCreatedEvent ev)
     {
-        if (GetTitle(ev.Profile, ev.Record.JobPrototype) is not { } title)
+        if (CustomJobTitleRules.GetTitle(ev.Profile, ev.Record.JobPrototype, _prototype) is not { } title)
             return;
 
         ev.Record.JobTitle = title;
         _records.Synchronize(ev.Key);
-    }
-
-    /// <summary>The profile's valid custom title for a job, or null to keep the job's own name.</summary>
-    private string? GetTitle(HumanoidCharacterProfile profile, string? jobId)
-    {
-        if (string.IsNullOrEmpty(jobId)
-            || !profile.Loadouts.TryGetValue(LoadoutSystem.GetJobPrototype(jobId), out var loadout))
-            return null;
-
-        return CustomJobTitleRules.Sanitize(loadout.CustomJobTitle, loadout.Role, _prototype);
     }
 }
