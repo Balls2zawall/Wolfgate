@@ -6,6 +6,7 @@ using System.Text.Json;
 using Content.Server.Database;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using NpgsqlTypes;
@@ -15,9 +16,11 @@ using NpgsqlTypes;
 namespace Content.Server.Database.Migrations.Postgres
 {
     [DbContext(typeof(PostgresServerDbContext))]
-    partial class PostgresServerDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260825143442_PersistentData")]
+    partial class PersistentData
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -659,110 +662,6 @@ namespace Content.Server.Database.Migrations.Postgres
                         });
                 });
 
-            modelBuilder.Entity("Content.Server.Database.ConsentFreetextReadReceipt", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer")
-                        .HasColumnName("consent_freetext_read_receipt_id");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
-
-                    b.Property<DateTime>("ReadAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("read_at");
-
-                    b.Property<int>("ReadConsentSettingsId")
-                        .HasColumnType("integer")
-                        .HasColumnName("read_consent_settings_id");
-
-                    b.Property<Guid>("ReaderUserId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("reader_user_id");
-
-                    b.HasKey("Id")
-                        .HasName("PK_consent_freetext_read_receipt");
-
-                    b.HasIndex("ReadConsentSettingsId")
-                        .HasDatabaseName("IX_consent_freetext_read_receipt_read_consent_settings_id");
-
-                    b.HasIndex("ReaderUserId", "ReadConsentSettingsId")
-                        .IsUnique();
-
-                    b.ToTable("consent_freetext_read_receipt", (string)null);
-                });
-
-            modelBuilder.Entity("Content.Server.Database.ConsentSettings", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer")
-                        .HasColumnName("consent_settings_id");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("ConsentFreetext")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("consent_freetext");
-
-                    b.Property<DateTime>("ConsentFreetextUpdatedAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("consent_freetext_updated_at");
-
-                    b.Property<int?>("ProfileId")
-                        .HasColumnType("integer")
-                        .HasColumnName("profile_id");
-
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("user_id");
-
-                    b.HasKey("Id")
-                        .HasName("PK_consent_settings");
-
-                    b.HasIndex("ProfileId")
-                        .IsUnique()
-                        .HasDatabaseName("IX_consent_settings_profile_id");
-
-                    b.HasIndex("UserId", "ProfileId")
-                        .IsUnique();
-
-                    b.ToTable("consent_settings", (string)null);
-                });
-
-            modelBuilder.Entity("Content.Server.Database.ConsentToggle", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer")
-                        .HasColumnName("consent_toggle_id");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
-
-                    b.Property<int>("ConsentSettingsId")
-                        .HasColumnType("integer")
-                        .HasColumnName("consent_settings_id");
-
-                    b.Property<string>("ToggleProtoId")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("toggle_proto_id");
-
-                    b.Property<string>("ToggleProtoState")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("toggle_proto_state");
-
-                    b.HasKey("Id")
-                        .HasName("PK_consent_toggle");
-
-                    b.HasIndex("ConsentSettingsId", "ToggleProtoId")
-                        .IsUnique();
-
-                    b.ToTable("consent_toggle", (string)null);
-                });
-
             modelBuilder.Entity("Content.Server.Database.IPIntelCache", b =>
                 {
                     b.Property<int>("Id")
@@ -973,11 +872,6 @@ namespace Content.Server.Database.Migrations.Postgres
                         .HasColumnType("text")
                         .HasColumnName("company");
 
-                    b.Property<string>("CustomSpeciesName")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("custom_species_name");
-
                     b.Property<string>("EyeColor")
                         .IsRequired()
                         .HasColumnType("text")
@@ -1007,11 +901,6 @@ namespace Content.Server.Database.Migrations.Postgres
                         .IsRequired()
                         .HasColumnType("text")
                         .HasColumnName("gender");
-
-                    b.Property<string>("Genitals")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("genitals");
 
                     b.Property<string>("HairColor")
                         .IsRequired()
@@ -1629,95 +1518,6 @@ namespace Content.Server.Database.Migrations.Postgres
                     b.ToTable("uploaded_resource_log", (string)null);
                 });
 
-            modelBuilder.Entity("Content.Server.Database.WayfarerSafetyDepositBox", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer")
-                        .HasColumnName("wayfarer_safety_deposit_box_id");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
-
-                    b.Property<Guid>("BoxId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("box_id");
-
-                    b.Property<int>("CharacterIndex")
-                        .HasColumnType("integer")
-                        .HasColumnName("character_index");
-
-                    b.Property<DateTime?>("LastWithdrawn")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("last_withdrawn");
-
-                    b.Property<int?>("LastWithdrawnRoundId")
-                        .HasColumnType("integer")
-                        .HasColumnName("last_withdrawn_round_id");
-
-                    b.Property<string>("Nickname")
-                        .HasColumnType("text")
-                        .HasColumnName("nickname");
-
-                    b.Property<string>("OwnerName")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("owner_name");
-
-                    b.Property<Guid>("OwnerUserId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("owner_user_id");
-
-                    b.Property<string>("ProtoId")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("proto_id");
-
-                    b.Property<DateTime>("PurchaseDate")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("purchase_date");
-
-                    b.HasKey("Id")
-                        .HasName("PK_wayfarer_safety_deposit_box");
-
-                    b.HasIndex("BoxId")
-                        .IsUnique();
-
-                    b.HasIndex("OwnerUserId");
-
-                    b.ToTable("wayfarer_safety_deposit_box", (string)null);
-                });
-
-            modelBuilder.Entity("Content.Server.Database.WayfarerSafetyDepositBoxItem", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer")
-                        .HasColumnName("wayfarer_safety_deposit_box_item_id");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
-
-                    b.Property<int>("BoxId")
-                        .HasColumnType("integer")
-                        .HasColumnName("box_id");
-
-                    b.Property<DateTime>("DepositDate")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("deposit_date");
-
-                    b.Property<string>("EntityData")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("entity_data");
-
-                    b.HasKey("Id")
-                        .HasName("PK_wayfarer_safety_deposit_box_item");
-
-                    b.HasIndex("BoxId")
-                        .HasDatabaseName("IX_wayfarer_safety_deposit_box_item_box_id");
-
-                    b.ToTable("wayfarer_safety_deposit_box_item", (string)null);
-                });
-
             modelBuilder.Entity("Content.Server.Database.Whitelist", b =>
                 {
                     b.Property<Guid>("UserId")
@@ -2020,40 +1820,6 @@ namespace Content.Server.Database.Migrations.Postgres
                     b.Navigation("HWId");
 
                     b.Navigation("Server");
-                });
-
-            modelBuilder.Entity("Content.Server.Database.ConsentFreetextReadReceipt", b =>
-                {
-                    b.HasOne("Content.Server.Database.ConsentSettings", "ReadConsentSettings")
-                        .WithMany("ReadReceipts")
-                        .HasForeignKey("ReadConsentSettingsId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired()
-                        .HasConstraintName("FK_consent_freetext_read_receipt_consent_settings_read_consent~");
-
-                    b.Navigation("ReadConsentSettings");
-                });
-
-            modelBuilder.Entity("Content.Server.Database.ConsentSettings", b =>
-                {
-                    b.HasOne("Content.Server.Database.Profile", "Profile")
-                        .WithOne("ConsentSettings")
-                        .HasForeignKey("Content.Server.Database.ConsentSettings", "ProfileId")
-                        .HasConstraintName("FK_consent_settings_profile_profile_id");
-
-                    b.Navigation("Profile");
-                });
-
-            modelBuilder.Entity("Content.Server.Database.ConsentToggle", b =>
-                {
-                    b.HasOne("Content.Server.Database.ConsentSettings", "ConsentSettings")
-                        .WithMany("ConsentToggles")
-                        .HasForeignKey("ConsentSettingsId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired()
-                        .HasConstraintName("FK_consent_toggle_consent_settings_consent_settings_id");
-
-                    b.Navigation("ConsentSettings");
                 });
 
             modelBuilder.Entity("Content.Server.Database.Job", b =>
@@ -2365,18 +2131,6 @@ namespace Content.Server.Database.Migrations.Postgres
                     b.Navigation("Profile");
                 });
 
-            modelBuilder.Entity("Content.Server.Database.WayfarerSafetyDepositBoxItem", b =>
-                {
-                    b.HasOne("Content.Server.Database.WayfarerSafetyDepositBox", "Box")
-                        .WithMany("Items")
-                        .HasForeignKey("BoxId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired()
-                        .HasConstraintName("FK_wayfarer_safety_deposit_box_item_wayfarer_safety_deposit_bo~");
-
-                    b.Navigation("Box");
-                });
-
             modelBuilder.Entity("PlayerRound", b =>
                 {
                     b.HasOne("Content.Server.Database.Player", null)
@@ -2414,13 +2168,6 @@ namespace Content.Server.Database.Migrations.Postgres
             modelBuilder.Entity("Content.Server.Database.ConnectionLog", b =>
                 {
                     b.Navigation("BanHits");
-                });
-
-            modelBuilder.Entity("Content.Server.Database.ConsentSettings", b =>
-                {
-                    b.Navigation("ConsentToggles");
-
-                    b.Navigation("ReadReceipts");
                 });
 
             modelBuilder.Entity("Content.Server.Database.Player", b =>
@@ -2475,8 +2222,6 @@ namespace Content.Server.Database.Migrations.Postgres
 
                     b.Navigation("Components");
 
-                    b.Navigation("ConsentSettings");
-
                     b.Navigation("Items");
 
                     b.Navigation("Jobs");
@@ -2518,11 +2263,6 @@ namespace Content.Server.Database.Migrations.Postgres
             modelBuilder.Entity("Content.Server.Database.ServerRoleBan", b =>
                 {
                     b.Navigation("Unban");
-                });
-
-            modelBuilder.Entity("Content.Server.Database.WayfarerSafetyDepositBox", b =>
-                {
-                    b.Navigation("Items");
                 });
 #pragma warning restore 612, 618
         }
