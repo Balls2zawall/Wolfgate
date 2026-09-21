@@ -1,0 +1,9 @@
+# Roles whose players can write their own job title. The id is the role loadout id.
+# Every job's name is always rejected; these lists add to that.
+- type: customJobTitle
+  id: JobContractor
+  blockedTitles:
+  - Game Master
+  blockedWords:
+  - admin
+  - moderator
