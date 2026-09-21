@@ -38,6 +38,12 @@ public sealed partial class ShuttleCameraSystem : EntitySystem
     private const float PvsFreeZoom = 1.5f;
 
     /// <summary>
+    /// Ceiling on how far the PVS range grows. Its cost goes with the square, so the last of the zoom
+    /// trades pop-in at the screen's edges for not loading seven times the area per pilot.
+    /// </summary>
+    private const float MaxPvsScale = 2f;
+
+    /// <summary>
     /// How often cameras catch up with a changing hull. A ship coming apart loses tiles every tick,
     /// and measuring the hull walks all of them.
     /// </summary>
@@ -186,7 +192,7 @@ public sealed partial class ShuttleCameraSystem : EntitySystem
         zoom = Math.Clamp(zoom, ShuttleCameraComponent.MinZoom, ShuttleCameraComponent.MaxZoom);
 
         var comp = EnsureComp<ShuttleCameraComponent>(pilot);
-        var pvsScale = MathF.Max(1f, zoom / PvsFreeZoom);
+        var pvsScale = Math.Clamp(zoom / PvsFreeZoom, 1f, MaxPvsScale);
 
         // Measuring the hull walks every tile, so a zoom or low-light change on the same view skips it.
         // Hull changes are picked up separately.

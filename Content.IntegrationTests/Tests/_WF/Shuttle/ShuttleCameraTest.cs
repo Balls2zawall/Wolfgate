@@ -148,8 +148,8 @@ public sealed class ShuttleCameraTest : InteractionTest
             Assert.That(camera.Camera, Is.Null);
             Assert.That(camera.Zoom, Is.EqualTo(ShuttleCameraComponent.MaxZoom));
             Assert.That(SEntMan.GetComponent<EyeComponent>(SPlayer).Target, Is.Null);
-            Assert.That(SEntMan.GetComponent<EyeComponent>(SPlayer).PvsScale, Is.GreaterThan(1f),
-                "At the helm the wider range sits on the pilot.");
+            Assert.That(SEntMan.GetComponent<EyeComponent>(SPlayer).PvsScale, Is.EqualTo(2f),
+                "At the helm the wider range sits on the pilot, and stops growing before the zoom does.");
 
             // Losing the camera without the console's help still has to hand the range back.
             SEntMan.RemoveComponent<ShuttleCameraComponent>(SPlayer);
