@@ -31,6 +31,7 @@ public sealed partial class RoleLoadout : IEquatable<RoleLoadout>
     /// <summary>
     /// WOLFGATE: player-written job title, for roles with a custom job title prototype.
     /// </summary>
+    [DataField]
     public string? CustomJobTitle;
 
     /*
