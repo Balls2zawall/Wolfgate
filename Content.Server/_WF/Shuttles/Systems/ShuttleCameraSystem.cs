@@ -37,6 +37,19 @@ public sealed partial class ShuttleCameraSystem : EntitySystem
     /// </summary>
     private const float PvsFreeZoom = 1.5f;
 
+    /// <summary>
+    /// How often cameras catch up with a changing hull. A ship coming apart loses tiles every tick,
+    /// and measuring the hull walks all of them.
+    /// </summary>
+    private const float HullCheckInterval = 0.5f;
+
+    /// <summary>
+    /// Grids that gained or lost hull since the cameras were last placed.
+    /// </summary>
+    private readonly HashSet<EntityUid> _changedHulls = new();
+
+    private float _hullCheckAccumulator;
+
     public override void Initialize()
     {
         base.Initialize();
@@ -48,6 +61,81 @@ public sealed partial class ShuttleCameraSystem : EntitySystem
 
         SubscribeLocalEvent<ShuttleCameraComponent, ComponentShutdown>(OnCameraShutdown);
         SubscribeLocalEvent<ShuttleCameraComponent, PlayerDetachedEvent>(OnPlayerDetached);
+        SubscribeLocalEvent<TileChangedEvent>(OnTileChanged);
+    }
+
+    private void OnTileChanged(ref TileChangedEvent args)
+    {
+        // Retiling a floor doesn't move the hull's edge, only tiles appearing or going does.
+        foreach (var change in args.Changes)
+        {
+            if (change.OldTile.IsEmpty == change.NewTile.IsEmpty)
+                continue;
+
+            _changedHulls.Add(args.Entity);
+            return;
+        }
+    }
+
+    /// <summary>
+    /// Keeps hull cameras on the hull as it's shot away, built on or split. A camera left hanging
+    /// where the bow used to be looks straight into whatever is now open to space.
+    /// </summary>
+    public override void Update(float frameTime)
+    {
+        base.Update(frameTime);
+
+        if (_changedHulls.Count == 0)
+            return;
+
+        _hullCheckAccumulator += frameTime;
+
+        if (_hullCheckAccumulator < HullCheckInterval)
+            return;
+
+        _hullCheckAccumulator = 0f;
+
+        var query = EntityQueryEnumerator<ShuttleCameraComponent, PilotComponent>();
+
+        while (query.MoveNext(out var pilot, out var comp, out var piloting))
+        {
+            if (comp.Camera is not { } camera || piloting.Console is not { } console)
+                continue;
+
+            // A split can leave the camera on the half the console isn't on, which counts as changed too.
+            var cameraGrid = Transform(camera).ParentUid;
+
+            if (!_changedHulls.Contains(cameraGrid) &&
+                (!TryGetShuttle(console, out var shuttle) || shuttle.Owner == cameraGrid))
+            {
+                continue;
+            }
+
+            Reposition(pilot, comp, console, camera);
+        }
+
+        _changedHulls.Clear();
+    }
+
+    /// <summary>
+    /// Puts an existing camera back on the hull's edge. Most hull damage is nowhere near that edge,
+    /// so this avoids touching the transform, or anything networked, unless the spot really moved.
+    /// </summary>
+    private void Reposition(EntityUid pilot, ShuttleCameraComponent comp, EntityUid console, EntityUid camera)
+    {
+        if (!TryGetCameraCoordinates(console, comp.View, out var coords))
+        {
+            // Nothing left to stand on.
+            Apply(pilot, console, ShuttleCameraView.Helm, comp.Zoom, comp.LowLight);
+            return;
+        }
+
+        var xform = Transform(camera);
+
+        if (xform.ParentUid == coords.EntityId && xform.LocalPosition.EqualsApprox(coords.Position))
+            return;
+
+        _transform.SetCoordinates(camera, xform, coords);
     }
 
     /// <summary>
@@ -100,10 +188,14 @@ public sealed partial class ShuttleCameraSystem : EntitySystem
         var comp = EnsureComp<ShuttleCameraComponent>(pilot);
         var pvsScale = MathF.Max(1f, zoom / PvsFreeZoom);
 
+        // Measuring the hull walks every tile, so a zoom or low-light change on the same view skips it.
+        // Hull changes are picked up separately.
+        var placed = view == comp.View && comp.Camera is { } current && !TerminatingOrDeleted(current);
+
         // Fall back to the helm if the hull can't be measured, rather than leaving the eye nowhere.
         EntityCoordinates coords = default;
 
-        if (view != ShuttleCameraView.Helm && !TryGetCameraCoordinates(console, view, out coords))
+        if (view != ShuttleCameraView.Helm && !placed && !TryGetCameraCoordinates(console, view, out coords))
             view = ShuttleCameraView.Helm;
 
         if (view == ShuttleCameraView.Helm)
@@ -113,15 +205,11 @@ public sealed partial class ShuttleCameraSystem : EntitySystem
         }
         else
         {
-            if (comp.Camera is { } existing && !TerminatingOrDeleted(existing))
-            {
-                _transform.SetCoordinates(existing, coords);
-            }
-            else
+            if (comp.Camera is not { } camera || TerminatingOrDeleted(camera))
             {
                 // It hangs off the hull over open space, where traversal would hand it to the map.
                 // That has to be off before it's placed, so it can't be spawned straight there.
-                var camera = Spawn(CameraProto, new EntityCoordinates(coords.EntityId, Vector2.Zero));
+                camera = Spawn(CameraProto, new EntityCoordinates(coords.EntityId, Vector2.Zero));
                 Transform(camera).GridTraversal = false;
                 _transform.SetCoordinates(camera, coords);
                 comp.Camera = camera;
@@ -129,11 +217,15 @@ public sealed partial class ShuttleCameraSystem : EntitySystem
                 if (TryComp<ActorComponent>(pilot, out var actor))
                     _viewSubscriber.AddViewSubscriber(camera, actor.PlayerSession);
             }
+            else if (!placed)
+            {
+                _transform.SetCoordinates(camera, coords);
+            }
 
             // PVS is measured around each viewer, so the range has to grow on the camera, not the pilot.
-            _eye.SetPvsScale(comp.Camera.Value, pvsScale);
+            _eye.SetPvsScale(camera, pvsScale);
             _eye.SetPvsScale(pilot, 1f);
-            _eye.SetTarget(pilot, comp.Camera);
+            _eye.SetTarget(pilot, camera);
         }
 
         comp.View = view;
@@ -152,16 +244,11 @@ public sealed partial class ShuttleCameraSystem : EntitySystem
     {
         coords = default;
 
-        // Drone consoles fly something other than the grid they're bolted to.
-        var ev = new ConsoleShuttleEvent { Console = console };
-        RaiseLocalEvent(console, ref ev);
-
-        if (ev.Console is not { } source ||
-            Transform(source).GridUid is not { } gridUid ||
-            !TryComp<MapGridComponent>(gridUid, out var grid))
-        {
+        if (!TryGetShuttle(console, out var shuttle))
             return false;
-        }
+
+        var gridUid = shuttle.Owner;
+        var grid = shuttle.Comp;
 
         var dir = view switch
         {
@@ -209,6 +296,27 @@ public sealed partial class ShuttleCameraSystem : EntitySystem
         return true;
     }
 
+    /// <summary>
+    /// The grid a console flies, which for a drone console isn't the one it's bolted to.
+    /// </summary>
+    private bool TryGetShuttle(EntityUid console, out Entity<MapGridComponent> shuttle)
+    {
+        shuttle = default;
+
+        var ev = new ConsoleShuttleEvent { Console = console };
+        RaiseLocalEvent(console, ref ev);
+
+        if (ev.Console is not { } source ||
+            Transform(source).GridUid is not { } gridUid ||
+            !TryComp<MapGridComponent>(gridUid, out var grid))
+        {
+            return false;
+        }
+
+        shuttle = (gridUid, grid);
+        return true;
+    }
+
     private void ClearCamera(EntityUid pilot, ShuttleCameraComponent comp)
     {
         if (comp.Camera is not { } camera)
@@ -231,6 +339,11 @@ public sealed partial class ShuttleCameraSystem : EntitySystem
     private void OnCameraShutdown(Entity<ShuttleCameraComponent> ent, ref ComponentShutdown args)
     {
         ClearCamera(ent, ent.Comp);
+
+        // The console resets these when a pilot gets up, but this can go without the console's say,
+        // and the helm view widens PVS on the pilot rather than on a camera.
+        if (!TerminatingOrDeleted(ent))
+            _contentEye.ResetZoom(ent);
     }
 
     /// <summary>

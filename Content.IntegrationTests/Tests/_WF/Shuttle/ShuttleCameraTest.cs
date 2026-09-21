@@ -115,6 +115,27 @@ public sealed class ShuttleCameraTest : InteractionTest
             });
         }
 
+        // Shoot the bow off and the front camera should fall back to what's left of the hull.
+        await SetCamera(console, ShuttleCameraView.Front, 3f);
+        await RunTicks(5);
+
+        await Server.WaitPost(() =>
+        {
+            mapSystem.SetTile(grid.Owner, grid.Comp, new Vector2i(2, 4), Tile.Empty);
+            mapSystem.SetTile(grid.Owner, grid.Comp, new Vector2i(2, 3), Tile.Empty);
+        });
+
+        // Placement is throttled, so give it more than one interval.
+        await RunSeconds(1.5f);
+
+        await Server.WaitAssertion(() =>
+        {
+            var xform = SEntMan.GetComponent<TransformComponent>(camera.Camera!.Value);
+            Assert.That(xform.ParentUid, Is.EqualTo(grid.Owner));
+            Assert.That(xform.LocalPosition, Is.EqualTo(new Vector2(2.5f, 3.5f)),
+                "The front camera should follow the hull back.");
+        });
+
         // Out of range requests are clamped rather than trusted.
         await SetCamera(console, ShuttleCameraView.Helm, 50f);
         await RunTicks(10);
@@ -127,11 +148,20 @@ public sealed class ShuttleCameraTest : InteractionTest
             Assert.That(camera.Camera, Is.Null);
             Assert.That(camera.Zoom, Is.EqualTo(ShuttleCameraComponent.MaxZoom));
             Assert.That(SEntMan.GetComponent<EyeComponent>(SPlayer).Target, Is.Null);
+            Assert.That(SEntMan.GetComponent<EyeComponent>(SPlayer).PvsScale, Is.GreaterThan(1f),
+                "At the helm the wider range sits on the pilot.");
+
+            // Losing the camera without the console's help still has to hand the range back.
+            SEntMan.RemoveComponent<ShuttleCameraComponent>(SPlayer);
+            Assert.That(SEntMan.GetComponent<EyeComponent>(SPlayer).PvsScale, Is.EqualTo(1f));
+            Assert.That(SEntMan.GetComponent<ContentEyeComponent>(SPlayer).TargetZoom, Is.EqualTo(Vector2.One));
         });
 
         // Leave on a hull view, so getting up has something to clean away.
         await SetCamera(console, ShuttleCameraView.Front, 2f, true);
         await RunTicks(5);
+
+        await Server.WaitPost(() => camera = SEntMan.GetComponent<ShuttleCameraComponent>(SPlayer));
 
         // Low-light is drawn by the client. Switching the eye's lighting off would take FOV with it.
         await Server.WaitAssertion(() =>
