@@ -54,6 +54,9 @@ public sealed partial class RopeComponent : Component
     /// <summary>Server only: stack units spent on this rope, refunded exactly on untie.</summary>
     public int Units;
 
+    /// <summary>Server only: false for rope that was never paid out of a coil, such as a harpoon's cable.</summary>
+    public bool Refundable = true;
+
     /// <summary>Server only: metres of rope per stack unit, from the coil that paid it out.</summary>
     public float MetresPerUnit = 1f;
 }

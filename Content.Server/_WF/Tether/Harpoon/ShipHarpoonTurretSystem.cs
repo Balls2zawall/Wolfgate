@@ -2,6 +2,8 @@
 using Content.Shared._WF.Tether;
 using Content.Shared._WF.Tether.Harpoon;
 using Content.Shared.Actions;
+using Content.Shared.Examine;
+using Content.Shared.Verbs;
 using Content.Shared.Interaction;
 using Content.Shared.Popups;
 using Content.Shared.Projectiles;
@@ -58,6 +60,8 @@ public sealed class ShipHarpoonTurretSystem : SharedShipHarpoonTurretSystem
         SubscribeLocalEvent<ShipHarpoonComponent, EmbedEvent>(OnHarpoonEmbed);
         SubscribeLocalEvent<ShipHarpoonComponent, InteractUsingEvent>(OnHarpoonInteractUsing);
         SubscribeLocalEvent<ShipHarpoonComponent, HarpoonPryDoAfterEvent>(OnHarpoonPried);
+        SubscribeLocalEvent<ShipHarpoonComponent, ExaminedEvent>(OnHarpoonExamined);
+        SubscribeLocalEvent<ShipHarpoonComponent, GetVerbsEvent<AlternativeVerb>>(OnHarpoonAltVerbs);
 
         SubscribeLocalEvent<MannedTurretOperatorComponent, HarpoonReelInActionEvent>(OnReelIn);
         SubscribeLocalEvent<MannedTurretOperatorComponent, HarpoonPayOutActionEvent>(OnPayOut);
@@ -348,7 +352,12 @@ public sealed class ShipHarpoonTurretSystem : SharedShipHarpoonTurretSystem
         ent.Comp.FlightRope = null;
         var distance = Vector2.Distance(_rope.GetAnchorPosition(turret.Value), _rope.GetAnchorPosition(harpoon));
         if (_rope.TryCreateRope(turret.Value, harpoon, ent.Comp.RopeType, distance * ent.Comp.Slack, out var rope))
+        {
             ent.Comp.Rope = rope;
+            // The winch cable comes with the turret; untying it must not mint coils.
+            if (rope is { } ropeUid && TryComp<RopeComponent>(ropeUid, out var ropeComp))
+                ropeComp.Refundable = false;
+        }
 
         Dirty(ent);
     }
@@ -364,6 +373,28 @@ public sealed class ShipHarpoonTurretSystem : SharedShipHarpoonTurretSystem
 
         args.Handled = _tools.UseTool(args.Used, args.User, uid, component.PryTime,
             new[] { PryingQuality }, new HarpoonPryDoAfterEvent(), out _);
+    }
+
+    private void OnHarpoonExamined(EntityUid uid, ShipHarpoonComponent component, ExaminedEvent args)
+    {
+        if (component.Embedded)
+            args.PushMarkup(Loc.GetString("wf-harpoon-examine-embedded"));
+    }
+
+    /// <summary>The crowbar is the tool; the verb just makes it discoverable from the other hull.</summary>
+    private void OnHarpoonAltVerbs(EntityUid uid, ShipHarpoonComponent component, GetVerbsEvent<AlternativeVerb> args)
+    {
+        if (!component.Embedded || !args.CanAccess || !args.CanInteract || args.Using is not { } used ||
+            !_tools.HasQuality(used, PryingQuality))
+            return;
+
+        var user = args.User;
+        args.Verbs.Add(new AlternativeVerb
+        {
+            Text = Loc.GetString("wf-harpoon-verb-pry"),
+            Act = () => _tools.UseTool(used, user, uid, component.PryTime, new[] { PryingQuality },
+                new HarpoonPryDoAfterEvent(), out _),
+        });
     }
 
     private void OnHarpoonPried(EntityUid uid, ShipHarpoonComponent component, HarpoonPryDoAfterEvent args)

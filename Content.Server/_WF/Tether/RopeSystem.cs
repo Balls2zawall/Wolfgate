@@ -139,7 +139,7 @@ public sealed partial class RopeSystem : VirtualController
         var proto = _protos.TryIndex(comp.RopeType, out var indexed) ? indexed : null;
         var origin = endA ?? endB ?? rope;
 
-        if (refund && proto != null)
+        if (refund && comp.Refundable && proto != null)
             RefundCoil(comp, proto, origin, user);
         else if (proto != null && !comp.Carried)
             _audio.PlayPvs(proto.BreakSound, origin);
