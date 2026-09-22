@@ -31,7 +31,6 @@
   - prompt: trader-wolfgate-prompt-shop
     response: trader-wolfgate-response-shop
     action: OpenShop
-    requires: Payment
   - prompt: trader-wolfgate-prompt-who
     response: trader-wolfgate-response-who
     action: None

@@ -31,7 +31,6 @@
   - prompt: trader-flatpack-prompt-shop
     response: trader-flatpack-response-shop
     action: OpenShop
-    requires: Payment
   - prompt: trader-flatpack-prompt-who
     response: trader-flatpack-response-who
     action: None

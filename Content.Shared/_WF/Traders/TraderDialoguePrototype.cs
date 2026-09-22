@@ -55,7 +55,9 @@ public sealed partial class TraderDialogueOption
     public TraderAction Action = TraderAction.None;
 
     /// <summary>
-    /// What the customer must have put in the barter zone first.
+    /// What the customer must have put in the barter zone first. Browsing is always free: this is
+    /// for options that hand something of the customer's straight to a service, never for the ones
+    /// that only open a catalogue, which take payment at their own checkout.
     /// </summary>
     [DataField]
     public TraderRequirement Requires = TraderRequirement.None;
@@ -94,7 +96,8 @@ public enum TraderRequirement : byte
     Payment,
 
     /// <summary>
-    /// An ID card.
+    /// Anything a shipyard console's card slot takes: the customer's own ID card, or a bearer
+    /// shipyard voucher belonging to nobody.
     /// </summary>
     Id,
 

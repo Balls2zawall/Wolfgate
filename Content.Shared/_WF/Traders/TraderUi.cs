@@ -141,14 +141,20 @@ public sealed class TraderUsedShipsState : BoundUserInterfaceState
     public int CashInZone;
 
     /// <summary>
+    /// Owner of the ID in the barter zone, if there is a usable one.
+    /// </summary>
+    public string? IdName;
+
+    /// <summary>
     /// Customer's bank balance.
     /// </summary>
     public int Balance;
 
-    public TraderUsedShipsState(List<TraderUsedShipEntry> entries, int cashInZone, int balance)
+    public TraderUsedShipsState(List<TraderUsedShipEntry> entries, int cashInZone, string? idName, int balance)
     {
         Entries = entries;
         CashInZone = cashInZone;
+        IdName = idName;
         Balance = balance;
     }
 }

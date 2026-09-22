@@ -52,7 +52,6 @@
   - prompt: trader-fuel-tech-prompt-shop
     response: trader-fuel-tech-response-shop
     action: OpenShop
-    requires: Payment
   - prompt: trader-fuel-tech-prompt-refuel
     response: trader-fuel-tech-response-refuel
     action: Refuel

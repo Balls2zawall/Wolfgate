@@ -29,7 +29,6 @@
   - prompt: trader-used-prompt-lot
     response: trader-used-response-lot
     action: UsedShips
-    requires: Id
   - prompt: trader-used-prompt-sell
     response: trader-used-response-sell
     action: SellShip

@@ -32,7 +32,6 @@
   - prompt: trader-astro-prompt-shop
     response: trader-astro-response-shop
     action: OpenShop
-    requires: Payment
   - prompt: trader-astro-prompt-who
     response: trader-astro-response-who
     action: None

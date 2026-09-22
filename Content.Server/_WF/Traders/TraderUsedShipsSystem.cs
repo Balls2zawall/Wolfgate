@@ -25,6 +25,8 @@ public sealed partial class TraderUsedShipsSystem : EntitySystem
     [Dependency] private UserInterfaceSystem _ui = default!;
     [Dependency] private UsedShipMarketSystem _market = default!;
 
+    private float _refreshAccumulator;
+
     public override void Initialize()
     {
         base.Initialize();
@@ -194,12 +196,13 @@ public sealed partial class TraderUsedShipsSystem : EntitySystem
 
     #region Buying off the lot
 
+    /// <summary>
+    /// The lot is free to look at; the card and the money are only wanted at the point of sale. The
+    /// conversation window stays up alongside it, the way the shop's does, because that is where the
+    /// salesman answers a refused purchase.
+    /// </summary>
     private void OpenLot(Entity<TraderUsedShipsComponent> ent, Entity<TraderComponent> trader, EntityUid customer)
     {
-        if (!_trader.TryHoldZoneId(trader, customer, out _))
-            return;
-
-        _trader.HideDialogue(trader, customer);
         _ui.TryOpenUi(ent.Owner, TraderUiKey.UsedShips, customer);
         UpdateState(ent, trader, customer);
     }
@@ -313,11 +316,39 @@ public sealed partial class TraderUsedShipsSystem : EntitySystem
                 listing.SellerName, listing.Price));
         }
 
+        string? idName = null;
+        if (_trader.TryGetZoneId(trader, customer, out var idCard, out _))
+            idName = Name(idCard);
+
         _ui.SetUiState(ent.Owner, TraderUiKey.UsedShips,
-            new TraderUsedShipsState(entries, _trader.GetZoneCash(trader), _trader.GetBalance(customer)));
+            new TraderUsedShipsState(entries, _trader.GetZoneCash(trader), idName, _trader.GetBalance(customer)));
     }
 
     #endregion
+
+    public override void Update(float frameTime)
+    {
+        base.Update(frameTime);
+
+        _refreshAccumulator += frameTime;
+        if (_refreshAccumulator < 1f)
+            return;
+
+        _refreshAccumulator = 0f;
+
+        // What is on the table changes while the lot is open, and the footer has to keep up.
+        var query = EntityQueryEnumerator<TraderUsedShipsComponent, TraderComponent>();
+        while (query.MoveNext(out var uid, out var used, out var trader))
+        {
+            if (trader.Customer is not { } customer)
+                continue;
+
+            if (!_ui.IsUiOpen((uid, null), TraderUiKey.UsedShips, customer))
+                continue;
+
+            UpdateState((uid, used), (uid, trader), customer);
+        }
+    }
 
     /// <summary>
     /// Every salesman calls out a fresh arrival on the lot, out loud and on the traffic channel.

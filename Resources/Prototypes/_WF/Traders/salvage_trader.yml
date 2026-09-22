@@ -32,7 +32,6 @@
   - prompt: trader-salvage-prompt-shop
     response: trader-salvage-response-shop
     action: OpenShop
-    requires: Payment
   - prompt: trader-salvage-prompt-who
     response: trader-salvage-response-who
     action: None

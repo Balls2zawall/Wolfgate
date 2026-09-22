@@ -32,7 +32,6 @@
   - prompt: trader-tools-prompt-shop
     response: trader-tools-response-shop
     action: OpenShop
-    requires: Payment
   - prompt: trader-tools-prompt-who
     response: trader-tools-response-who
     action: None

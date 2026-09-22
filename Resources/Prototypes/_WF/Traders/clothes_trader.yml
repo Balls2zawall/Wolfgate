@@ -32,7 +32,6 @@
   - prompt: trader-clothes-prompt-shop
     response: trader-clothes-response-shop
     action: OpenShop
-    requires: Payment
   - prompt: trader-clothes-prompt-who
     response: trader-clothes-response-who
     action: None

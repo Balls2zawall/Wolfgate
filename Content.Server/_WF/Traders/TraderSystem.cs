@@ -1,6 +1,7 @@
 using System.Linq;
 using System.Numerics;
 using Content.Server._NF.Bank;
+using Content.Server._NF.Shipyard.Components;
 using Content.Server._WF.Access;
 using Content.Server.Carrying;
 using Content.Server.Chat.Systems;
@@ -158,6 +159,7 @@ public sealed class TraderSystem : EntitySystem
         }
 
         ent.Comp.Customer = null;
+        ent.Comp.PendingOption = null;
         ent.Comp.ReplyAt = null;
         ent.Comp.ReplyLine = null;
         ent.Comp.ReplyAction = TraderAction.None;
@@ -328,22 +330,24 @@ public sealed class TraderSystem : EntitySystem
     }
 
     /// <summary>
-    /// Finds the customer's own ID in the barter zone and holds it. Says why it cannot on failure.
+    /// Finds whatever a shipyard console's card slot will take - a voucher first, since that is what
+    /// a customer holding one came to redeem, otherwise the customer's own ID - and holds it. Says
+    /// why it cannot on failure.
     /// </summary>
-    public bool TryHoldZoneId(Entity<TraderComponent> ent, EntityUid customer, out EntityUid idCard)
+    public bool TryHoldConsoleId(Entity<TraderComponent> ent, EntityUid customer, out EntityUid item)
     {
-        if (!TryGetZoneId(ent, customer, out idCard, out var wrongOwner))
+        if (TryGetZoneVoucher(ent, out item))
+            return TryHoldItem(ent, item);
+
+        if (!TryGetZoneId(ent, customer, out item, out var wrongOwner))
         {
             SayAndShow(ent, wrongOwner
                 ? Loc.GetString("trader-not-your-id")
-                : Loc.GetString("trader-request-item", ("thing", Loc.GetString("trader-thing-id"))));
+                : Loc.GetString("trader-request-item", ("thing", Loc.GetString("trader-thing-id-voucher"))));
             return false;
         }
 
-        if (!TryHoldItem(ent, idCard))
-            return false;
-
-        return true;
+        return TryHoldItem(ent, item);
     }
 
     /// <summary>
@@ -413,6 +417,7 @@ public sealed class TraderSystem : EntitySystem
 
         ent.Comp.Customer = null;
         ent.Comp.Confirming = false;
+        ent.Comp.PendingOption = null;
         ent.Comp.ReplyAt = null;
         ent.Comp.ReplyLine = null;
         ent.Comp.ReplyAction = TraderAction.None;
@@ -606,14 +611,59 @@ public sealed class TraderSystem : EntitySystem
         var option = dialogue.Options[args.Index];
         if (!MeetsRequirement(ent, args.Actor, option.Requires, out var thing))
         {
+            // Asked for rather than refused: the trader picks it up itself once it is put down.
+            ent.Comp.PendingOption = args.Index;
+            ent.Comp.PendingUntil = _timing.CurTime + ent.Comp.PendingTimeout;
             SayAndShow(ent, Loc.GetString("trader-request-item", ("thing", Loc.GetString(thing))));
             return;
         }
 
+        ent.Comp.PendingOption = null;
+        QueueReply(ent, option);
+    }
+
+    /// <summary>
+    /// Has the trader answer an option after its reply delay, and run whatever service it names.
+    /// </summary>
+    private void QueueReply(Entity<TraderComponent> ent, TraderDialogueOption option)
+    {
         ent.Comp.ReplyAt = _timing.CurTime + ent.Comp.ReplyDelay;
         ent.Comp.ReplyLine = Loc.GetString(option.Response);
         ent.Comp.ReplyAction = option.Action;
         ent.Comp.ReplyArgument = option.Argument;
+    }
+
+    /// <summary>
+    /// Runs an option the customer already picked once whatever it asked for turns up in the zone.
+    /// </summary>
+    private void PollPendingOption(Entity<TraderComponent> ent, EntityUid customer, TimeSpan now)
+    {
+        if (ent.Comp.PendingOption is not { } index)
+            return;
+
+        if (now > ent.Comp.PendingUntil)
+        {
+            ent.Comp.PendingOption = null;
+            return;
+        }
+
+        // Something else has the conversation: let it finish before jumping in.
+        if (ent.Comp.Confirming || ent.Comp.ReplyAt != null)
+            return;
+
+        if (!_proto.TryIndex(ent.Comp.Dialogue, out var dialogue) || index >= dialogue.Options.Count)
+        {
+            ent.Comp.PendingOption = null;
+            return;
+        }
+
+        var option = dialogue.Options[index];
+        if (!MeetsRequirement(ent, customer, option.Requires, out _))
+            return;
+
+        ent.Comp.PendingOption = null;
+        NoteInput(ent);
+        QueueReply(ent, option);
     }
 
     private void OnConfirm(Entity<TraderComponent> ent, ref TraderConfirmMessage args)
@@ -623,6 +673,7 @@ public sealed class TraderSystem : EntitySystem
 
         NoteInput(ent);
         ent.Comp.Confirming = false;
+        ent.Comp.PendingOption = null;
 
         var ev = new TraderConfirmedEvent(ent.Owner, args.Actor, args.Accepted);
         RaiseLocalEvent(ent.Owner, ref ev);
@@ -659,10 +710,10 @@ public sealed class TraderSystem : EntitySystem
                 return false;
 
             case TraderRequirement.Id:
-                thing = "trader-thing-id";
+                thing = "trader-thing-id-voucher";
                 foreach (var item in items)
                 {
-                    if (HasComp<IdCardComponent>(item))
+                    if (HasComp<IdCardComponent>(item) || HasComp<ShipyardVoucherComponent>(item))
                         return true;
                 }
 
@@ -711,7 +762,8 @@ public sealed class TraderSystem : EntitySystem
         var found = false;
         foreach (var item in items)
         {
-            if (!HasComp<IdCardComponent>(item))
+            // A held card can be spent and deleted by the console it was handed to.
+            if (TerminatingOrDeleted(item) || !HasComp<IdCardComponent>(item))
                 continue;
 
             if (_idOwner.IsOwnedBy(item, customer))
@@ -725,6 +777,29 @@ public sealed class TraderSystem : EntitySystem
         }
 
         wrongOwner = found;
+        return false;
+    }
+
+    /// <summary>
+    /// Finds a shipyard voucher the trader can see. Vouchers carry no owner, so whoever put one down
+    /// is the one redeeming it.
+    /// </summary>
+    public bool TryGetZoneVoucher(Entity<TraderComponent> ent, out EntityUid voucher)
+    {
+        voucher = default;
+
+        var items = GetZoneItems(ent);
+        items.AddRange(ent.Comp.Held);
+
+        foreach (var item in items)
+        {
+            if (TerminatingOrDeleted(item) || !HasComp<ShipyardVoucherComponent>(item))
+                continue;
+
+            voucher = item;
+            return true;
+        }
+
         return false;
     }
 
@@ -951,7 +1026,13 @@ public sealed class TraderSystem : EntitySystem
             }
 
             if (!InCustomerRange(ent, customer))
+            {
                 EndConversation(ent);
+                continue;
+            }
+
+            if (refresh)
+                PollPendingOption(ent, customer, now);
         }
     }
 

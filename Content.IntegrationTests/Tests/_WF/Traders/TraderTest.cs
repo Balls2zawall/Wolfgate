@@ -332,6 +332,68 @@ public sealed class TraderTest
             Assert.That(stacks.Sum(), Is.EqualTo(basketOverpay), "One payment should have covered the whole basket.");
         });
 
+        // Part 5c: browsing costs nothing. The catalogue opens with no money on the table, and it is
+        // the checkout that refuses.
+        await server.WaitPost(() =>
+        {
+            var traderComp = entMan.GetComponent<TraderComponent>(trader);
+            foreach (var uid in traderSys.GetZoneItems((trader, traderComp)))
+            {
+                if (entMan.TryGetComponent(uid, out StackComponent? stack)
+                    && stack.StackTypeId == TraderSystem.CashStackType.Id)
+                {
+                    entMan.DeleteEntity(uid);
+                }
+            }
+        });
+
+        await pair.RunTicksSync(2);
+
+        await server.WaitAssertion(() =>
+        {
+            var traderComp = entMan.GetComponent<TraderComponent>(trader);
+            var shop = entMan.GetComponent<TraderShopComponent>(trader);
+            var dialogue = protoMan.Index<TraderDialoguePrototype>(traderComp.Dialogue);
+
+            var zone = traderSys.GetZoneItems((trader, traderComp));
+            Assert.That(CashStacks(entMan, zone), Is.Empty, "There should be no money left on the table.");
+            Assert.That(traderSys.TryGetZoneId((trader, traderComp), customer, out _, out _), Is.False,
+                "There should be no usable ID on the table either.");
+
+            var browse = dialogue.Options.First(o => o.Action == TraderAction.OpenShop);
+            Assert.That(browse.Requires, Is.EqualTo(TraderRequirement.None),
+                "Opening a catalogue must not ask for anything.");
+            Assert.That(traderSys.MeetsRequirement((trader, traderComp), customer, browse.Requires, out _), Is.True,
+                "The shop should open over an empty table.");
+
+            var before = zone.Count(uid =>
+                entMan.GetComponent<MetaDataComponent>(uid).EntityPrototype?.ID == FuelItemProto);
+
+            Assert.That(shopSys.TryCheckout((trader, shop), (trader, traderComp), customer,
+                    new Dictionary<string, int> { [FuelItemProto] = 1 }),
+                Is.False, "A checkout with nothing on the table should be refused.");
+
+            var after = traderSys.GetZoneItems((trader, traderComp)).Count(uid =>
+                entMan.GetComponent<MetaDataComponent>(uid).EntityPrototype?.ID == FuelItemProto);
+            Assert.That(after, Is.EqualTo(before), "A refused checkout should not have vended anything.");
+        });
+
+        // Part 5d: every trader in the game follows the same rule.
+        await server.WaitAssertion(() =>
+        {
+            foreach (var dialogue in protoMan.EnumeratePrototypes<TraderDialoguePrototype>())
+            {
+                foreach (var option in dialogue.Options)
+                {
+                    if (option.Action is not (TraderAction.OpenShop or TraderAction.UsedShips))
+                        continue;
+
+                    Assert.That(option.Requires, Is.EqualTo(TraderRequirement.None),
+                        $"{dialogue.ID} makes the customer pay before they may look at {option.Action}.");
+                }
+            }
+        });
+
         // Part 6: losing the table clears the zone within an upkeep tick.
         await server.WaitPost(() => entMan.DeleteEntity(table));
         await pair.RunTicksSync(70);

@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using Content.Client.UserInterface.Controls;
 using Content.Shared._NF.Bank;
 using Content.Shared._WF.Traders;
@@ -15,6 +16,12 @@ public sealed partial class TraderUsedShipsWindow : FancyWindow
 {
     public event Action<int>? OnBuyPressed;
 
+    /// <summary>
+    /// The lot as last sent, so a refresh of what is on the table does not rebuild the list under
+    /// the mouse.
+    /// </summary>
+    private List<TraderUsedShipEntry> _entries = new();
+
     public TraderUsedShipsWindow()
     {
         RobustXamlLoader.Load(this);
@@ -22,9 +29,34 @@ public sealed partial class TraderUsedShipsWindow : FancyWindow
 
     public void UpdateState(TraderUsedShipsState state)
     {
+        if (!SameEntries(state.Entries))
+        {
+            _entries = new List<TraderUsedShipEntry>(state.Entries);
+            RebuildLot();
+        }
+
+        UpdateFooter(state);
+    }
+
+    private bool SameEntries(List<TraderUsedShipEntry> entries)
+    {
+        if (entries.Count != _entries.Count)
+            return false;
+
+        for (var i = 0; i < entries.Count; i++)
+        {
+            if (!entries[i].Equals(_entries[i]))
+                return false;
+        }
+
+        return true;
+    }
+
+    private void RebuildLot()
+    {
         LotBox.RemoveAllChildren();
 
-        if (state.Entries.Count == 0)
+        if (_entries.Count == 0)
         {
             LotBox.AddChild(new Label
             {
@@ -34,11 +66,28 @@ public sealed partial class TraderUsedShipsWindow : FancyWindow
             });
         }
 
-        foreach (var entry in state.Entries)
+        foreach (var entry in _entries)
             LotBox.AddChild(MakeRow(entry));
+    }
 
-        ZoneLabel.Text = Loc.GetString("trader-shop-zone-cash",
-            ("amount", BankSystemExtensions.ToSpesoString(state.CashInZone)));
+    /// <summary>
+    /// What the salesman can see on the table right now.
+    /// </summary>
+    private void UpdateFooter(TraderUsedShipsState state)
+    {
+        var parts = new List<string>();
+
+        if (state.CashInZone > 0)
+            parts.Add(Loc.GetString("trader-shop-zone-cash",
+                ("amount", BankSystemExtensions.ToSpesoString(state.CashInZone))));
+
+        if (state.IdName != null)
+            parts.Add(Loc.GetString("trader-shop-zone-id", ("name", state.IdName)));
+
+        ZoneLabel.Text = parts.Count == 0
+            ? Loc.GetString("trader-shop-zone-none")
+            : string.Join(", ", parts);
+
         BalanceLabel.Text = Loc.GetString("trader-shop-balance",
             ("amount", BankSystemExtensions.ToSpesoString(state.Balance)));
     }

@@ -146,4 +146,23 @@ public sealed partial class TraderComponent : Component
     /// </summary>
     [ViewVariables]
     public string? ReplyArgument;
+
+    /// <summary>
+    /// How long a refused option waits for what it asked for before giving up.
+    /// </summary>
+    [DataField]
+    public TimeSpan PendingTimeout = TimeSpan.FromSeconds(60);
+
+    /// <summary>
+    /// Option the customer picked that was refused for something missing from the barter zone. The
+    /// trader runs it by itself the moment that thing turns up.
+    /// </summary>
+    [ViewVariables]
+    public int? PendingOption;
+
+    /// <summary>
+    /// When <see cref="PendingOption"/> stops waiting.
+    /// </summary>
+    [ViewVariables]
+    public TimeSpan PendingUntil;
 }

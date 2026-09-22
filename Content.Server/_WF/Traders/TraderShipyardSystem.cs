@@ -57,7 +57,8 @@ public sealed partial class TraderShipyardSystem : EntitySystem
             return;
         }
 
-        if (!_trader.TryHoldZoneId(traderEnt, args.Customer, out var idCard))
+        // A voucher goes in the slot exactly like a card; the console redeems it on purchase.
+        if (!_trader.TryHoldConsoleId(traderEnt, args.Customer, out var idCard))
             return;
 
         if (!_shipyard.TryHostConsole(ent.Owner, argument, out var uiKey)

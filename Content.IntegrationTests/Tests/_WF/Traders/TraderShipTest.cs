@@ -18,8 +18,11 @@ using Content.Shared._Mono.Ships.Components;
 using Content.Shared._NF.Shipyard;
 using Content.Shared._NF.Shipyard.Components;
 using Content.Shared._NF.Shipyard.Prototypes;
+using Content.Shared._WF.Access;
 using Content.Shared._WF.Traders;
 using Content.Shared.Access.Components;
+using Content.Shared.Mind;
+using Content.Shared.Players;
 using Content.Shared.DeviceNetwork.Components;
 using Content.Shared.Gravity;
 using Content.Shared.Pinpointer;
@@ -54,7 +57,14 @@ public sealed class TraderShipTest
     private const string ConsoleProto = "ComputerShipyard";
     private const string TableProto = "Table";
     private const string IdProto = "PassengerIDCard";
+    private const string VoucherProto = "ShipVoucherFrontierService";
+    private const string CustomerProto = "MobHuman";
     private const string CashProto = "SpaceCash";
+
+    /// <summary>
+    /// Index of the dealer's first BuyShip option, which fronts <see cref="ConsoleProto"/>.
+    /// </summary>
+    private const int BuyShipOption = 0;
     private const string MarkerProto = "Wrench";
     private const string VesselProto = "Guppy";
     private const string BorgProto = "BorgChassisGeneric";
@@ -186,6 +196,182 @@ public sealed class TraderShipTest
         });
 
         await pair.CleanReturnAsync();
+    }
+
+    /// <summary>
+    /// The dealer takes a ship voucher in place of a card, prefers it over one, gives back an unspent
+    /// one, survives a spent one being deleted out of the slot, and picks a refused option back up by
+    /// itself once what it asked for lands on the table.
+    /// </summary>
+    [Test]
+    public async Task VoucherAndPendingBuyShip()
+    {
+        await using var pair = await PoolManager.GetServerClient(new PoolSettings { Connected = true });
+        var server = pair.Server;
+        var map = await pair.CreateTestMap();
+
+        var entMan = server.EntMan;
+        var mapSys = entMan.System<SharedMapSystem>();
+        var mindSys = entMan.System<SharedMindSystem>();
+        var traderSys = entMan.System<TraderSystem>();
+
+        var gridUid = map.Grid.Owner;
+
+        Assert.That(pair.Client.Session, Is.Not.Null, "This test needs a connected pair.");
+        var session = server.PlayerMan.GetSessionById(pair.Client.Session!.UserId);
+
+        var trader = EntityUid.Invalid;
+        var customer = EntityUid.Invalid;
+        var voucher = EntityUid.Invalid;
+
+        // A customer with a real session: an ID only counts as theirs against a player.
+        await server.WaitPost(() =>
+        {
+            mapSys.SetTile(gridUid, map.Grid.Comp, new Vector2i(0, -1), map.Tile.Tile);
+            mapSys.SetTile(gridUid, map.Grid.Comp, new Vector2i(1, 0), map.Tile.Tile);
+
+            trader = entMan.SpawnEntity(DealerProto, new EntityCoordinates(gridUid, 0.5f, 0.5f));
+            entMan.SpawnEntity(TableProto, new EntityCoordinates(gridUid, 0.5f, -0.5f));
+
+            mindSys.WipeMind(session.ContentData()?.Mind);
+            customer = entMan.SpawnEntity(CustomerProto, new EntityCoordinates(gridUid, 1.5f, 0.5f));
+            var mind = mindSys.CreateMind(session.UserId).Owner;
+            mindSys.TransferTo(mind, customer);
+        });
+
+        await pair.RunTicksSync(5);
+
+        Assert.That(session.AttachedEntity, Is.EqualTo(customer), "The customer should be the player's body.");
+
+        // A voucher and a card on the table: the voucher is what the customer came to redeem.
+        await server.WaitPost(() =>
+        {
+            var comp = entMan.GetComponent<TraderComponent>(trader);
+            traderSys.RefreshTable((trader, comp));
+
+            entMan.SpawnEntity(IdProto, new EntityCoordinates(gridUid, 0.5f, -0.5f));
+            voucher = entMan.SpawnEntity(VoucherProto, new EntityCoordinates(gridUid, 0.5f, -0.5f));
+
+            Assert.That(traderSys.TryStartConversation((trader, comp), customer), Is.True,
+                "The dealer should have started talking.");
+
+            SelectOption(entMan, trader, customer, BuyShipOption);
+        });
+
+        await pair.RunTicksSync(30);
+
+        await server.WaitAssertion(() =>
+        {
+            Assert.That(entMan.TryGetComponent<ShipyardConsoleComponent>(trader, out var console), Is.True,
+                "A voucher should have got the listing open.");
+            Assert.That(console!.TargetIdSlot.Item, Is.EqualTo(voucher),
+                "The voucher, not the card, should be in the console's slot.");
+            Assert.That(console.TargetIdSlot.Locked, Is.True);
+            Assert.That(entMan.GetComponent<TraderShipyardComponent>(trader).ActiveKey,
+                Is.EqualTo(ShipyardConsoleUiKey.Shipyard));
+        });
+
+        // Ending the conversation hands an unspent voucher straight back.
+        await server.WaitAssertion(() =>
+        {
+            var comp = entMan.GetComponent<TraderComponent>(trader);
+            traderSys.EndConversation((trader, comp), farewell: false);
+
+            Assert.That(entMan.Deleted(voucher), Is.False, "An unspent voucher must never be destroyed.");
+            Assert.That(traderSys.GetZoneItems((trader, comp)), Does.Contain(voucher),
+                "The voucher should be back on the table.");
+            Assert.That(entMan.HasComponent<ShipyardConsoleComponent>(trader), Is.False);
+        });
+
+        // A voucher the console spends is deleted under the trader; handing items back must cope.
+        await server.WaitPost(() =>
+        {
+            var comp = entMan.GetComponent<TraderComponent>(trader);
+            Assert.That(traderSys.TryStartConversation((trader, comp), customer), Is.True);
+            SelectOption(entMan, trader, customer, BuyShipOption);
+        });
+
+        await pair.RunTicksSync(30);
+
+        await server.WaitAssertion(() =>
+        {
+            var comp = entMan.GetComponent<TraderComponent>(trader);
+            Assert.That(comp.Held, Does.Contain(voucher), "The trader should be holding the voucher.");
+
+            entMan.DeleteEntity(voucher);
+
+            Assert.DoesNotThrow(() => traderSys.EndConversation((trader, comp), farewell: false),
+                "A voucher spent inside the console must not break the handback.");
+            Assert.That(comp.Held, Is.Empty);
+            Assert.That(entMan.HasComponent<ShipyardConsoleComponent>(trader), Is.False);
+        });
+
+        // Nothing on the table: the option is asked for rather than refused, and waits.
+        await server.WaitPost(() =>
+        {
+            var comp = entMan.GetComponent<TraderComponent>(trader);
+            foreach (var uid in traderSys.GetZoneItems((trader, comp)))
+                entMan.DeleteEntity(uid);
+        });
+
+        await pair.RunTicksSync(2);
+
+        await server.WaitPost(() =>
+        {
+            var comp = entMan.GetComponent<TraderComponent>(trader);
+            Assert.That(traderSys.GetZoneItems((trader, comp)), Is.Empty, "The table should be clear.");
+
+            Assert.That(traderSys.TryStartConversation((trader, comp), customer), Is.True);
+            SelectOption(entMan, trader, customer, BuyShipOption);
+        });
+
+        await pair.RunTicksSync(30);
+
+        await server.WaitAssertion(() =>
+        {
+            var comp = entMan.GetComponent<TraderComponent>(trader);
+            Assert.That(comp.PendingOption, Is.EqualTo(BuyShipOption), "The dealer should be waiting on a card.");
+            Assert.That(entMan.HasComponent<ShipyardConsoleComponent>(trader), Is.False,
+                "Nothing should have opened without a card.");
+        });
+
+        // The customer puts their own card down; the dealer carries on by itself.
+        await server.WaitPost(() =>
+        {
+            var idCard = entMan.SpawnEntity(IdProto, new EntityCoordinates(gridUid, 0.5f, -0.5f));
+            entMan.EnsureComponent<IdCardOwnerComponent>(idCard).UserId = session.UserId;
+        });
+
+        await pair.RunTicksSync(150);
+
+        await server.WaitAssertion(() =>
+        {
+            var comp = entMan.GetComponent<TraderComponent>(trader);
+            Assert.That(comp.PendingOption, Is.Null, "The waiting option should have run.");
+            Assert.That(entMan.TryGetComponent<ShipyardConsoleComponent>(trader, out var console), Is.True,
+                "The listing should have opened as soon as the card arrived.");
+            Assert.That(console!.TargetIdSlot.Item, Is.Not.Null, "The card should be in the console's slot.");
+            Assert.That(entMan.GetComponent<TraderShipyardComponent>(trader).ActiveKey,
+                Is.EqualTo(ShipyardConsoleUiKey.Shipyard));
+
+            traderSys.EndConversation((trader, comp), farewell: false);
+        });
+
+        await pair.CleanReturnAsync();
+    }
+
+    /// <summary>
+    /// Sends the dialogue message a customer's window would send, without a client behind it.
+    /// </summary>
+    private static void SelectOption(IEntityManager entMan, EntityUid trader, EntityUid customer, int index)
+    {
+        var msg = new TraderDialogueSelectMessage(index)
+        {
+            Actor = customer,
+            UiKey = TraderUiKey.Dialogue,
+        };
+
+        entMan.EventBus.RaiseLocalEvent(trader, msg);
     }
 
     /// <summary>

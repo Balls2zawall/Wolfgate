@@ -8,6 +8,7 @@ trader-short = You're { $amount } short.
 trader-request-item = Please give me your { $thing }.
 trader-thing-payment = ID or cash
 trader-thing-id = ID
+trader-thing-id-voucher = ID or ship voucher
 trader-thing-deed-id = ship's ID
 trader-cannot-help = I can't help you with that.
 trader-verb-talk = Talk
