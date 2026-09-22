@@ -50,8 +50,15 @@ public abstract class SharedShipHarpoonTurretSystem : EntitySystem
 
     private void OnStrapped(Entity<ShipHarpoonTurretComponent> turret, ref StrappedEvent args)
     {
-        if (turret.Comp.Operator != null || !IsPowered(turret))
+        if (turret.Comp.Operator != null)
             return;
+
+        // A dead hardpoint gives no controls, so do not leave the user sat in it either.
+        if (!IsPowered(turret))
+        {
+            _buckle.Unbuckle(args.Buckle.Owner, null);
+            return;
+        }
 
         turret.Comp.Operator = GetNetEntity(args.Buckle.Owner);
         Dirty(turret);

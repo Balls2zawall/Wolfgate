@@ -3,7 +3,7 @@
 procedurally generated sprite for the installer gun.
 
 Coil and anchor-eye art come from real 32x32 PNGs supplied by the user
-(``SOURCE_DIR`` below); this script only copies them into RSI folders with a
+(``Tools/_WF/tether_source``, or a directory given as the first argument); this script only copies them into RSI folders with a
 single ``icon`` state and a meta.json, except for the tow cable coil, which
 is a darker/heavier Pillow-recoloured copy of the steel cable art (no source
 PNG exists for tow cable specifically).
@@ -14,19 +14,20 @@ cassette-futurism palette (greys, safety orange/yellow), matching the scale
 and outline weight of the supplied rope/eye art and the existing grappling
 gun icon.
 
-Usage: python Tools/_WF/tether_sprites.py
+Usage: python Tools/_WF/tether_sprites.py [source-dir]
 Writes into Resources/Textures/_WF/Tether/*.rsi/
 """
 
 import json
 import os
+import sys
 
 from PIL import Image, ImageEnhance
 
 FRAME = 32
 ROOT = os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", ".."))
 OUT_ROOT = os.path.join(ROOT, "Resources", "Textures", "_WF", "Tether")
-SOURCE_DIR = r"C:\Users\jzo12\Pictures\SS14 Sprites\Rope Stuff"
+SOURCE_DIR = sys.argv[1] if len(sys.argv) > 1 else os.path.join(os.path.dirname(os.path.abspath(__file__)), "tether_source")
 
 COPYRIGHT = "Made by the Wolfgate team"
 

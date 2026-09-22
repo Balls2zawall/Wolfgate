@@ -38,7 +38,8 @@ public sealed class TetherInstallerSystem : EntitySystem
 
     private void OnAfterInteract(Entity<TetherInstallerComponent> ent, ref AfterInteractEvent args)
     {
-        if (args.Handled || !args.CanReach)
+        // CanReach is the stock 1.5 m; the installer has its own longer range, checked below.
+        if (args.Handled)
             return;
 
         var location = args.ClickLocation;
@@ -105,6 +106,10 @@ public sealed class TetherInstallerSystem : EntitySystem
             return;
 
         if (_turf.IsSpace(tileRef.Value))
+            return;
+
+        // The tile may have moved with its grid during the delay.
+        if (!_interaction.InRangeUnobstructed(args.User, coordinates, ent.Comp.Range))
             return;
 
         foreach (var occupant in _turf.GetEntitiesInTile(coordinates))

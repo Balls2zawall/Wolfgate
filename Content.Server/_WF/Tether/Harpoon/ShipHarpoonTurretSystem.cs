@@ -86,8 +86,9 @@ public sealed class ShipHarpoonTurretSystem : SharedShipHarpoonTurretSystem
         component.PayOutAction = null;
         component.ReleaseAction = null;
 
-        if (TryGetTurret(user, component, out var turret))
-            SetReeling(turret, 0);
+        // Operator is already cleared by the time controls are revoked, so resolve the turret directly.
+        if (TryGetEntity(component.Turret, out var turret) && TryComp<ShipHarpoonTurretComponent>(turret, out var comp))
+            SetReeling((turret.Value, comp), 0);
     }
 
     private void OnReelIn(EntityUid uid, MannedTurretOperatorComponent component, HarpoonReelInActionEvent args)
@@ -290,14 +291,17 @@ public sealed class ShipHarpoonTurretSystem : SharedShipHarpoonTurretSystem
     /// </summary>
     private Vector2 EntryNormal(EntityUid harpoon, EntityUid target, Vector2 direction)
     {
-        var box = _lookup.GetWorldAABB(target);
+        // Work in the target's own frame, so a rotated hull's faces are its real faces and not a world box.
+        var (_, targetRot, worldMatrix, invMatrix) = Transforms.GetWorldPositionRotationMatrixWithInv(target);
+        var box = invMatrix.TransformBox(_lookup.GetWorldAABB(target));
+        var localDir = (-targetRot).RotateVec(direction);
         // Start well outside the bounds, so the slab test reads the entry face and not the overlap.
-        var origin = Transforms.GetWorldPosition(harpoon) - direction * (box.Width + box.Height + 2f);
+        var origin = Vector2.Transform(Transforms.GetWorldPosition(harpoon), invMatrix) - localDir * (box.Width + box.Height + 2f);
         var entry = float.NegativeInfinity;
         var normal = Vector2.Zero;
-        Axis(direction.X, origin.X, box.Left, box.Right, new Vector2(-1f, 0f), new Vector2(1f, 0f));
-        Axis(direction.Y, origin.Y, box.Bottom, box.Top, new Vector2(0f, -1f), new Vector2(0f, 1f));
-        return normal;
+        Axis(localDir.X, origin.X, box.Left, box.Right, new Vector2(-1f, 0f), new Vector2(1f, 0f));
+        Axis(localDir.Y, origin.Y, box.Bottom, box.Top, new Vector2(0f, -1f), new Vector2(0f, 1f));
+        return targetRot.RotateVec(normal);
 
         // The last axis to be entered is the one whose face was struck.
         void Axis(float d, float o, float min, float max, Vector2 low, Vector2 high)

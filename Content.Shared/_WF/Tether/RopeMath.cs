@@ -93,7 +93,8 @@ public static class RopeMath
             return 0f;
 
         var impulse = force * frameTime;
-        var ceiling = effectiveMass * (MathF.Max(0f, separatingSpeed) + extension / frameTime);
+        // Motion already closing the gap counts against the budget, so the spring never adds closing energy.
+        var ceiling = effectiveMass * (separatingSpeed + extension / frameTime);
         if (!float.IsFinite(ceiling) || ceiling <= 0f)
             return 0f;
 

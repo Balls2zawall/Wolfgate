@@ -396,8 +396,13 @@ public sealed partial class RopeSystem
             if (!SetLength(rope, comp.Length - metresPerUnit))
                 return;
 
-            comp.Units = Math.Max(0, comp.Units - 1);
-            GiveUnits(user, comp, proto, 1);
+            // Only rope that was paid out of a coil comes back as one.
+            if (comp.Refundable && comp.Units > 0)
+            {
+                comp.Units -= 1;
+                GiveUnits(user, comp, proto, 1);
+            }
+
             return;
         }
 

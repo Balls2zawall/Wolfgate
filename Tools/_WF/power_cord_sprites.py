@@ -17,7 +17,7 @@ from PIL import Image, ImageDraw
 
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 OUT = os.path.join(ROOT, "Resources", "Textures", "_WF", "Tether")
-DEFAULT_SOURCE = r"C:\Users\jzo12\Pictures\SS14 Sprites\Rope Stuff\cable_rope.png"
+DEFAULT_SOURCE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "tether_source", "cable_rope.png")
 
 # Voltage tints, matching the stock HV / MV / APC cable colours.
 VOLTAGES = {

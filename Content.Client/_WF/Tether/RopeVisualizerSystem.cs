@@ -66,12 +66,9 @@ public sealed class RopeVisualizerSystem : EntitySystem
             var span = new Box2(Vector2.Min(endA, endB), Vector2.Max(endA, endB))
                 .Enlarged(MathF.Max(rope.Length * 0.5f, 1f));
             chain.Visible = mapId == currentMap && view.Intersects(span);
+            // A hidden chain keeps its last simulated ends, so a big move off screen reseeds it on return.
             if (!chain.Visible)
-            {
-                chain.EndA = endA;
-                chain.EndB = endB;
                 continue;
-            }
 
             if (RopeVerlet.NeedsReseed(chain.EndA, chain.EndB, endA, endB))
                 RopeVerlet.Seed(chain.Points, chain.Previous, chain.Count, endA, endB, MathF.Min(rope.Length * 0.1f, 0.6f));
