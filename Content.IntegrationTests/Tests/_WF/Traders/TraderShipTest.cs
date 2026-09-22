@@ -23,6 +23,11 @@ using Content.Shared.Access.Components;
 using Content.Shared.DeviceNetwork.Components;
 using Content.Shared.Gravity;
 using Content.Shared.Pinpointer;
+using Content.Shared.Damage;
+using Content.Shared.Damage.Components;
+using Content.Shared.Damage.Prototypes;
+using Content.Shared.Damage.Systems;
+using Content.Shared.FixedPoint;
 using Content.Shared.Stacks;
 using Content.Shared.Station.Components;
 using Robust.Server.GameObjects;
@@ -354,6 +359,12 @@ public sealed class TraderShipTest
             var marker = entMan.SpawnEntity(MarkerProto, new EntityCoordinates(shuttle, deck));
             metaSys.SetEntityName(marker, MarkerName);
 
+            // Dent the marker so the copy has damage to keep.
+            var damageSys = entMan.System<DamageableSystem>();
+            entMan.EnsureComponent<DamageableComponent>(marker);
+            damageSys.TryChangeDamage(marker, new DamageSpecifier(protoMan.Index<DamageTypePrototype>("Blunt"), 7), true);
+            Assert.That(entMan.GetComponent<DamageableComponent>(marker).TotalDamage, Is.EqualTo(FixedPoint2.New(7)));
+
             // A ship that was running when it was sold: force the gravity generator's receiver powered
             // so its charge tops out and the hull really has gravity before it is copied.
             foreach (var uid in Descendants(entMan, shuttle))
@@ -435,6 +446,10 @@ public sealed class TraderShipTest
             bought = loaded!.Value;
             Assert.That(entMan.GetComponent<MetaDataComponent>(bought).EntityName, Is.EqualTo(ShipName));
             Assert.That(MarkersAboard(entMan, bought), Is.EqualTo(1), "The cargo should still be aboard.");
+            var boughtMarker = Descendants(entMan, bought)
+                .First(uid => entMan.GetComponent<MetaDataComponent>(uid).EntityName == MarkerName);
+            Assert.That(entMan.GetComponent<DamageableComponent>(boughtMarker).TotalDamage, Is.EqualTo(FixedPoint2.New(7)),
+                "Damage should survive the resale copy.");
             Assert.That(entMan.HasComponent<ShuttleDeedComponent>(bought), Is.False, "The old deed must not come back.");
 
             // The grid never map-inits again, so the nav map has to be rebuilt by hand.
