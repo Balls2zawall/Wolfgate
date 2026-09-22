@@ -59,7 +59,7 @@ public sealed partial class TraderComponent : Component
     /// Delay between the customer speaking and the trader replying.
     /// </summary>
     [DataField]
-    public TimeSpan ReplyDelay = TimeSpan.FromSeconds(1);
+    public TimeSpan ReplyDelay = TimeSpan.FromSeconds(0.25);
 
     /// <summary>
     /// Paper used for receipts.

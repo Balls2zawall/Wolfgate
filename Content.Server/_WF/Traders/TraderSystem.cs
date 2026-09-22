@@ -494,12 +494,12 @@ public sealed class TraderSystem : EntitySystem
     }
 
     /// <summary>
-    /// Speaks a line and shows it in the menu.
+    /// Shows a line in the menu. Only the greeting and farewell go to chat; the rest stays between
+    /// the trader and the customer.
     /// </summary>
     public void SayAndShow(Entity<TraderComponent> ent, string message)
     {
         ent.Comp.CurrentLine = message;
-        Say(ent, message);
         UpdateDialogueState(ent);
     }
 
@@ -607,8 +607,6 @@ public sealed class TraderSystem : EntitySystem
             SayAndShow(ent, Loc.GetString("trader-request-item", ("thing", Loc.GetString(thing))));
             return;
         }
-
-        _chat.TrySendInGameICMessage(args.Actor, Loc.GetString(option.Prompt), InGameICChatType.Speak, false);
 
         ent.Comp.ReplyAt = _timing.CurTime + ent.Comp.ReplyDelay;
         ent.Comp.ReplyLine = Loc.GetString(option.Response);
