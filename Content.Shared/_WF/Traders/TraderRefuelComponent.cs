@@ -52,6 +52,12 @@ public sealed partial class TraderFuelEntry
     public string? Reagent;
 
     /// <summary>
+    /// Antimatter: tops up (or supplies) the fuel jar in every AME controller aboard.
+    /// </summary>
+    [DataField]
+    public bool Antimatter;
+
+    /// <summary>
     /// Vendor item this fuel is bought as, used to derive the unit price.
     /// </summary>
     [DataField(required: true)]

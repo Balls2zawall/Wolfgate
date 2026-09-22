@@ -3,6 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
 using Content.Server._WF.Traders;
+using Content.Shared.Containers.ItemSlots;
+using Content.Shared.Ame.Components;
+using Content.Server.Ame.Components;
 using Content.Server.Cargo.Systems;
 using Content.Shared._NF.Bank.Components;
 using Content.Shared._WF.Traders;
@@ -52,6 +55,8 @@ public sealed class TraderTest
     private const string FuelMaterial = "FuelGradePlasma";
     private const string GeneratorProto = "PortableGeneratorPacmanShuttle";
     private const string ChemGeneratorProto = "PortableGeneratorJrPacmanShuttle";
+    private const string AmeControllerProto = "AmeController";
+    private const string AmeJarProto = "AmeJar";
     private const string ChemItemProto = "JerryCanWeldingFuel";
     private const string FuelReagent = "WeldingFuel";
     private const string HairMarking = "HumanHairPixie";
@@ -143,7 +148,7 @@ public sealed class TraderTest
         // Part 1: the trader prototype spawns inert, dressed and with its fixed look.
         await server.WaitAssertion(() =>
         {
-            foreach (var x in new[] { -1, 1, 2, 3 })
+            foreach (var x in new[] { -1, 1, 2, 3, 4, 5 })
                 mapSys.SetTile(gridUid, map.Grid.Comp, new Vector2i(x, 0), map.Tile.Tile);
 
             mapSys.SetTile(gridUid, map.Grid.Comp, new Vector2i(0, -1), map.Tile.Tile);
@@ -372,8 +377,29 @@ public sealed class TraderTest
             var chemItem = protoMan.Index<EntityPrototype>(ChemItemProto);
             var chemUnitPrice = ExpectedPrice(chemItem) / (double) ReagentsPerItem(chemItem, compFactory, FuelReagent);
 
+            // Two AME controllers: one with an empty slot, one with a half-used jar.
+            var emptyAme = entMan.SpawnEntity(AmeControllerProto, new EntityCoordinates(gridUid, 4.5f, 0.5f));
+            var jarAme = entMan.SpawnEntity(AmeControllerProto, new EntityCoordinates(gridUid, 5.5f, 0.5f));
+            var jar = entMan.SpawnEntity(AmeJarProto, new EntityCoordinates(gridUid, 5.5f, 0.5f));
+            var jarComp = entMan.GetComponent<AmeFuelContainerComponent>(jar);
+            jarComp.FuelAmount = jarComp.FuelCapacity / 2;
+            Assert.That(entMan.System<ItemSlotsSystem>().TryInsert(jarAme,
+                entMan.GetComponent<AmeControllerComponent>(jarAme).FuelSlot, jar, null), Is.True, "The jar should go in.");
+
+            var jarProto = protoMan.Index<EntityPrototype>(AmeJarProto);
+            Assert.That(jarProto.TryGetComponent<AmeFuelContainerComponent>(out var fullJar, compFactory), Is.True);
+            var jarUnitPrice = ExpectedPrice(jarProto) / (double) fullJar!.FuelCapacity;
+
             var lines = refuelSys.GetQuote((trader, refuel), gridUid, out var total);
-            Assert.That(lines, Has.Count.EqualTo(2), "Both generators should have been quoted.");
+            Assert.That(lines, Has.Count.EqualTo(4), "Both generators and both AMEs should have been quoted.");
+
+            var emptyLine = lines.First(l => l.Generator == emptyAme);
+            Assert.That(emptyLine.IsAntimatter, Is.True);
+            Assert.That(emptyLine.Units, Is.EqualTo(fullJar.FuelCapacity), "An empty slot gets a whole jar.");
+            Assert.That(emptyLine.Cost, Is.EqualTo((int) Math.Ceiling(fullJar.FuelCapacity * jarUnitPrice)));
+
+            var jarLine = lines.First(l => l.Generator == jarAme);
+            Assert.That(jarLine.Units, Is.EqualTo(jarComp.FuelCapacity - jarComp.FuelAmount), "A part-used jar is topped up.");
 
             var solidLine = lines.First(l => l.Generator == solid);
             Assert.That(solidLine.Units, Is.EqualTo(missing), "The quote should cover exactly what is missing.");
@@ -385,13 +411,18 @@ public sealed class TraderTest
             Assert.That(chemLine.Units, Is.EqualTo(missingFuel), "The quote should fill the tank to the brim.");
             Assert.That(chemLine.Cost, Is.EqualTo((int) Math.Ceiling(missingFuel * chemUnitPrice)));
 
-            Assert.That(total, Is.EqualTo(solidLine.Cost + chemLine.Cost), "This trader charges no service fee.");
+            Assert.That(total, Is.EqualTo(solidLine.Cost + chemLine.Cost + emptyLine.Cost + jarLine.Cost),
+                "This trader charges no service fee.");
 
             refuelSys.Fill(lines);
             Assert.That(materialSys.GetTotalMaterialAmount(solid, storage, true), Is.EqualTo(limit),
                 "Filling should top the generator up to its limit.");
             Assert.That(solution.AvailableVolume.Int(), Is.EqualTo(0),
                 "Filling should top the chemical generator's tank up.");
+            Assert.That(jarComp.FuelAmount, Is.EqualTo(jarComp.FuelCapacity), "The part-used jar should be full.");
+            var newJar = entMan.GetComponent<AmeControllerComponent>(emptyAme).FuelSlot.Item;
+            Assert.That(newJar, Is.Not.Null, "The empty AME should have been given a jar.");
+            Assert.That(entMan.GetComponent<AmeFuelContainerComponent>(newJar!.Value).FuelAmount, Is.EqualTo(fullJar.FuelCapacity));
         });
 
         await pair.CleanReturnAsync();

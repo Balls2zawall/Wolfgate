@@ -94,7 +94,7 @@ public sealed class TraderShipTest
             Assert.That(salesman.TryGetComponent<TraderUsedShipsComponent>(out var used, compFactory), Is.True,
                 $"{SalesmanProto} should deal in used ships.");
             Assert.That(used!.UsedShipMarkup, Is.EqualTo(0.05f).Within(0.0001f));
-            Assert.That(used.RelistDelay, Is.EqualTo(TimeSpan.FromMinutes(5)));
+            Assert.That(used.RelistDelay, Is.EqualTo(TimeSpan.FromMinutes(1)));
         });
 
         await pair.CleanReturnAsync();

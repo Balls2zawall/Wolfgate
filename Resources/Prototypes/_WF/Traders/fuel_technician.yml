@@ -88,3 +88,5 @@
       item: FuelBananium
     - reagent: WeldingFuel
       item: JerryCanWeldingFuel
+    - antimatter: true
+      item: AmeJar

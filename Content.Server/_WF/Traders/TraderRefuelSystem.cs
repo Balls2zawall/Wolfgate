@@ -1,6 +1,11 @@
+using System.Linq;
 using System.Text;
 using Content.Server.GameTicking;
+using Content.Server.Ame.Components;
+using Content.Server.Ame.EntitySystems;
 using Content.Server.Power.Generator;
+using Content.Shared.Ame.Components;
+using Content.Shared.Containers.ItemSlots;
 using Content.Server.Shuttles.Components;
 using Content.Shared._NF.Bank;
 using Content.Shared._NF.Bank.Components;
@@ -27,14 +32,17 @@ public record struct TraderRefuelLine(
     string FuelId,
     bool IsReagent,
     int Units,
-    int Cost);
+    int Cost,
+    bool IsAntimatter = false);
 
 /// <summary>
 /// Fills the generators of a docked ship, priced off a vending machine's fuel stock.
 /// </summary>
 public sealed partial class TraderRefuelSystem : EntitySystem
 {
+    [Dependency] private AmeControllerSystem _ame = default!;
     [Dependency] private GameTicker _gameTicker = default!;
+    [Dependency] private ItemSlotsSystem _itemSlots = default!;
     [Dependency] private IComponentFactory _componentFactory = default!;
     [Dependency] private IPrototypeManager _proto = default!;
     [Dependency] private SharedMaterialStorageSystem _materialStorage = default!;
@@ -218,6 +226,19 @@ public sealed partial class TraderRefuelSystem : EntitySystem
             }
         }
 
+        var ameQuery = EntityQueryEnumerator<AmeControllerComponent, TransformComponent>();
+        while (ameQuery.MoveNext(out var uid, out var controller, out var xform))
+        {
+            if (xform.GridUid != ship)
+                continue;
+
+            if (TryQuoteAntimatter(ent, uid, controller, vend, modifier, out var line))
+            {
+                lines.Add(line);
+                subtotal += line.Cost;
+            }
+        }
+
         total = (int) Math.Ceiling(subtotal * (1f + Math.Max(0f, ent.Comp.ServiceFee)));
         return lines;
     }
@@ -288,6 +309,44 @@ public sealed partial class TraderRefuelSystem : EntitySystem
         }
 
         return false;
+    }
+
+    /// <summary>
+    /// An AME controller: top up the jar it holds, or supply a full one if the slot is empty.
+    /// </summary>
+    private bool TryQuoteAntimatter(Entity<TraderRefuelComponent> ent,
+        EntityUid controller,
+        AmeControllerComponent ame,
+        VendingMachineComponent vend,
+        MarketModifierComponent? modifier,
+        out TraderRefuelLine line)
+    {
+        line = default;
+
+        var entry = ent.Comp.Fuels.FirstOrDefault(f => f.Antimatter);
+        if (entry == null || !_proto.TryIndex(entry.Item, out var jarProto))
+            return false;
+
+        if (!jarProto.TryGetComponent<AmeFuelContainerComponent>(out var fullJar, _componentFactory) || fullJar.FuelCapacity <= 0)
+            return false;
+
+        var price = _shop.GetPrice(jarProto, vend, modifier);
+        if (price <= 0)
+            return false;
+
+        var unitPrice = price / (double) fullJar.FuelCapacity;
+
+        int missing;
+        if (TryComp<AmeFuelContainerComponent>(ame.FuelSlot.Item, out var jar))
+            missing = jar.FuelCapacity - jar.FuelAmount;
+        else
+            missing = fullJar.FuelCapacity;
+
+        if (missing <= 0)
+            return false;
+
+        line = new TraderRefuelLine(controller, entry.Item, false, missing, (int) Math.Ceiling(missing * unitPrice), true);
+        return true;
     }
 
     /// <summary>
@@ -402,6 +461,12 @@ public sealed partial class TraderRefuelSystem : EntitySystem
             if (TerminatingOrDeleted(line.Generator))
                 continue;
 
+            if (line.IsAntimatter)
+            {
+                FillAntimatter(line);
+                continue;
+            }
+
             if (!line.IsReagent)
             {
                 _materialStorage.TryChangeMaterialAmount(line.Generator, line.FuelId, line.Units);
@@ -416,6 +481,26 @@ public sealed partial class TraderRefuelSystem : EntitySystem
 
             _solutionContainer.TryAddReagent(tank, line.FuelId, line.Units, out _);
         }
+    }
+
+    private void FillAntimatter(TraderRefuelLine line)
+    {
+        if (!TryComp<AmeControllerComponent>(line.Generator, out var ame))
+            return;
+
+        if (TryComp<AmeFuelContainerComponent>(ame.FuelSlot.Item, out var jar))
+        {
+            jar.FuelAmount = Math.Min(jar.FuelCapacity, jar.FuelAmount + line.Units);
+            Dirty(ame.FuelSlot.Item.Value, jar);
+        }
+        else
+        {
+            var fresh = Spawn(line.FuelId, Transform(line.Generator).Coordinates);
+            if (!_itemSlots.TryInsert(line.Generator, ame.FuelSlot, fresh, null))
+                QueueDel(fresh);
+        }
+
+        _ame.UpdateUi(line.Generator, ame);
     }
 
     #endregion
@@ -455,6 +540,9 @@ public sealed partial class TraderRefuelSystem : EntitySystem
 
     private string GetFuelName(TraderRefuelLine line)
     {
+        if (line.IsAntimatter)
+            return _proto.TryIndex(line.FuelId, out EntityPrototype? jar) ? jar.Name : line.FuelId;
+
         if (line.IsReagent)
             return _proto.TryIndex<ReagentPrototype>(line.FuelId, out var reagent) ? reagent.LocalizedName : line.FuelId;
 
