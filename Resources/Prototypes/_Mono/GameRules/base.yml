@@ -81,4 +81,4 @@
     minimumTimeUntilFirstEvent: 1800 # WOLFGATE: 30 minutes
     minMaxEventTiming:
       min: 2400 # WOLFGATE: 40 minutes between events
-      max: 2400 # WOLFGATE: 40 minutes between events
+      max: 3600 # WOLFGATE: 60 minutes between events
