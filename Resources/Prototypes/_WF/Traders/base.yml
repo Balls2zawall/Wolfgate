@@ -7,6 +7,20 @@
   save: true # humanoids default to save: false, which drops mapped traders from savemap
   components:
   - type: Trader
+  # Solid: customers walk around the counter, not through the trader.
+  - type: Fixtures
+    fixtures:
+      fix1:
+        shape:
+          !type:PhysShapeCircle
+          radius: 0.35
+        density: 185
+        restitution: 0.0
+        mask:
+        - MobMask
+        layer:
+        - MobLayer
+        - Impassable
   - type: UserInterface
     # BaseMobSpecies (parent of BaseMobHuman) already registers these three interfaces on
     # UserInterface. That dictionary is AlwaysPushInheritance, so an override here replaces it

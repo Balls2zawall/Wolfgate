@@ -6,6 +6,7 @@ using Content.Server.Carrying;
 using Content.Server.Chat.Systems;
 using Content.Server.Stack;
 using Content.Shared.Chat;
+using Content.Shared.Climbing.Components;
 using Content.Shared._NF.Bank;
 using Content.Shared._WF.Access;
 using Content.Shared._WF.Traders;
@@ -126,6 +127,7 @@ public sealed class TraderSystem : EntitySystem
         RemComp<InputMoverComponent>(ent);
         RemComp<MobMoverComponent>(ent);
         RemComp<InteractionPopupComponent>(ent);
+        RemComp<ClimbingComponent>(ent); // no dragging them onto their own table
 
         if (TryComp<PhysicsComponent>(ent, out var physics))
             _physics.SetBodyType(ent, BodyType.Static, body: physics);
