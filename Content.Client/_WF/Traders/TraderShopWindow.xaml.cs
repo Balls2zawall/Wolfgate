@@ -14,7 +14,7 @@ namespace Content.Client._WF.Traders;
 [GenerateTypedNameReferences]
 public sealed partial class TraderShopWindow : FancyWindow
 {
-    private IPrototypeManager _proto = IoCManager.Resolve<IPrototypeManager>();
+    [Dependency] private IPrototypeManager _proto = default!;
 
     /// <summary>
     /// Item prototypes the customer has picked, in the order they first picked them.
@@ -37,6 +37,7 @@ public sealed partial class TraderShopWindow : FancyWindow
     public TraderShopWindow()
     {
         RobustXamlLoader.Load(this);
+        IoCManager.InjectDependencies(this);
 
         SearchBar.OnTextChanged += _ => RebuildCatalogue();
         ClearButton.OnPressed += _ => ClearBasket();

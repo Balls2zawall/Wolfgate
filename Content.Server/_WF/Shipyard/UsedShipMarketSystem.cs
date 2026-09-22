@@ -159,8 +159,8 @@ public sealed class UsedShipMarketSystem : EntitySystem
     }
 
     /// <summary>
-    /// Copies a ship that has just been sold and puts it out back. The grid is expected to be about
-    /// to be deleted, so everything bound to its old owner is stripped before the copy is taken.
+    /// Copies a ship that has just been sold and puts it out back. The live grid is left alone so its
+    /// own deletion still runs every cleanup bound to the old owner; the copy is stripped when it is loaded.
     /// </summary>
     public bool TryCapture(EntityUid shuttle,
         EntityUid console,
@@ -189,8 +189,6 @@ public sealed class UsedShipMarketSystem : EntitySystem
             designId = design.ID;
             designName = design.Name;
         }
-
-        _shipyard.StripForResale(shuttle);
 
         if (!_shipyard.TrySaveShip(shuttle, out var data))
             return false;
@@ -230,6 +228,8 @@ public sealed class UsedShipMarketSystem : EntitySystem
 
         if (!_shipyard.TryAddSavedShip(listing.Data, out var grid))
             return false;
+
+        _shipyard.StripForResale(grid.Value);
 
         if (!_shipyard.TryDockLoadedShuttle(station, grid.Value))
         {

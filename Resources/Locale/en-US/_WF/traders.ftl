@@ -90,6 +90,8 @@ trader-used-sale-done = { $amount }, straight into your account. Pleasure.
 trader-used-gone = Somebody beat you to that one.
 trader-used-load-failed = She won't come out of the yard. Your money's back on the table.
 trader-used-sold = The { $ship }, sold! No refunds, no take-backs.
+trader-used-no-session = I need a real buyer to put on the paperwork.
+trader-used-deed-failed = The paperwork won't go through. I've put the money back in your account; she stays on the lot.
 trader-used-new-stock = Fresh on the lot: the { $ship }, a { $design } - { $price }.
 trader-used-sale-receipt-name = Vessel Trade-In Receipt
 trader-used-sale-receipt-header = [head=2]{ $trader }[/head]

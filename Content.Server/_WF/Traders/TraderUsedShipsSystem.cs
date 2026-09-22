@@ -1,4 +1,5 @@
 using System.Text;
+using Content.Server._NF.Bank;
 using Content.Server._NF.Shipyard.Systems;
 using Content.Server._WF.Shipyard;
 using Content.Server.GameTicking;
@@ -15,6 +16,7 @@ namespace Content.Server._WF.Traders;
 /// </summary>
 public sealed partial class TraderUsedShipsSystem : EntitySystem
 {
+    [Dependency] private BankSystem _bank = default!;
     [Dependency] private GameTicker _gameTicker = default!;
     [Dependency] private ShipyardSystem _shipyard = default!;
     [Dependency] private TraderSystem _trader = default!;
@@ -231,6 +233,13 @@ public sealed partial class TraderUsedShipsSystem : EntitySystem
             return;
         }
 
+        // The deed needs a player behind the customer; find out before anything changes hands.
+        if (!TryComp<ActorComponent>(args.Actor, out var actor) || actor.PlayerSession is not { } session)
+        {
+            _trader.SayAndShow(traderEnt, Loc.GetString("trader-used-no-session"));
+            return;
+        }
+
         // Fetched before it is paid for: a hull that will not come out of the yard costs nothing,
         // and nobody's cash has to be handed back as change it did not arrive as.
         if (!_market.TryLoadListing(listing, station, out var shuttle))
@@ -245,8 +254,15 @@ public sealed partial class TraderUsedShipsSystem : EntitySystem
             return;
         }
 
-        if (TryComp<ActorComponent>(args.Actor, out var actor) && actor.PlayerSession is { } session)
-            AssignDeed(shuttle.Value, idCard, session, listing);
+        if (!AssignDeed(shuttle.Value, idCard, session, listing))
+        {
+            // Paid but not deeded: scrap the hull, keep the listing and put the money back in the bank.
+            QueueDel(shuttle.Value);
+            _bank.TryBankDeposit(args.Actor, listing.Price, tax: false);
+            _trader.SayAndShow(traderEnt, Loc.GetString("trader-used-deed-failed"));
+            UpdateState(ent, traderEnt, args.Actor);
+            return;
+        }
 
         _market.RemoveListing(listing);
 
