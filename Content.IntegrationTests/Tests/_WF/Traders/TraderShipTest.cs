@@ -569,7 +569,9 @@ public sealed class TraderShipTest
             listingsBefore = marketSys.Listings.Count;
         });
 
-        await pair.RunTicksSync(15);
+        // The power net and the generator's charge loop take a few ticks to settle; how many depends on the runner.
+        for (var i = 0; i < 40 && !entMan.GetComponent<GravityComponent>(shuttle).Enabled; i++)
+            await pair.RunTicksSync(10);
 
         // Anything the map loader will not write out has to stop the sale rather than be destroyed by it.
         await server.WaitAssertion(() =>
