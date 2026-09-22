@@ -306,3 +306,10 @@ Entries:
   id: 100027
   time: '2026-09-22T16:23:55.0000000+00:00'
   url: https://github.com/VanguardControl/Wolfgate/pull/59
+- author: Happyowl93
+  changes:
+    - type: Tweak
+      message: Xenomorphs buffed, added Reclamation gamemode.
+  id: 100028
+  time: '2026-09-22T20:26:38.0000000+00:00'
+  url: https://github.com/VanguardControl/Wolfgate/pull/48
