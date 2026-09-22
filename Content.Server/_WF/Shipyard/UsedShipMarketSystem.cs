@@ -1,6 +1,7 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using Content.Server._NF.Shipyard.Systems;
+using Content.Server.Shuttles.Systems;
 using Content.Server.Station.Systems;
 using Content.Shared._Mono.Ships.Components;
 using Content.Shared._NF.Shipyard.Prototypes;
@@ -70,6 +71,7 @@ public record struct UsedShipListedEvent(UsedShipListing Listing);
 public sealed class UsedShipMarketSystem : EntitySystem
 {
     [Dependency] private IGameTiming _timing = default!;
+    [Dependency] private DockingSystem _docking = default!;
     [Dependency] private IPrototypeManager _proto = default!;
     [Dependency] private ShipyardSystem _shipyard = default!;
     [Dependency] private StationSystem _station = default!;
@@ -189,6 +191,10 @@ public sealed class UsedShipMarketSystem : EntitySystem
             designId = design.ID;
             designName = design.Name;
         }
+
+        // A docked hull's joints and docks point at the station; the copy cannot carry them and a
+        // dangling reference makes the whole load fail. The hull is about to be deleted regardless.
+        _docking.UndockDocks(shuttle);
 
         if (!_shipyard.TrySaveShip(shuttle, out var data))
             return false;

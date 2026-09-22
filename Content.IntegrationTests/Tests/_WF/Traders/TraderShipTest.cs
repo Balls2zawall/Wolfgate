@@ -1,9 +1,13 @@
+using System;
 #nullable enable
 using System.Collections.Generic;
+using System.Numerics;
 using System.Linq;
 using Content.Server._NF.Shipyard.Systems;
 using Content.Server._WF.Shipyard;
 using Content.Server._WF.Traders;
+using Content.Server.Shuttles.Components;
+using Content.Server.Shuttles.Systems;
 using Content.Server.Station.Systems;
 using Content.Shared._Mono.Ships.Components;
 using Content.Shared._NF.Shipyard;
@@ -38,6 +42,7 @@ public sealed class TraderShipTest
     private const string TableProto = "Table";
     private const string IdProto = "PassengerIDCard";
     private const string CashProto = "SpaceCash";
+    private const string MarkerProto = "Wrench";
     private const string VesselProto = "Guppy";
     private const string ShipName = "Test Barge";
     private const string MarkerName = "Wolfgate resale marker";
@@ -292,6 +297,106 @@ public sealed class TraderShipTest
     /// <summary>
     /// How many marker items are somewhere aboard a grid.
     /// </summary>
+    /// <summary>
+    /// The real thing: a ship docked to a marked station is sold through the console path, and the
+    /// copy the market took must load and dock again.
+    /// </summary>
+    [Test]
+    public async Task DockedSaleReloads()
+    {
+        await using var pair = await PoolManager.GetServerClient(new PoolSettings { Connected = false, Dirty = true });
+        var server = pair.Server;
+        var map = await pair.CreateTestMap();
+
+        var entMan = server.EntMan;
+        var protoMan = server.ResolveDependency<IPrototypeManager>();
+        var mapLoader = entMan.System<MapLoaderSystem>();
+        var metaSys = entMan.System<MetaDataSystem>();
+        var shipyardSys = entMan.System<ShipyardSystem>();
+        var marketSys = entMan.System<UsedShipMarketSystem>();
+        var shuttleSys = entMan.System<ShuttleSystem>();
+        var stationSys = entMan.System<StationSystem>();
+
+        var station = EntityUid.Invalid;
+        var dockGrid = EntityUid.Invalid;
+        var shuttle = EntityUid.Invalid;
+        var console = EntityUid.Invalid;
+        var listingsBefore = 0;
+
+        await server.WaitAssertion(() =>
+        {
+            var vessel = protoMan.Index<VesselPrototype>(VesselProto);
+
+            // One hull stands in for the station (it has docks), a second is the ship being sold.
+            Assert.That(mapLoader.TryLoadGrid(map.MapId, vessel.ShuttlePath, out var stationHull), Is.True);
+            Assert.That(mapLoader.TryLoadGrid(map.MapId, vessel.ShuttlePath, out var sold, offset: new Vector2(60, 0)), Is.True);
+            dockGrid = stationHull!.Value.Owner;
+            shuttle = sold!.Value.Owner;
+
+            station = entMan.Spawn();
+            entMan.EnsureComponent<StationDataComponent>(station);
+            entMan.EnsureComponent<UsedShipMarketComponent>(station);
+            stationSys.AddGridToStation(station, dockGrid);
+
+            metaSys.SetEntityName(shuttle, ShipName);
+            entMan.EnsureComponent<VesselComponent>(shuttle).VesselId = VesselProto;
+            var deck = entMan.GetComponent<MapGridComponent>(shuttle).LocalAABB.Center;
+            // Not cash: the sale teleports preserve-on-sale items (cash, IDs) off the hull first.
+            var marker = entMan.SpawnEntity(MarkerProto, new EntityCoordinates(shuttle, deck));
+            metaSys.SetEntityName(marker, MarkerName);
+
+            var shuttleComp = entMan.GetComponent<ShuttleComponent>(shuttle);
+            Assert.That(shuttleSys.TryFTLDock(shuttle, shuttleComp, dockGrid), Is.True, "The ship should dock to the station hull.");
+
+            console = entMan.SpawnEntity(ConsoleProto, new EntityCoordinates(dockGrid, 0.5f, 0.5f));
+            listingsBefore = marketSys.Listings.Count;
+        });
+
+        await pair.RunTicksSync(5);
+
+        UsedShipListing? listing = null;
+
+        await server.WaitAssertion(() =>
+        {
+            shipyardSys.SetupShipyardIfNeeded();
+
+            // The sale's last step refreshes the sector shuttle records, which need a round; by then the
+            // capture and the deletion have both happened, so that one failure is let through.
+            try
+            {
+                var result = shipyardSys.TrySellShuttle(station, shuttle, console, out _);
+                Assert.That(result.Error, Is.EqualTo(ShipyardSystem.ShipyardSaleError.Success), $"Sale failed: {result.Error}");
+            }
+            catch (ArgumentException e) when (e.StackTrace?.Contains("ShuttleRecordsSystem") == true)
+            {
+            }
+
+            Assert.That(marketSys.Listings.Count, Is.EqualTo(listingsBefore + 1), "The sale should have been captured.");
+            listing = marketSys.Listings[^1];
+            Assert.That(listing.ShipName, Is.EqualTo(ShipName));
+        });
+
+        await pair.RunTicksSync(5);
+
+        await server.WaitAssertion(() =>
+        {
+            Assert.That(entMan.Deleted(shuttle), Is.True, "The sold hull should be gone.");
+
+            listing!.AvailableAt = listing.SoldAt;
+            Assert.That(marketSys.TryLoadListing(listing, station, out var loaded), Is.True,
+                "The copy of a really sold ship should load back in.");
+
+            Assert.That(entMan.GetComponent<MetaDataComponent>(loaded!.Value).EntityName, Is.EqualTo(ShipName));
+            Assert.That(MarkersAboard(entMan, loaded.Value), Is.EqualTo(1), "The cargo should still be aboard.");
+            Assert.That(entMan.HasComponent<ShuttleDeedComponent>(loaded.Value), Is.False, "The old deed must not come back.");
+
+            marketSys.RemoveListing(listing);
+            entMan.DeleteEntity(loaded.Value);
+        });
+
+        await pair.CleanReturnAsync();
+    }
+
     private static int MarkersAboard(IEntityManager entMan, EntityUid grid)
     {
         return Descendants(entMan, grid)
