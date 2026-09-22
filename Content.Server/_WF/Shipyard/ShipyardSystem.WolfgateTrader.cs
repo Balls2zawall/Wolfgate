@@ -109,15 +109,29 @@ public sealed partial class ShipyardSystem
     }
 
     /// <summary>
-    /// Runs the console's own sell path with the customer as the actor. True when the ship is gone.
+    /// The last thing a console popped up at a customer; how a hosting trader learns why a sale was refused.
     /// </summary>
-    public bool TryHostedSell(EntityUid host, EntityUid customer, Enum uiKey, EntityUid shuttle)
+    public string? LastConsolePopup;
+
+    /// <summary>
+    /// Runs the console's own sell path with the customer as the actor. True when the deed left the card:
+    /// the hull itself is only queued for deletion, so it is still around when this returns.
+    /// </summary>
+    public bool TryHostedSell(EntityUid host, EntityUid customer, Enum uiKey, EntityUid idCard, out string? refusal)
     {
+        refusal = null;
+
         if (!TryComp<ShipyardConsoleComponent>(host, out var console))
             return false;
 
+        LastConsolePopup = null;
         OnSellMessage(host, console, new ShipyardConsoleSellMessage { Actor = customer, UiKey = uiKey });
-        return TerminatingOrDeleted(shuttle);
+
+        if (!HasDeed(idCard))
+            return true;
+
+        refusal = LastConsolePopup;
+        return false;
     }
 
     #endregion

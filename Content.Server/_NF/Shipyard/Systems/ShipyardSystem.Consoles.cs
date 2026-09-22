@@ -671,6 +671,7 @@ public sealed partial class ShipyardSystem : SharedShipyardSystem
 
     private void ConsolePopup(EntityUid uid, string text)
     {
+        LastConsolePopup = text; // WOLFGATE: hosting traders read back why a sale was refused
         _popup.PopupEntity(text, uid);
     }
 

@@ -130,15 +130,16 @@ public sealed partial class TraderUsedShipsSystem : EntitySystem
         var shipName = Name(shuttle);
 
         // Everything past here is the console's own sale: docking, organics, taxes, the bank deposit.
-        var sold = _shipyard.TryHostedSell(ent.Owner, customer, uiKey, shuttle);
+        var sold = _shipyard.TryHostedSell(ent.Owner, customer, uiKey, idCard, out var refusal);
 
         _trader.ReturnHeldItems(traderEnt);
         _shipyard.ClearHostedConsole(ent.Owner);
 
         if (!sold)
         {
-            // The console has already popped up why.
-            _trader.SayAndShow(traderEnt, Loc.GetString("trader-used-sale-refused"));
+            _trader.SayAndShow(traderEnt, refusal == null
+                ? Loc.GetString("trader-used-sale-refused")
+                : Loc.GetString("trader-used-sale-refused-reason", ("reason", refusal)));
             return;
         }
 

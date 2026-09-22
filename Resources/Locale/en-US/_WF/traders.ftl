@@ -86,6 +86,7 @@ trader-used-unknown-seller = an anonymous seller
 trader-used-no-ship = I don't see a ship on that ID.
 trader-used-quote = I can give you { $amount } for the { $ship }.
 trader-used-sale-refused = Can't take her like that, I'm afraid.
+trader-used-sale-refused-reason = Can't take her like that, I'm afraid. { $reason }
 trader-used-sale-done = { $amount }, straight into your account. Pleasure.
 trader-used-gone = Somebody beat you to that one.
 trader-used-load-failed = She won't come out of the yard. Your money's back on the table.
