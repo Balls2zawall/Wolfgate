@@ -709,11 +709,16 @@ public sealed class TraderSystem : EntitySystem
 
                 return false;
 
+            // Only the customer's own card counts, so a stranger's card on the table does not
+            // satisfy the check and then get refused by the service a moment later.
             case TraderRequirement.Id:
                 thing = "trader-thing-id-voucher";
                 foreach (var item in items)
                 {
-                    if (HasComp<IdCardComponent>(item) || HasComp<ShipyardVoucherComponent>(item))
+                    if (HasComp<ShipyardVoucherComponent>(item))
+                        return true;
+
+                    if (HasComp<IdCardComponent>(item) && _idOwner.IsOwnedBy(item, customer))
                         return true;
                 }
 
@@ -723,8 +728,12 @@ public sealed class TraderSystem : EntitySystem
                 thing = "trader-thing-deed-id";
                 foreach (var item in items)
                 {
-                    if (HasComp<IdCardComponent>(item) && HasComp<Content.Shared._NF.Shipyard.Components.ShuttleDeedComponent>(item))
+                    if (HasComp<IdCardComponent>(item)
+                        && HasComp<Content.Shared._NF.Shipyard.Components.ShuttleDeedComponent>(item)
+                        && _idOwner.IsOwnedBy(item, customer))
+                    {
                         return true;
+                    }
                 }
 
                 return false;

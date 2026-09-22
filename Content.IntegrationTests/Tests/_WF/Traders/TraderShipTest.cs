@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Numerics;
 using System.Linq;
+using Content.Server._NF.SectorServices;
 using Content.Server._NF.Shipyard.Systems;
 using Content.Server._WF.Shipyard;
 using Content.Server._WF.Traders;
@@ -536,6 +537,8 @@ public sealed class TraderShipTest
             station = entMan.Spawn();
             entMan.EnsureComponent<StationDataComponent>(station);
             entMan.EnsureComponent<UsedShipMarketComponent>(station);
+            // The sale's last step writes a sector shuttle record; the host component gives it a sector entity.
+            entMan.EnsureComponent<StationSectorServiceHostComponent>(station);
             stationSys.AddGridToStation(station, dockGrid);
 
             metaSys.SetEntityName(shuttle, ShipName);
@@ -595,31 +598,27 @@ public sealed class TraderShipTest
                 $"Nothing else on a stock hull should be unsavable: {string.Join(", ", leftover.Select(uid => entMan.ToPrettyString(uid).ToString()))}");
         });
 
-        await pair.RunTicksSync(5);
+        // Docking settles over a few ticks; wait for it rather than assuming a count.
+        for (var i = 0; i < 40 && !IsDockedTo(entMan, shuttle, dockGrid); i++)
+            await pair.RunTicksSync(5);
 
         UsedShipListing? listing = null;
 
         await server.WaitAssertion(() =>
         {
+            Assert.That(IsDockedTo(entMan, shuttle, dockGrid), Is.True, "The ship should be docked before it is sold.");
             shipyardSys.SetupShipyardIfNeeded();
 
-            // The sale's last step refreshes the sector shuttle records, which need a round; by then the
-            // capture and the deletion have both happened, so that one failure is let through.
-            try
-            {
-                var result = shipyardSys.TrySellShuttle(station, shuttle, console, out _);
-                Assert.That(result.Error, Is.EqualTo(ShipyardSystem.ShipyardSaleError.Success), $"Sale failed: {result.Error}");
-            }
-            catch (ArgumentException e) when (e.StackTrace?.Contains("ShuttleRecordsSystem") == true)
-            {
-            }
+            var result = shipyardSys.TrySellShuttle(station, shuttle, console, out _);
+            Assert.That(result.Error, Is.EqualTo(ShipyardSystem.ShipyardSaleError.Success), $"Sale failed: {result.Error}");
 
             Assert.That(marketSys.Listings.Count, Is.EqualTo(listingsBefore + 1), "The sale should have been captured.");
             listing = marketSys.Listings[^1];
             Assert.That(listing.ShipName, Is.EqualTo(ShipName));
         });
 
-        await pair.RunTicksSync(5);
+        for (var i = 0; i < 40 && !entMan.Deleted(shuttle); i++)
+            await pair.RunTicksSync(5);
 
         var bought = EntityUid.Invalid;
 
@@ -671,6 +670,24 @@ public sealed class TraderShipTest
         });
 
         await pair.CleanReturnAsync();
+    }
+
+    /// <summary>
+    /// Whether any dock on the shuttle is joined to a dock on the other grid.
+    /// </summary>
+    private static bool IsDockedTo(IEntityManager entMan, EntityUid shuttle, EntityUid other)
+    {
+        var query = entMan.EntityQueryEnumerator<DockingComponent, TransformComponent>();
+        while (query.MoveNext(out _, out var dock, out var xform))
+        {
+            if (xform.GridUid != shuttle || dock.DockedWith is not { } target)
+                continue;
+
+            if (entMan.GetComponent<TransformComponent>(target).GridUid == other)
+                return true;
+        }
+
+        return false;
     }
 
     private static int MarkersAboard(IEntityManager entMan, EntityUid grid)
