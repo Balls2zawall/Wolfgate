@@ -55,4 +55,4 @@
   - type: TraderUsedShips
     console: ComputerShipyard
     usedShipMarkup: 0.05
-    relistDelay: 300
+    relistDelay: 60

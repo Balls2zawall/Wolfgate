@@ -25,7 +25,7 @@ public sealed partial class TraderUsedShipsComponent : Component
     /// How long a ship sits out back before it goes on the lot.
     /// </summary>
     [DataField]
-    public TimeSpan RelistDelay = TimeSpan.FromMinutes(5);
+    public TimeSpan RelistDelay = TimeSpan.FromMinutes(1);
 
     /// <summary>
     /// Set while the customer is being asked to accept a sale quote.

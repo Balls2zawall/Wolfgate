@@ -87,7 +87,7 @@ public sealed class UsedShipMarketSystem : EntitySystem
     /// <summary>
     /// How long a ship waits before it goes on the lot, when a sale does not come from a salesman.
     /// </summary>
-    public static readonly TimeSpan DefaultRelistDelay = TimeSpan.FromMinutes(5);
+    public static readonly TimeSpan DefaultRelistDelay = TimeSpan.FromMinutes(1);
 
     public override void Initialize()
     {
