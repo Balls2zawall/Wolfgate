@@ -4,8 +4,8 @@ meta:
   engineVersion: 277.0.0
   forkId: ""
   forkVersion: ""
-  time: 09/22/2026 05:16:24
-  entityCount: 10104
+  time: 09/22/2026 15:09:29
+  entityCount: 10107
 maps:
 - 1
 grids:
@@ -336,10 +336,10 @@ entities:
     - type: ThermalSignature
     - type: SpreaderGrid
       spreadQueues:
-        Puddle: []
         Smoke: []
-        MetalFoam: []
         Kudzu: []
+        Puddle: []
+        MetalFoam: []
     - type: Shuttle
       dampingModifier: 0.25
     - type: ImplicitRoof
@@ -31899,6 +31899,17 @@ entities:
       pipeLayer: Secondary
     - type: AtmosPipeColor
       color: '#990000FF'
+  - uid: 10105
+    components:
+    - type: Transform
+      pos: -15.5,11.5
+      parent: 2
+  - uid: 10106
+    components:
+    - type: Transform
+      rot: 3.141592653589793 rad
+      pos: -15.5,9.5
+      parent: 2
 - proto: GasPipeBend
   entities:
   - uid: 357
@@ -36521,6 +36532,12 @@ entities:
       parent: 2
     - type: AtmosPipeColor
       color: '#0055CCFF'
+  - uid: 10107
+    components:
+    - type: Transform
+      rot: 3.141592653589793 rad
+      pos: -15.5,10.5
+      parent: 2
 - proto: GasPipeStraightAlt1
   entities:
   - uid: 138
@@ -68881,13 +68898,13 @@ entities:
             required: False
             points: 1
         markings:
-          Hair:
-          - markingId: HumanHairBalding
+          FacialHair:
+          - markingId: HumanFacialHairFullbeard
             visible: True
             markingColor:
             - '#9C9990FF'
-          FacialHair:
-          - markingId: HumanFacialHairFullbeard
+          Hair:
+          - markingId: HumanHairBalding
             visible: True
             markingColor:
             - '#9C9990FF'
@@ -69040,13 +69057,13 @@ entities:
             required: False
             points: 1
         markings:
-          Hair:
-          - markingId: HumanHairCombover
+          FacialHair:
+          - markingId: HumanFacialHairMoustache
             visible: True
             markingColor:
             - '#2E2420FF'
-          FacialHair:
-          - markingId: HumanFacialHairMoustache
+          Hair:
+          - markingId: HumanHairCombover
             visible: True
             markingColor:
             - '#2E2420FF'
@@ -69970,13 +69987,13 @@ entities:
             required: False
             points: 1
         markings:
-          Hair:
-          - markingId: HumanHairPompadour
+          FacialHair:
+          - markingId: HumanFacialHairMoustache
             visible: True
             markingColor:
             - '#171310FF'
-          FacialHair:
-          - markingId: HumanFacialHairMoustache
+          Hair:
+          - markingId: HumanHairPompadour
             visible: True
             markingColor:
             - '#171310FF'
@@ -70129,13 +70146,13 @@ entities:
             required: False
             points: 1
         markings:
-          Hair:
-          - markingId: HumanHairCombover
+          FacialHair:
+          - markingId: HumanFacialHairFullbeard
             visible: True
             markingColor:
             - '#3B3128FF'
-          FacialHair:
-          - markingId: HumanFacialHairFullbeard
+          Hair:
+          - markingId: HumanHairCombover
             visible: True
             markingColor:
             - '#3B3128FF'
