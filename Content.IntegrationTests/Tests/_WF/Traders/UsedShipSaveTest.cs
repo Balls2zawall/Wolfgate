@@ -1,3 +1,4 @@
+#nullable enable
 using System.Linq;
 using Content.Server._NF.Shipyard.Systems;
 using Content.Server._WF.Shipyard;
