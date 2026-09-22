@@ -1,13 +1,19 @@
 using System.Text;
+using System.Linq;
 using Content.Server._NF.Bank;
 using Content.Server._NF.Shipyard.Systems;
+using Content.Server._Mono.Shipyard;
 using Content.Server._WF.Shipyard;
+using Content.Shared._NF.Shipyard.Components;
+using Content.Shared.Access.Components;
+using Content.Shared.Access.Systems;
 using Content.Server.GameTicking;
 using Content.Server.Radio.EntitySystems;
 using Content.Shared._NF.Bank;
 using Content.Shared._WF.Traders;
 using Robust.Server.GameObjects;
 using Robust.Shared.Player;
+using Robust.Shared.Prototypes;
 
 namespace Content.Server._WF.Traders;
 
@@ -17,7 +23,11 @@ namespace Content.Server._WF.Traders;
 /// </summary>
 public sealed partial class TraderUsedShipsSystem : EntitySystem
 {
+    [Dependency] private SharedAccessSystem _access = default!;
     [Dependency] private BankSystem _bank = default!;
+    [Dependency] private ShipyardDirectionSystem _direction = default!;
+    [Dependency] private SharedIdCardSystem _idCard = default!;
+    [Dependency] private IPrototypeManager _proto = default!;
     [Dependency] private GameTicker _gameTicker = default!;
     [Dependency] private RadioSystem _radio = default!;
     [Dependency] private ShipyardSystem _shipyard = default!;
@@ -293,10 +303,39 @@ public sealed partial class TraderUsedShipsSystem : EntitySystem
         }
 
         _market.RemoveListing(listing);
+        GrantConsolePerks(ent, idCard, args.Actor);
 
         PrintPurchaseReceipt(traderEnt, args.Actor, listing);
-        _trader.SayAndShow(traderEnt, Loc.GetString("trader-used-sold", ("ship", listing.ShipName)));
+        var sold = Loc.GetString("trader-used-sold", ("ship", listing.ShipName));
+        _trader.SayAndShow(traderEnt, sold);
+        _trader.Say(traderEnt, sold);
+        _radio.SendRadioMessage(ent.Owner, Loc.GetString("shipyard-console-docking",
+            ("owner", Name(args.Actor)), ("vessel", listing.ShipName)), ent.Comp.RadioChannel, ent.Owner);
+        _direction.SendShipDirectionMessage(args.Actor, shuttle.Value);
         UpdateState(ent, traderEnt, args.Actor);
+    }
+
+    /// <summary>
+    /// What the console this salesman stands in for would put on the buyer's card: the access levels
+    /// the ship's own doors expect, and the job title.
+    /// </summary>
+    private void GrantConsolePerks(Entity<TraderUsedShipsComponent> ent, EntityUid idCard, EntityUid buyer)
+    {
+        if (!_proto.TryIndex(ent.Comp.Console, out var consoleProto)
+            || !consoleProto.TryGetComponent<ShipyardConsoleComponent>(out var console, EntityManager.ComponentFactory))
+        {
+            return;
+        }
+
+        if (console.NewAccessLevels.Count > 0 && TryComp<AccessComponent>(idCard, out var access))
+        {
+            var tags = access.Tags.ToList();
+            tags.AddRange(console.NewAccessLevels);
+            _access.TrySetTags(idCard, tags, access);
+        }
+
+        if (!string.IsNullOrEmpty(console.NewJobTitle))
+            _idCard.TryChangeJobTitle(idCard, console.NewJobTitle, player: buyer);
     }
 
     /// <summary>
