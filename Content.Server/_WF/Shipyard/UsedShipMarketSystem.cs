@@ -209,7 +209,10 @@ public sealed class UsedShipMarketSystem : EntitySystem
         _docking.UndockDocks(shuttle);
 
         if (!_shipyard.TrySaveShip(shuttle, out var data))
+        {
+            Log.Error($"Could not copy {shipName} for the used lot; it is lost.");
             return false;
+        }
 
         var saleValue = _shipyard.GetPostSaleRateBill(console, appraisal);
         var now = _timing.CurTime;
@@ -229,6 +232,7 @@ public sealed class UsedShipMarketSystem : EntitySystem
         };
 
         _listings.Add(listing);
+        Log.Info($"Captured {shipName} ({designName}) for the used lot at {listing.Price}, available at {listing.AvailableAt}.");
         return true;
     }
 
