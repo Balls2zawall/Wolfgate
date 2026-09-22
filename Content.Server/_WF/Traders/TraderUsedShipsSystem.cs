@@ -3,6 +3,7 @@ using Content.Server._NF.Bank;
 using Content.Server._NF.Shipyard.Systems;
 using Content.Server._WF.Shipyard;
 using Content.Server.GameTicking;
+using Content.Server.Radio.EntitySystems;
 using Content.Shared._NF.Bank;
 using Content.Shared._WF.Traders;
 using Robust.Server.GameObjects;
@@ -18,6 +19,7 @@ public sealed partial class TraderUsedShipsSystem : EntitySystem
 {
     [Dependency] private BankSystem _bank = default!;
     [Dependency] private GameTicker _gameTicker = default!;
+    [Dependency] private RadioSystem _radio = default!;
     [Dependency] private ShipyardSystem _shipyard = default!;
     [Dependency] private TraderSystem _trader = default!;
     [Dependency] private UserInterfaceSystem _ui = default!;
@@ -296,17 +298,20 @@ public sealed partial class TraderUsedShipsSystem : EntitySystem
     #endregion
 
     /// <summary>
-    /// Every salesman calls out a fresh arrival on the lot.
+    /// Every salesman calls out a fresh arrival on the lot, out loud and on the traffic channel.
     /// </summary>
     private void OnListed(ref UsedShipListedEvent args)
     {
+        var line = Loc.GetString("trader-used-new-stock",
+            ("ship", args.Listing.ShipName),
+            ("design", args.Listing.DesignName),
+            ("price", BankSystemExtensions.ToSpesoString(args.Listing.Price)));
+
         var query = EntityQueryEnumerator<TraderUsedShipsComponent, TraderComponent>();
-        while (query.MoveNext(out var uid, out _, out var trader))
+        while (query.MoveNext(out var uid, out var used, out var trader))
         {
-            _trader.Say((uid, trader), Loc.GetString("trader-used-new-stock",
-                ("ship", args.Listing.ShipName),
-                ("design", args.Listing.DesignName),
-                ("price", BankSystemExtensions.ToSpesoString(args.Listing.Price))));
+            _trader.Say((uid, trader), line);
+            _radio.SendRadioMessage(uid, line, used.RadioChannel, uid);
         }
     }
 

@@ -1,3 +1,4 @@
+using Content.Shared.Radio;
 using Robust.Shared.Prototypes;
 
 namespace Content.Shared._WF.Traders;
@@ -26,6 +27,12 @@ public sealed partial class TraderUsedShipsComponent : Component
     /// </summary>
     [DataField]
     public TimeSpan RelistDelay = TimeSpan.FromMinutes(1);
+
+    /// <summary>
+    /// Radio channel new stock is called out on, the same one the shipyard consoles use.
+    /// </summary>
+    [DataField]
+    public ProtoId<RadioChannelPrototype> RadioChannel = "Traffic";
 
     /// <summary>
     /// Set while the customer is being asked to accept a sale quote.
