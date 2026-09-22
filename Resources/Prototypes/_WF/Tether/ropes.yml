@@ -170,6 +170,10 @@
     ropeType: RopeHemp
     metresPerUnit: 1
     slack: 1.15
+  - type: StaticPrice
+    price: 0
+  - type: StackPrice
+    price: 2
 
 - type: entity
   id: RopeHempCoil1
@@ -197,6 +201,10 @@
     ropeType: RopeSynthetic
     metresPerUnit: 1
     slack: 1.15
+  - type: StaticPrice
+    price: 0
+  - type: StackPrice
+    price: 4
 
 - type: entity
   id: RopeSyntheticCoil1
@@ -224,6 +232,10 @@
     ropeType: RopeBungee
     metresPerUnit: 1
     slack: 1.15
+  - type: StaticPrice
+    price: 0
+  - type: StackPrice
+    price: 6
 
 - type: entity
   id: RopeBungeeCoil1
@@ -251,6 +263,10 @@
     ropeType: RopeSteelCable
     metresPerUnit: 1
     slack: 1.15
+  - type: StaticPrice
+    price: 0
+  - type: StackPrice
+    price: 8
 
 - type: entity
   id: RopeSteelCableCoil1
@@ -279,6 +295,10 @@
     ropeType: RopeTowCable
     metresPerUnit: 1
     slack: 1.15
+  - type: StaticPrice
+    price: 0
+  - type: StackPrice
+    price: 20
 
 - type: entity
   id: RopeTowCableCoil1

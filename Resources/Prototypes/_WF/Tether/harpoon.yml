@@ -127,6 +127,23 @@
     graph: WFShipHarpoonTurret
     node: turret
 
+- type: entity
+  parent: BaseFlatpack
+  id: ShipHarpoonTurretFlatpack
+  name: harpoon turret flatpack
+  description: A flatpack used for constructing a ship harpoon turret.
+  components:
+  - type: Flatpack
+    entity: ShipHarpoonTurret
+  - type: Sprite
+    layers:
+    - state: base
+    - state: overlay
+      color: "#8a8f96"
+    - state: icon-default
+  - type: StaticPrice
+    price: 3000
+
 # Operator controls, granted while buckled in.
 
 - type: entity

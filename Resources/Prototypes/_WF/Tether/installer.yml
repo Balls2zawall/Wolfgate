@@ -24,3 +24,5 @@
     materialPerInstall: 200
     range: 3
     installDelay: 1.5
+  - type: StaticPrice
+    price: 400

@@ -96,6 +96,10 @@
     ropeType: PowerCordHV
     metresPerUnit: 1
     slack: 1.15
+  - type: StaticPrice
+    price: 0
+  - type: StackPrice
+    price: 12
 
 - type: entity
   id: PowerCordCoilHV1
@@ -123,6 +127,10 @@
     count: 20
   - type: RopeCoil
     ropeType: PowerCordMV
+  - type: StaticPrice
+    price: 0
+  - type: StackPrice
+    price: 8
 
 - type: entity
   id: PowerCordCoilMV1
@@ -150,6 +158,10 @@
     count: 20
   - type: RopeCoil
     ropeType: PowerCordLV
+  - type: StaticPrice
+    price: 0
+  - type: StackPrice
+    price: 5
 
 - type: entity
   id: PowerCordCoilLV1
