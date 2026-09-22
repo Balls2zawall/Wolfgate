@@ -78,7 +78,7 @@
   - type: BasicStationEventScheduler
     scheduledGameRules: !type:NestedSelector
       tableId: XenoborgShipTable
-    minimumTimeUntilFirstEvent: 3600 # 1 hour
+    minimumTimeUntilFirstEvent: 1800 # WOLFGATE: 30 minutes
     minMaxEventTiming:
-      min: 5400 # 90 minutes between events
-      max: 7200 # 120 minutes between events
+      min: 2400 # WOLFGATE: 40 minutes between events
+      max: 2400 # WOLFGATE: 40 minutes between events

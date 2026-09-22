@@ -33,6 +33,7 @@
     contents:
     - id: SheetSteel
     - id: SheetGlass
+    - id: SheetPlastic # WOLFGATE: starter material for xenoborg recipes
     - id: IngotSilver
     - id: IngotGold
 
@@ -46,5 +47,6 @@
     contents:
     - id: SheetSteel
     - id: SheetGlass
+    - id: SheetPlastic # WOLFGATE: starter material for xenoborg recipes
     - id: IngotSilver
     - id: IngotGold
