@@ -7,7 +7,9 @@ using Content.Shared._Mono.Ships.Components;
 using Content.Shared._NF.Shipyard.Prototypes;
 using Content.Shared._WF.Traders;
 using Content.Shared.GameTicking;
+using Robust.Shared.Audio.Components;
 using Robust.Shared.Prototypes;
+using Robust.Shared.Spawners;
 using Robust.Shared.Timing;
 
 namespace Content.Server._WF.Shipyard;
@@ -75,6 +77,7 @@ public sealed class UsedShipMarketSystem : EntitySystem
     [Dependency] private IPrototypeManager _proto = default!;
     [Dependency] private ShipyardSystem _shipyard = default!;
     [Dependency] private StationSystem _station = default!;
+    [Dependency] private UsedShipReinitSystem _reinit = default!;
 
     private readonly List<UsedShipListing> _listings = new();
     private int _nextId = 1;
@@ -192,6 +195,15 @@ public sealed class UsedShipMarketSystem : EntitySystem
             designName = design.Name;
         }
 
+        // The map loader silently drops these, so the copy comes back without them. The salesman
+        // refuses a sale before it gets this far; anything that reaches here really is lost.
+        var unsavable = GetUnsavableAboard(shuttle);
+        if (unsavable.Count > 0)
+        {
+            var names = string.Join(", ", unsavable.Select(uid => ToPrettyString(uid).ToString()));
+            Log.Warning($"Copying {ToPrettyString(shuttle)} for resale loses {unsavable.Count} entities: {names}");
+        }
+
         // A docked hull's joints and docks point at the station; the copy cannot carry them and a
         // dangling reference makes the whole load fail. The hull is about to be deleted regardless.
         _docking.UndockDocks(shuttle);
@@ -220,6 +232,44 @@ public sealed class UsedShipMarketSystem : EntitySystem
         return true;
     }
 
+    /// <summary>
+    /// Everything aboard a grid the map loader will not write out and somebody would miss: borgs,
+    /// mechs, drones, pets. The copy comes back without them, so a sale has to be refused first.
+    /// </summary>
+    public List<EntityUid> GetUnsavableAboard(EntityUid grid)
+    {
+        var found = new List<EntityUid>();
+        var pending = new Queue<EntityUid>();
+        pending.Enqueue(grid);
+
+        while (pending.TryDequeue(out var parent))
+        {
+            var children = Transform(parent).ChildEnumerator;
+            while (children.MoveNext(out var child))
+            {
+                // A prototype that is not saved takes everything inside it with it, so do not recurse.
+                if (MetaData(child).EntityPrototype is { MapSavable: false } && !IsTransient(child))
+                {
+                    found.Add(child);
+                    continue;
+                }
+
+                pending.Enqueue(child);
+            }
+        }
+
+        return found;
+    }
+
+    /// <summary>
+    /// Whether an entity is aboard only for a moment: a playing sound or a timed effect. Every
+    /// humming computer parents an unsavable audio stream to the grid, and nobody can carry one off.
+    /// </summary>
+    private bool IsTransient(EntityUid uid)
+    {
+        return HasComp<AudioComponent>(uid) || HasComp<TimedDespawnComponent>(uid);
+    }
+
     #endregion
 
     #region Buying
@@ -236,6 +286,7 @@ public sealed class UsedShipMarketSystem : EntitySystem
             return false;
 
         _shipyard.StripForResale(grid.Value);
+        _reinit.ReinitLoadedShip(grid.Value);
 
         if (!_shipyard.TryDockLoadedShuttle(station, grid.Value))
         {

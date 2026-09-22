@@ -6,15 +6,23 @@ using System.Linq;
 using Content.Server._NF.Shipyard.Systems;
 using Content.Server._WF.Shipyard;
 using Content.Server._WF.Traders;
+using Content.Server.DeviceNetwork.Systems;
+using Content.Server.Gravity;
+using Content.Server.Power.Components;
 using Content.Server.Shuttles.Components;
 using Content.Server.Shuttles.Systems;
 using Content.Server.Station.Systems;
+using Content.Server.Wires;
+using Content.Shared._Crescent.ShipShields;
 using Content.Shared._Mono.Ships.Components;
 using Content.Shared._NF.Shipyard;
 using Content.Shared._NF.Shipyard.Components;
 using Content.Shared._NF.Shipyard.Prototypes;
 using Content.Shared._WF.Traders;
 using Content.Shared.Access.Components;
+using Content.Shared.DeviceNetwork.Components;
+using Content.Shared.Gravity;
+using Content.Shared.Pinpointer;
 using Content.Shared.Stacks;
 using Content.Shared.Station.Components;
 using Robust.Server.GameObjects;
@@ -44,6 +52,7 @@ public sealed class TraderShipTest
     private const string CashProto = "SpaceCash";
     private const string MarkerProto = "Wrench";
     private const string VesselProto = "Guppy";
+    private const string BorgProto = "BorgChassisGeneric";
     private const string ShipName = "Test Barge";
     private const string MarkerName = "Wolfgate resale marker";
 
@@ -345,11 +354,46 @@ public sealed class TraderShipTest
             var marker = entMan.SpawnEntity(MarkerProto, new EntityCoordinates(shuttle, deck));
             metaSys.SetEntityName(marker, MarkerName);
 
+            // A ship that was running when it was sold: force the gravity generator's receiver powered
+            // so its charge tops out and the hull really has gravity before it is copied.
+            foreach (var uid in Descendants(entMan, shuttle))
+            {
+                if (entMan.HasComponent<GravityGeneratorComponent>(uid)
+                    && entMan.TryGetComponent<ApcPowerReceiverComponent>(uid, out var receiver))
+                {
+                    receiver.NeedsPower = false;
+                }
+            }
+
             var shuttleComp = entMan.GetComponent<ShuttleComponent>(shuttle);
             Assert.That(shuttleSys.TryFTLDock(shuttle, shuttleComp, dockGrid), Is.True, "The ship should dock to the station hull.");
 
             console = entMan.SpawnEntity(ConsoleProto, new EntityCoordinates(dockGrid, 0.5f, 0.5f));
             listingsBefore = marketSys.Listings.Count;
+        });
+
+        await pair.RunTicksSync(15);
+
+        // Anything the map loader will not write out has to stop the sale rather than be destroyed by it.
+        await server.WaitAssertion(() =>
+        {
+            Assert.That(entMan.GetComponent<GravityComponent>(shuttle).Enabled, Is.True,
+                "The ship should have gravity before it is sold.");
+
+            var deck = entMan.GetComponent<MapGridComponent>(shuttle).LocalAABB.Center;
+            Assert.That(marketSys.GetUnsavableAboard(shuttle), Is.Empty,
+                "A stock hull, humming computers and all, should be sellable.");
+
+            var borg = entMan.SpawnEntity(BorgProto, new EntityCoordinates(shuttle, deck));
+
+            Assert.That(marketSys.GetUnsavableAboard(shuttle), Does.Contain(borg),
+                "A borg aboard should block the sale.");
+
+            entMan.DeleteEntity(borg);
+
+            var leftover = marketSys.GetUnsavableAboard(shuttle);
+            Assert.That(leftover, Is.Empty,
+                $"Nothing else on a stock hull should be unsavable: {string.Join(", ", leftover.Select(uid => entMan.ToPrettyString(uid).ToString()))}");
         });
 
         await pair.RunTicksSync(5);
@@ -378,6 +422,8 @@ public sealed class TraderShipTest
 
         await pair.RunTicksSync(5);
 
+        var bought = EntityUid.Invalid;
+
         await server.WaitAssertion(() =>
         {
             Assert.That(entMan.Deleted(shuttle), Is.True, "The sold hull should be gone.");
@@ -386,12 +432,39 @@ public sealed class TraderShipTest
             Assert.That(marketSys.TryLoadListing(listing, station, out var loaded), Is.True,
                 "The copy of a really sold ship should load back in.");
 
-            Assert.That(entMan.GetComponent<MetaDataComponent>(loaded!.Value).EntityName, Is.EqualTo(ShipName));
-            Assert.That(MarkersAboard(entMan, loaded.Value), Is.EqualTo(1), "The cargo should still be aboard.");
-            Assert.That(entMan.HasComponent<ShuttleDeedComponent>(loaded.Value), Is.False, "The old deed must not come back.");
+            bought = loaded!.Value;
+            Assert.That(entMan.GetComponent<MetaDataComponent>(bought).EntityName, Is.EqualTo(ShipName));
+            Assert.That(MarkersAboard(entMan, bought), Is.EqualTo(1), "The cargo should still be aboard.");
+            Assert.That(entMan.HasComponent<ShuttleDeedComponent>(bought), Is.False, "The old deed must not come back.");
 
-            marketSys.RemoveListing(listing);
-            entMan.DeleteEntity(loaded.Value);
+            // The grid never map-inits again, so the nav map has to be rebuilt by hand.
+            Assert.That(entMan.TryGetComponent<NavMapComponent>(bought, out var navMap), Is.True,
+                "The resold hull should have nav map data for its consoles.");
+            Assert.That(navMap!.Chunks, Is.Not.Empty, "The nav map should have been filled from the tiles.");
+
+            Assert.That(Descendants(entMan, bought).Any(entMan.HasComponent<ShipShieldComponent>), Is.False,
+                "The seller's shield bubble must not come back with the hull.");
+
+            var deviceSys = entMan.System<DeviceNetworkSystem>();
+            var connected = Descendants(entMan, bought).Count(uid =>
+                entMan.TryGetComponent<DeviceNetworkComponent>(uid, out var device)
+                && deviceSys.IsDeviceConnected(uid, device));
+            Assert.That(connected, Is.GreaterThan(0), "The hull's devices should be back on a device net.");
+
+            var wired = Descendants(entMan, bought).Count(uid =>
+                entMan.TryGetComponent<WiresComponent>(uid, out var wires) && wires.WiresList.Count > 0);
+            Assert.That(wired, Is.GreaterThan(0), "The hull's boards should have wires again.");
+        });
+
+        await pair.RunTicksSync(15);
+
+        await server.WaitAssertion(() =>
+        {
+            Assert.That(entMan.GetComponent<GravityComponent>(bought).Enabled, Is.True,
+                "A ship sold with a running generator should come back with its gravity on.");
+
+            marketSys.RemoveListing(listing!);
+            entMan.DeleteEntity(bought);
         });
 
         await pair.CleanReturnAsync();

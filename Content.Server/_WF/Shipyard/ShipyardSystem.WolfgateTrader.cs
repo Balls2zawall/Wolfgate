@@ -1,9 +1,14 @@
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Numerics;
+using Content.Server._Mono.Shuttles.Components;
+using Content.Server.Physics.Controllers;
 using Content.Server.Shuttles.Components;
 using Content.Server.StationEvents.Components;
 using Content.Shared._Mono.Company;
+using Content.Shared._Mono.Shipyard;
+using Content.Shared._Mono.Ships.Components;
+using Content.Shared._WF.ShipPa;
 using Content.Shared._NF.Shipyard;
 using Content.Shared._NF.Shipyard.Components;
 using Content.Shared._NF.Shipyard.Events;
@@ -171,6 +176,8 @@ public sealed partial class ShipyardSystem
 
     /// <summary>
     /// Strips everything bound to the old owner, so the saved copy comes back as an unclaimed hull.
+    /// Everything taken off here is put back by the system that owns it or by the buyer's deed; what
+    /// survives a sale on purpose, such as the repair record, is left alone.
     /// </summary>
     public void StripForResale(EntityUid grid)
     {
@@ -180,6 +187,25 @@ public sealed partial class ShipyardSystem
         RemComp<StationMemberComponent>(grid);
         RemComp<CompanyComponent>(grid);
         RemComp<FTLComponent>(grid);
+
+        // Guests the seller waved aboard, by card and by borg.
+        RemComp<ShipGuestAccessComponent>(grid);
+
+        // Job slots and the station they were counted against; the console saves them again on power loss.
+        RemComp<ShuttleConsoleJobSlotsComponent>(grid);
+
+        // Whoever was at the helm, and the consoles a crewed hull was counting: both are dead uids.
+        RemComp<PilotedShuttleComponent>(grid);
+        RemComp<CrewedShuttleComponent>(grid);
+
+        // The deed sets the lock again for the buyer, at the console's own default.
+        RemComp<FTLLockComponent>(grid);
+
+        // The PA timeline, which points at audio fetched for the old crew.
+        RemComp<ShipPaBroadcastComponent>(grid);
+
+        // A hull on the lot is not at general quarters; the PA ensures this again with its defaults.
+        RemComp<ShipAlertComponent>(grid);
     }
 
     /// <summary>
