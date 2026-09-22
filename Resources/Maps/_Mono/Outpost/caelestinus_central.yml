@@ -4,7 +4,7 @@ meta:
   engineVersion: 277.0.0
   forkId: ""
   forkVersion: ""
-  time: 09/22/2026 02:27:07
+  time: 09/22/2026 05:16:24
   entityCount: 10104
 maps:
 - 1
@@ -337,9 +337,9 @@ entities:
     - type: SpreaderGrid
       spreadQueues:
         Puddle: []
+        Smoke: []
         MetalFoam: []
         Kudzu: []
-        Smoke: []
     - type: Shuttle
       dampingModifier: 0.25
     - type: ImplicitRoof
@@ -24221,30 +24221,6 @@ entities:
       bodyType: Dynamic
     - type: Pullable
       prevFixedRotation: True
-  - uid: 10038
-    components:
-    - type: Transform
-      rot: 3.141592653589793 rad
-      pos: -21.5,14.5
-      parent: 2
-  - uid: 10039
-    components:
-    - type: Transform
-      rot: 3.141592653589793 rad
-      pos: -22.5,14.5
-      parent: 2
-  - uid: 10042
-    components:
-    - type: Transform
-      rot: 3.141592653589793 rad
-      pos: -18.5,14.5
-      parent: 2
-  - uid: 10043
-    components:
-    - type: Transform
-      rot: 3.141592653589793 rad
-      pos: -19.5,14.5
-      parent: 2
 - proto: ComputerAdvancedRadar
   entities:
   - uid: 3247
@@ -24339,6 +24315,24 @@ entities:
     components:
     - type: Transform
       pos: -30.5,51.5
+      parent: 2
+    - type: ApcPowerReceiver
+      powerLoad: 5
+    - type: Battery
+      startingCharge: 0
+  - uid: 9152
+    components:
+    - type: Transform
+      pos: -18.5,14.5
+      parent: 2
+    - type: ApcPowerReceiver
+      powerLoad: 5
+    - type: Battery
+      startingCharge: 0
+  - uid: 10038
+    components:
+    - type: Transform
+      pos: -22.5,14.5
       parent: 2
     - type: ApcPowerReceiver
       powerLoad: 5
@@ -52256,11 +52250,6 @@ entities:
       parent: 2
 - proto: RandomVendingDrinks
   entities:
-  - uid: 9152
-    components:
-    - type: Transform
-      pos: -53.5,-11.5
-      parent: 2
   - uid: 9762
     components:
     - type: Transform
@@ -54542,6 +54531,21 @@ entities:
     - type: Transform
       rot: -1.5707963267948966 rad
       pos: 22.5,8.5
+      parent: 2
+  - uid: 10039
+    components:
+    - type: Transform
+      pos: -19.5,14.5
+      parent: 2
+  - uid: 10042
+    components:
+    - type: Transform
+      pos: -21.5,14.5
+      parent: 2
+  - uid: 10043
+    components:
+    - type: Transform
+      pos: -53.5,-11.5
       parent: 2
 - proto: SalvageSpawnerScrapCommon75
   entities:
@@ -68877,13 +68881,13 @@ entities:
             required: False
             points: 1
         markings:
-          FacialHair:
-          - markingId: HumanFacialHairFullbeard
+          Hair:
+          - markingId: HumanHairBalding
             visible: True
             markingColor:
             - '#9C9990FF'
-          Hair:
-          - markingId: HumanHairBalding
+          FacialHair:
+          - markingId: HumanFacialHairFullbeard
             visible: True
             markingColor:
             - '#9C9990FF'
@@ -69036,13 +69040,13 @@ entities:
             required: False
             points: 1
         markings:
-          FacialHair:
-          - markingId: HumanFacialHairMoustache
+          Hair:
+          - markingId: HumanHairCombover
             visible: True
             markingColor:
             - '#2E2420FF'
-          Hair:
-          - markingId: HumanHairCombover
+          FacialHair:
+          - markingId: HumanFacialHairMoustache
             visible: True
             markingColor:
             - '#2E2420FF'
@@ -69966,13 +69970,13 @@ entities:
             required: False
             points: 1
         markings:
-          FacialHair:
-          - markingId: HumanFacialHairMoustache
+          Hair:
+          - markingId: HumanHairPompadour
             visible: True
             markingColor:
             - '#171310FF'
-          Hair:
-          - markingId: HumanHairPompadour
+          FacialHair:
+          - markingId: HumanFacialHairMoustache
             visible: True
             markingColor:
             - '#171310FF'
@@ -70125,13 +70129,13 @@ entities:
             required: False
             points: 1
         markings:
-          FacialHair:
-          - markingId: HumanFacialHairFullbeard
+          Hair:
+          - markingId: HumanHairCombover
             visible: True
             markingColor:
             - '#3B3128FF'
-          Hair:
-          - markingId: HumanHairCombover
+          FacialHair:
+          - markingId: HumanFacialHairFullbeard
             visible: True
             markingColor:
             - '#3B3128FF'
