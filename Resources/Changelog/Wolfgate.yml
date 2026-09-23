@@ -335,3 +335,12 @@ Entries:
   id: 100029
   time: '2026-09-23T02:16:08.0000000+00:00'
   url: https://github.com/VanguardControl/Wolfgate/pull/62
+- author: Gandalf2k15
+  changes:
+    - type: Add
+      message: >-
+        Emergency responders now get an emergency responder ship voucher for a
+        smol medical ship.
+  id: 100030
+  time: '2026-09-23T23:24:12.0000000+00:00'
+  url: https://github.com/VanguardControl/Wolfgate/pull/66
