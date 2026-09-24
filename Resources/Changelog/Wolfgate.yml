@@ -344,3 +344,12 @@ Entries:
   id: 100030
   time: '2026-09-23T23:24:12.0000000+00:00'
   url: https://github.com/VanguardControl/Wolfgate/pull/66
+- author: Gandalf2k15
+  changes:
+    - type: Add
+      message: >-
+        The crafting menu has x2, x5, x10, x20, x50 and All buttons to craft an
+        item several times in a row.
+  id: 100031
+  time: '2026-09-24T00:27:11.0000000+00:00'
+  url: https://github.com/VanguardControl/Wolfgate/pull/67
