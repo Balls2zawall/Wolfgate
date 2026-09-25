@@ -1,4 +1,0 @@
-# WOLFGATE - Everything added through Wolfgate is stocked here; John Wolfgate sells the same list.
-- type: vendingMachineInventory
-  id: WolfgateVendInventory
-  startingInventory: {}
