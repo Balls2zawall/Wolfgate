@@ -367,3 +367,20 @@ Entries:
   id: 100033
   time: '2026-09-25T00:36:30.0000000+00:00'
   url: https://github.com/VanguardControl/Wolfgate/pull/73
+- author: Gandalf2k15
+  changes:
+    - type: Add
+      message: >-
+        Added parts and chemical silos that can supply linked fabrication
+        machines with precursor components and recipe chemicals.
+    - type: Tweak
+      message: >-
+        Overhauled fabrication menus and added queues that wait for missing
+        supplies and start automatically when those supplies arrive.
+    - type: Tweak
+      message: >-
+        Recipe components can now be inserted directly into compatible
+        fabrication machines instead of being placed on top.
+  id: 100034
+  time: '2026-09-25T01:10:51.0000000+00:00'
+  url: https://github.com/VanguardControl/Wolfgate/pull/69
