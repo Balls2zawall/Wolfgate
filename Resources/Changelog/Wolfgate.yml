@@ -360,3 +360,10 @@ Entries:
   id: 100032
   time: '2026-09-24T05:10:00.0000000+00:00'
   url: https://github.com/VanguardControl/Wolfgate/pull/71
+- author: Gandalf2k15
+  changes:
+    - type: Add
+      message: Superheated tiles are now shown with a heat haze effect.
+  id: 100033
+  time: '2026-09-25T00:36:30.0000000+00:00'
+  url: https://github.com/VanguardControl/Wolfgate/pull/73
