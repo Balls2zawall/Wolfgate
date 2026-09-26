@@ -123,8 +123,9 @@ public sealed class WolfmedOrganThresholdSystem : EntitySystem
                 sum += over * MathF.Max(0f, policy.DamageMultipliers.GetValueOrDefault(type));
 
             var damage = sum * share * scale;
-            if (cap > 0f)
-                damage = MathF.Min(damage, cap);
+            var organCap = health.HitCap ?? cap;
+            if (organCap > 0f)
+                damage = MathF.Min(damage, organCap);
 
             var applied = FixedPoint2.New(damage);
             if (applied <= FixedPoint2.Zero)

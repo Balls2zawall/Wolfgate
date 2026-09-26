@@ -37,6 +37,14 @@ public sealed partial class WolfmedOrganComponent : Component
     /// </summary>
     [DataField] public float ImpairedCoolingFactor = 1f;
 
+    /// <summary>
+    /// Most health this organ loses to one hit through the reach lines, in place of wolfmed.organ_hit_cap when set.
+    /// A chassis torso holds only the core and the pump, so every heavy round hit both at the global cap and an IPC
+    /// shut down on the fifth rifle round and lost its core on the eighth (playtest 3).
+    /// </summary>
+    [DataField] public float? HitCap;
+
+    /// <summary>
     /// M5 (plan §3.8, OD13): toxin clearance multiplier while this organ is impaired (the liver: 0.5). Read only
     /// for a liver; a failed liver clears nothing.
     /// </summary>

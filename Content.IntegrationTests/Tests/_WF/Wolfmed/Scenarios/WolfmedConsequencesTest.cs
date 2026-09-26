@@ -779,4 +779,56 @@ public sealed class WolfmedConsequencesTest : GameTest
             Assert.That(gainWeak / gainHealthy, Is.EqualTo(0.5f).Within(0.5f * Band), "the impaired heart does not halve it.");
         });
     }
+
+    /// <summary>
+    /// Playtest 3: an IPC went into shutdown after six turret rounds (Piercing 22) to the chassis. The chassis torso
+    /// holds only the core and the pump, so each takes a far larger share of every hit than a human heart does among
+    /// five organs. With the same rounds a chassis must last at least as long as a human chest: the pump fails no
+    /// sooner than the human heart (it now lasts twice as long, the chassis being plated), and the core later still.
+    /// </summary>
+    [Test]
+    public async Task IpcTorsoLastsAsLongAsAHumanChestTest()
+    {
+        await Pin();
+        var map = await Pair.CreateTestMap();
+        var s = new WolfmedScenario(SEntMan);
+
+        await Server.WaitAssertion(() =>
+        {
+            var shooter = SEntMan.SpawnEntity("MobHuman", map.GridCoords);
+            var human = SEntMan.SpawnEntity("MobHuman", map.GridCoords);
+            var ipc = SEntMan.SpawnEntity("MobIPC", map.GridCoords);
+            var humanTorso = s.Part(human, BodyPartType.Torso);
+            var ipcTorso = s.Part(ipc, BodyPartType.Torso);
+
+            int? heartFailed = null, lungsFailed = null, pumpFailed = null, coreFailed = null;
+            var trace = new List<string>();
+            for (var hit = 1; hit <= 40 && (heartFailed == null || coreFailed == null); hit++)
+            {
+                Routing.TryApplyPartDamage(human, humanTorso, Spec("Piercing", 22), shooter);
+                Routing.TryApplyPartDamage(ipc, ipcTorso, Spec("Piercing", 22), shooter);
+                if (heartFailed == null && Hp(human, "heart") <= 0f)
+                    heartFailed = hit;
+                if (lungsFailed == null && Hp(human, "lungs") <= 0f)
+                    lungsFailed = hit;
+                if (pumpFailed == null && Hp(ipc, "pump") <= 0f)
+                    pumpFailed = hit;
+                if (coreFailed == null && Hp(ipc, "posbrain") <= 0f)
+                    coreFailed = hit;
+                trace.Add($"{hit}: heart {Hp(human, "heart"):0.0} lungs {Hp(human, "lungs"):0.0} | pump {Hp(ipc, "pump"):0.0} core {Hp(ipc, "posbrain"):0.0}");
+            }
+
+            _log.Add("IpcTorsoLastsAsLongAsAHumanChestTest (Piercing 22 to the torso): human lungs fail on hit " +
+                     $"{lungsFailed}, heart on hit {heartFailed}; IPC pump on hit {pumpFailed}, core on hit {coreFailed}.");
+            _log.AddRange(trace);
+            Assert.Multiple(() =>
+            {
+                Assert.That(heartFailed, Is.Not.Null, "forty rounds never failed the human heart.");
+                Assert.That(pumpFailed, Is.Not.Null, "forty rounds never failed the pump.");
+                // Measured with the machine organs' hitCap 2.5: human heart on hit 5, pump on hit 10, core on hit 16.
+                Assert.That(pumpFailed, Is.GreaterThanOrEqualTo(heartFailed * 3 / 2), "the pump does not clearly outlast a human heart.");
+                Assert.That(coreFailed, Is.GreaterThan(pumpFailed), "the core failed no later than the pump.");
+            });
+        });
+    }
 }

@@ -3319,3 +3319,13 @@ three-job split (`core`, `wolfmed`, `entity`) was a memory workaround from befor
 and it changed CI for every PR in the repo. Kept: `EntityTest`'s `[NonParallelizable]` (two spawn-all tests at once are
 the single job's memory peak) and `GameTest`'s failure print (a failed assertion survives the dirty-dispose warning).
 If the single job runs out of memory again, the fix is the spawn-all tests' footprint, not the workflow.
+
+## IPC organs take less per hit (playtest 3, 2026-09-26)
+
+The owner, as an IPC in front of a ballistic turret (Piercing 22 rounds, seven in two seconds), went into shutdown
+(COOLANT PUMP OFFLINE) on about the sixth round. Measured (`IpcTorsoLastsAsLongAsAHumanChestTest`): a human chest under
+the same rounds loses its lungs on hit 3 and its heart on hit 5, so the chassis was level with flesh, but its torso
+holds only the core and the pump, so both took the full `wolfmed.organ_hit_cap` (5) every round, and the core, which
+is death rather than arrest, went on hit 8. `WolfmedOrganComponent.HitCap` now overrides the global cap per organ; the
+positronic core and the coolant pump (IPC and synth) set 2.5. Turret rounds: pump on hit 10, core on hit 16. Standard
+rifle rounds (Piercing 14): core on hit 16 (was 13), human heart unchanged at 13. Humans and headshots are untouched.
