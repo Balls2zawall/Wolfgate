@@ -592,12 +592,6 @@ Skipped ("dirty-disposed").
 
 ## Non-modular edits
 
-- [`.github/workflows/build-test-debug.yml`](../../../.github/workflows/build-test-debug.yml)
-  - one red job must not cancel the others; each part's result is wanted
-  - the integration tests run as three jobs, so each part of the suite gets a runner to
-  - the unit tests run once, with the core half
-  - one part of the suite per job, and a heap limit so server GC collects before the runner is killed
-  - one artifact per job
 - [`Content.Client/_Onyx/HealthExaminable/ExamineSystem.PartStatus.cs`](../../../Content.Client/_Onyx/HealthExaminable/ExamineSystem.PartStatus.cs): ported from Onyx for Wolfmed.
 - [`Content.Client/_Onyx/HealthExaminable/PartStatusTag.cs`](../../../Content.Client/_Onyx/HealthExaminable/PartStatusTag.cs): ported from Onyx for Wolfmed.
 - [`Content.Client/_Onyx/Medical/HealthAnalyzer/EllipsisLabel.cs`](../../../Content.Client/_Onyx/Medical/HealthAnalyzer/EllipsisLabel.cs): ported from Onyx for Wolfmed.

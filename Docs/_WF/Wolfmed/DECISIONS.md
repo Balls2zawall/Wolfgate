@@ -3311,3 +3311,11 @@ The job itself then died twice at about fifty-five minutes with the runner shut 
 **What the different-maps spawn-all found.** With a runner to itself the fixture ran, and `SpawnAndDeleteAllEntitiesOnDifferentMaps` showed two things nothing else had. On the runner, a cockroach gibbed by its own destruction trigger flung its `food` solution entity: a gib dumps every container on the body, a solution lives in a `solution@` container, and a solution entity has no physics, so the fling logged an error. Gibbing now skips `solution@` containers; a solution goes with its owner. Locally, the same test hit a debug assertion in the deletion phase: entities are deleted in query order, so a body's blood solution can go before its heart, and the organ-removed hook then asked the bloodstream for a level through a cached solution that was gone. `WolfmedLifeSystem.GetBlood` checks the solution is still registered before reading it. That test needs about nine gigabytes of heap on its own now (it holds every prototype alive at once, and a mob is many entities), so it fits the twelve-gigabyte limit only with the pool it gets in the `entity` job.
 
 **A fake power loss, undone by a real event.** `PowerLossPausesAndRestoreResumesTest` raised its power-loss event ten ticks after spawning the pod, and on some runs the power net's first refresh, which flips a new receiver to powered and raises the real event, landed in the two seconds after it and resumed the pod. The test waits a full second before the fake loss.
+
+## CI split reverted (2026-09-26)
+
+The owner asked for `build-test-debug.yml` back as main has it: one integration job, no matrix, no heap limit. The
+three-job split (`core`, `wolfmed`, `entity`) was a memory workaround from before main's #88 fixed the leaked test pairs,
+and it changed CI for every PR in the repo. Kept: `EntityTest`'s `[NonParallelizable]` (two spawn-all tests at once are
+the single job's memory peak) and `GameTest`'s failure print (a failed assertion survives the dirty-dispose warning).
+If the single job runs out of memory again, the fix is the spawn-all tests' footprint, not the workflow.
