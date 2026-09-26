@@ -21,8 +21,7 @@ and `WolfmedLifeSystem` (the clock from wounded to dead), `AutodocSystem` (`Cont
 and the analyzer partials in `Content.Server/_WF/Wolfmed/Medical`.
 
 Design record, in `Docs/_WF/Wolfmed`: `DECISIONS.md` (every decision by milestone and playtest; append to it),
-the phase plans (`WOLFMED_PLAN*.md`, `WOLFMED_DEATH_PLAN.md`), `WOLFMED_STATUS.md`, `WOLFMED_HANDOFF.md` and
-`WOLFMED_MANIFEST.md`, the port-time file manifest. The generated list below is the list of record for the
+the death plan (`WOLFMED_DEATH_PLAN.md`) and `WOLFMED_MANIFEST.md`, the port-time file manifest. The generated list below is the list of record for the
 files the module edits outside `_WF`.
 
 Tests: `Content.IntegrationTests/Tests/_WF/Wolfmed` and `Tests/_Onyx/Wounds`. Run the filter
@@ -589,14 +588,7 @@ Skipped ("dirty-disposed").
 
 - [`Docs/_WF/Wolfmed/DECISIONS.md`](../../../Docs/_WF/Wolfmed/DECISIONS.md)
 - [`Docs/_WF/Wolfmed/WOLFMED_DEATH_PLAN.md`](../../../Docs/_WF/Wolfmed/WOLFMED_DEATH_PLAN.md)
-- [`Docs/_WF/Wolfmed/WOLFMED_HANDOFF.md`](../../../Docs/_WF/Wolfmed/WOLFMED_HANDOFF.md)
 - [`Docs/_WF/Wolfmed/WOLFMED_MANIFEST.md`](../../../Docs/_WF/Wolfmed/WOLFMED_MANIFEST.md)
-- [`Docs/_WF/Wolfmed/WOLFMED_PLAN.md`](../../../Docs/_WF/Wolfmed/WOLFMED_PLAN.md)
-- [`Docs/_WF/Wolfmed/WOLFMED_PLAN2.md`](../../../Docs/_WF/Wolfmed/WOLFMED_PLAN2.md)
-- [`Docs/_WF/Wolfmed/WOLFMED_PLAN3.md`](../../../Docs/_WF/Wolfmed/WOLFMED_PLAN3.md)
-- [`Docs/_WF/Wolfmed/WOLFMED_PLAN4.md`](../../../Docs/_WF/Wolfmed/WOLFMED_PLAN4.md)
-- [`Docs/_WF/Wolfmed/WOLFMED_PLAN5.md`](../../../Docs/_WF/Wolfmed/WOLFMED_PLAN5.md)
-- [`Docs/_WF/Wolfmed/WOLFMED_STATUS.md`](../../../Docs/_WF/Wolfmed/WOLFMED_STATUS.md)
 
 ## Non-modular edits
 
