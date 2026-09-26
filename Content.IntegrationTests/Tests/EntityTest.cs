@@ -73,6 +73,16 @@ namespace Content.IntegrationTests.Tests
                     }
                 }
 
+                // WOLFGATE(Wolfmed) START: maps first, so everything on them goes parent-first, as it does when a round
+                // ends. Deleting in enumeration order could delete a held item out of a live xenoborg's hand before its
+                // module, which DroppableBorgModuleSystem logs as an error; the order follows prototype file order,
+                // which differs between Windows and Linux, so it failed on CI only.
+                foreach (var mapId in mapSystem.GetAllMapIds().ToList())
+                {
+                    mapSystem.DeleteMap(mapId);
+                }
+                // WOLFGATE END
+
                 var entityMetas = Query<MetaDataComponent>(entityMan).ToList();
                 foreach (var (uid, meta) in entityMetas)
                 {
@@ -130,6 +140,17 @@ namespace Content.IntegrationTests.Tests
                         yield return (uid, meta);
                     }
                 }
+
+                // WOLFGATE(Wolfmed) START: maps first, so everything on them goes parent-first, as it does when a round
+                // ends. Deleting in enumeration order could delete a held item out of a live xenoborg's hand before its
+                // module, which DroppableBorgModuleSystem logs as an error; the order follows prototype file order,
+                // which differs between Windows and Linux, so it failed on CI only.
+                var mapSystem = entityMan.System<SharedMapSystem>();
+                foreach (var mapId in mapSystem.GetAllMapIds().ToList())
+                {
+                    mapSystem.DeleteMap(mapId);
+                }
+                // WOLFGATE END
 
                 var entityMetas = Query<MetaDataComponent>(entityMan).ToList();
                 foreach (var (uid, meta) in entityMetas)

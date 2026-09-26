@@ -740,7 +740,9 @@ Skipped ("dirty-disposed").
   - D9
   - §2.7
   - Shitmed's attach takes a slot id
-- [`Content.IntegrationTests/Tests/EntityTest.cs`](../../../Content.IntegrationTests/Tests/EntityTest.cs): the spawn-all tests need about six gigabytes each; two at once go past the runner's heap limit
+- [`Content.IntegrationTests/Tests/EntityTest.cs`](../../../Content.IntegrationTests/Tests/EntityTest.cs)
+  - the spawn-all tests need about six gigabytes each; two at once go past the runner's heap limit
+  - maps first, so everything on them goes parent-first, as it does when a round
 - [`Content.Server/_EinsteinEngines/Medical/CPR/CPRSystem.cs`](../../_EinsteinEngines/Medical/CPR/CPRSystem.cs)
   - BRAIN
   - BRAIN: on a wound host, CPR marks the chest as being worked on for the do-after's
