@@ -826,8 +826,8 @@ public sealed class WolfmedConsequencesTest : GameTest
                 Assert.That(heartFailed, Is.Not.Null, "forty rounds never failed the human heart.");
                 Assert.That(pumpFailed, Is.Not.Null, "forty rounds never failed the pump.");
                 // Measured with the machine organs' hitCap 2.5: human heart on hit 5, pump on hit 10, core on hit 16.
-                Assert.That(pumpFailed, Is.GreaterThanOrEqualTo(heartFailed * 3 / 2), "the pump does not clearly outlast a human heart.");
-                Assert.That(coreFailed, Is.GreaterThan(pumpFailed), "the core failed no later than the pump.");
+                Assert.That(pumpFailed ?? 0, Is.GreaterThanOrEqualTo((heartFailed ?? 0) * 3 / 2), "the pump does not clearly outlast a human heart.");
+                Assert.That(coreFailed ?? 0, Is.GreaterThan(pumpFailed ?? 0), "the core failed no later than the pump.");
             });
         });
     }
