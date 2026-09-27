@@ -37,6 +37,7 @@ public sealed class WolfmedWoundOverlaySystem : EntitySystem
     private readonly HashSet<EntityUid> _pending = new();
     private readonly Dictionary<HumanoidVisualLayers, WolfmedWoundOverlay> _woundScratch = new();
     private readonly HashSet<HumanoidVisualLayers> _rotScratch = new();
+    private readonly Dictionary<WolfmedArterySite, WolfmedArteryOverlay> _arteryScratch = new();
     private TimeSpan _nextSweep;
 
     /// <inheritdoc/>
@@ -90,11 +91,18 @@ public sealed class WolfmedWoundOverlaySystem : EntitySystem
         var streamRate = _cfg.GetCVar(WolfmedCVars.WoundOverlayStreamRate);
         var wounds = _woundScratch;
         var rot = _rotScratch;
+        var arteries = _arteryScratch;
         wounds.Clear();
         rot.Clear();
+        arteries.Clear();
+        var hasHead = false;
+        var neck = WolfmedArteryOverlay.None;
 
-        foreach (var (part, _) in _body.GetBodyChildren(body))
+        foreach (var (part, bodyPart) in _body.GetBodyChildren(body))
         {
+            if (bodyPart.PartType == BodyPartType.Head)
+                hasHead = true;
+
             if (!_projection.TryGetVisualLayer(part, out var layer) || !TryComp(part, out WoundableComponent? woundable) ||
                 !_traits.IsOrganic((part, woundable)))
                 continue;
@@ -106,16 +114,73 @@ public sealed class WolfmedWoundOverlaySystem : EntitySystem
 
             if (IsRotting((part, woundable)))
                 rot.Add(layer);
+
+            // Playtest 4: the arteries. The head's own when an arterial bleed is on it; the neck's is the torso's stump,
+            // shown once the head is gone.
+            if (bodyPart.PartType == BodyPartType.Head)
+            {
+                var artery = GetArteryOverlay((part, woundable));
+                if (artery != WolfmedArteryOverlay.None)
+                    arteries[WolfmedArterySite.Head] = artery;
+            }
+            else if (bodyPart.PartType == BodyPartType.Torso)
+            {
+                neck = GetStumpOverlay((part, woundable), host.DismembermentWound);
+            }
         }
 
+        if (!hasHead && neck != WolfmedArteryOverlay.None)
+            arteries[WolfmedArterySite.Neck] = neck;
+
         var colour = _gore.GetBloodColor(body) ?? FallbackBlood;
-        if (Same(visual.Wounds, wounds) && visual.Rot.SetEquals(rot) && visual.WoundColor == colour)
+        if (Same(visual.Wounds, wounds) && visual.Rot.SetEquals(rot) && visual.WoundColor == colour &&
+            Same(visual.Arteries, arteries))
             return;
 
         visual.Wounds = new Dictionary<HumanoidVisualLayers, WolfmedWoundOverlay>(wounds);
         visual.Rot = new HashSet<HumanoidVisualLayers>(rot);
         visual.WoundColor = colour;
+        visual.Arteries = new Dictionary<WolfmedArterySite, WolfmedArteryOverlay>(arteries);
         Dirty(body, visual);
+    }
+
+    /// <summary>
+    /// The head's artery: the spray while any arterial bleed on the part pumps, the still artery once every one of them
+    /// has been clamped, dressed to a stop or has clotted, nothing when the part has no cut artery.
+    /// </summary>
+    public WolfmedArteryOverlay GetArteryOverlay(Entity<WoundableComponent> part)
+    {
+        var look = WolfmedArteryOverlay.None;
+        foreach (var wound in _wounds.GetWounds(part.AsNullable()))
+        {
+            if (wound.Comp.State != WoundState.Open || !_traits.TryGetBehavior(wound.Owner, out WolfmedArterialBleedBehavior _))
+                continue;
+
+            if (TryComp(wound, out WoundBleedingComponent? bleeding) && bleeding.CurrentRate > 0f)
+                return WolfmedArteryOverlay.Bleeding;
+
+            look = WolfmedArteryOverlay.Still;
+        }
+
+        return look;
+    }
+
+    /// <summary>The neck's artery: the torso's open stump, spraying while it bleeds and still once it has stopped.</summary>
+    public WolfmedArteryOverlay GetStumpOverlay(Entity<WoundableComponent> part, ProtoId<WoundPrototype> stump)
+    {
+        var look = WolfmedArteryOverlay.None;
+        foreach (var wound in _wounds.GetWounds(part.AsNullable()))
+        {
+            if (wound.Comp.State != WoundState.Open || wound.Comp.Prototype != stump)
+                continue;
+
+            if (TryComp(wound, out WoundBleedingComponent? bleeding) && bleeding.CurrentRate > 0f)
+                return WolfmedArteryOverlay.Bleeding;
+
+            look = WolfmedArteryOverlay.Still;
+        }
+
+        return look;
     }
 
     /// <summary>
@@ -166,15 +231,16 @@ public sealed class WolfmedWoundOverlaySystem : EntitySystem
         return false;
     }
 
-    private static bool Same(Dictionary<HumanoidVisualLayers, WolfmedWoundOverlay> current,
-        Dictionary<HumanoidVisualLayers, WolfmedWoundOverlay> next)
+    private static bool Same<TKey, TLook>(Dictionary<TKey, TLook> current, Dictionary<TKey, TLook> next)
+        where TKey : notnull
+        where TLook : struct, Enum
     {
         if (current.Count != next.Count)
             return false;
 
         foreach (var (layer, look) in next)
         {
-            if (!current.TryGetValue(layer, out var existing) || existing != look)
+            if (!current.TryGetValue(layer, out var existing) || !EqualityComparer<TLook>.Default.Equals(existing, look))
                 return false;
         }
 

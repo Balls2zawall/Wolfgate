@@ -501,6 +501,7 @@ Skipped ("dirty-disposed").
 
 ### Textures
 
+- [`Resources/Textures/_WF/Wolfmed/Damage/artery.rsi/`](../../../Resources/Textures/_WF/Wolfmed/Damage/artery.rsi/)
 - [`Resources/Textures/_WF/Wolfmed/Damage/rot.rsi/`](../../../Resources/Textures/_WF/Wolfmed/Damage/rot.rsi/)
 - [`Resources/Textures/_WF/Wolfmed/Damage/wounds.rsi/`](../../../Resources/Textures/_WF/Wolfmed/Damage/wounds.rsi/)
 - [`Resources/Textures/_WF/Wolfmed/Effects/blood_splatter.rsi/`](../../../Resources/Textures/_WF/Wolfmed/Effects/blood_splatter.rsi/)

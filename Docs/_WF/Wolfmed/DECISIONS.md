@@ -3968,3 +3968,27 @@ ogg peaked at -23.5 dB, and the earlier "very quiet too" note was a complaint, n
 volume to -18 dB buried it entirely (-41 dB peak against the heartbeat's -4). The file is normalised to -1.5 dB peak
 and plays at -6 dB again, a shade under the heartbeat. `WolfmedCritHeartbeatTest.FlatlineMarksTheArrestTest` pins
 that the client reads the arrest (`Flatlined`) the moment the server starts one, and drops it when the arrest ends.
+
+## The arteries on the sprite (playtest 4, 2026-09-27)
+
+"Don't see the head_artery0 or head_artery1 (0 static, 1 bleeding), nor the neck_artery0/1. Neck artery is for when a
+head is chopped off, and head is for head bleeding." Bob's artery.dmi has an artery pair per part; the head and neck
+pairs are ported as asked, grey and tinted with the blood colour like the wound glyphs, and ride
+`PartDamageVisualsComponent.Arteries` beside the wounds and rot.
+
+- **The head's artery** shows while the head carries an arterial bleed (`WFWolfmedArterialBleedWound`, the deep cut
+  that reached an artery): the spray while it pumps, the still artery once it is clamped, dressed to a stop or clotted.
+  An ordinary head bleed keeps the drip glyph; a spray for every scratch would say "artery" when there is none.
+- **The neck's artery** is the torso's stump once the body has no head: spraying while the stump bleeds, still once a
+  dressing has stopped it. The torso cannot tell an arm's stump from the neck's, so an arm stump bleeding on a headless
+  torso sprays from the neck too, which reads right anyway.
+- **On top of everything.** A spray leaves the body, so the two layers are appended above hair, helmets and collars
+  rather than tucked under the clothing like the wound glyphs. Both take the head's species shift.
+
+`WolfmedWoundOverlayTest.ArteryOverlayTest` walks the four states on the server and the client.
+
+## The gibs, checked from the client (playtest 4, 2026-09-27)
+
+"Haven't been seeing the gibs." `WolfmedGibDecalTest` only counted the decals on the server. It now stands the test
+client's player in the body, and asserts the client received the chunk with the gib decals and resolves every gib
+decal's art at 32x32.

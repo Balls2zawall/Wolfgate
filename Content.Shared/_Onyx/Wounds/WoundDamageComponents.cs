@@ -120,6 +120,10 @@ public sealed partial class PartDamageVisualsComponent : Component
 
     [AutoNetworkedField]
     public Color WoundColor = Color.White;
+
+    /// <summary>Playtest 4: the head's artery when an arterial bleed is on the head, the neck's when the head is off.</summary>
+    [AutoNetworkedField]
+    public Dictionary<WolfmedArterySite, WolfmedArteryOverlay> Arteries = new();
     // WOLFGATE END
 }
 

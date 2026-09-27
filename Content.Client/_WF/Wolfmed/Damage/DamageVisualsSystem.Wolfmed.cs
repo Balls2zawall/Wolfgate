@@ -237,6 +237,41 @@ public sealed partial class DamageVisualsSystem
                 WolfmedWoundOverlays.GetWoundState(layer, damage.Wounds.GetValueOrDefault(layer)), offset,
                 damage.WoundColor, $"WolfmedDegradation{layer}", $"WolfmedRot{layer}");
         }
+
+        // Playtest 4: the arteries go on top of everything. The spray leaves the body, so hair, a helmet or a collar
+        // must not hide it. Both sit with the head, so both take the head's species shift.
+        var headShift = species is { } headSpecies && offsets != null
+            ? offsets.Get(headSpecies, HumanoidVisualLayers.Head)
+            : Vector2i.Zero;
+        var headOffset = new Vector2(headShift.X, headShift.Y) / EyeManager.PixelsPerMeter;
+        foreach (var site in Enum.GetValues<WolfmedArterySite>())
+        {
+            UpdateTopLayer(uid, sprite, $"WolfmedArtery{site}", WolfmedWoundOverlays.ArteryRsi,
+                WolfmedWoundOverlays.GetArteryState(site, damage.Arteries.GetValueOrDefault(site)), headOffset,
+                damage.WoundColor);
+        }
+    }
+
+    /// <summary>Creates (once, appended above every layer the sprite has) and updates one artery layer.</summary>
+    private void UpdateTopLayer(EntityUid uid, SpriteComponent sprite, string key, ResPath rsi, string? state,
+        Vector2 offset, Color colour)
+    {
+        if (!SpriteSystem.LayerMapTryGet((uid, sprite), key, out var index, false))
+        {
+            if (state == null)
+                return;
+
+            index = SpriteSystem.AddLayer((uid, sprite), new SpriteSpecifier.Rsi(rsi, state));
+            SpriteSystem.LayerMapSet((uid, sprite), key, index);
+        }
+
+        SpriteSystem.LayerSetVisible((uid, sprite), index, state != null);
+        if (state == null)
+            return;
+
+        SpriteSystem.LayerSetRsiState((uid, sprite), index, state);
+        SpriteSystem.LayerSetOffset((uid, sprite), index, offset);
+        SpriteSystem.LayerSetColor((uid, sprite), index, colour);
     }
 
     /// <summary>Creates (once) and updates one wound or rot layer, above the limb and the overlays named below it.</summary>

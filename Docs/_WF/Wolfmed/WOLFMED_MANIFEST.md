@@ -5150,6 +5150,7 @@ Two marked upstream edits, one marked Onyx edit, the rest `_WF` (DECISIONS "Play
 | `Resources/Textures/_WF/Wolfmed/Interface/Alerts/pain.rsi/` | new, generated | `pain0`..`pain7`, `paindd` on the health alerts' backing. |
 | `Resources/Textures/_WF/Wolfmed/Damage/wounds.rsi/` | new, generated | `<Part>_drip`, `<Part>_stream`, `<Part>_old` for the ten part layers, 4 directions, grey. |
 | `Resources/Textures/_WF/Wolfmed/Damage/rot.rsi/` | new, generated | `<Part>_rot` for the ten part layers, 4 directions x 10 frames. |
+| `Resources/Textures/_WF/Wolfmed/Damage/artery.rsi/` | new, generated | Playtest 4: `head_artery0/1` and `neck_artery0/1` from Bob's artery.dmi, 4 directions, grey; the 1 states are the three-frame spray. |
 | `Resources/Prototypes/_WF/Wolfmed/Damage/overlay_offsets.yml` | new, generated | `WFWolfmedOverlayOffsets`: per-species, per-part pixel shifts. |
 | `Resources/Prototypes/_WF/Wolfmed/Alerts/alerts.yml` | modified | The `WFWolfmedPain` category and the `WFWolfmedPain` and `WFWolfmedPainMechanical` alerts, severities 0-8. |
 | `Resources/Prototypes/Alerts/alerts.yml` | modified, `# WOLFGATE` | The pain category is ordered under Health. |

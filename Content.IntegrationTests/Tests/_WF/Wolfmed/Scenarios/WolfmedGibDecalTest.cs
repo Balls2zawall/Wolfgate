@@ -11,7 +11,10 @@ using Content.Shared._WF.Wolfmed.CCVar;
 using Content.Shared.Body.Part;
 using Content.Shared.Decals;
 using Content.Shared.Humanoid;
+using Content.Shared.Mind;
+using Content.Shared.Players;
 using NUnit.Framework;
+using Robust.Client.GameObjects;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Map.Components;
 
@@ -43,13 +46,19 @@ public sealed class WolfmedGibDecalTest : GameTest
         await OverrideCVar(Side.Server, WolfmedCVars.GibsGib, 7);
         var map = await Pair.CreateTestMap();
         var s = new WolfmedScenario(SEntMan);
+        var minds = SEntMan.System<SharedMindSystem>();
+        var session = Server.PlayerMan.GetSessionById(Client.Session!.UserId);
         EntityUid a = default;
         await Server.WaitPost(() =>
         {
             s.SetAir(map.MapUid, true);
+            // The client's player stands in the body: the server only sends decal chunks to a session that can see them.
+            minds.WipeMind(session.ContentData()?.Mind);
             a = SEntMan.SpawnEntity("MobHuman", map.GridCoords);
+            minds.TransferTo(minds.CreateMind(session.UserId).Owner, a);
         });
         await RunSeconds(2);
+        Assert.That(session.AttachedEntity, Is.EqualTo(a), "the player did not attach to the body.");
 
         await Server.WaitAssertion(() =>
         {
@@ -66,7 +75,29 @@ public sealed class WolfmedGibDecalTest : GameTest
             var skin = SEntMan.GetComponent<HumanoidAppearanceComponent>(a).SkinColor;
             Assert.That(decals.Where(d => d.Id.EndsWith("_flesh")).All(d => d.Color == skin), Is.True, "a flesh layer is not the skin colour.");
             Assert.That(decals.All(d => d.Cleanable), Is.True, "a gib is not cleanable.");
+        });
 
+        // Playtest 4: "haven't been seeing the gibs". The client has to receive the chunk and resolve every gib's art.
+        await RunTicksSync(10);
+        await Client.WaitAssertion(() =>
+        {
+            var grid = CEntMan.GetComponent<DecalGridComponent>(ToClientUid(map.Grid.Owner));
+            var seen = grid.ChunkCollection.ChunkCollection.Values.SelectMany(c => c.Decals.Values)
+                .Count(d => d.Id.StartsWith(WolfmedGibDecalSystem.Prefix));
+            Assert.That(seen, Is.GreaterThan(0), "the client never received a gib decal.");
+            var sprites = CEntMan.System<SpriteSystem>();
+            foreach (var proto in CProtoMan.EnumeratePrototypes<DecalPrototype>())
+            {
+                if (!proto.ID.StartsWith(WolfmedGibDecalSystem.Prefix))
+                    continue;
+
+                var texture = sprites.Frame0(proto.Sprite);
+                Assert.That(texture.Width == 32 && texture.Height == 32, Is.True, $"{proto.ID} has no 32x32 art.");
+            }
+        });
+
+        await Server.WaitAssertion(() =>
+        {
             SEntMan.System<BodySystem>().GibBody(a);
         });
         await RunTicksSync(5);

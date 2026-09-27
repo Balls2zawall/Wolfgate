@@ -15,8 +15,11 @@ wounds.rsi  bulletwound.dmi is one 3x3 wound glyph with a drip under it, drawn i
             a direction where the part is hidden behind others gets an empty frame.
 rot.rsi     rot_parts.dmi in its own colour, renamed <Part>_rot. Wolfgate has no groin part, so rot_chest and
             rot_groin are composited into Chest_rot.
+artery.rsi  artery.dmi's head_artery0/1 and neck_artery0/1 as they are (they are drawn in place on the human frame),
+            recoloured to grey the same way as the wounds: the still artery (0) and the spraying one (1, three
+            frames). The head one is an arterial bleed on the head, the neck one the stump where a head was.
 
-Deterministic; rerunning rewrites the three RSIs byte for byte.
+Deterministic; rerunning rewrites the four RSIs byte for byte.
 """
 import json
 import math
@@ -289,6 +292,27 @@ def build_wounds(bob):
               states)
 
 
+# --- artery overlays ---
+
+ARTERY_STATES = ["head_artery0", "head_artery1", "neck_artery0", "neck_artery1"]
+
+
+def build_artery(bob):
+    dmi = load_dmi(os.path.join(bob, "mob", "human", "overlays", "artery.dmi"))
+    keys = [(name, fr, d) for name in ARTERY_STATES for fr in range(dmi[name]["frames"]) for d in range(4)]
+    greyed = dict(zip(keys, grey([dmi[name]["images"][fr][d] for name, fr, d in keys])))
+    states = []
+    for name in ARTERY_STATES:
+        source = dmi[name]
+        frames = [[greyed[(name, fr, d)] for fr in range(source["frames"])] for d in range(4)]
+        delays = [seconds(source["delay"], source["frames"]) for _ in range(4)] if source["frames"] > 1 else None
+        states.append((name, 4, frames, delays))
+    write_rsi(os.path.join(OUT, "Damage", "artery.rsi"),
+              f"head_artery0/1 and neck_artery0/1 from modular_septic/icons/mob/human/overlays/artery.dmi, {BOB_REPO}, "
+              "recoloured to grey by Tools/_WF/Wolfmed/gen_wolfmed_overlays.py for Wolfgate (Wolfmed)",
+              states)
+
+
 # --- rot overlays ---
 
 def rot_frames(dmi, sources, d, count):
@@ -341,6 +365,7 @@ def main():
     build_pain(bob)
     build_wounds(bob)
     build_rot(bob)
+    build_artery(bob)
 
 
 if __name__ == "__main__":

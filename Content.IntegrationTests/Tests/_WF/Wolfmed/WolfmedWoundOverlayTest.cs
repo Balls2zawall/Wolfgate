@@ -183,6 +183,93 @@ public sealed class WolfmedWoundOverlayTest : GameTest
         });
     }
 
+    /// <summary>
+    /// Playtest 4: an arterial bleed on the head sprays from the head's artery and shows the still artery once clamped; a
+    /// head off sprays from the neck and shows the still neck once the stump is dressed to a stop. The client draws the
+    /// artery above everything, tinted with the blood colour.
+    /// </summary>
+    [Test]
+    public async Task ArteryOverlayTest()
+    {
+        var map = await Pair.CreateTestMap();
+        EntityUid body = default;
+        EntityUid head = default;
+
+        await Server.WaitAssertion(() =>
+        {
+            body = SEntMan.SpawnEntity("MobHuman", map.GridCoords);
+            head = Part(body, BodyPartType.Head);
+            Assert.That(SEntMan.System<WoundSystem>().CreateOrMergeWound(head, "WFWolfmedArterialBleedWound", FixedPoint2.New(10)),
+                Is.Not.Null);
+            Assert.That(SEntMan.System<WoundBleedingSystem>().GetPartRate(head), Is.GreaterThan(0f), "the artery does not bleed.");
+            var visual = Refresh(body);
+            Assert.Multiple(() =>
+            {
+                Assert.That(visual.Arteries.GetValueOrDefault(WolfmedArterySite.Head), Is.EqualTo(WolfmedArteryOverlay.Bleeding),
+                    "a pumping artery on the head does not spray.");
+                Assert.That(visual.Arteries.ContainsKey(WolfmedArterySite.Neck), Is.False, "a head still on shows the neck.");
+            });
+        });
+
+        await Pair.RunTicksSync(10);
+        await Client.WaitAssertion(() =>
+        {
+            var (clientBody, sprite) = ClientSprite(body);
+            var sprites = CEntMan.System<SpriteSystem>();
+            Assert.That(sprites.LayerMapTryGet((clientBody, sprite), "WolfmedArteryHead", out var artery, false), Is.True,
+                "the client never added the artery layer.");
+            Assert.Multiple(() =>
+            {
+                Assert.That(sprites.LayerGetRsiState((clientBody, sprite), artery).Name, Is.EqualTo("head_artery1"));
+                Assert.That(sprites.TryGetLayer((clientBody, sprite), artery, out var layer, false) && layer.Visible, Is.True);
+                Assert.That(layer!.Color, Is.EqualTo(CEntMan.GetComponent<PartDamageVisualsComponent>(clientBody).WoundColor));
+                Assert.That(sprites.LayerMapTryGet((clientBody, sprite), HumanoidVisualLayers.Hair, out var hair, false), Is.True);
+                Assert.That(artery, Is.GreaterThan(hair), "hair must not hide the spray.");
+                Assert.That(sprites.LayerMapTryGet((clientBody, sprite), "head", out var helmet, false), Is.True);
+                Assert.That(artery, Is.GreaterThan(helmet), "a helmet must not hide the spray.");
+                Assert.That(sprites.LayerMapTryGet((clientBody, sprite), "WolfmedArteryNeck", out _, false), Is.False,
+                    "a head still on has a neck layer.");
+            });
+        });
+
+        await Server.WaitAssertion(() =>
+        {
+            var bleeding = SEntMan.System<WoundBleedingSystem>();
+            foreach (var wound in SEntMan.System<WoundSystem>().GetWounds(head))
+                Assert.That(bleeding.SetTreatment(wound.Owner, BleedingTreatment.Clamped), Is.True, "the clamp did not take.");
+            Assert.That(bleeding.GetPartRate(head), Is.EqualTo(0f), "a clamp did not stop the artery.");
+            Assert.That(Refresh(body).Arteries.GetValueOrDefault(WolfmedArterySite.Head), Is.EqualTo(WolfmedArteryOverlay.Still),
+                "a clamped artery is not the still one.");
+
+            Assert.That(SEntMan.System<AmputationSystem>().TryAmputate(body, head), Is.True, "the head did not come off.");
+            var visual = Refresh(body);
+            Assert.Multiple(() =>
+            {
+                Assert.That(visual.Arteries.ContainsKey(WolfmedArterySite.Head), Is.False, "a head that is off still shows its artery.");
+                Assert.That(visual.Arteries.GetValueOrDefault(WolfmedArterySite.Neck), Is.EqualTo(WolfmedArteryOverlay.Bleeding),
+                    "the neck does not spray.");
+            });
+
+            var torso = Part(body, BodyPartType.Torso);
+            Assert.That(bleeding.ReducePartBleeding(torso, 1000, dressing: true), Is.True, "the neck could not be dressed.");
+            Assert.That(Refresh(body).Arteries.GetValueOrDefault(WolfmedArterySite.Neck), Is.EqualTo(WolfmedArteryOverlay.Still),
+                "a dressed neck is not the still one.");
+        });
+
+        await Pair.RunTicksSync(10);
+        await Client.WaitAssertion(() =>
+        {
+            var (clientBody, sprite) = ClientSprite(body);
+            var sprites = CEntMan.System<SpriteSystem>();
+            Assert.That(sprites.LayerMapTryGet((clientBody, sprite), "WolfmedArteryNeck", out var neck, false), Is.True,
+                "the client never added the neck layer.");
+            Assert.That(sprites.LayerGetRsiState((clientBody, sprite), neck).Name, Is.EqualTo("neck_artery0"));
+            Assert.That(sprites.LayerMapTryGet((clientBody, sprite), "WolfmedArteryHead", out var artery, false), Is.True);
+            Assert.That(sprites.TryGetLayer((clientBody, sprite), artery, out var layer, false) && layer.Visible, Is.False,
+                "the head's artery is still drawn with the head off.");
+        });
+    }
+
     /// <summary>Every state the overlays can select exists in its RSI, and the offset table names only real species.</summary>
     [Test]
     public async Task OverlayArtCoversEveryLayerTest()
@@ -192,6 +279,7 @@ public sealed class WolfmedWoundOverlayTest : GameTest
         {
             Assert.That(cache.TryGetResource<RSIResource>(new ResPath("/Textures") / WolfmedWoundOverlays.WoundRsi, out var wounds), Is.True);
             Assert.That(cache.TryGetResource<RSIResource>(new ResPath("/Textures") / WolfmedWoundOverlays.RotRsi, out var rot), Is.True);
+            Assert.That(cache.TryGetResource<RSIResource>(new ResPath("/Textures") / WolfmedWoundOverlays.ArteryRsi, out var artery), Is.True);
             Assert.That(CProtoMan.HasIndex<WolfmedOverlayOffsetsPrototype>(WolfmedOverlayOffsetsPrototype.Default), Is.True);
             Assert.Multiple(() =>
             {
@@ -208,6 +296,18 @@ public sealed class WolfmedWoundOverlayTest : GameTest
 
                     var rotState = WolfmedWoundOverlays.GetRotState(layer);
                     Assert.That(rotState != null && rot!.RSI.TryGetState(rotState, out _), Is.True, $"no rot state {rotState}.");
+                }
+
+                foreach (var site in Enum.GetValues<WolfmedArterySite>())
+                {
+                    foreach (var look in Enum.GetValues<WolfmedArteryOverlay>())
+                    {
+                        if (look == WolfmedArteryOverlay.None)
+                            continue;
+
+                        var state = WolfmedWoundOverlays.GetArteryState(site, look);
+                        Assert.That(state != null && artery!.RSI.TryGetState(state, out _), Is.True, $"no artery state {state}.");
+                    }
                 }
             });
         });

@@ -22,6 +22,30 @@ public enum WolfmedWoundOverlay : byte
     Stream,
 }
 
+/// <summary>An artery on the humanoid sprite (playtest 4): the head's when an arterial bleed is on the head, the neck's when the head is off.</summary>
+[Serializable, NetSerializable]
+public enum WolfmedArteryOverlay : byte
+{
+    None = 0,
+
+    /// <summary>The cut artery is there but not pumping: clamped, dressed to a stop, or clotted.</summary>
+    Still,
+
+    /// <summary>Pumping: the spray plays.</summary>
+    Bleeding,
+}
+
+/// <summary>Where an artery overlay is drawn.</summary>
+[Serializable, NetSerializable]
+public enum WolfmedArterySite : byte
+{
+    /// <summary>An arterial bleed on the head.</summary>
+    Head,
+
+    /// <summary>The stump where the head was.</summary>
+    Neck,
+}
+
 /// <summary>The wound and rot overlay art, and the RSI state each (layer, look) pair draws.</summary>
 // The states are baked per part and per direction by Tools/_WF/Wolfmed/gen_wolfmed_overlays.py, so the layer map
 // is the same ten layers the degradation overlay covers, with the same state prefixes.
@@ -29,6 +53,7 @@ public static class WolfmedWoundOverlays
 {
     public static readonly ResPath WoundRsi = new("_WF/Wolfmed/Damage/wounds.rsi");
     public static readonly ResPath RotRsi = new("_WF/Wolfmed/Damage/rot.rsi");
+    public static readonly ResPath ArteryRsi = new("_WF/Wolfmed/Damage/artery.rsi");
 
     /// <summary>The wound state for one layer, or null for none or a layer with no art.</summary>
     public static string? GetWoundState(HumanoidVisualLayers layer, WolfmedWoundOverlay overlay)
@@ -46,6 +71,16 @@ public static class WolfmedWoundOverlays
     /// <summary>The rot state for one layer, or null for a layer with no art. The chest state carries the groin too.</summary>
     public static string? GetRotState(HumanoidVisualLayers layer) =>
         WolfmedDegradationLayers.TryGetPrefix(layer, out var prefix) ? $"{prefix}_rot" : null;
+
+    /// <summary>The artery state for one site: head_artery0/1 or neck_artery0/1, null for none.</summary>
+    public static string? GetArteryState(WolfmedArterySite site, WolfmedArteryOverlay overlay)
+    {
+        if (overlay == WolfmedArteryOverlay.None)
+            return null;
+
+        var where = site == WolfmedArterySite.Head ? "head" : "neck";
+        return $"{where}_artery{(overlay == WolfmedArteryOverlay.Bleeding ? 1 : 0)}";
+    }
 
     /// <summary>Which look wins when one layer has two parts behind it (a second left arm).</summary>
     public static int Rank(WolfmedWoundOverlay overlay) => (int) overlay;
