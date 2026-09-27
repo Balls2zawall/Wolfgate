@@ -3920,7 +3920,8 @@ sounds and overlays organic-only, the pain HUD for machines too) are in the spec
   `wolfmed.chop_sound_damage` (40: a wielded fire axe at 45 chops, a machete at 32 does not, a stab never). Every
   weapon keeps its own `soundHit` ("the thud should still play"); the owner first asked for one merged file per
   hit, then for the chop to be its own sound keyed on weight, so the mixes were dropped. Crowbars (`BaseCrowbar`,
-  six prototypes) carry `WolfmedHitOverlaySoundComponent` with `WFWolfmedCrowbarHit` (`crowbarhit1-2`), played over
+  six prototypes) carry `WolfmedHitOverlaySoundComponent` with `WFWolfmedCrowbarHit` (`crowbarhit1-2`, encoded at
+  0.6 gain: "notched down 30 %"), played over
   their thud on flesh the same way. Both overlays are predicted like the hit sound and never play on a chassis or a
   structure. Arterial sprays: `artery3` joins the splatter (the owner dropped `artery1`).
   `WolfmedBobMeleeSoundsTest` pins the crowbar overlay, the axe's and spear's untouched sounds and the chop line.
