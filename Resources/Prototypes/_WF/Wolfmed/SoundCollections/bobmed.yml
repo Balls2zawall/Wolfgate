@@ -169,10 +169,8 @@
   id: WFWolfmedChop
   files:
   - /Audio/_WF/Wolfmed/Melee/chop2.ogg
-  - /Audio/_WF/Wolfmed/Melee/chop3.ogg
   - /Audio/_WF/Wolfmed/Melee/chop4.ogg
   - /Audio/_WF/Wolfmed/Melee/chop5.ogg
-  - /Audio/_WF/Wolfmed/Melee/chop6.ogg
 
 - type: soundCollection
   id: WFWolfmedCrowbarHit
