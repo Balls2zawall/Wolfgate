@@ -3438,3 +3438,9 @@ the table guard sees the attempt already cancelled.
 disabler, laser and energy revolvers, the pulse and antique lasers) carry themselves; rifles, shotguns, SMGs and the
 rest stay cancelled. Melee, throwing and pulling while Downed are unchanged. `WolfmedDownedSidearmTest` fires the
 attempt for a pistol, a revolver, a rifle and a shotgun.
+
+*[Correction the same evening: the Mk-58 still would not fire. `SharedGunSystem.AttemptShoot` asks
+`ActionBlockerSystem.CanAttack(user)` before it ever raises the shot attempt, and Downed cancelled every
+`AttackAttemptEvent`. That gate now passes when the attempt names no target and no weapon (the gun system's shape)
+and the active hand holds a `Sidearm`; melee attempts carry both and stay cancelled. The test now picks the gun up
+and asks `CanAttack` as well as raising the shot attempt.]*

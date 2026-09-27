@@ -5112,7 +5112,7 @@ One marked Onyx edit and `_WF` (DECISIONS "Treated pain fades", "The pod is for 
 
 | File | Kind | Change |
 | --- | --- | --- |
-| `Content.Shared/_WF/Wolfmed/Consciousness/WolfmedDownedSystem.cs` | modified | `OnShotAttempt` passes guns with the `Sidearm` tag. |
+| `Content.Shared/_WF/Wolfmed/Consciousness/WolfmedDownedSystem.cs` | modified | `OnShotAttempt` passes guns with the `Sidearm` tag; `OnAttackAttempt` passes the gun system's targetless, weaponless CanAttack when the active hand holds one. |
 | `Content.Shared/_WF/Wolfmed/CCVar/WolfmedCVars.cs` | modified | The reach line's comment. |
 | `Content.IntegrationTests/Tests/_WF/Wolfmed/Scenarios/WolfmedDownedSidearmTest.cs` | new | Pistol and revolver fire, rifle and shotgun do not. |
 | `Docs/_WF/Wolfmed/DECISIONS.md`, this file | modified | This section. |

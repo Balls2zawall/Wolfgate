@@ -193,6 +193,11 @@ public sealed class WolfmedDownedSystem : EntitySystem
 
     private void OnAttackAttempt(EntityUid uid, WolfmedDownedComponent component, AttackAttemptEvent args)
     {
+        // Playtest 4: the gun system asks CanAttack with no target and no weapon before a shot, so a sidearm in the
+        // active hand passes here and OnShotAttempt does the rest; melee (a target, a weapon) stays out.
+        if (args.Target == null && args.Weapon == null && _hands.GetActiveItem(uid) is { } held && _tags.HasTag(held, SidearmTag))
+            return;
+
         args.Cancel();
     }
 
