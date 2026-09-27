@@ -229,9 +229,19 @@ public sealed class WolfmedRemainingCausesTest : GameTest
             endLoad = Toxin.GetLoad(treated);
             endState = s.State(treated);
         });
+        var liver = "";
+        var dyloveneLeft = 0f;
+        await Server.WaitPost(() =>
+        {
+            liver = Toxin.GetLiver(treated).ToString();
+            var solutions = SEntMan.System<SharedSolutionContainerSystem>();
+            var bloodstream = SEntMan.GetComponent<BloodstreamComponent>(treated);
+            if (solutions.TryGetSolution(treated, bloodstream.ChemicalSolutionName, out _, out var chemicals))
+                dyloveneLeft = chemicals.GetTotalPrototypeQuantity("Dylovene").Float();
+        });
         Note($"ToxinScenarioTest: 15 u dylovene at Poison 130: wakes at {woke} s (load {wokeLoad:0.0}), " +
                                   $"stands at {stood} s (load {stoodLoad:0.0}); at the end load {endLoad:0.0}, {endState}, " +
-                                  $"vitals {s.Vitals(treated).Cause}.");
+                                  $"vitals {s.Vitals(treated).Cause}, liver {liver}, dylovene left {dyloveneLeft:0.0} u.");
         Assert.Multiple(() =>
         {
             Assert.That(woke, Is.Not.Null, "dylovene never woke a toxic coma.");
