@@ -23,7 +23,7 @@ import math
 import os
 import sys
 
-from PIL import Image
+from PIL import Image, ImageDraw
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from dmi_extract import parse, read_description  # noqa: E402
@@ -147,6 +147,18 @@ def backing():
     return out
 
 
+def bordered(tile, colour=(220, 30, 30, 255)):
+    """The tile with a two-pixel border in the colour along the backing's outer opaque edge."""
+    out = tile.copy()
+    box = out.getbbox()
+    if box is None:
+        return out
+    draw = ImageDraw.Draw(out)
+    x0, y0, x1, y1 = box[0], box[1], box[2] - 1, box[3] - 1
+    draw.rectangle((x0, y0, x1, y1), outline=colour, width=2)
+    return out
+
+
 def build_pain(bob):
     dmi = load_dmi(os.path.join(bob, "hud", "screen_nigga.dmi"))
     base = backing()
@@ -158,7 +170,15 @@ def build_pain(bob):
             tile = base.copy()
             tile.alpha_composite(state["images"][frame][0])
             frames.append(tile)
+        if name == "paindd":
+            # Pain crit (the faint): the border flashes red fast, on every frame of the glyph's own blink.
+            frames = [img for frame in frames for img in (bordered(frame), frame)]
+            states.append((name, 1, [frames], [[0.12] * len(frames)]))
+            continue
         states.append((name, 1, [frames], [seconds(state["delay"], state["frames"])]))
+    # Downed by pain: the top glyph with the border flashing red, slower than the faint's.
+    downed = states[PAIN_STATES.index("pain7")][2][0][0]
+    states.insert(PAIN_STATES.index("paindd"), ("paindowned", 1, [[bordered(downed), downed]], [[0.4, 0.4]]))
     write_rsi(os.path.join(OUT, "Interface", "Alerts", "pain.rsi"),
               f"Pain glyphs from modular_septic/icons/hud/screen_nigga.dmi, {BOB_REPO}, composited onto the "
               "backing of Resources/Textures/_Crescent/Interface/Alerts/bleed.rsi (sprites provided by @_miket) "

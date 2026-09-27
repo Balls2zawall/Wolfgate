@@ -28,7 +28,7 @@
       types:
         Blunt: 16
     soundHit:
-      collection: MetalThud
+      collection: WFWolfmedCrowbarHit # WOLFGATE(Wolfmed): playtest 4, Bob's crowbar hits
   - type: Tool
     qualities:
     - Prying

@@ -3897,3 +3897,27 @@ wheeze or a shiver). Along the way: the sidearm attack gate (`WolfmedDownedSyste
 `GetActiveItem` of bodies without hands, which logged and failed `DownedReachesOnlyItselfTest`; it now checks for
 hands first. The owner's mid-batch corrections (one blood type, the existing `Bloodpack`, no bag variants; body
 sounds and overlays organic-only, the pain HUD for machines too) are in the specs and the packages.
+
+## Stumps hurt, the pain HUD flashes, the flatline is quiet (playtest 4, 2026-09-27)
+
+- **"Strange that stump trauma from a freshly cut off stump doesn't cause any pain."** It did not: the severed part
+  took its pain with it, and neither stump wound carried a `WoundPainBehavior`. Marked Onyx YAML: `DismembermentWound`
+  (the open stump) gets a one-time spike of its severity (an arm 120, a hand 80, on the part that keeps the
+  stump), and `AmputationConsequenceWound` a floor of its severity (`amputationConsequenceSeverity` 35) until the
+  stump is treated: losing an arm floors you until the spike fades. `WolfmedStumpPainTest`: an arm off leaves
+  the torso over 100 at once and settles on 35.
+- **"Make the pain HUD border flash red when in Downed pain, and even more rapid when in pain crit."** Two new
+  states from the generator: `paindowned` (the top glyph, a two-pixel red border on every other frame, 0.4 s) at
+  severity 8 while pain holds the body Downed, and `paindd` now flashes the border at 0.12 s over its own blink for
+  the faint (severity 9). `WolfmedPainAlertSystem.DownedSeverity` / `FaintSeverity`, both alerts carry the extra
+  icon, the hover text names both bands.
+- **"The flatline tone very quiet too."** `WolfmedCritHeartbeatSystem` plays it at -18 dB (was -6).
+- **Second round of Bob sounds (same morning).** Fists: the `Punch` collection now lists the owner's `punch1-3`
+  (marked; it replaces the Skyrat punches WOLFGATE(Weapons) had put there). The fire axe's `MetalThud` and the
+  spear's blade slice are `WFWolfmedChop` (`chop2-6`); every spear and the flaming axe inherit it. Crowbars
+  (`BaseCrowbar`) are `WFWolfmedCrowbarHit` (`crowbarhit1-2`). `WolfmedOrganicSoundSystem.GetHitSound` keeps any
+  `WFWolfmed*` collection a weapon already carries, so the spear chops rather than stabs; the stab still takes the
+  other piercing weapons. Arterial sprays: `artery1` and `artery3` join the splatter in `WFWolfmedBleedSpurt` and
+  `WFWolfmedBleedStump`. `WolfmedBobMeleeSoundsTest` pins the prototypes and the precedence.
+- **Bullet impacts on flesh.** The Skyrat flesh impacts WOLFGATE(Weapons) ported (`MeatBulletImpact`, nine files)
+  are the owner's `ric_flesh1-4` now, under `Resources/Audio/_WF/Wolfmed/Impacts` (marked in `gun_impacts.yml`).

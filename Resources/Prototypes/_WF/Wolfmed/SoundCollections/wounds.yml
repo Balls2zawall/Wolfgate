@@ -136,12 +136,17 @@
   files:
   # Wet sounds only. Bleeding/blood1-6 are the light-bleed drips (WFWolfmedBloodDrip).
   - /Audio/_WF/Wolfmed/Bleeding/splatter.ogg
+  # Playtest 4: the owner's arterial sprays alongside the splatter.
+  - /Audio/_WF/Wolfmed/Bleeding/artery1.ogg
+  - /Audio/_WF/Wolfmed/Bleeding/artery3.ogg
 
 # An open stump, which is wetter and comes with the bone.
 - type: soundCollection
   id: WFWolfmedBleedStump
   files:
   - /Audio/_WF/Wolfmed/Bleeding/splatter.ogg
+  - /Audio/_WF/Wolfmed/Bleeding/artery1.ogg
+  - /Audio/_WF/Wolfmed/Bleeding/artery3.ogg
   - /Audio/_WF/Wolfmed/Bleeding/crackandbleed.ogg
   - /Audio/Effects/Fluids/splat.ogg
 

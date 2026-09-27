@@ -81,9 +81,9 @@ public sealed class WolfmedPainHudTest : GameTest
             SetPain(a, BodyPartType.Torso, 58);
             Assert.That(PainAlert(a)?.Severity, Is.EqualTo((short) 3), "58 of 135 is severity 3.");
 
-            // The cap: 7, and the body is Downed by it, which the HUD shows rather than hides.
+            // The cap Downs the body, and the HUD shows that as the flashing paindowned (playtest 4), not plain 7.
             SetPain(a, BodyPartType.Torso, 135);
-            Assert.That(PainAlert(a)?.Severity, Is.EqualTo((short) 7), "the soft cap is severity 7.");
+            Assert.That(PainAlert(a)?.Severity, Is.EqualTo(WolfmedPainAlertSystem.DownedSeverity), "Downed by pain is the flashing severity.");
             Assert.That(SEntMan.GetComponent<WolfmedConsciousnessComponent>(a).State,
                 Is.EqualTo(WolfmedConsciousness.Downed));
 
@@ -106,7 +106,8 @@ public sealed class WolfmedPainHudTest : GameTest
 
             // The hover text follows the severity AlertControl passes it.
             Assert.That(Loc.GetString("alerts-wolfmed-pain-desc", ("severity", 3)), Is.EqualTo("Strong pain."));
-            Assert.That(Loc.GetString("alerts-wolfmed-pain-desc", ("severity", 8)), Does.StartWith("Passed out"));
+            Assert.That(Loc.GetString("alerts-wolfmed-pain-desc", ("severity", (int) WolfmedPainAlertSystem.DownedSeverity)), Does.StartWith("Floored"));
+            Assert.That(Loc.GetString("alerts-wolfmed-pain-desc", ("severity", (int) WolfmedPainAlertSystem.FaintSeverity)), Does.StartWith("Passed out"));
         });
     }
 }

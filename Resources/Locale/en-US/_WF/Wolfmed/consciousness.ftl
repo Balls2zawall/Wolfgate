@@ -223,6 +223,7 @@ alerts-wolfmed-pain-desc = { $severity ->
         [5] Terrible pain.
         [6] Agony. A little more and it floors you.
         [7] Agony, at or past the point it floors you.
+        [8] Floored by the pain. Crawl, or wait for it to ease.
        *[other] Passed out from the pain. It passes in seconds.
     }
 alerts-wolfmed-pain-mechanical-name = Sensor overload
@@ -234,5 +235,6 @@ alerts-wolfmed-pain-mechanical-desc = { $severity ->
         [4] Heavy fault signals.
         [5] Heavy fault signals.
         [6] Sensors near overload. A little more and they drop you.
-       *[other] Sensors overloaded, at or past the point they drop you.
+        [7] Sensors overloaded, at or past the point they drop you.
+       *[other] Sensors overloaded: dropped. Repairs clear it.
     }

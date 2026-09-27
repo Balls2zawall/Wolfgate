@@ -687,6 +687,11 @@
     chance: 1
     awakeMultiplier: 1.5
     clottingMultiplier: 4
+  # WOLFGATE(Wolfmed): playtest 4: a fresh stump hurt nothing (the lost part took its pain with it). One spike on the
+  # part that keeps the stump, the stump's severity: an arm 120 (the cap: Downed until it fades), a hand 80.
+  - !type:WoundPainBehavior
+    painPerSeverity: 1
+    oneTime: true
 
 - type: wound
   id: IpcMechanicalDamageWound
@@ -1165,6 +1170,11 @@
   damageTypes: {}
   mergeMode: SeparateInstances
   maximumSeverity: 200
+  # WOLFGATE(Wolfmed): playtest 4: the missing limb keeps hurting until the stump is treated, its severity
+  # (WolfmedBodyPart.amputationConsequenceSeverity, 35) as a pain floor on the part that holds it.
+  behaviors:
+  - !type:WoundPainBehavior
+    painPerSeverity: 1
 
 - type: wound
   id: InternalBleedingWound

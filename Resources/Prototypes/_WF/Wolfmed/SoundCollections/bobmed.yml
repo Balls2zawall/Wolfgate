@@ -156,3 +156,26 @@
   - /Audio/_WF/Wolfmed/Emotes/gag3.ogg
   - /Audio/_WF/Wolfmed/Emotes/gag4.ogg
   - /Audio/_WF/Wolfmed/Emotes/gag5.ogg
+
+# Playtest 4, the owner's second round: fists, chopping weapons and crowbars.
+- type: soundCollection
+  id: WFWolfmedPunch
+  files:
+  - /Audio/_WF/Wolfmed/Melee/punch1.ogg
+  - /Audio/_WF/Wolfmed/Melee/punch2.ogg
+  - /Audio/_WF/Wolfmed/Melee/punch3.ogg
+
+- type: soundCollection
+  id: WFWolfmedChop
+  files:
+  - /Audio/_WF/Wolfmed/Melee/chop2.ogg
+  - /Audio/_WF/Wolfmed/Melee/chop3.ogg
+  - /Audio/_WF/Wolfmed/Melee/chop4.ogg
+  - /Audio/_WF/Wolfmed/Melee/chop5.ogg
+  - /Audio/_WF/Wolfmed/Melee/chop6.ogg
+
+- type: soundCollection
+  id: WFWolfmedCrowbarHit
+  files:
+  - /Audio/_WF/Wolfmed/Melee/crowbarhit1.ogg
+  - /Audio/_WF/Wolfmed/Melee/crowbarhit2.ogg

@@ -225,9 +225,11 @@
   - sprite: /Textures/_WF/Wolfmed/Interface/Alerts/pain.rsi
     state: pain7
   - sprite: /Textures/_WF/Wolfmed/Interface/Alerts/pain.rsi
+    state: paindowned
+  - sprite: /Textures/_WF/Wolfmed/Interface/Alerts/pain.rsi
     state: paindd
   minSeverity: 0
-  maxSeverity: 8
+  maxSeverity: 9
   name: alerts-wolfmed-pain-name
   description: alerts-wolfmed-pain-desc
 
@@ -252,8 +254,10 @@
   - sprite: /Textures/_WF/Wolfmed/Interface/Alerts/pain.rsi
     state: pain7
   - sprite: /Textures/_WF/Wolfmed/Interface/Alerts/pain.rsi
+    state: paindowned
+  - sprite: /Textures/_WF/Wolfmed/Interface/Alerts/pain.rsi
     state: paindd
   minSeverity: 0
-  maxSeverity: 8
+  maxSeverity: 9
   name: alerts-wolfmed-pain-mechanical-name
   description: alerts-wolfmed-pain-mechanical-desc

@@ -1,3 +1,4 @@
+using System;
 using Content.Shared._EinsteinEngines.Silicon.Components;
 using Content.Shared._Onyx.Wounds;
 using Content.Shared._WF.Wolfmed.Wounds;
@@ -58,6 +59,12 @@ public sealed class WolfmedOrganicSoundSystem : EntitySystem
         EntityUid user,
         MeleeWeaponComponent component)
     {
+        // Playtest 4: a weapon the owner gave one of the Bob collections (the fire axe's and spear's chop, the
+        // crowbar's hits) keeps it, stab or not.
+        if (component.HitSound is SoundCollectionSpecifier { Collection: { } own } &&
+            own.StartsWith("WFWolfmed", StringComparison.Ordinal))
+            return null;
+
         if (!IsOrganicBody(target) ||
             PickCollection(damage, weapon != user, component.HitSound != null) is not { } collection)
             return null;

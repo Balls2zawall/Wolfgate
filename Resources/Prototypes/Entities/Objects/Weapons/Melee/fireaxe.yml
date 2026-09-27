@@ -24,7 +24,7 @@
         Slash: 20
         Structural: 10
     soundHit:
-      collection: MetalThud
+      collection: WFWolfmedChop # WOLFGATE(Wolfmed): playtest 4, Bob's chop instead of the thud
   - type: Wieldable
   - type: IncreaseDamageOnWield
     damage:

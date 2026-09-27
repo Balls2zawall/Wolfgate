@@ -5221,3 +5221,19 @@ Three marked upstream edits and `_WF` (DECISIONS "Playtest 4, SOUNDS").
 | `Content.Server/_WF/Wolfmed/README.md` | regenerated | `modules.py --write`. |
 | `Docs/_WF/Wolfmed/DECISIONS.md`, this file | modified | This section. |
 | `Resources/Prototypes/_WF/Wolfmed/Voice/bobmed_emote_sounds.yml` (merge) | modified | The SEPSIS emotes wired to the SOUNDS voices: cough and cough-blood, choke, retch. |
+
+## Playtest 4, stumps hurt and the HUD flashes (2026-09-27)
+
+| File | Kind | Change |
+| --- | --- | --- |
+| `Resources/Prototypes/_Onyx/Wounds/wounds.yml` | modified, `# WOLFGATE` | Pain behaviours on `DismembermentWound` (one-time, 1) and `AmputationConsequenceWound` (floor, 1). |
+| `Tools/_WF/Wolfmed/gen_wolfmed_overlays.py`, `Resources/Textures/_WF/Wolfmed/Interface/Alerts/pain.rsi` | modified | `bordered()`; `paindowned` and the fast-flashing `paindd`. |
+| `Content.Server/_WF/Wolfmed/Consciousness/WolfmedPainAlertSystem.cs`, `Resources/Prototypes/_WF/Wolfmed/Alerts/alerts.yml`, `Resources/Locale/en-US/_WF/Wolfmed/consciousness.ftl` | modified | Severity 8 Downed by pain, 9 the faint; the icons and hover lines. |
+| `Content.Client/_WF/Wolfmed/Audio/WolfmedCritHeartbeatSystem.cs` | modified | Flatline at -18 dB. |
+| `Content.IntegrationTests/Tests/_WF/Wolfmed/Scenarios/WolfmedStumpPainTest.cs`, `WolfmedPainHudTest.cs` | new, modified | The stump pain; the cap now reads as the Downed severity. |
+| `Resources/Prototypes/SoundCollections/punching.yml`, `Entities/Objects/Weapons/Melee/fireaxe.yml`, `spear.yml`, `Entities/Objects/Tools/crowbars.yml` | modified, `# WOLFGATE` | Bob punches; chop on the fire axe and spears; crowbar hits. |
+| `Resources/Prototypes/_WF/Wolfmed/SoundCollections/bobmed.yml`, `wounds.yml`, `Resources/Audio/_WF/Wolfmed/Melee`, `Bleeding` | modified | `WFWolfmedPunch`, `WFWolfmedChop`, `WFWolfmedCrowbarHit`; artery sprays in the spurt collections. |
+| `Content.Shared/_WF/Wolfmed/Sounds/WolfmedOrganicSoundSystem.cs` | modified | An owner-chosen `WFWolfmed*` hit sound beats the stab. |
+| `Content.IntegrationTests/Tests/_WF/Wolfmed/WolfmedBobMeleeSoundsTest.cs` | new | The prototypes' collections and the precedence. |
+| `Resources/Prototypes/SoundCollections/gun_impacts.yml`, `Resources/Audio/_WF/Wolfmed/Impacts` | modified, new | `MeatBulletImpact` is Bob's `ric_flesh1-4`. |
+| `Docs/_WF/Wolfmed/DECISIONS.md`, this file | modified | This section. |

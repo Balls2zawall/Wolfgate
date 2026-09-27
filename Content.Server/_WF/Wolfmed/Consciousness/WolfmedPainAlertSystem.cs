@@ -30,7 +30,11 @@ public sealed class WolfmedPainAlertSystem : EntitySystem
     public const short TopSeverity = 7;
 
     /// <summary>The paindd icon, shown while a pain faint holds the body.</summary>
-    public const short FaintSeverity = 8;
+    /// <summary>The paindowned icon, the top glyph with its border flashing red, while pain holds the body Downed.</summary>
+    public const short DownedSeverity = 8;
+
+    /// <summary>The paindd icon, its border flashing faster, while a pain faint holds the body.</summary>
+    public const short FaintSeverity = 9;
 
     [Dependency] private AlertsSystem _alerts = default!;
     [Dependency] private IConfigurationManager _cfg = default!;
@@ -71,6 +75,11 @@ public sealed class WolfmedPainAlertSystem : EntitySystem
         var effective = MathF.Max(0f, _pain.GetPain((body, pain)).Float() - _relief.GetRelief(body));
         if (effective <= _cfg.GetCVar(WolfmedCVars.PainHudFrom))
             return null;
+
+        // Playtest 4: Downed by pain flashes the border; the faint above flashes it faster. Read after the
+        // threshold: Downed outlives the pain that caused it by a moment, and the HUD follows the pain.
+        if (consciousness.State == WolfmedConsciousness.Downed && consciousness.Cause == WolfmedCause.Pain)
+            return DownedSeverity;
 
         var level = MathF.Round(effective / pain.SoftPainCap.Float() * TopSeverity);
         return (short) Math.Clamp(level, 0f, TopSeverity);
