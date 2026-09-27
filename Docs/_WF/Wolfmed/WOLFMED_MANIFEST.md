@@ -5247,3 +5247,12 @@ Three marked upstream edits and `_WF` (DECISIONS "Playtest 4, SOUNDS").
 | `Content.Server/_WF/Wolfmed/Gore/WolfmedGibDecalSystem.cs`, `WolfmedCVars.cs` | new, modified | The three trauma hooks and the five `wolfmed.gib*` lines. |
 | `Content.IntegrationTests/Tests/_WF/Wolfmed/Scenarios/WolfmedGibDecalTest.cs` | new | Limb off, gib, colours, cleanable, machines. |
 | `Docs/_WF/Wolfmed/DECISIONS.md`, this file | modified | This section. |
+
+## Playtest 4, the tourniquet holds (2026-09-27)
+
+| File | Kind | Change |
+| --- | --- | --- |
+| `Content.Server/_Onyx/Wounds/WoundBleedingSystem.cs`, `Content.Server/_Onyx/Medical/Tourniquet/TourniquetSystem.cs` | modified, `// WOLFGATE` | Clamp survives new damage under a tourniquet; new bleeds under one start clamped; the strap covers child parts. |
+| `Content.Server/_WF/Wolfmed/Wounds/WoundBleedingSystem.Wolfmed.cs` | modified | `IsTiedOff`. |
+| `Content.IntegrationTests/Tests/_WF/Wolfmed/Scenarios/WolfmedTourniquetHoldsTest.cs` | new | The strap holds through Blunt and Slash, ties off the foot, leaves the other leg alone. |
+| `Docs/_WF/Wolfmed/DECISIONS.md`, this file | modified | This section. |

@@ -330,6 +330,7 @@ Skipped ("dirty-disposed").
 - [`Content.IntegrationTests/Tests/_WF/Wolfmed/Scenarios/WolfmedSpeciesTest.cs`](../../../Content.IntegrationTests/Tests/_WF/Wolfmed/Scenarios/WolfmedSpeciesTest.cs)
 - [`Content.IntegrationTests/Tests/_WF/Wolfmed/Scenarios/WolfmedStumpPainTest.cs`](../../../Content.IntegrationTests/Tests/_WF/Wolfmed/Scenarios/WolfmedStumpPainTest.cs)
 - [`Content.IntegrationTests/Tests/_WF/Wolfmed/Scenarios/WolfmedTemperatureTest.cs`](../../../Content.IntegrationTests/Tests/_WF/Wolfmed/Scenarios/WolfmedTemperatureTest.cs)
+- [`Content.IntegrationTests/Tests/_WF/Wolfmed/Scenarios/WolfmedTourniquetHoldsTest.cs`](../../../Content.IntegrationTests/Tests/_WF/Wolfmed/Scenarios/WolfmedTourniquetHoldsTest.cs)
 - [`Content.IntegrationTests/Tests/_WF/Wolfmed/WolfmedAimScatterTest.cs`](../../../Content.IntegrationTests/Tests/_WF/Wolfmed/WolfmedAimScatterTest.cs)
 - [`Content.IntegrationTests/Tests/_WF/Wolfmed/WolfmedAmputationTest.cs`](../../../Content.IntegrationTests/Tests/_WF/Wolfmed/WolfmedAmputationTest.cs)
 - [`Content.IntegrationTests/Tests/_WF/Wolfmed/WolfmedAnalyzerDollLayoutTest.cs`](../../../Content.IntegrationTests/Tests/_WF/Wolfmed/WolfmedAnalyzerDollLayoutTest.cs)
@@ -968,6 +969,7 @@ Skipped ("dirty-disposed").
   - W2: an arterial bleed away from the limbs has nowhere to tie off; say so.
   - D13 — class is now Content.Server-only, so Onyx's "if (_net.IsServer)" guard is always true; dropped with the INetManager dependency
   - D13 — class is now Content.Server-only, so Onyx's "!_net.IsServer ||" half of this guard is always false; dropped with the INetManager dependency
+  - playtest 4: the strap ties off everything below it too (a leg's foot, an arm's hand).
   - W2: a torso or head artery cannot be tied off.
   - W5: the item is consumed, so the part carries the clock.
   - W2: nothing to do if every bleed here is untieable.
@@ -988,7 +990,9 @@ Skipped ("dirty-disposed").
   - D13, BloodstreamComponent is server-only in Wolfgate.
   - D13, BloodstreamSystem is server-only in Wolfgate.
   - playtest 1
+  - playtest 4: a bleed opening on a part under a tourniquet (or below one) is tied off
   - infection creep is not a new injury, it must not strip the dressing
+  - playtest 4: a tourniquet stays tied whatever the wound does under it (the strap's own
   - playtest 1: once per cooldown, not every vacuum tick
   - dressing
   - gauze that stops a bleed stays on the wound as a dressing. Removing the component here let the

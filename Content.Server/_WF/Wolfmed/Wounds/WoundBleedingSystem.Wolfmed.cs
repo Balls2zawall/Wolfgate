@@ -2,6 +2,7 @@
 // which carries only the three call sites that route through here.
 
 using Content.Shared._WF.Wolfmed.Wounds;
+using Robust.Shared.GameObjects;
 using Content.Shared.FixedPoint;
 
 namespace Content.Shared._Onyx.Wounds;
@@ -64,6 +65,23 @@ public sealed partial class WoundBleedingSystem
 
             if (AllowsTopicalBleedReduction(wound) || bleeding.Treatment == BleedingTreatment.None)
                 return true;
+        }
+
+        return false;
+    }
+
+    /// <summary>
+    /// Playtest 4: whether a tourniquet is on this part or on one it hangs from (a strap on the leg ties off the foot).
+    /// The part carries <see cref="WolfmedTourniquetComponent"/> from the strap going on until it comes off.
+    /// </summary>
+    public bool IsTiedOff(EntityUid part)
+    {
+        EntityUid? current = part;
+        while (current is { } uid && !TerminatingOrDeleted(uid))
+        {
+            if (HasComp<WolfmedTourniquetComponent>(uid))
+                return true;
+            current = _body.GetParentPartOrNull(uid);
         }
 
         return false;

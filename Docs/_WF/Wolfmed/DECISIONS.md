@@ -3947,3 +3947,15 @@ splats and streaks; an opened belly (the torso overflow after `WolfmedEviscerati
 `wolfmed.gibs_evisceration` (3) from the ones with guts; a gibbed body (`BeingGibbedEvent` on the wound host)
 `wolfmed.gibs_gib` (7) from all of them. `wolfmed.gib_decals` turns the lot off. `WolfmedGibDecalTest`: an arm off
 leaves two, colours as above and cleanable; the gib adds seven; an IPC leaves none.
+
+## The tourniquet holds (playtest 4, 2026-09-27)
+
+"I've been trying to apply a tourniquet to my right leg, and it says it applies and stops, but it continues
+bleeding." `TourniquetSystem.Apply` clamped the bleeds it found and then, as Onyx has it, hurt the part
+(Blunt 5, "tourniquets hurt"); `WoundBleedingSystem.OnWoundChanged` clears any treatment on a wound whose severity
+rises, so the strap's own blow reopened what it had just clamped, and so did every later hit and the comminuted
+fracture's crawling. Three marked edits: a `Clamped` treatment survives new damage while the part is tied off
+(`WoundBleedingSystem.IsTiedOff`, the part or one above it carrying `WolfmedTourniquetComponent`); a bleed that
+opens under a tourniquet starts clamped; and the strap ties off the parts below it (a leg's foot, an arm's hand).
+Every other dressing still comes off a wound that reopens. Removal is unchanged: taking the strap off unclamps
+(`WolfmedNecrosisSystem`). `WolfmedTourniquetHoldsTest`.

@@ -57,13 +57,26 @@ public sealed partial class WoundBleedingSystem : EntitySystem
     }
 
     private void OnBleedingInit(Entity<WoundBleedingComponent> wound, ref ComponentInit args) => RestartAutomaticClotting(wound);
-    private void OnWoundCreated(Entity<WoundBleedingComponent> wound, ref WoundCreatedEvent args) => RestartAutomaticClotting(wound);
+    private void OnWoundCreated(Entity<WoundBleedingComponent> wound, ref WoundCreatedEvent args)
+    {
+        // WOLFGATE(Wolfmed): playtest 4: a bleed opening on a part under a tourniquet (or below one) is tied off
+        // already; the strap covers the whole limb, not just the wounds it found when it went on.
+        if (TryComp(wound, out WoundComponent? core) && IsTiedOff(core.HoldingPart) &&
+            _traits.CanTourniquet(wound.Owner, core.HoldingPart))
+            wound.Comp.Treatment = BleedingTreatment.Clamped;
+
+        RestartAutomaticClotting(wound);
+    }
     private void OnWoundChanged(Entity<WoundBleedingComponent> wound, ref WoundChangedEvent args)
     {
         if (args.Severity > args.OldSeverity && !_wfInfection.ApplyingCreep) // WOLFGATE(Wolfmed): infection creep is not a new injury, it must not strip the dressing
         {
             wound.Comp.BleedingSeverity += args.Severity - args.OldSeverity;
-            wound.Comp.Treatment = BleedingTreatment.None;
+            // WOLFGATE(Wolfmed): playtest 4: a tourniquet stays tied whatever the wound does under it (the strap's own
+            // Blunt was undoing the clamp it had just put on); every other dressing still comes off a wound that reopens.
+            if (wound.Comp.Treatment != BleedingTreatment.Clamped ||
+                !TryComp(wound, out WoundComponent? changedCore) || !IsTiedOff(changedCore.HoldingPart))
+                wound.Comp.Treatment = BleedingTreatment.None;
             RestartAutomaticClotting(wound);
         }
         else

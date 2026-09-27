@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Linq;
 using Content.Shared._Shitmed.Targeting; // WOLFGATE(Wolfmed): D10 — Onyx's TargetingComponent registers as "Targeting", colliding with Shitmed's; use Shitmed's identical field instead
 using Content.Shared._WF.Wolfmed.Targeting; // WOLFGATE(Wolfmed): D10 — WoundTargetResolver replaces the absent TargetResolverSystem
@@ -105,13 +106,22 @@ public sealed partial class TourniquetSystem : EntitySystem
             return false;
 
         var applied = false;
-        foreach (var wound in _wounds.GetWounds((part, Comp<WoundableComponent>(part))).ToArray())
+        // WOLFGATE(Wolfmed): playtest 4: the strap ties off everything below it too (a leg's foot, an arm's hand).
+        var parts = new List<EntityUid> { part };
+        parts.AddRange(_body.GetBodyPartChildren(part).Select(child => child.Id));
+        foreach (var tied in parts)
         {
-            if (!TryComp(wound, out WoundBleedingComponent? bleeding) || bleeding.CurrentRate <= 0f ||
-                !_traits.CanTourniquet(wound.Owner, part)) // WOLFGATE(Wolfmed): W2: a torso or head artery cannot be tied off.
+            if (!TryComp(tied, out WoundableComponent? woundable))
                 continue;
 
-            applied |= _bleeding.SetTreatment(wound.Owner, BleedingTreatment.Clamped);
+            foreach (var wound in _wounds.GetWounds((tied, woundable)).ToArray())
+            {
+                if (!TryComp(wound, out WoundBleedingComponent? bleeding) || bleeding.CurrentRate <= 0f ||
+                    !_traits.CanTourniquet(wound.Owner, tied)) // WOLFGATE(Wolfmed): W2: a torso or head artery cannot be tied off.
+                    continue;
+
+                applied |= _bleeding.SetTreatment(wound.Owner, BleedingTreatment.Clamped);
+            }
         }
 
         if (applied)
