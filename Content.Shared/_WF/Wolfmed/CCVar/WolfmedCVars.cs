@@ -442,6 +442,14 @@ public sealed class WolfmedCVars
         CVarDef.Create("wolfmed.painkiller_absorb_seconds", 4f, CVar.SERVERONLY);
 
     /// <summary>
+    /// Pain a second a part sheds from the share of its pain no open wound backs (playtest 4). Onyx recovers pain at
+    /// one ninth a second whatever its source, so a treated wound kept hurting for minutes; the wound floor still
+    /// holds while the wound is open. Zero keeps Onyx's rate.
+    /// </summary>
+    public static readonly CVarDef<float> PainLooseRecovery =
+        CVarDef.Create("wolfmed.pain_loose_recovery", 3f, CVar.SERVERONLY);
+
+    /// <summary>
     /// Seconds between two "You feel your wounds painfully close!" lines on one body (playtest 1). Vacuum deals a
     /// little Heat every second, and each tick on a bleeding body used to say it again.
     /// </summary>

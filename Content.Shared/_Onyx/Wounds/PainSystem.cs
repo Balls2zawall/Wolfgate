@@ -259,6 +259,12 @@ public sealed partial class PainSystem : EntitySystem
             recovery *= 1f + (GetRecoveryMultiplier(bodyPain) - 1f) * suppressionRatio;
         }
 
+        // WOLFGATE(Wolfmed): playtest 4, the share of the pain no open wound backs (Value over WoundPain) fades at
+        // wolfmed.pain_loose_recovery a second, so a treated wound stops hurting within a minute; the floor holds.
+        var loose = _wolfmedPain.LooseRecovery;
+        if (loose > FixedPoint2.Zero && entity.Comp.Value > minimum)
+            recovery = FixedPoint2.Max(recovery, loose);
+
         var recovered = FixedPoint2.Max(minimum, entity.Comp.Value - recovery * seconds);
         return SetPain(entity, recovered);
     }

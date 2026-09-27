@@ -27,6 +27,9 @@ public sealed class WolfmedBodyPainSystem : EntitySystem
 
     public float AdrenalineCrawlMultiplier => MathF.Max(0f, _cfg.GetCVar(WolfmedCVars.AdrenalineCrawlMultiplier));
 
+    /// <summary>Pain a second a part sheds from the share no open wound backs (playtest 4).</summary>
+    public FixedPoint2 LooseRecovery => FixedPoint2.New(MathF.Max(0f, _cfg.GetCVar(WolfmedCVars.PainLooseRecovery)));
+
     public override void Initialize()
     {
         base.Initialize();

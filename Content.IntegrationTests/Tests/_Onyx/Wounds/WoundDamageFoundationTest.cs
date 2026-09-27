@@ -1,6 +1,7 @@
 using System.Linq;
 using System.Collections.Generic;
 using Content.IntegrationTests.Fixtures;
+using Content.IntegrationTests.Fixtures.Attributes;
 using Content.Shared._Onyx.Wounds;
 using Content.Shared._Onyx.Targeting;
 using Content.Shared._Shitmed.Targeting; // WOLFGATE(Wolfmed): D10, Onyx's own Targeting stack is not vendored.
@@ -764,6 +765,8 @@ public sealed class WoundDamageFoundationTest : GameTest
     [Test]
     public async Task PainApiAndProjectionTest()
     {
+        // WOLFGATE(Wolfmed): playtest 4, the loose rate would change Onyx's recovery arithmetic asserted below.
+        await OverrideCVar(Side.Server, Content.Shared._WF.Wolfmed.CCVar.WolfmedCVars.PainLooseRecovery, 0f);
         // WOLFGATE(Wolfmed): canary for the language trap that made the whole pain system inert. On a record struct
         // with a primary constructor, `new T()` binds to the implicit parameterless struct constructor and
         // zeroes the field rather than taking the primary constructor's `= 1f` default, so Onyx's

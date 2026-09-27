@@ -1,3 +1,4 @@
+using Content.Shared._WF.Wolfmed.Autodoc;
 using Content.Shared.Climbing.Components;
 using Content.Shared.Climbing.Events;
 using Content.Shared.Physics;
@@ -24,7 +25,8 @@ public sealed class WolfmedDownedClimbSystem : EntitySystem
     public override void Initialize()
     {
         base.Initialize();
-        SubscribeLocalEvent<ClimbableComponent, AttemptClimbEvent>(OnAttemptClimb);
+        // Playtest 4: after the pod's own refusal, so a body that is down gets "for lying in, not on" there, not this.
+        SubscribeLocalEvent<ClimbableComponent, AttemptClimbEvent>(OnAttemptClimb, after: new[] { typeof(SharedAutodocSystem) });
         SubscribeLocalEvent<WolfmedDownedComponent, EndClimbEvent>(OnEndClimb);
     }
 

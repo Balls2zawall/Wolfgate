@@ -289,6 +289,7 @@ Skipped ("dirty-disposed").
 - [`Content.IntegrationTests/Tests/_WF/Wolfmed/Scenarios/WolfmedIpcDeathTest.cs`](../../../Content.IntegrationTests/Tests/_WF/Wolfmed/Scenarios/WolfmedIpcDeathTest.cs)
 - [`Content.IntegrationTests/Tests/_WF/Wolfmed/Scenarios/WolfmedIpcFluidLossTest.cs`](../../../Content.IntegrationTests/Tests/_WF/Wolfmed/Scenarios/WolfmedIpcFluidLossTest.cs)
 - [`Content.IntegrationTests/Tests/_WF/Wolfmed/Scenarios/WolfmedLeftoversTest.cs`](../../../Content.IntegrationTests/Tests/_WF/Wolfmed/Scenarios/WolfmedLeftoversTest.cs)
+- [`Content.IntegrationTests/Tests/_WF/Wolfmed/Scenarios/WolfmedLoosePainTest.cs`](../../../Content.IntegrationTests/Tests/_WF/Wolfmed/Scenarios/WolfmedLoosePainTest.cs)
 - [`Content.IntegrationTests/Tests/_WF/Wolfmed/Scenarios/WolfmedMacheteTest.cs`](../../../Content.IntegrationTests/Tests/_WF/Wolfmed/Scenarios/WolfmedMacheteTest.cs)
 - [`Content.IntegrationTests/Tests/_WF/Wolfmed/Scenarios/WolfmedMedicInfoTest.cs`](../../../Content.IntegrationTests/Tests/_WF/Wolfmed/Scenarios/WolfmedMedicInfoTest.cs)
 - [`Content.IntegrationTests/Tests/_WF/Wolfmed/Scenarios/WolfmedMedicLinesTest.cs`](../../../Content.IntegrationTests/Tests/_WF/Wolfmed/Scenarios/WolfmedMedicLinesTest.cs)
@@ -705,6 +706,7 @@ Skipped ("dirty-disposed").
   - P3-D5: derivation from WoundFoundationArmorLocational — head matches the first
   - D23: derivation — the head is armoured by the partModifiers Blunt 0.25 entry, and that
   - P3-D5: the coverage gate returns before any modifier maths, so an uncovered part takes
+  - playtest 4, the loose rate would change Onyx's recovery arithmetic asserted below.
   - canary for the language trap that made the whole pain system inert. On a record struct
   - pinpoint diagnostics — pain reaching zero here has three distinct causes (no routed
   - D16: Onyx's SuppressPain entity effect is phase 4; PainSystem.SuppressPain is the same
@@ -1036,6 +1038,7 @@ Skipped ("dirty-disposed").
   - M1a: OD5, adrenaline no longer takes 30% off every reading; it no longer stands anyone up.
   - M1a: P13, the share is of the sum of the parts, not of the capped body value, so the
   - M1a: P13, a body's pain is min(soft cap, sum of its parts) after every change, direct
+  - playtest 4, the share of the pain no open wound backs (Value over WoundPain) fades at
   - M1a: CVar
   - BRAIN: a shock on a body that has already bled out stops the heart.
   - P2-D8: Wolfgate's PainNumbness trait grants the legacy PainNumbnessComponent

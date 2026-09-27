@@ -448,6 +448,9 @@ public sealed class WolfmedCauseScenarioTest : GameTest
     [Test]
     public async Task BodyPainTracksPartsTest()
     {
+        // Playtest 4: these sets carry no wound floor, so the loose rate would fade them mid-assertion; this test is
+        // the P13 arithmetic, not the decay.
+        await OverrideCVar(Side.Server, WolfmedCVars.PainLooseRecovery, 0f);
         await PinPain();
         var map = await Pair.CreateTestMap();
         EntityUid a = default;

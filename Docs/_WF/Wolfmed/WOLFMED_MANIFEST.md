@@ -5095,3 +5095,15 @@ All `_WF` YAML, one CVar default and tests (DECISIONS "Organs take nine heavy hi
 | `Content.IntegrationTests/Tests/_WF/Wolfmed/Scenarios/WolfmedMacheteTest.cs` | new | Machete to a human and a Skrell chest: heart intact and no faint on hit 3, heart failed within hits 7-12. |
 | `Content.IntegrationTests/Tests/_WF/Wolfmed/WolfmedOrganTest.cs`, `Scenarios/WolfmedConsequencesTest.cs`, `WolfmedAnalyzerTest.cs`, `WolfmedWoundSurgeryTest.cs`, `WolfmedAutodocFaintTest.cs` | modified | Organ health 25 on torso organs (rows, heal steps, the shock band at 21); the rifle calibration reads lungs 8-12 impaired, 12-16 failed, heart never; the IPC pump only has to outlast the heart; both pin cap 3; the autodoc faint fixture adds a torso hit since two legs cap at 180 pain. |
 | `Docs/_WF/Wolfmed/DECISIONS.md`, this file | modified | This section. |
+
+## Playtest 4, treated pain fades and the pod's popup (2026-09-26)
+
+One marked Onyx edit and `_WF` (DECISIONS "Treated pain fades", "The pod is for lying in").
+
+| File | Kind | Change |
+| --- | --- | --- |
+| `Content.Shared/_Onyx/Wounds/PainSystem.cs` | modified, `// WOLFGATE` | `RecoverPain` sheds pain over the wound floor at `wolfmed.pain_loose_recovery` a second. |
+| `Content.Shared/_WF/Wolfmed/CCVar/WolfmedCVars.cs`, `Consciousness/WolfmedBodyPainSystem.cs` | modified | `wolfmed.pain_loose_recovery` (3) and its accessor. |
+| `Content.Shared/_WF/Wolfmed/Consciousness/WolfmedDownedClimbSystem.cs` | modified | The table guard runs after the pod's climb refusal. |
+| `Content.IntegrationTests/Tests/_WF/Wolfmed/Scenarios/WolfmedLoosePainTest.cs` | new | 100 pain over a 60 floor settles to 60 in 20 s; with the floor gone it is under 1 in 25 s. |
+| `Docs/_WF/Wolfmed/DECISIONS.md`, this file | modified | The two sections. |

@@ -3411,3 +3411,21 @@ heart on hit 9, pump on hit 10, core on hit 16 (`IpcTorsoLastsAsLongAsAHumanChes
 outlast the heart); rifle rounds (Piercing 14), lungs impaired on hit 10 and failed on hit 14, the heart still beating
 at 4.4 when the routing stops taking hits on that torso around hit 19 (`OrganCalibrationTest`: a rifle takes the
 lungs, never the heart). Rifles were already killing by blood and pain long before either.
+
+## Treated pain fades (playtest 4, 2026-09-26)
+
+"Pain should decay far faster when a wound is fixed." Onyx recovers a part's pain at one ninth a second whatever its
+source, down to the floor its open wounds set, so a bandaged or sutured wound kept its patient hurting, and often
+Downed, for minutes. `PainSystem.RecoverPain` now sheds the share of a part's pain that no open wound backs (its
+value over `WoundPain`) at `wolfmed.pain_loose_recovery` (3) a second instead, a marked edit: a hit still spikes and
+settles onto its wound's floor within seconds, the floor holds while the wound is open, and once treatment clears
+the floor the rest goes within half a minute (`WolfmedLoosePainTest`). Painkillers' recovery multiplier still
+applies on top of Onyx's rate; the loose rate is a floor on the rate, not a multiplier.
+
+## The pod is for lying in (playtest 4, 2026-09-26)
+
+A body that was down and tried to get into the pod was told "You can't climb while you're down", the playtest 3
+table guard, instead of the pod's own "The pod is for lying in, not on" (every constructible machine is climbable).
+Entering the pod was never a climb (the verb and the drag both insert, and Downed is allowed), so only the popup was
+wrong. `WolfmedDownedClimbSystem` now subscribes after `SharedAutodocSystem`, so the pod's refusal comes first and
+the table guard sees the attempt already cancelled.

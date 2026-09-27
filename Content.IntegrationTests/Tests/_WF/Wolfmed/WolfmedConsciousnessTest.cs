@@ -1,6 +1,8 @@
 #nullable enable
 using System.Linq;
 using Content.IntegrationTests.Fixtures;
+using Content.Shared._WF.Wolfmed.CCVar;
+using Content.IntegrationTests.Fixtures.Attributes;
 using Content.Server._WF.Wolfmed.Consciousness;
 using Content.Server._WF.Wolfmed.Life;
 using Content.Server.Body.Systems;
@@ -439,6 +441,8 @@ public sealed class WolfmedConsciousnessTest : GameTest
     [Test]
     public async Task EmergencyPenLiftsThenCrashesTest()
     {
+        // Playtest 4: the pain here carries no wound floor, so the loose rate would fade it under the pen's arithmetic.
+        await OverrideCVar(Side.Server, WolfmedCVars.PainLooseRecovery, 0f);
         var server = Pair.Server;
         await server.WaitIdleAsync();
         var entities = server.ResolveDependency<IEntityManager>();
