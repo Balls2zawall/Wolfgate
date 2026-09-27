@@ -53,7 +53,6 @@ public sealed class WolfmedAvailabilityTest : GameTest
         "WFWolfmedNaloxonePen",
         "WFWolfmedHydraulicFluidPack",
         "Tourniquet",
-        "MedicalPatchMakeshift",
         "WFWolfmedAnalgesicPillCanister",
         "WFWolfmedIbuprofenPill",
         "WFWolfmedIbuprofenPillCanister",

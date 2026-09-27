@@ -4204,7 +4204,6 @@ Brutepack, Ointment, Gauze, Tourniquet and the splint stand in five columns, the
 | item | NanoMed Plus | NanoMed wall | CiviMed | Wolfgate shop | Robotech |
 |---|---|---|---|---|---|
 | Tourniquet | 4 | 2 | inf | 6 | |
-| MedicalPatchMakeshift | 4 | 2 | inf | 6 | |
 | MedicatedSuture, RegenerativeMesh | 2 each | | | 2 each | |
 | WFWolfmedAnalgesicPillCanister | 3 | 2 | inf | 4 | |
 | WFWolfmedIbuprofenPillCanister, WFWolfmedKetorolacPillCanister | 2 each | 1 each | inf | 3 each | |
@@ -4246,3 +4245,11 @@ canister and the synthetic kit, and now checks every certain entry of each fill,
 `PillCanistersSpawnFullTest` (each canister's count, each pill's reagent, each bottle's 30 u) and
 `FlatpacksUnpackTest` (a multitool unpacks each onto the grid, the pack is used up, the pack costs at least what it
 builds).
+
+**Review round (2026-09-28).** The makeshift patch came back out of the four vendors: it is sold empty, nothing can fill
+it (no refillable or injectable solution), and once stuck on a patient it cannot be removed (the Unremoveable trap the
+patch test records), so it treated nothing. It stays craftable from cloth until the patch itself is fixed. The new
+canisters and bottles, and the opiate and spaceacillin bottles, now carry their own names ("osteogen pill canister",
+"tramadol bottle"): the trader shop names rows from the prototype, not the label, so they all read "pill canister" and
+"bottle" there. John Wolfgate sells the autodoc flatpack at his shop's normal markup (32,000 credits on the 3,200
+price); the board route at the lathe stays the cheap one.

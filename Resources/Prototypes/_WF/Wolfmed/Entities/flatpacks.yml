@@ -12,7 +12,8 @@
   - type: Sprite
     layers:
     - state: medical_lathe
-  # Above what the unpacked pod appraises at (2500 with its board and parts), or buying one and selling it pays.
+  # Above what the unpacked pod appraises at: its 2500 plus the board, parts and the tools it spawns with, about
+  # 3,140. Under that, buying one and selling the pod pays.
   - type: StaticPrice
     price: 3200
 

@@ -4,6 +4,7 @@
 
 - type: entity
   id: WFSpaceacillinChemistryBottle
+  name: spaceacillin bottle
   suffix: spaceacillin
   parent: BaseChemistryBottleFilled
   components:
@@ -60,6 +61,7 @@
 - type: entity
   parent: PillCanister
   id: WFWolfmedOsteogenPillCanister
+  name: osteogen pill canister
   suffix: Osteogen 15u, 5
   components:
   - type: Label
@@ -75,6 +77,7 @@
 - type: entity
   parent: BaseChemistryBottleFilled
   id: WFWolfmedOsteogenChemistryBottle
+  name: osteogen bottle
   suffix: osteogen
   components:
   - type: Label

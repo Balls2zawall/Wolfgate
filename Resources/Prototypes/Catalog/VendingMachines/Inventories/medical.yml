@@ -16,7 +16,6 @@
     WFWolfmedNaloxonePen: 2 # WOLFGATE(Wolfmed): M2: OD14, the opioid antagonist that reverses an overdose.
     WFWolfmedSplint: 4 # WOLFGATE(Wolfmed): V5: field treatment for a fracture, short of the table.
     Tourniquet: 4 # WOLFGATE(Wolfmed): ITEMS: stops a limb bleeding out; the standard kit's first tool.
-    MedicalPatchMakeshift: 4 # WOLFGATE(Wolfmed): ITEMS: the cheap patch, for when nobody has cloth.
     MedicatedSuture: 2 # WOLFGATE(Wolfmed): ITEMS: closes cuts and punctures and stops their bleeding.
     RegenerativeMesh: 2 # WOLFGATE(Wolfmed): ITEMS: the advanced burn dressing.
     WFWolfmedAnalgesicPillCanister: 3 # WOLFGATE(Wolfmed): ITEMS: the weak rung by the canister.

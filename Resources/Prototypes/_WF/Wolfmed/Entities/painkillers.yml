@@ -26,6 +26,7 @@
 - type: entity
   parent: BaseChemistryBottleFilled
   id: WFWolfmedOpiateChemistryBottle
+  name: opiate bottle
   suffix: opiate
   components:
   - type: Label
@@ -150,6 +151,7 @@
 - type: entity
   parent: PillCanister
   id: WFWolfmedAnalgesicPillCanister
+  name: analgesic pill canister
   suffix: Analgesic, 7
   components:
   - type: Label
@@ -186,6 +188,7 @@
 - type: entity
   parent: PillCanister
   id: WFWolfmedIbuprofenPillCanister
+  name: ibuprofen pill canister
   suffix: Ibuprofen 10u, 5
   components:
   - type: Label
@@ -221,6 +224,7 @@
 - type: entity
   parent: PillCanister
   id: WFWolfmedKetorolacPillCanister
+  name: ketorolac pill canister
   suffix: Ketorolac 10u, 5
   components:
   - type: Label
@@ -236,6 +240,7 @@
 - type: entity
   parent: BaseChemistryBottleFilled
   id: WFWolfmedTramadolChemistryBottle
+  name: tramadol bottle
   suffix: tramadol
   components:
   - type: Label
@@ -251,6 +256,7 @@
 - type: entity
   parent: BaseChemistryBottleFilled
   id: WFWolfmedOxycodoneChemistryBottle
+  name: oxycodone bottle
   suffix: oxycodone
   components:
   - type: Label
