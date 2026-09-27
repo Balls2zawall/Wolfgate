@@ -195,7 +195,8 @@ public sealed class WolfmedDownedSystem : EntitySystem
     {
         // Playtest 4: the gun system asks CanAttack with no target and no weapon before a shot, so a sidearm in the
         // active hand passes here and OnShotAttempt does the rest; melee (a target, a weapon) stays out.
-        if (args.Target == null && args.Weapon == null && _hands.GetActiveItem(uid) is { } held && _tags.HasTag(held, SidearmTag))
+        if (args.Target == null && args.Weapon == null && TryComp(uid, out HandsComponent? hands) &&
+            _hands.GetActiveItem((uid, hands)) is { } held && _tags.HasTag(held, SidearmTag))
             return;
 
         args.Cancel();
