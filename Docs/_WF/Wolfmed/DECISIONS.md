@@ -3884,3 +3884,16 @@ Tests: `WolfmedBobSoundsTest` (5): every `WFWolfmed` collection's files exist an
 the flesh-only guard against an IPC and a wall; 75 Blunt cracks a human arm once and an IPC arm never, a tendon cut
 snaps once on a human and never on an IPC; a 0.36 slash drips within two 1 s intervals, an arterial cut and an IPC
 with the same slash never do. `WolfmedWoundSfxTest` now expects the fracture entry to be silent.
+
+## Playtest 4 batch, the merge (2026-09-27)
+
+The four packages (SEPSIS, VISUALS, IV, SOUNDS; specs and reports under `C:/Users/jzo12/Documents/Wolfmed/plan/p8/`)
+landed as one linear commit each on `Wolfmed`, in that order, with the shared files (`WolfmedCVars.cs`, this file,
+the manifest, the module README) merged by keeping both sides. The SEPSIS emotes were shipped silent and the SOUNDS
+package shipped their voices without the emotes, so the orchestrator wired `WFWolfmedCough` and `WFWolfmedCoughBlood`
+to `WFWolfmedCoughMale/Female`, `WFWolfmedChoke` to `WFWolfmedChokeMale/Female` and `WFWolfmedRetch` to
+`WFWolfmedRetch` in `bobmed_emote_sounds.yml`; `WFWolfmedWheeze` and `WFWolfmedShiver` stay silent (no source has a
+wheeze or a shiver). Along the way: the sidearm attack gate (`WolfmedDownedSystem.OnAttackAttempt`) asked
+`GetActiveItem` of bodies without hands, which logged and failed `DownedReachesOnlyItselfTest`; it now checks for
+hands first. The owner's mid-batch corrections (one blood type, the existing `Bloodpack`, no bag variants; body
+sounds and overlays organic-only, the pain HUD for machines too) are in the specs and the packages.

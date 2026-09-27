@@ -16,6 +16,15 @@
       collection: WFWolfmedSniffMale
     WFWolfmedGulp:
       collection: WFWolfmedGulp
+    # The SEPSIS package's condition emotes (wired by the orchestrator after the merge).
+    WFWolfmedCough:
+      collection: WFWolfmedCoughMale
+    WFWolfmedCoughBlood:
+      collection: WFWolfmedCoughMale
+    WFWolfmedChoke:
+      collection: WFWolfmedChokeMale
+    WFWolfmedRetch:
+      collection: WFWolfmedRetch
 
 - type: emoteSounds
   id: WFWolfmedFemaleEmotes
@@ -30,3 +39,12 @@
       collection: WFWolfmedSniffFemale
     WFWolfmedGulp:
       collection: WFWolfmedGulp
+    # The SEPSIS package's condition emotes (wired by the orchestrator after the merge).
+    WFWolfmedCough:
+      collection: WFWolfmedCoughFemale
+    WFWolfmedCoughBlood:
+      collection: WFWolfmedCoughFemale
+    WFWolfmedChoke:
+      collection: WFWolfmedChokeFemale
+    WFWolfmedRetch:
+      collection: WFWolfmedRetch

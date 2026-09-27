@@ -5220,3 +5220,4 @@ Three marked upstream edits and `_WF` (DECISIONS "Playtest 4, SOUNDS").
 | `Content.IntegrationTests/Tests/_WF/Wolfmed/WolfmedWoundSfxTest.cs` | modified | The fracture entry is silent; a soundless entry is skipped. |
 | `Content.Server/_WF/Wolfmed/README.md` | regenerated | `modules.py --write`. |
 | `Docs/_WF/Wolfmed/DECISIONS.md`, this file | modified | This section. |
+| `Resources/Prototypes/_WF/Wolfmed/Voice/bobmed_emote_sounds.yml` (merge) | modified | The SEPSIS emotes wired to the SOUNDS voices: cough and cough-blood, choke, retch. |
