@@ -125,6 +125,10 @@ def write_rsi(directory, copyright_text, states, keep=()):
         if dirs != 1:
             entry["directions"] = dirs
         if delays is not None:
+            # The RSI validator wants every direction to last the same; Bob's 2bullet south runs a tenth longer than
+            # its other facings. The shorter directions hold their last frame for the difference.
+            longest = max(sum(row) for row in delays)
+            delays = [row[:-1] + [round(row[-1] + longest - sum(row), 3)] for row in delays]
             entry["delays"] = delays
         meta_states.append(entry)
     meta = {

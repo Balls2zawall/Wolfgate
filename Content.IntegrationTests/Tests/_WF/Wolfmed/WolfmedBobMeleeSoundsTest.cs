@@ -34,7 +34,7 @@ public sealed class WolfmedBobMeleeSoundsTest : GameTest
         {
             var prototype = SProtoMan.Index<EntityPrototype>(proto);
             Assert.That(prototype.Components.TryGetValue("WolfmedHitOverlaySound", out var entry), Is.True, $"{proto} has no overlay.");
-            var overlay = (WolfmedHitOverlaySoundComponent) entry.Component;
+            var overlay = (WolfmedHitOverlaySoundComponent) entry!.Component;
             Assert.That(((SoundCollectionSpecifier) overlay.Sound).Collection, Is.EqualTo("WFWolfmedCrowbarHit"));
             Assert.That(((SoundCollectionSpecifier) ((MeleeWeaponComponent) prototype.Components["MeleeWeapon"].Component).HitSound!).Collection,
                 Is.EqualTo("MetalThud"), "the crowbar lost its own thud.");
