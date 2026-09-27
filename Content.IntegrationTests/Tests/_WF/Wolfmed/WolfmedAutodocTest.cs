@@ -5,11 +5,14 @@ using System.Linq;
 using System.Threading.Tasks;
 using Content.IntegrationTests.Fixtures;
 using Content.Server._WF.Wolfmed.Autodoc;
+using Content.Server.Body.Components;
+using Content.Shared._Shitmed.Body.Organ;
 using Content.Shared._Onyx.Wounds;
 using Content.Shared._Shitmed.Targeting;
 using Content.Shared._WF.Wolfmed.Autodoc;
 using Content.Shared._WF.Wolfmed.Consciousness;
 using Content.Shared.ActionBlocker;
+using Content.Shared.Body.Organ;
 using Content.Shared.Body.Part;
 using Content.Shared.Body.Systems;
 using Content.Shared.Chemistry.EntitySystems;
@@ -27,6 +30,9 @@ using NUnit.Framework;
 using Robust.Shared.Containers;
 using Robust.Shared.ContentPack;
 using Robust.Shared.GameObjects;
+using Robust.Shared.Map;
+using Robust.Shared.Maths;
+using Robust.Shared.Map.Components;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Utility;
 
@@ -89,6 +95,71 @@ public sealed class WolfmedAutodocTest : GameTest
 ";
 
     /// <summary>A queued fracture repair runs end to end and leaves the bone mended, with no tool loose in the world.</summary>
+    /// <summary>
+    /// Playtest 5: "stuff gets stuck inside the autodoc". A limb or an organ taken off inside the pod drops where the
+    /// patient is, the pod's own tile, under its sprite and out of reach; the pod sweeps its tile and puts it beside
+    /// itself. What the pod stowed in its tray goes out with the patient.
+    /// </summary>
+    [Test]
+    public async Task WhatComesOffInsideLeavesThePodTest()
+    {
+        var server = Pair.Server;
+        await server.WaitIdleAsync();
+        var entities = server.ResolveDependency<IEntityManager>();
+        var map = await Pair.CreateTestMap();
+        EntityUid body = default, arm = default, gauze = default, liver = default;
+        Entity<AutodocComponent> pod = default;
+        await server.WaitAssertion(() =>
+        {
+            var autodoc = entities.System<AutodocSystem>();
+            // The test map is one tile; the pod slides things onto a neighbouring floor tile, so give it four.
+            var maps = entities.System<SharedMapSystem>();
+            var gridComp = entities.GetComponent<MapGridComponent>(map.Grid);
+            var podTile = maps.TileIndicesFor(map.Grid.Owner, gridComp, map.GridCoords);
+            foreach (var offset in new[] { Vector2i.Up, Vector2i.Down, Vector2i.Left, Vector2i.Right })
+                maps.SetTile(map.Grid.Owner, gridComp, podTile + offset, map.Tile.Tile);
+            body = entities.SpawnEntity("MobHuman", map.GridCoords);
+            arm = Part(entities, body, BodyPartType.Arm, BodyPartSymmetry.Left);
+            pod = Pod(entities, map);
+            Assert.That(autodoc.TryInsert(pod, body), Is.True);
+            var slots = entities.System<ItemSlotsSystem>();
+            gauze = entities.SpawnEntity("Gauze", map.GridCoords);
+            slots.SetLock(pod.Owner, AutodocComponent.TraySlotId, false);
+            Assert.That(slots.TryInsert(pod.Owner, AutodocComponent.TraySlotId, gauze, null), Is.True, "the tray took nothing.");
+            slots.SetLock(pod.Owner, AutodocComponent.TraySlotId, true);
+
+            // The two ways things come off inside: an organ out of its part, a part off the body.
+            var bodySys = entities.System<SharedBodySystem>();
+            liver = bodySys.GetBodyOrgans(body).First(o => entities.HasComponent<LiverComponent>(o.Id)).Id;
+            Assert.That(bodySys.RemoveOrgan(liver), Is.True, "the liver did not come out.");
+            Assert.That(entities.System<AmputationSystem>().TryAmputate(body, arm), Is.True, "the arm did not come off.");
+        });
+        await Pair.RunTicksSync(40);
+        await server.WaitAssertion(() =>
+        {
+            var containers = entities.System<SharedContainerSystem>();
+            var maps = entities.System<SharedMapSystem>();
+            var grid = entities.GetComponent<MapGridComponent>(map.Grid);
+            var podTile = maps.TileIndicesFor(map.Grid, grid, entities.GetComponent<TransformComponent>(pod.Owner).Coordinates);
+            Vector2i TileOf(EntityUid uid) => maps.TileIndicesFor(map.Grid, grid, entities.GetComponent<TransformComponent>(uid).Coordinates);
+            Assert.That(containers.TryGetContainer(pod.Owner, AutodocComponent.BodyContainerId, out var container), Is.True);
+            Assert.Multiple(() =>
+            {
+                Assert.That(container!.ContainedEntities, Is.EquivalentTo(new[] { body }), "something other than the patient is inside the pod.");
+                Assert.That(TileOf(arm), Is.Not.EqualTo(podTile), "the arm is still under the pod.");
+                Assert.That(TileOf(liver), Is.Not.EqualTo(podTile), "the liver is still under the pod.");
+            });
+            Assert.That(entities.System<AutodocSystem>().TryEject(pod, force: true), Is.True);
+        });
+        await Pair.RunTicksSync(2);
+        await server.WaitAssertion(() =>
+        {
+            var slots = entities.System<ItemSlotsSystem>();
+            Assert.That(slots.GetItemOrNull(pod.Owner, AutodocComponent.TraySlotId), Is.Null, "the tray kept the gauze after the patient left.");
+            Assert.That(entities.GetComponent<TransformComponent>(gauze).ParentUid, Is.EqualTo(map.Grid.Owner), "the gauze is not on the deck.");
+        });
+    }
+
     [Test]
     public async Task PodMendsAFractureThroughTheRealStepsTest()
     {

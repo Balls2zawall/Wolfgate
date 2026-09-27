@@ -90,6 +90,7 @@ public sealed partial class AutodocSystem
             }
 
             TickPodWounds(ent);
+            SweepTile(ent); // Playtest 5
         }
     }
 

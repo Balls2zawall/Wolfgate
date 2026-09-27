@@ -1,3 +1,4 @@
+using System.Linq;
 using System.Numerics;
 using Content.Server.Body.Components;
 using Content.Server.Decals;
@@ -166,8 +167,29 @@ public sealed class WolfmedGoreSystem : EntitySystem
             QueueDel(cleanable.Owner);
         }
 
+        // Playtest 5: the floor half too, for a reagent that is no cleaner of decals in general (a mop's water). Only
+        // Wolfmed's own blood and gibs go, so a spilled cup never washes a mapper's paint.
+        if (TryComp(gridUid, out DecalGridComponent? decalGrid))
+        {
+            var bounds = _lookup.GetLocalBounds(tile, grid.TileSize).Enlarged(0.5f).Translated(new Vector2(-0.5f, -0.5f));
+            foreach (var (index, decal) in _decals.GetDecalsIntersecting(gridUid, bounds, decalGrid).ToList())
+            {
+                if (!decal.Cleanable || !decal.Id.StartsWith(WolfmedDecalPrefix) || spent + DecalCleanCost > budget)
+                    continue;
+
+                _decals.RemoveDecal(gridUid, index, decalGrid);
+                spent += DecalCleanCost;
+            }
+        }
+
         return spent;
     }
+
+    /// <summary>Every decal Wolfmed leaves starts with this: the floor splats and the gibs.</summary>
+    public const string WolfmedDecalPrefix = "WFWolfmed";
+
+    /// <summary>Reagent units one Wolfmed decal costs to wash away, the same as CleanDecalsReaction charges.</summary>
+    private const float DecalCleanCost = 0.25f;
 
     /// <summary>
     /// Decides now, with one walk of at most three tiles, whether the spray ends on a wall or on the

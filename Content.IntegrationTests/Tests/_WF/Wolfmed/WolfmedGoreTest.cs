@@ -54,6 +54,46 @@ public sealed class WolfmedGoreTest : GameTest
     /// The spray goes the way the hit was going: along a projectile's travel, or away from whoever was
     /// holding the knife. Nothing usable behind it still picks a direction rather than failing.
     /// </summary>
+    /// <summary>
+    /// Playtest 5: "blood splatters cannot be cleaned". A mop only has water, and water had no tile reaction, so the
+    /// wall splats and Wolfmed's floor decals stayed. Water now takes both, and only Wolfmed's decals: a mapper's
+    /// cleanable paint is left for space cleaner.
+    /// </summary>
+    [Test]
+    public async Task WaterWashesTheBloodOffTheTileTest()
+    {
+        var server = Pair.Server;
+        await server.WaitIdleAsync();
+        var entities = server.ResolveDependency<IEntityManager>();
+        var protoMan = server.ResolveDependency<IPrototypeManager>();
+        var map = await Pair.CreateTestMap();
+        await server.WaitAssertion(() =>
+        {
+            var decals = entities.System<DecalSystem>();
+            var coords = new EntityCoordinates(map.Grid, 0, 0);
+            Assert.That(decals.TryAddDecal("WFWolfmedBloodFloor1", coords, out _, Color.Red, cleanable: true), Is.True);
+            Assert.That(decals.TryAddDecal("Dirt", coords, out _, null, cleanable: true), Is.True, "no Dirt decal to keep.");
+            // A wall splat sits on its tile's centre, where the spray put it.
+            var wall = entities.SpawnEntity("WFWolfmedBloodSplatWall", new EntityCoordinates(map.Grid, 0.5f, 0.5f));
+            Assert.That(entities.HasComponent<WolfmedCleanableComponent>(wall), Is.True);
+
+            var water = protoMan.Index<ReagentPrototype>("Water");
+            Assert.That(water.TileReactions.Any(r => r is WolfmedCleanSplats), Is.True, "water does not clean Wolfmed's blood.");
+            var grid = entities.GetComponent<MapGridComponent>(map.Grid);
+            var tile = entities.System<SharedMapSystem>().GetTileRef(map.Grid, grid, coords);
+            var spent = new WolfmedCleanSplats().TileReact(tile, water, FixedPoint2.New(5), entities, null);
+            Assert.That(spent, Is.GreaterThan(FixedPoint2.Zero), "the water cleaned nothing.");
+
+            var left = decals.GetDecalsInRange(map.Grid, coords.Position + new Vector2(0.5f, 0.5f), 1f).Select(d => d.Decal.Id).ToList();
+            Assert.Multiple(() =>
+            {
+                Assert.That(left, Does.Not.Contain("WFWolfmedBloodFloor1"), "the blood decal survived the water.");
+                Assert.That(left, Does.Contain("Dirt"), "water took a decal that is not Wolfmed's.");
+                Assert.That(entities.Deleted(wall) || entities.IsQueuedForDeletion(wall), Is.True, "the wall splat survived the water.");
+            });
+        });
+    }
+
     [Test]
     public async Task SplatterFacesAwayFromTheSourceTest()
     {

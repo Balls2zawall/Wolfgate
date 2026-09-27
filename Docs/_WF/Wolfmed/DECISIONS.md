@@ -4260,3 +4260,17 @@ Downed band and vomit at the coma band on a random roll, and upstream's `VomitSy
 bloodstream's chemicals into the puddle, so the injected dylovene went on the floor. The test turns the roll off
 (`wolfmed.condition_emote_chance` 0). Whether an unconscious patient should lose an injected antitoxin to a vomit is
 the owner's call; left as it plays.
+
+## Playtest 5 bugs: the pod keeps things, the mop cannot clean (2026-09-28)
+
+- **"Stuff gets stuck inside the autodoc."** A limb, an organ, a spent round or a garment the tray could not take,
+  taken off the patient inside the pod, drops where the patient is: the pod's own tile, under the pod's sprite and
+  out of reach. The pod now sweeps its tile once a second (`SweepTile`) and puts anything loose there beside itself
+  with the same placement an ejected patient gets. The delivery tray, which the pod locks while it works, empties
+  onto the deck when the patient leaves (`ReturnTray`), so a stowed garment never stays locked in.
+- **"Blood splatters cannot be cleaned."** Space cleaner took both halves of a splat, but a mop only carries water,
+  and water had no tile reaction at all, so mopping the blood puddle left the wall splat and the floor decal. Water
+  now runs `WolfmedCleanSplats`, which takes the wall splats and, new, Wolfmed's own floor decals (ids starting
+  `WFWolfmed`) and nothing else, so a spilled cup does not wash a mapper's cleanable paint; space cleaner still takes
+  everything. `WolfmedGoreTest.WaterWashesTheBloodOffTheTileTest` and `WolfmedAutodocTest.WhatComesOffInsideLeavesThePodTest`
+  pin both.

@@ -1770,6 +1770,7 @@ Skipped ("dirty-disposed").
 - [`Resources/Prototypes/Nyanotrasen/Entities/Clothing/OuterClothing/armor.yml`](../../../Resources/Prototypes/Nyanotrasen/Entities/Clothing/OuterClothing/armor.yml): P6, P3-D6: locational armour coverage
 - [`Resources/Prototypes/Reagents/cleaning.yml`](../../../Resources/Prototypes/Reagents/cleaning.yml): GORE: wall blood splats are entities, not decals.
 - [`Resources/Prototypes/Reagents/Consumable/Drink/alcohol.yml`](../../../Resources/Prototypes/Reagents/Consumable/Drink/alcohol.yml): PROTO K: Onyx's \<Onyx-PartPain> block on Cognac. Onyx puts it in a `Digestion:` group that
+- [`Resources/Prototypes/Reagents/Consumable/Drink/drinks.yml`](../../../Resources/Prototypes/Reagents/Consumable/Drink/drinks.yml): GORE: a mop's water takes Wolfmed's blood off the tile, wall splats and its own floor decals
 - [`Resources/Prototypes/Reagents/medicine.yml`](../../../Resources/Prototypes/Reagents/medicine.yml)
   - PROTO I: Onyx's \<Onyx-PartPain> block on Bicaridine. Group is Medicine, not Onyx's
   - CONSC: painkiller tier. Stimulant: this is what an emergency medipen already carries,

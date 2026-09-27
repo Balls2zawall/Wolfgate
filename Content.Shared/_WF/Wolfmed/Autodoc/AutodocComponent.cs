@@ -409,6 +409,14 @@ public sealed partial class AutodocComponent : Component
     [ViewVariables]
     public bool OccupantWasDead;
 
+    /// <summary>
+    /// Playtest 5, server: when the pod next sweeps its own tile. A limb, an organ, a spent round or a garment taken
+    /// off the patient inside the pod drops where the patient is, which is the pod's tile, under the pod's sprite
+    /// and out of reach; the sweep puts it beside the pod.
+    /// </summary>
+    [ViewVariables]
+    public TimeSpan NextTileSweep;
+
     /// <summary>What the vital alarm read on its last tick, so an escalation is heard as one.</summary>
     [ViewVariables]
     public AutodocAlarm AlarmLevel;

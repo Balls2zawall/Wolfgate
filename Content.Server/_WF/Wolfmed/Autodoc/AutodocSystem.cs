@@ -1,3 +1,5 @@
+using Content.Shared.Body.Organ;
+using Content.Shared.Item;
 using System.Linq;
 using Content.Server.Administration.Logs;
 using Content.Server.Body.Systems;
@@ -64,6 +66,7 @@ public sealed partial class AutodocSystem : EntitySystem
     [Dependency] private Consciousness.WolfmedConsciousnessSystem _consciousness = default!; // M1a: faints
     [Dependency] private IConfigurationManager _cfg = default!;
     [Dependency] private IGameTiming _timing = default!;
+    [Dependency] private EntityLookupSystem _lookup = default!; // Playtest 5: the tile sweep
     [Dependency] private IPrototypeManager _protos = default!;
     [Dependency] private IRobustRandom _random = default!;
     [Dependency] private BloodstreamSystem _bloodstream = default!;
@@ -175,6 +178,74 @@ public sealed partial class AutodocSystem : EntitySystem
         SlideOff(ent, body);
         _audio.PlayPvs(ent.Comp.LidOpenSound, ent);
         return true;
+    }
+
+    /// <summary>Seconds between sweeps of the pod's tile.</summary>
+    private static readonly TimeSpan TileSweep = TimeSpan.FromSeconds(1);
+
+    /// <summary>
+    /// Playtest 5: anything loose on the pod's own tile is put beside the pod. What comes off the patient inside (a
+    /// limb, an organ, a spent round, a garment the tray could not take) drops where the patient is, under the pod's
+    /// sprite and out of reach. Once a second, cheap: one lookup on one tile.
+    /// </summary>
+    private void SweepTile(Entity<AutodocComponent> ent)
+    {
+        if (_timing.CurTime < ent.Comp.NextTileSweep)
+            return;
+
+        ent.Comp.NextTileSweep = _timing.CurTime + TileSweep;
+        var xform = Transform(ent.Owner);
+        if (xform.GridUid == null)
+            return;
+
+        _onTile.Clear();
+        _lookup.GetEntitiesInRange(xform.Coordinates, 0.4f, _onTile, LookupFlags.Uncontained | LookupFlags.Dynamic | LookupFlags.Sundries);
+        foreach (var loose in _onTile)
+        {
+            if (loose == ent.Owner || TerminatingOrDeleted(loose) || _containers.IsEntityInContainer(loose) ||
+                !(HasComp<ItemComponent>(loose) || HasComp<BodyPartComponent>(loose) || HasComp<OrganComponent>(loose)))
+                continue;
+
+            SlideOff(ent, loose);
+        }
+
+        // An organ the pod took out has no hands to go to, and the engine's drop puts it into the container its part
+        // sat in: inside the patient, out of reach. Anything detached that is still in one of the patient's containers
+        // comes out beside the pod too.
+        if (GetOccupant(ent) is not { } occupant)
+            return;
+
+        _loose.Clear();
+        foreach (var container in _containers.GetAllContainers(occupant))
+        {
+            foreach (var held in container.ContainedEntities)
+            {
+                if (CompOrNull<OrganComponent>(held)?.Body == null && HasComp<OrganComponent>(held) ||
+                    CompOrNull<BodyPartComponent>(held)?.Body == null && HasComp<BodyPartComponent>(held))
+                    _loose.Add((held, container));
+            }
+        }
+
+        foreach (var (held, container) in _loose)
+        {
+            _containers.Remove(held, container, destination: xform.Coordinates);
+            SlideOff(ent, held);
+        }
+    }
+
+    private readonly List<(EntityUid, BaseContainer)> _loose = new();
+
+    private readonly HashSet<EntityUid> _onTile = new();
+
+    /// <summary>Playtest 5: whatever the pod stowed in its tray goes out with the patient, so nothing stays locked inside.</summary>
+    private void ReturnTray(Entity<AutodocComponent> ent)
+    {
+        if (_slots.GetItemOrNull(ent.Owner, AutodocComponent.TraySlotId) is not { } item)
+            return;
+
+        _slots.SetLock(ent.Owner, AutodocComponent.TraySlotId, false);
+        if (_slots.TryEject(ent.Owner, AutodocComponent.TraySlotId, null, out _))
+            SlideOff(ent, item);
     }
 
     /// <summary>The pod's front first, then its sides, then behind it.</summary>
@@ -309,6 +380,7 @@ public sealed partial class AutodocSystem : EntitySystem
         if (args.Container.ID == AutodocComponent.BodyContainerId)
         {
             SetOccupantLying(args.Entity, false);
+            ReturnTray(ent); // Playtest 5
             AtmosphereOccupantLeft(ent, args.Entity); // Playtest 3: back to the room's air
             WakeOccupant(ent, args.Entity);
             ent.Comp.FailedProcedures.Clear();
