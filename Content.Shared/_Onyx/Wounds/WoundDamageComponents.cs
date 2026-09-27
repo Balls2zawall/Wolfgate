@@ -125,12 +125,23 @@ public sealed partial class PartDamageVisualsComponent : Component
     [AutoNetworkedField]
     public Dictionary<WolfmedArterySite, WolfmedArteryOverlay> Arteries = new();
 
-    /// <summary>Counts the body's blood spurts; the client plays the spray on every spurting artery when it moves.</summary>
+    /// <summary>
+    /// Playtest 4: the stumps where limbs were, by the missing part's site: Old for an open stump that has stopped,
+    /// Drip or Stream while it bleeds. The stump art itself shows for any of them; the glyph only while it bleeds.
+    /// </summary>
     [AutoNetworkedField]
-    public int ArterySpray;
+    public Dictionary<WolfmedArterySite, WolfmedWoundOverlay> Stumps = new();
 
-    /// <summary>Client only: the last ArterySpray it played, -1 before the first state so a body seen mid-bleed does not spray on sight.</summary>
-    public int LastArterySpray = -1;
+    /// <summary>
+    /// When the body last threw a blood spurt with a spurting artery on the sprite. The client plays the spray on every
+    /// spurting artery when this moves and is recent; a stale time (a body seen mid-bleed, one back from out of view)
+    /// plays nothing.
+    /// </summary>
+    [AutoNetworkedField]
+    public TimeSpan ArterySprayAt;
+
+    /// <summary>Client only: the last ArterySprayAt it played.</summary>
+    public TimeSpan LastArterySprayAt;
     // WOLFGATE END
 }
 

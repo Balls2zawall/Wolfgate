@@ -114,6 +114,7 @@ public static class WolfmedWoundOverlays
     public static readonly ResPath WoundRsi = new("_WF/Wolfmed/Damage/wounds.rsi");
     public static readonly ResPath RotRsi = new("_WF/Wolfmed/Damage/rot.rsi");
     public static readonly ResPath ArteryRsi = new("_WF/Wolfmed/Damage/artery.rsi");
+    public static readonly ResPath StumpRsi = new("_WF/Wolfmed/Damage/stumps.rsi");
 
     /// <summary>The wound state for one layer, or null for none or a layer with no art.</summary>
     public static string? GetWoundState(HumanoidVisualLayers layer, WolfmedWoundOverlay overlay)
@@ -139,6 +140,28 @@ public static class WolfmedWoundOverlays
             return null;
 
         return $"{WolfmedArterySites.Prefix(site)}_artery{(overlay == WolfmedArteryOverlay.Bleeding ? 1 : 0)}";
+    }
+
+    /// <summary>The stump's flesh state for a site where a limb was, null for the head (a head off is the neck).</summary>
+    public static string? GetStumpState(WolfmedArterySite site) =>
+        site == WolfmedArterySite.Head ? null : $"{WolfmedArterySites.Prefix(site)}_stump";
+
+    /// <summary>The stump's bone and outline, drawn in their own colours over the flesh.</summary>
+    public static string? GetStumpBoneState(WolfmedArterySite site) =>
+        site == WolfmedArterySite.Head ? null : $"{WolfmedArterySites.Prefix(site)}_stump_bone";
+
+    /// <summary>The drip or trickle hung from the stump while it bleeds; null for a stump that has stopped.</summary>
+    public static string? GetStumpBleedState(WolfmedArterySite site, WolfmedWoundOverlay look)
+    {
+        if (site == WolfmedArterySite.Head)
+            return null;
+
+        return look switch
+        {
+            WolfmedWoundOverlay.Drip => $"{WolfmedArterySites.Prefix(site)}_stump_drip",
+            WolfmedWoundOverlay.Stream => $"{WolfmedArterySites.Prefix(site)}_stump_stream",
+            _ => null,
+        };
     }
 
     /// <summary>Which look wins when one layer has two parts behind it (a second left arm).</summary>

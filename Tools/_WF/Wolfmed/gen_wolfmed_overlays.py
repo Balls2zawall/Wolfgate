@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Builds the Wolfmed pain HUD, wound and rot RSIs from the Bobstation septic icons.
 
-Usage: python Tools/_WF/Wolfmed/gen_wolfmed_overlays.py [--bob <modular_septic/icons dir>]
+Usage: python Tools/_WF/Wolfmed/gen_wolfmed_overlays.py [--bob <modular_septic/icons dir>] [--nevado <modular_septic/icons dir>]
 
 pain.rsi    pain0..pain7 and paindd from hud/screen_nigga.dmi, each frame composited onto the dark scanline
             backing the Crescent health alerts draw inside their own sprites (read off bleed.rsi/bleed3, whose
@@ -15,12 +15,16 @@ wounds.rsi  bulletwound.dmi is one 3x3 wound glyph with a drip under it, drawn i
             a direction where the part is hidden behind others gets an empty frame.
 rot.rsi     rot_parts.dmi in its own colour, renamed <Part>_rot. Wolfgate has no groin part, so rot_chest and
             rot_groin are composited into Chest_rot.
-artery.rsi  artery.dmi's <site>_artery0/1 as they are (they are drawn in place on the human frame), recoloured to
-            grey the same way as the wounds: the still artery (0) and the spray (1, three frames, played once per
-            blood spurt). head is the head's own artery, neck the stump where a head was, r_arm .. l_foot the limb's
-            artery, cut or a stump.
+artery.rsi  artery.dmi's <site>_artery0/1 as they are (they are drawn in place on the human frame), as a blood mask
+            (the reddest pixel is white, so the blood-colour tint lands on the blood colour): the still artery (0) and
+            the spray (1, three frames, played once per blood spurt). head is the head's own artery, neck the stump
+            where a head was, r_arm .. l_foot the limb's artery, cut or a stump.
+stumps.rsi  Escape From Nevado's stump.dmi (its modular_septic copy), one stump per site where a limb was: <site>_stump
+            is the flesh as a blood mask, <site>_stump_bone the bone and the outline in their own colours, and
+            <site>_stump_drip / _stump_stream the bulletwound drip and trickle glyphs hung from the bottom of the
+            stump, for a stump that bleeds.
 
-Deterministic; rerunning rewrites the four RSIs byte for byte.
+Deterministic; rerunning rewrites the five RSIs byte for byte.
 """
 import json
 import math
@@ -38,6 +42,8 @@ TEXTURES = os.path.join(ROOT, "Resources", "Textures")
 OUT = os.path.join(TEXTURES, "_WF", "Wolfmed")
 DEFAULT_BOB = r"C:/Users/jzo12/Documents/GitHub/bobstation-reignited/modular_septic/icons"
 BOB_REPO = "https://gitgud.io/bobstation/bobstation-reignited"
+DEFAULT_NEVADO = r"C:/Users/jzo12/Documents/GitHub/EscapeFromNevado/modular_septic/icons"
+NEVADO_REPO = "https://github.com/EscapeFromNevado/EscapeFromNevado"
 
 BACKING = os.path.join(TEXTURES, "_Crescent", "Interface", "Alerts", "bleed.rsi", "bleed3.png")
 HUMAN = os.path.join(TEXTURES, "Mobs", "Species", "Human", "parts.rsi")
@@ -252,12 +258,34 @@ def grey(images):
     return out
 
 
-def build_wounds(bob):
+def blood_mask(images):
+    """A mask for art that is all blood: the strongest channel to grey, normalised so the reddest pixel across the
+    set is white. Luminance is wrong here: pure reds sit near 30% and one orange highlight drags every red to black."""
+    def pixels(img):
+        return [img.getpixel((x, y)) for y in range(img.height) for x in range(img.width)]
+
+    peak = max((max(c[:3]) for img in images for c in pixels(img) if c[3] > 0), default=1) or 1
+    out = []
+    for img in images:
+        g = Image.new("RGBA", img.size, (0, 0, 0, 0))
+        for i, c in enumerate(pixels(img)):
+            if c[3] > 0:
+                v = min(255, round(max(c[:3]) / peak * 255))
+                g.putpixel((i % img.width, i // img.width), (v, v, v, c[3]))
+        out.append(g)
+    return out
+
+
+def wound_glyphs(bob):
+    """The bulletwound glyph frames, greyed in one pass so every variant shares one normalisation: (dmi, {(variant, dir, frame): image})."""
     dmi = load_dmi(os.path.join(bob, "mob", "human", "overlays", "bulletwound.dmi"))
-    # Grey every frame of every variant in one pass, so the whole set shares one normalisation.
     variants = ["bullet", "1bullet", "2bullet", "obullet"]
     keys = [(v, f, fr) for v in variants for f in range(4) for fr in range(dmi[f"{v}_{FACINGS[f]}"]["frames"])]
-    greyed = dict(zip(keys, grey([dmi[f"{v}_{FACINGS[f]}"]["images"][fr][f] for v, f, fr in keys])))
+    return dmi, dict(zip(keys, grey([dmi[f"{v}_{FACINGS[f]}"]["images"][fr][f] for v, f, fr in keys])))
+
+
+def build_wounds(bob):
+    dmi, greyed = wound_glyphs(bob)
 
     visible = part_masks()
     uses = {  # state suffix -> source variant, per part
@@ -299,10 +327,53 @@ ARTERY_SITES = ["head", "neck", "r_arm", "l_arm", "r_hand", "l_hand", "r_leg", "
 ARTERY_STATES = [f"{site}_artery{look}" for site in ARTERY_SITES for look in (0, 1)]
 
 
+MIRROR = {"r_arm": "l_arm", "l_arm": "r_arm", "r_hand": "l_hand", "l_hand": "r_hand",
+          "r_leg": "l_leg", "l_leg": "r_leg", "r_foot": "l_foot", "l_foot": "r_foot"}
+
+
+def on_limb(tile, mask):
+    """Whether any of the tile's pixels sits on the mask."""
+    return any(tile.getpixel((x, y))[3] > 0 for (x, y) in mask)
+
+
+def fix_limb_frames(site, frames):
+    """
+    Bob's sheets copy a frame or two onto the wrong side (l_foot north is r_foot's, r_arm west is its own east).
+    frames: [dir] -> [frame images] of one limb site. A direction whose pixels sit on the mirror limb, or on no limb
+    at all, is replaced by the mirror site's frames flipped, or blanked when those are empty on this limb too.
+    """
+    if site not in MIRROR:
+        return frames
+    own = load_masks(site)
+    other = load_masks(MIRROR[site])
+    fixed = []
+    for d in range(4):
+        row = frames[d]
+        first = row[0]
+        if first.getbbox() is None or on_limb(first, own[d]):
+            fixed.append(row)
+            continue
+        flipped = [img.transpose(Image.FLIP_LEFT_RIGHT) for img in row]
+        if on_limb(first, other[d]) and on_limb(flipped[0], own[d]):
+            print(f"  {site} dir {d}: on the {MIRROR[site]}, mirrored")
+            fixed.append(flipped)
+        else:
+            print(f"  {site} dir {d}: on no limb, blanked")
+            fixed.append([Image.new("RGBA", (FRAME, FRAME), (0, 0, 0, 0)) for _ in row])
+    return fixed
+
+
 def build_artery(bob):
     dmi = load_dmi(os.path.join(bob, "mob", "human", "overlays", "artery.dmi"))
+    for name in ARTERY_STATES:
+        site = name[:-len("_artery0")]
+        by_dir = [[dmi[name]["images"][fr][d] for fr in range(dmi[name]["frames"])] for d in range(4)]
+        by_dir = fix_limb_frames(site, by_dir)
+        for fr in range(dmi[name]["frames"]):
+            for d in range(4):
+                dmi[name]["images"][fr][d] = by_dir[d][fr]
     keys = [(name, fr, d) for name in ARTERY_STATES for fr in range(dmi[name]["frames"]) for d in range(4)]
-    greyed = dict(zip(keys, grey([dmi[name]["images"][fr][d] for name, fr, d in keys])))
+    greyed = dict(zip(keys, blood_mask([dmi[name]["images"][fr][d] for name, fr, d in keys])))
     states = []
     for name in ARTERY_STATES:
         source = dmi[name]
@@ -312,6 +383,74 @@ def build_artery(bob):
     write_rsi(os.path.join(OUT, "Damage", "artery.rsi"),
               f"<site>_artery0/1 from modular_septic/icons/mob/human/overlays/artery.dmi, {BOB_REPO}, "
               "recoloured to grey by Tools/_WF/Wolfmed/gen_wolfmed_overlays.py for Wolfgate (Wolfmed)",
+              states)
+
+
+# --- stump overlays ---
+
+STUMP_SITES = ["neck", "r_arm", "l_arm", "r_hand", "l_hand", "r_leg", "l_leg", "r_foot", "l_foot"]
+
+
+def is_flesh(c):
+    """The reds are flesh; the greys (the bone) and the near-black outline are not."""
+    r, g, b = c[:3]
+    return r > 60 and r > g * 2 and r > b * 2
+
+
+def split_stump(tile):
+    """(flesh pixels as an image, everything else as an image) of one stump frame."""
+    flesh = Image.new("RGBA", tile.size, (0, 0, 0, 0))
+    bone = Image.new("RGBA", tile.size, (0, 0, 0, 0))
+    for y in range(tile.height):
+        for x in range(tile.width):
+            c = tile.getpixel((x, y))
+            if c[3] == 0:
+                continue
+            (flesh if is_flesh(c) else bone).putpixel((x, y), c)
+    return flesh, bone
+
+
+def stump_anchor(flesh):
+    """Where a stump's drip hangs from: the middle of its lowest flesh row, or None for an empty frame."""
+    pixels = [(x, y) for y in range(flesh.height) for x in range(flesh.width) if flesh.getpixel((x, y))[3] > 0]
+    if not pixels:
+        return None
+    bottom = max(y for _, y in pixels)
+    row = [x for x, y in pixels if y == bottom]
+    return (round(sum(row) / len(row)), bottom)
+
+
+def build_stumps(nevado, bob):
+    dmi = load_dmi(os.path.join(nevado, "mob", "human", "overlays", "stump.dmi"))
+    glyph_dmi, glyphs = wound_glyphs(bob)
+    tiles = {site: fix_limb_frames(site, [[dmi[f"stump_{site}"]["images"][0][d]] for d in range(4)]) for site in STUMP_SITES}
+    split = {(site, d): split_stump(tiles[site][d][0]) for site in STUMP_SITES for d in range(4)}
+    masks = dict(zip(split.keys(), blood_mask([flesh for flesh, _ in split.values()])))
+    states = []
+    for site in STUMP_SITES:
+        states.append((f"{site}_stump", 4, [[masks[(site, d)]] for d in range(4)], None))
+        states.append((f"{site}_stump_bone", 4, [[split[(site, d)][1]] for d in range(4)], None))
+        anchors = [stump_anchor(split[(site, d)][0]) for d in range(4)]
+        print(f"  {site}: drip at {anchors}")
+        for suffix, variant in (("drip", "bullet"), ("stream", "2bullet")):
+            count = max(glyph_dmi[f"{variant}_{facing}"]["frames"] for facing in FACINGS)
+            frames, delays = [], []
+            for d, facing in enumerate(FACINGS):
+                source = glyph_dmi[f"{variant}_{facing}"]
+                row = []
+                for fr in range(count):
+                    tile = Image.new("RGBA", (FRAME, FRAME), (0, 0, 0, 0))
+                    if anchors[d] is not None:
+                        glyph = glyphs[(variant, d, min(fr, source["frames"] - 1))]
+                        tile.alpha_composite(glyph, (anchors[d][0] - GLYPH_CENTRE[0], anchors[d][1] - GLYPH_CENTRE[1]))
+                    row.append(tile)
+                frames.append(row)
+                delays.append(seconds(source["delay"], count))
+            states.append((f"{site}_stump_{suffix}", 4, frames, delays if count > 1 else None))
+    write_rsi(os.path.join(OUT, "Damage", "stumps.rsi"),
+              f"Stumps from modular_septic/icons/mob/human/overlays/stump.dmi, {NEVADO_REPO}, split into a blood mask "
+              f"and the bone; the drip and trickle glyphs from modular_septic/icons/mob/human/overlays/bulletwound.dmi, "
+              f"{BOB_REPO}, hung from each stump, by Tools/_WF/Wolfmed/gen_wolfmed_overlays.py for Wolfgate (Wolfmed)",
               states)
 
 
@@ -364,10 +503,14 @@ def main():
     bob = DEFAULT_BOB
     if "--bob" in sys.argv:
         bob = sys.argv[sys.argv.index("--bob") + 1]
+    nevado = DEFAULT_NEVADO
+    if "--nevado" in sys.argv:
+        nevado = sys.argv[sys.argv.index("--nevado") + 1]
     build_pain(bob)
     build_wounds(bob)
     build_rot(bob)
     build_artery(bob)
+    build_stumps(nevado, bob)
 
 
 if __name__ == "__main__":

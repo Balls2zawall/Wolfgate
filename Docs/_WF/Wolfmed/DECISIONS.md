@@ -3973,8 +3973,11 @@ that the client reads the arrest (`Flatlined`) the moment the server starts one,
 
 "Did you port all of the arteries for each stump? They should always stop when that stump stops profusely/arterial
 bleeding. Also, it should animate intermittently, specifically when the blood sprays happen." Bob's artery.dmi has a
-still (0) and a three-frame spray (1) for the head, the neck and each limb; all ten pairs are ported, grey and tinted
-with the blood colour like the wound glyphs, and ride `PartDamageVisualsComponent.Arteries` beside the wounds and rot.
+still (0) and a three-frame spray (1) for the head, the neck and each limb; all ten pairs are ported as a blood mask
+tinted with the blood colour, and ride `PartDamageVisualsComponent.Arteries` beside the wounds and rot.
+- **"The arterial bleed overlay is black."** The first cut greyed the art by luminance normalised over the whole set,
+  and the legs' one orange highlight (luminance 127) dragged every pure red (65) to a third of white, so the tint landed
+  near black. `blood_mask` in the generator takes the strongest channel instead, so the reddest pixel is white.
 
 - **A site per part.** A cut artery (`WolfmedArterialBleedBehavior`) on an attached part is that part's site; a
   dismemberment wound is the site of the part it is the stump of (`WolfmedStumpComponent`, tagged off the amputation
@@ -3983,9 +3986,18 @@ with the blood colour like the wound glyphs, and ride `PartDamageVisualsComponen
 - **The look is the blood spurts' rule.** Bleeding while `WolfmedBleedSpurtSystem` would throw from it: a stump
   bleeding untreated, a cut artery bleeding at all. Anything else open is the still artery, so a dressed, tied-off or
   clotted stump stops spraying the moment the spurts do.
-- **The spray plays per spurt, not on a loop.** The layer rests on the still frame. Each spurt moves the body's
-  `ArterySpray` counter, and the client plays the spray once (a sprite flick to `_artery1` and back to `_artery0`) on
-  every site that is Bleeding. A body first seen mid-bleed does not spray on sight.
+- **The spray plays per spurt, not on a loop.** The layer rests on the still frame. Each spurt with a spurting artery
+  stamps the body's `ArterySprayAt`, and the client plays the spray once (a sprite flick to `_artery1` and back to
+  `_artery0`) on every site that is Bleeding when the stamp moves and is under a second old. A stamp older than that
+  (a body first seen mid-bleed, one back from out of view, the review's catch: the client keeps a detached entity's
+  component, so a counter played on sight) plays nothing. The looks are recomputed at the spurt, so the stamp goes out
+  with the looks it was decided on.
+- **Review round, fixed:** `spurting &= bleeding!.Treatment == None` does not short-circuit, and a stump whose bleed
+  has run out (burns, the hemostat step) has no bleeding component: a null reference every sweep, which stalled every
+  overlay refresh after it. Bob's sheets also copy two frames onto the wrong side (l_foot north is r_foot's, r_arm
+  west is its own east, on the chest); the generator now checks each limb frame against the human limb masks and
+  mirrors or blanks the strays, for the arteries and the stumps alike. Left as is: a held item picked up after the
+  layers were made draws above them.
 - **On top of everything.** The spray leaves the body, so the layers are appended above hair, helmets and collars
   rather than tucked under the clothing like the wound glyphs; each takes its own limb's species shift, the neck the
   head's.
@@ -3998,3 +4010,23 @@ and the client, and reads the spray flick off the client's animation player.
 "Haven't been seeing the gibs." `WolfmedGibDecalTest` only counted the decals on the server. It now stands the test
 client's player in the body, and asserts the client received the chunk with the gib decals and resolves every gib
 decal's art at 32x32.
+
+## Stumps (playtest 4, 2026-09-27)
+
+"I've actually found the proper stump overlays (combine with arterial/drip bleeding): Escape From Nevado's
+modular_septic stump.dmi. Recoloured again to the relevant species; there is a small white bone visible in these so
+make sure only the flesh is rendered to the species blood type. I suppose that also means that the chest should have
+5 possible stumps?" Yes: the neck, two shoulders and two hips all sit on the torso, and the wrists and ankles on the
+arms and legs; each is its own site, the same sites the arteries use.
+
+- **Art.** `stumps.rsi`, generated: `<site>_stump` is the flesh as a blood mask (tinted the blood colour on the
+  client), `<site>_stump_bone` the bone and the outline in their own colours, `<site>_stump_drip` and `_stump_stream`
+  the bulletwound drip and trickle glyphs hung from the bottom of each stump. stump_head, stump_groin and the headshot
+  states are not used: no head site, no groin part.
+- **When.** `PartDamageVisualsComponent.Stumps`, from the tagged stump wounds beside the arteries: the art whenever the
+  stump is open, the drip or trickle by the part's stream rate while it bleeds, nothing hung once dressed or clotted. A
+  stump wound no longer feeds the torso's wound glyph at the chest's centre, which is where the first cut drew it.
+- **Stacking per site, bottom to top:** flesh, bone, drip, artery, all above the sprite's own layers (a sleeve must not
+  cover a missing arm), and the four keep that order whichever is created first.
+
+`WolfmedWoundOverlayTest.StumpOverlayTest` walks an arm off, its dressing and a head off, on the server and the client.

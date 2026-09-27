@@ -9,6 +9,7 @@ using Robust.Client.Animations;
 using Robust.Client.GameObjects;
 using Robust.Client.Graphics;
 using Robust.Shared.Animations;
+using Robust.Shared.Timing;
 using Robust.Shared.Utility;
 
 namespace Content.Client.Damage;
@@ -17,6 +18,10 @@ namespace Content.Client.Damage;
 public sealed partial class DamageVisualsSystem
 {
     [Dependency] private AnimationPlayerSystem _wfAnimation = default!;
+    [Dependency] private IGameTiming _wfTiming = default!;
+
+    /// <summary>A spurt older than this when its state lands is not played: the body was out of view, or just seen.</summary>
+    private static readonly TimeSpan SprayWindow = TimeSpan.FromSeconds(1);
 
     /// <summary>Re-runs the damage visuals when a wound host's per-part damage projection changes.</summary>
     private void OnPartDamageVisualsState(Entity<PartDamageVisualsComponent> ent, ref AfterAutoHandleStateEvent args)
@@ -242,20 +247,33 @@ public sealed partial class DamageVisualsSystem
                 damage.WoundColor, $"WolfmedDegradation{layer}", $"WolfmedRot{layer}");
         }
 
-        // Playtest 4: the arteries go on top of everything. The spray leaves the body, so hair, a helmet or a collar
-        // must not hide it. Each shows the still artery; the spray plays once on every spurting one per blood spurt.
-        var spray = damage.LastArterySpray >= 0 && damage.ArterySpray != damage.LastArterySpray;
-        damage.LastArterySpray = damage.ArterySpray;
+        // Playtest 4: the stumps and arteries go on top of everything. A stump is a missing limb, and a spray leaves
+        // the body, so hair, a helmet or a collar must not hide them. Per site, bottom to top: the stump's flesh in
+        // the blood colour, its bone, its drip while it bleeds, then the artery, which rests on the still frame and
+        // plays its spray once on every spurting one per blood spurt.
+        var spray = damage.ArterySprayAt != damage.LastArterySprayAt &&
+                    _wfTiming.CurTime - damage.ArterySprayAt <= SprayWindow;
+        damage.LastArterySprayAt = damage.ArterySprayAt;
         foreach (var site in Enum.GetValues<WolfmedArterySite>())
         {
-            var look = damage.Arteries.GetValueOrDefault(site);
-            var key = $"WolfmedArtery{site}";
             var shift = species is { } at && offsets != null ? offsets.Get(at, WolfmedArterySites.Layer(site)) : Vector2i.Zero;
             var offset = new Vector2(shift.X, shift.Y) / EyeManager.PixelsPerMeter;
+
+            var stump = damage.Stumps.GetValueOrDefault(site);
+            var open = stump != WolfmedWoundOverlay.None;
+            UpdateSiteLayer(uid, sprite, site, SiteKind.Stump, WolfmedWoundOverlays.StumpRsi,
+                open ? WolfmedWoundOverlays.GetStumpState(site) : null, offset, damage.WoundColor);
+            UpdateSiteLayer(uid, sprite, site, SiteKind.StumpBone, WolfmedWoundOverlays.StumpRsi,
+                open ? WolfmedWoundOverlays.GetStumpBoneState(site) : null, offset, Color.White);
+            UpdateSiteLayer(uid, sprite, site, SiteKind.StumpBleed, WolfmedWoundOverlays.StumpRsi,
+                WolfmedWoundOverlays.GetStumpBleedState(site, stump), offset, damage.WoundColor);
+
+            var look = damage.Arteries.GetValueOrDefault(site);
+            var key = SiteKey(site, SiteKind.Artery);
             var still = look == WolfmedArteryOverlay.None
                 ? null
                 : WolfmedWoundOverlays.GetArteryState(site, WolfmedArteryOverlay.Still);
-            UpdateTopLayer(uid, sprite, key, WolfmedWoundOverlays.ArteryRsi, still, offset, damage.WoundColor);
+            UpdateSiteLayer(uid, sprite, site, SiteKind.Artery, WolfmedWoundOverlays.ArteryRsi, still, offset, damage.WoundColor);
 
             if (look != WolfmedArteryOverlay.Bleeding)
             {
@@ -269,6 +287,57 @@ public sealed partial class DamageVisualsSystem
         }
     }
 
+    /// <summary>The layers one site stacks, bottom to top.</summary>
+    private enum SiteKind : byte
+    {
+        Stump,
+        StumpBone,
+        StumpBleed,
+        Artery,
+    }
+
+    private static string SiteKey(WolfmedArterySite site, SiteKind kind) => $"Wolfmed{kind}{site}";
+
+    /// <summary>
+    /// Creates (once) and updates one of a site's layers. A new layer goes above the sprite's own layers: under the
+    /// site's layers of a later kind if any exist, else just above those of an earlier kind, else on top of everything.
+    /// </summary>
+    private void UpdateSiteLayer(EntityUid uid, SpriteComponent sprite, WolfmedArterySite site, SiteKind kind, ResPath rsi,
+        string? state, Vector2 offset, Color colour)
+    {
+        var key = SiteKey(site, kind);
+        if (!SpriteSystem.LayerMapTryGet((uid, sprite), key, out var index, false))
+        {
+            if (state == null)
+                return;
+
+            int? above = null;
+            int? below = null;
+            foreach (var other in Enum.GetValues<SiteKind>())
+            {
+                if (other == kind || !SpriteSystem.LayerMapTryGet((uid, sprite), SiteKey(site, other), out var existing, false))
+                    continue;
+
+                if (other < kind)
+                    above = above is { } top ? Math.Max(top, existing) : existing;
+                else
+                    below = below is { } bottom ? Math.Min(bottom, existing) : existing;
+            }
+
+            // An insert at an index goes under the layer that held it and pushes it up.
+            var insert = below ?? (above is { } highest ? highest + 1 : (int?) null);
+            index = SpriteSystem.AddLayer((uid, sprite), new SpriteSpecifier.Rsi(rsi, state), insert);
+            SpriteSystem.LayerMapSet((uid, sprite), key, index);
+        }
+
+        SpriteSystem.LayerSetVisible((uid, sprite), index, state != null);
+        if (state == null)
+            return;
+
+        SpriteSystem.LayerSetRsiState((uid, sprite), index, state);
+        SpriteSystem.LayerSetOffset((uid, sprite), index, offset);
+        SpriteSystem.LayerSetColor((uid, sprite), index, colour);
+    }
     /// <summary>Plays the site's spray once, then returns the layer to the still artery.</summary>
     private void Spray(EntityUid uid, SpriteComponent sprite, string key, WolfmedArterySite site)
     {

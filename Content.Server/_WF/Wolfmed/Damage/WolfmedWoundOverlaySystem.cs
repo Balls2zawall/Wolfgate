@@ -38,6 +38,7 @@ public sealed class WolfmedWoundOverlaySystem : EntitySystem
     private readonly Dictionary<HumanoidVisualLayers, WolfmedWoundOverlay> _woundScratch = new();
     private readonly HashSet<HumanoidVisualLayers> _rotScratch = new();
     private readonly Dictionary<WolfmedArterySite, WolfmedArteryOverlay> _arteryScratch = new();
+    private readonly Dictionary<WolfmedArterySite, WolfmedWoundOverlay> _stumpScratch = new();
     private readonly HashSet<(BodyPartType, BodyPartSymmetry)> _presentScratch = new();
     private TimeSpan _nextSweep;
 
@@ -51,9 +52,14 @@ public sealed class WolfmedWoundOverlaySystem : EntitySystem
         SubscribeLocalEvent<WolfmedBleedSpurtEvent>(OnBleedSpurt);
     }
 
-    /// <summary>A blood spurt moves the spray counter when an artery on the sprite is spurting, so the client plays the spray.</summary>
+    /// <summary>
+    /// A blood spurt stamps the spray time when an artery on the sprite is spurting, so the client plays the spray. The
+    /// looks are recomputed first: a part put back on or a bleed that ran out only reaches the sweep, and the stamp must
+    /// go out with the looks it was decided on.
+    /// </summary>
     private void OnBleedSpurt(ref WolfmedBleedSpurtEvent args)
     {
+        Refresh(args.Body);
         if (!TryComp(args.Body, out PartDamageVisualsComponent? visual))
             return;
 
@@ -62,7 +68,7 @@ public sealed class WolfmedWoundOverlaySystem : EntitySystem
             if (look != WolfmedArteryOverlay.Bleeding)
                 continue;
 
-            visual.ArterySpray++;
+            visual.ArterySprayAt = _timing.CurTime;
             Dirty(args.Body, visual);
             return;
         }
@@ -111,10 +117,12 @@ public sealed class WolfmedWoundOverlaySystem : EntitySystem
         var wounds = _woundScratch;
         var rot = _rotScratch;
         var arteries = _arteryScratch;
+        var stumps = _stumpScratch;
         var present = _presentScratch;
         wounds.Clear();
         rot.Clear();
         arteries.Clear();
+        stumps.Clear();
         present.Clear();
         foreach (var (_, bodyPart) in _body.GetBodyChildren(body))
             present.Add((bodyPart.PartType, bodyPart.Symmetry));
@@ -133,29 +141,33 @@ public sealed class WolfmedWoundOverlaySystem : EntitySystem
             if (IsRotting((part, woundable)))
                 rot.Add(layer);
 
-            CollectArteries((part, bodyPart, woundable), host.DismembermentWound, present, arteries);
+            CollectSites((part, bodyPart, woundable), host.DismembermentWound, streamRate, present, arteries, stumps);
         }
 
         var colour = _gore.GetBloodColor(body) ?? FallbackBlood;
         if (Same(visual.Wounds, wounds) && visual.Rot.SetEquals(rot) && visual.WoundColor == colour &&
-            Same(visual.Arteries, arteries))
+            Same(visual.Arteries, arteries) && Same(visual.Stumps, stumps))
             return;
 
         visual.Wounds = new Dictionary<HumanoidVisualLayers, WolfmedWoundOverlay>(wounds);
         visual.Rot = new HashSet<HumanoidVisualLayers>(rot);
         visual.WoundColor = colour;
         visual.Arteries = new Dictionary<WolfmedArterySite, WolfmedArteryOverlay>(arteries);
+        visual.Stumps = new Dictionary<WolfmedArterySite, WolfmedWoundOverlay>(stumps);
         Dirty(body, visual);
     }
 
     /// <summary>
-    /// Playtest 4: the arteries this part puts on the sprite. A cut artery on the part itself is the part's own site;
-    /// a stump wound on it is the site of the part that was torn off, unless that part is back on. The look follows the
-    /// blood spurts' rule (<c>WolfmedBleedSpurtSystem.HasSpurtSource</c>): a stump spurts while it bleeds untreated, a
-    /// cut artery while it bleeds at all; anything else open is the still artery. The worse look wins a shared site.
+    /// Playtest 4: the arteries and stumps this part puts on the sprite. A cut artery on the part itself is the part's
+    /// own site; a stump wound on it is the site of the part that was torn off, unless that part is back on, and that
+    /// site also gets the stump: the art whenever the stump is open, a drip or trickle by the part's stream rate while
+    /// it bleeds. The artery look follows the blood spurts' rule (<c>WolfmedBleedSpurtSystem.HasSpurtSource</c>): a
+    /// stump spurts while it bleeds untreated, a cut artery while it bleeds at all; anything else open is the still
+    /// artery. The worse look wins a shared site.
     /// </summary>
-    public void CollectArteries(Entity<BodyPartComponent, WoundableComponent> part, ProtoId<WoundPrototype> stump,
-        HashSet<(BodyPartType, BodyPartSymmetry)> present, Dictionary<WolfmedArterySite, WolfmedArteryOverlay> arteries)
+    public void CollectSites(Entity<BodyPartComponent, WoundableComponent> part, ProtoId<WoundPrototype> stump,
+        float streamRate, HashSet<(BodyPartType, BodyPartSymmetry)> present,
+        Dictionary<WolfmedArterySite, WolfmedArteryOverlay> arteries, Dictionary<WolfmedArterySite, WolfmedWoundOverlay> stumps)
     {
         foreach (var wound in _wounds.GetWounds((part.Owner, part.Comp2)))
         {
@@ -163,14 +175,24 @@ public sealed class WolfmedWoundOverlaySystem : EntitySystem
                 continue;
 
             WolfmedArterySite? site;
-            var spurting = TryComp(wound, out WoundBleedingComponent? bleeding) && bleeding.CurrentRate > 0f;
+            var rate = TryComp(wound, out WoundBleedingComponent? bleeding) ? bleeding.CurrentRate : 0f;
+            var spurting = rate > 0f;
             if (wound.Comp.Prototype == stump)
             {
                 if (!TryComp(wound, out WolfmedStumpComponent? tag) || present.Contains((tag.PartType, tag.Symmetry)))
                     continue;
 
                 site = WolfmedArterySites.ForPart(tag.PartType, tag.Symmetry, true);
-                spurting &= bleeding!.Treatment == BleedingTreatment.None;
+                // A stump whose bleed has run out has no bleeding component at all; && so it is never read then.
+                spurting = spurting && bleeding!.Treatment == BleedingTreatment.None;
+                if (site is { } where)
+                {
+                    var stumpLook = rate <= 0f ? WolfmedWoundOverlay.Old
+                        : rate >= streamRate ? WolfmedWoundOverlay.Stream : WolfmedWoundOverlay.Drip;
+                    if (!stumps.TryGetValue(where, out var currentStump) ||
+                        WolfmedWoundOverlays.Rank(stumpLook) > WolfmedWoundOverlays.Rank(currentStump))
+                        stumps[where] = stumpLook;
+                }
             }
             else if (_traits.TryGetBehavior(wound.Owner, out WolfmedArterialBleedBehavior _))
             {
@@ -192,7 +214,7 @@ public sealed class WolfmedWoundOverlaySystem : EntitySystem
 
     /// <summary>
     /// A drip while any open wound on the part bleeds, a trickle once the part bleeds at the stream rate, and the still
-    /// wound once every bleed on it has clotted or been dressed; an open stump shows even after its bleed is gone.
+    /// wound once every bleed on it has clotted or been dressed. Stump wounds are left out: the stump draws itself.
     /// </summary>
     public WolfmedWoundOverlay GetWoundOverlay(Entity<WoundableComponent> part, ProtoId<WoundPrototype> stump,
         float streamRate)
@@ -204,16 +226,16 @@ public sealed class WolfmedWoundOverlaySystem : EntitySystem
             if (wound.Comp.State != WoundState.Open)
                 continue;
 
+            // Playtest 4: a stump draws at the joint it was torn from (the Stumps table), not as a glyph on the part.
+            if (wound.Comp.Prototype == stump)
+                continue;
+
             // The bleeding component comes with a bleed that rolled and goes when the wound drops under its bleeding
             // stage; a dressing or clotting leaves it at zero, which is the still wound.
             if (TryComp(wound, out WoundBleedingComponent? bleeding))
             {
                 open = true;
                 rate += bleeding.CurrentRate;
-            }
-            else if (wound.Comp.Prototype == stump)
-            {
-                open = true;
             }
         }
 

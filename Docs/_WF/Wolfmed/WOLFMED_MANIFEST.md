@@ -5152,6 +5152,7 @@ Two marked upstream edits, one marked Onyx edit, the rest `_WF` (DECISIONS "Play
 | `Resources/Textures/_WF/Wolfmed/Damage/rot.rsi/` | new, generated | `<Part>_rot` for the ten part layers, 4 directions x 10 frames. |
 | `Resources/Textures/_WF/Wolfmed/Damage/artery.rsi/` | new, generated | Playtest 4: `<site>_artery0/1` for the head, neck and eight limbs from Bob's artery.dmi, 4 directions, grey; the 1 states are the three-frame spray. |
 | `Content.Shared/_WF/Wolfmed/Wounds/WolfmedStumpComponent.cs` | new | Playtest 4: which part a dismemberment wound is the stump of. |
+| `Resources/Textures/_WF/Wolfmed/Damage/stumps.rsi/` | new, generated | Playtest 4: `<site>_stump` (blood mask), `_stump_bone`, `_stump_drip`, `_stump_stream` for the neck and eight limbs, from Nevado's stump.dmi and Bob's bulletwound glyph. |
 | `Content.Server/_WF/Wolfmed/Wounds/WolfmedStumpTagSystem.cs` | new | Playtest 4: tags each new stump wound off the amputation event. |
 | `Resources/Prototypes/_WF/Wolfmed/Damage/overlay_offsets.yml` | new, generated | `WFWolfmedOverlayOffsets`: per-species, per-part pixel shifts. |
 | `Resources/Prototypes/_WF/Wolfmed/Alerts/alerts.yml` | modified | The `WFWolfmedPain` category and the `WFWolfmedPain` and `WFWolfmedPainMechanical` alerts, severities 0-8. |
