@@ -16,7 +16,7 @@ namespace Content.IntegrationTests.Tests._WF.Wolfmed.Range;
 
 public static class WolfmedRangeMap
 {
-    /// <summary>The committed range, loaded in game with `loadmap 100 /Maps/_WF/Wolfmed/wolfmed_range.yml`.</summary>
+    /// <summary>The committed range, loaded in game with `wolfmedrange` (loadmap leaves it uninitialised).</summary>
     public static readonly ResPath Path = new("/Maps/_WF/Wolfmed/wolfmed_range.yml");
 }
 

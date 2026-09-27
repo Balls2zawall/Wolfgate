@@ -22,16 +22,19 @@ using Robust.Shared.Utility;
 namespace Content.IntegrationTests.Tests._WF.Wolfmed.Range;
 
 /// <summary>
-/// Builds the Wolfmed range (playtest 4): one walled room with every playable species lined up, the medical supplies,
-/// two powered pods, and a row of guns, melee and armour. Run by hand with WOLFMED_RANGE_OUT set to the file to
-/// write, then commit the file at <see cref="WolfmedRangeMap.Path"/>. The species come from the species prototypes,
-/// so a new species only needs a rerun.
+/// Builds the Wolfmed range (playtest 4): one walled, lit room with every playable species lined up, the medical
+/// supplies, two powered pods, and a row of guns, melee and armour. Run by hand with WOLFMED_RANGE_OUT set to the
+/// file to write, then commit the file at <see cref="WolfmedRangeMap.Path"/>. The species come from the species
+/// prototypes, so a new species only needs a rerun. In game: `wolfmedrange`.
 /// </summary>
 [TestFixture]
 [Explicit("Regenerates the Wolfmed range map; set WOLFMED_RANGE_OUT to the file to write.")]
 public sealed class WolfmedRangeMapGenerator
 {
-    private const int Size = 48;
+    /// <summary>Tiles a side, walls included; 32 floor tiles across.</summary>
+    private const int Size = 34;
+
+    private const int PerRow = 16;
 
     private static readonly string[] Medical =
     [
@@ -71,6 +74,7 @@ public sealed class WolfmedRangeMapGenerator
         var tileDefs = server.ResolveDependency<ITileDefinitionManager>();
         var mapMan = server.ResolveDependency<IMapManager>();
         var mapSys = entMan.System<SharedMapSystem>();
+        var transform = entMan.System<SharedTransformSystem>();
         var loader = entMan.System<MapLoaderSystem>();
         var skipped = new List<string>();
         var saved = new ResPath("/wolfmed_range.yml");
@@ -84,7 +88,7 @@ public sealed class WolfmedRangeMapGenerator
             for (var y = 0; y < Size; y++)
                 mapSys.SetTile(grid, new Vector2i(x, y), floor);
 
-            EntityUid? Spawn(string id, int x, int y)
+            EntityUid? Spawn(string id, int x, int y, Angle rotation = default)
             {
                 if (!protos.TryIndex<EntityPrototype>(id, out var proto) || proto.Categories.Any(c => c.ID == "DoNotMap"))
                 {
@@ -92,7 +96,10 @@ public sealed class WolfmedRangeMapGenerator
                     return null;
                 }
 
-                return entMan.SpawnEntity(id, new EntityCoordinates(grid, new Vector2(x + 0.5f, y + 0.5f)));
+                var uid = entMan.SpawnEntity(id, new EntityCoordinates(grid, new Vector2(x + 0.5f, y + 0.5f)));
+                if (rotation != Angle.Zero)
+                    transform.SetLocalRotation(entMan.GetComponent<TransformComponent>(uid), rotation);
+                return uid;
             }
 
             for (var i = 0; i < Size; i++)
@@ -103,65 +110,74 @@ public sealed class WolfmedRangeMapGenerator
                 Spawn("WallSolid", Size - 1, i);
             }
 
+            // Wall lights every six tiles, each turned to face into the room.
+            for (var i = 4; i < Size - 1; i += 6)
+            {
+                Spawn("AlwaysPoweredWallLight", i, Size - 1);
+                Spawn("AlwaysPoweredWallLight", i, 0, Angle.FromDegrees(180));
+                Spawn("AlwaysPoweredWallLight", 0, i, Angle.FromDegrees(-90));
+                Spawn("AlwaysPoweredWallLight", Size - 1, i, Angle.FromDegrees(90));
+            }
+
             var gravity = entMan.EnsureComponent<GravityComponent>(grid);
             gravity.Enabled = true;
             gravity.Inherent = true;
-            entMan.EnsureComponent<MapLightComponent>(mapUid).AmbientLightColor = Color.White;
+            entMan.EnsureComponent<MapLightComponent>(mapUid).AmbientLightColor = Color.FromHex("#303030");
             entMan.System<AtmosphereSystem>().SetMapAtmosphere(mapUid, false, Scenarios.WolfmedScenario.Air());
 
-            // Every species with a humanoid player mob, in rows along the north wall.
+            // Every species with a humanoid player mob, in rows along the north wall. Player mobs are save: false, so
+            // the map carries a marker that spawns the species on map init.
             var species = protos.EnumeratePrototypes<SpeciesPrototype>()
                 .Where(s => protos.TryIndex<EntityPrototype>(s.Prototype, out var p) && p.Components.ContainsKey("HumanoidAppearance"))
                 .OrderBy(s => s.ID, StringComparer.Ordinal)
                 .ToList();
             for (var i = 0; i < species.Count; i++)
             {
-                // Player mobs are save: false, so the map carries a marker that spawns the species on map init.
-                var marker = Spawn("WFWolfmedRangeSpawner", 3 + i % 22 * 2, Size - 4 - i / 22 * 3);
+                var marker = Spawn("WFWolfmedRangeSpawner", 2 + i % PerRow * 2, Size - 4 - i / PerRow * 2);
                 if (marker != null)
                     entMan.GetComponent<RandomSpawnerComponent>(marker.Value).Prototypes = [species[i].Prototype];
             }
 
-            // Power: an RTG into a substation into an APC, low-voltage cable to the pods.
-            Spawn("CableHV", 6, 6);
-            Spawn("CableHV", 7, 6);
-            Spawn("GeneratorRTG", 6, 6);
-            Spawn("CableMV", 7, 6);
-            Spawn("CableMV", 8, 6);
-            Spawn("SubstationBasic", 7, 6);
-            Spawn("APCBasic", 8, 6);
-            for (var y = 6; y <= 10; y++)
-                Spawn("CableApcExtension", 8, y);
-            for (var x = 9; x <= 11; x++)
-                Spawn("CableApcExtension", x, 10);
-            Spawn("WFMachineAutodoc", 8, 10);
-            Spawn("WFMachineAutodoc", 11, 10);
-            Spawn("MedicalBed", 6, 12);
-            Spawn("MedicalBed", 6, 14);
-            Spawn("OperatingTable", 6, 16);
-            Spawn("WFCrateWolfmedDebug", 5, 18);
-            Spawn("WFCrateWolfmedDebug", 5, 19);
+            // Power: an RTG into a substation into an APC, low-voltage cable under the pods.
+            Spawn("CableHV", 5, 4);
+            Spawn("CableHV", 6, 4);
+            Spawn("GeneratorRTG", 5, 4);
+            Spawn("CableMV", 6, 4);
+            Spawn("CableMV", 7, 4);
+            Spawn("SubstationBasic", 6, 4);
+            Spawn("APCBasic", 7, 4);
+            for (var y = 4; y <= 8; y++)
+                Spawn("CableApcExtension", 7, y);
+            for (var x = 8; x <= 10; x++)
+                Spawn("CableApcExtension", x, 8);
+            Spawn("WFMachineAutodoc", 7, 8);
+            Spawn("WFMachineAutodoc", 10, 8);
+            Spawn("MedicalBed", 5, 14);
+            Spawn("MedicalBed", 5, 16);
+            Spawn("OperatingTable", 5, 18);
+            Spawn("WFCrateWolfmedDebug", 2, 15);
+            Spawn("WFCrateWolfmedDebug", 2, 16);
 
             // Supplies on tables along the west wall, four to a table.
             for (var i = 0; i < Medical.Length; i++)
             {
-                var y = 6 + i / 4;
+                var y = 4 + i / 4;
                 if (i % 4 == 0)
-                    Spawn("Table", 3, y);
-                Spawn(Medical[i], 3, y);
+                    Spawn("Table", 2, y);
+                Spawn(Medical[i], 2, y);
             }
 
             // Guns and melee on tables along the south wall, armour along the east wall.
             for (var i = 0; i < Arms.Length; i++)
             {
-                Spawn("Table", 12 + i * 2, 3);
-                Spawn(Arms[i], 12 + i * 2, 3);
+                Spawn("Table", 6 + i * 2, 2);
+                Spawn(Arms[i], 6 + i * 2, 2);
             }
 
             for (var i = 0; i < Armour.Length; i++)
             {
-                Spawn("Table", Size - 4, 6 + i * 2);
-                Spawn(Armour[i], Size - 4, 6 + i * 2);
+                Spawn("Table", Size - 3, 4 + i * 2);
+                Spawn(Armour[i], Size - 3, 4 + i * 2);
             }
 
             Assert.That(loader.TrySaveMap(mapId, saved), "the map did not save.");

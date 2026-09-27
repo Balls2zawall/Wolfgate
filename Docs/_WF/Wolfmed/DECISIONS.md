@@ -3377,3 +3377,11 @@ generator skips any prototype that is missing or categorised DoNotMap and prints
 loads the committed file, counts one humanoid per playable species and checks both pods are powered, so the map
 cannot fall behind the species list quietly. In game: `loadmap 100 /Maps/_WF/Wolfmed/wolfmed_range.yml`, then
 teleport to map 100.
+
+*[Correction the same evening: the owner loaded the range with `loadmap` and found it dark, unpowered and empty.
+`loadmap` builds its options as `new DeserializationOptions { StoreYamlUids }`, so the map arrives uninitialised: the
+species markers never fire (they spawn on MapInit) and the power net never forms, and nothing in a map file can
+change that. `wolfmedrange` (`Content.Server/_WF/Wolfmed/Range/WolfmedRangeCommand.cs`, AdminFlags.Mapping) loads the
+file with `InitializeMaps = true` and moves the caller to the middle of the grid, so it is the way in. The room is now
+34 x 34 (32 floor tiles across, the species in three rows of sixteen), with an always-powered wall light every six
+tiles on each wall turned to face in, over a dim `#303030` ambient so nothing is ever pitch black.]*
