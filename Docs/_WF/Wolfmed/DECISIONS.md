@@ -3917,7 +3917,7 @@ sounds and overlays organic-only, the pain HUD for machines too) are in the spec
   spear's blade slice are `WFWolfmedChop` (`chop2`, `chop4`, `chop5`; the owner dropped 3 and 6); every spear and the flaming axe inherit it. Crowbars
   (`BaseCrowbar`) are `WFWolfmedCrowbarHit` (`crowbarhit1-2`). `WolfmedOrganicSoundSystem.GetHitSound` keeps any
   `WFWolfmed*` collection a weapon already carries, so the spear chops rather than stabs; the stab still takes the
-  other piercing weapons. Arterial sprays: `artery1` and `artery3` join the splatter in `WFWolfmedBleedSpurt` and
+  other piercing weapons. Arterial sprays: `artery3` joins the splatter (the owner dropped `artery1`) in `WFWolfmedBleedSpurt` and
   `WFWolfmedBleedStump`. `WolfmedBobMeleeSoundsTest` pins the prototypes and the precedence.
 - **Bullet impacts on flesh.** The Skyrat flesh impacts WOLFGATE(Weapons) ported (`MeatBulletImpact`, nine files)
   are the owner's `ric_flesh1-4` now, under `Resources/Audio/_WF/Wolfmed/Impacts` (marked in `gun_impacts.yml`).
