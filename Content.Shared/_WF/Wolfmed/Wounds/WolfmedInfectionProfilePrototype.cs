@@ -108,9 +108,18 @@ public sealed partial class WolfmedInfectionProfilePrototype : IPrototype
     [DataField]
     public float PartFromWoundPerMinute = 10f;
 
-    /// <summary>Part progress per minute from each child part (a hand for its arm) that is spreading or septic.</summary>
+    /// <summary>Part progress per minute from each child part (a hand for its arm) at <see cref="PartTransferStage"/> or past it.</summary>
     [DataField]
     public float PartSpreadPerMinute = 8f;
+
+    /// <summary>
+    /// Playtest 5: the stage a part has to reach before it infects its parent. Septic, so a limb that is merely
+    /// spreading (the first fever on the analyzer) is still safe to deal with and a septic limb is the amputation
+    /// decision; a dead limb is pinned at 100 and transfers at once. Sepsis from a torso or head starts at spreading
+    /// regardless: that is the bloodstream.
+    /// </summary>
+    [DataField]
+    public WolfmedInfectionStage PartTransferStage = WolfmedInfectionStage.Septic;
 
     /// <summary>Part progress shed per minute while nothing feeds the part.</summary>
     [DataField]

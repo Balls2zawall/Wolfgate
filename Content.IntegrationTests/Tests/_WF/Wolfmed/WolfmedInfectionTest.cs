@@ -607,8 +607,9 @@ public sealed class WolfmedInfectionTest : GameTest
                 Assert.That(Prototypes(entities, arm), Does.Contain("WFWolfmedNecrosisWound"));
             });
 
-            // INFECTION: a hand put back dead reaches sepsis through the arm and then the torso, two 20-minute hops
-            // (playtest 5; derived 40 minutes); it used to be about a minute, off the necrosis wound directly.
+            // INFECTION: a hand put back dead reaches sepsis through the arm and then the torso: 20 minutes to the arm's
+            // spreading, 13 more to septic, then 20 to the torso (playtest 5; derived 53 minutes); it used to be about a
+            // minute, off the necrosis wound directly.
             var infection = entities.System<WolfmedInfectionSystem>();
             var other = entities.SpawnEntity("MobHuman", map.GridCoords);
             var hand = Part(entities, other, BodyPartType.Hand, BodyPartSymmetry.Left);
@@ -616,7 +617,7 @@ public sealed class WolfmedInfectionTest : GameTest
             entities.GetComponent<WolfmedNecrosisComponent>(hand).DetachedAt = timing.CurTime - TimeSpan.FromMinutes(30);
             Assert.That(necrosis.OnAttached(hand), Is.True);
 
-            Run(infection, 39f);
+            Run(infection, 52f);
             Assert.Multiple(() =>
             {
                 Assert.That(infection.GetPartStage(Part(entities, other, BodyPartType.Arm, BodyPartSymmetry.Left)),
@@ -625,7 +626,7 @@ public sealed class WolfmedInfectionTest : GameTest
                     "sepsis started before the infection reached the torso.");
             });
 
-            Run(infection, 2f);
+            Run(infection, 2.5f);
             Assert.That(entities.HasComponent<WolfmedSepsisComponent>(other), Is.True, "a dead hand never reached sepsis.");
         });
     }

@@ -4341,3 +4341,9 @@ the owner's call; left as it plays.
   instead of 7.5) and `sepsisPerMinute` 12 to 4 (septic shock 20 minutes after sepsis starts instead of 7). A chest cut
   now starts sepsis at about 27 minutes untreated (was 16) and reaches shock at 47 (was 23); a hand cut starts it at
   67 (was 31). The tests that walk the clock were moved with it.
+- **A limb has to be septic before it infects the next one (owner, 2026-09-28).** A part used to feed its parent as
+  soon as it was spreading (60), the same moment it first showed a fever on the analyzer, so there was no window where
+  a limb was visibly infected but still safe. `partTransferStage: Septic` (`WolfmedInfectionProfilePrototype.PartTransferStage`)
+  makes a septic limb the amputation decision: an untreated hand cut now spreads to the arm at 52 minutes and to the
+  torso at 86 (was 47 and 67). A torso or head still starts sepsis at spreading, since that is the bloodstream, and a
+  dead limb is pinned at 100 and transfers at once. `WolfmedInfectionSpreadTest` walks the new clock.

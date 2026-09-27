@@ -292,7 +292,7 @@ public sealed class WolfmedInfectionSystem : EntitySystem
         while (infected.MoveNext(out var uid, out var infection))
         {
             feed.TryAdd(uid, 0f);
-            if (infection.Stage >= WolfmedInfectionStage.Spreading)
+            if (infection.Stage >= profile.PartTransferStage) // Playtest 5: septic, not merely spreading
                 spreading.Add(uid);
         }
 
