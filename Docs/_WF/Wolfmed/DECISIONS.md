@@ -3921,4 +3921,5 @@ sounds and overlays organic-only, the pain HUD for machines too) are in the spec
   `WFWolfmedBleedStump`. `WolfmedBobMeleeSoundsTest` pins the prototypes and the precedence.
 - **Bullet impacts on flesh.** The Skyrat flesh impacts WOLFGATE(Weapons) ported (`MeatBulletImpact`, nine files)
   are the owner's `ric_flesh1-4` now, under `Resources/Audio/_WF/Wolfmed/Impacts` (marked in `gun_impacts.yml`),
-  encoded at 0.7 gain: "quieten the bullet hit sounds by maybe 30 %".
+  encoded at 0.6 gain, 3 dB under the mono originals: "quieten the bullet hit sounds by maybe 30 %" (0.7 only bought
+  2 dB because the source peaks are clipped).
