@@ -141,6 +141,9 @@ LINES = [
     ("emag-5", "MEMORY CONTENTS WILL NOT BE WIPED.", None, "Urgent"),
 
     ("offline", "S-S-S.A.M. OFF-LINE.", "S. S. S. A. M. Off. Line.", "Info"),
+
+    # Playtest 4, IV: the patient needs blood and the blood reservoir is empty.
+    ("no-blood", "NO BLOOD LOADED.", None, "Urgent"),
 ]
 
 ATTRIBUTIONS = """- files: ["{files}"]

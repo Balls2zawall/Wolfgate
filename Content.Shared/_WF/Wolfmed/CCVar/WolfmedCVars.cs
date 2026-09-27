@@ -854,4 +854,70 @@ public sealed class WolfmedCVars
     /// </summary>
     public static readonly CVarDef<float> OverlayRefreshSeconds =
         CVarDef.Create("wolfmed.overlay_refresh_seconds", 1f, CVar.SERVERONLY);
+    // Playtest 4, IV: the IV drip and the pod's blood reservoir.
+
+    /// <summary>
+    /// Units a second a new IV drip moves. tg's DEFAULT_IV_TRANSFER_RATE (Nova keeps it): a blood pack's 30 u in six
+    /// seconds, a human's 300 u pool in a minute.
+    /// </summary>
+    public static readonly CVarDef<float> IvRateDefault =
+        CVarDef.Create("wolfmed.iv_rate_default", 5f, CVar.SERVERONLY);
+
+    /// <summary>Slowest flow an IV drip can be set to, in units a second. tg's MIN_IV_TRANSFER_RATE: stopped.</summary>
+    public static readonly CVarDef<float> IvRateMin =
+        CVarDef.Create("wolfmed.iv_rate_min", 0f, CVar.SERVERONLY);
+
+    /// <summary>Fastest flow an IV drip can be set to, in units a second. Nova's MAX_IV_TRANSFER_RATE (tg's 5, tripled).</summary>
+    public static readonly CVarDef<float> IvRateMax =
+        CVarDef.Create("wolfmed.iv_rate_max", 15f, CVar.SERVERONLY);
+
+    /// <summary>What an IV drip's flow is rounded to, in units a second. tg's IV_TRANSFER_RATE_STEP.</summary>
+    public static readonly CVarDef<float> IvRateStep =
+        CVarDef.Create("wolfmed.iv_rate_step", 0.01f, CVar.SERVERONLY);
+
+    /// <summary>
+    /// Units of blood one pack of a Bloodpack stack is worth on an IV drip or in the pod's blood reservoir. The same
+    /// 30 u a pack restores applied by hand (its Healing ModifyBloodLevel), so a drip only saves the medic the clicks.
+    /// </summary>
+    public static readonly CVarDef<float> IvUnitsPerPack =
+        CVarDef.Create("wolfmed.iv_units_per_pack", 30f, CVar.SERVERONLY);
+
+    /// <summary>Seconds of do-after to put an IV drip's needle into a patient. tg's one second.</summary>
+    public static readonly CVarDef<float> IvAttachSeconds =
+        CVarDef.Create("wolfmed.iv_attach_seconds", 1f, CVar.SERVERONLY);
+
+    /// <summary>
+    /// Piercing a needle ripped out by walking away deals to an arm, through the wound routing. tg's 3 brute; it opens
+    /// a puncture wound.
+    /// </summary>
+    public static readonly CVarDef<float> IvRipDamage =
+        CVarDef.Create("wolfmed.iv_rip_damage", 3f, CVar.SERVERONLY);
+
+    /// <summary>
+    /// Severity the wound a ripped-out needle opens is raised to. tg adds a moderate pierce wound on top of its 3 brute;
+    /// 3 Piercing alone opens a puncture at 3, and a puncture only bleeds from 9, so 10 is a small wound that does
+    /// bleed. 0 leaves the wound as the damage made it.
+    /// </summary>
+    public static readonly CVarDef<float> IvRipWoundSeverity =
+        CVarDef.Create("wolfmed.iv_rip_wound_severity", 10f, CVar.SERVERONLY);
+
+    /// <summary>Blood fraction under which a drip taking blood beeps loudly now and then. tg's BLOOD_VOLUME_SAFE.</summary>
+    public static readonly CVarDef<float> IvBeepBelow =
+        CVarDef.Create("wolfmed.iv_beep_below", 0.85f, CVar.SERVERONLY);
+
+    /// <summary>Chance a second of that beep. tg rolls 5% a two-second machine tick.</summary>
+    public static readonly CVarDef<float> IvBeepChance =
+        CVarDef.Create("wolfmed.iv_beep_chance", 0.025f, CVar.SERVERONLY);
+
+    /// <summary>Blood fraction under which the pod starts transfusing its occupant out of its blood reservoir.</summary>
+    public static readonly CVarDef<float> PodTransfuseBelow =
+        CVarDef.Create("wolfmed.pod_transfuse_below", 0.85f, CVar.SERVERONLY);
+
+    /// <summary>Units a second the pod's blood reservoir transfuses. An IV drip's default flow.</summary>
+    public static readonly CVarDef<float> PodTransfuseRate =
+        CVarDef.Create("wolfmed.pod_transfuse_rate", 5f, CVar.SERVERONLY);
+
+    /// <summary>Blood fraction the pod's blood reservoir transfuses up to once started.</summary>
+    public static readonly CVarDef<float> PodTransfuseTo =
+        CVarDef.Create("wolfmed.pod_transfuse_to", 0.95f, CVar.SERVERONLY);
 }

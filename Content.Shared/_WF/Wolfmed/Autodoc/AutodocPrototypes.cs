@@ -157,6 +157,9 @@ public enum AutodocVoiceEvent : byte
 
     /// <summary>Playtest 3: the hull was breached with somebody inside, so outside air is getting in.</summary>
     HullBreach,
+
+    /// <summary>Playtest 4, IV: the occupant needs blood and the blood reservoir is empty.</summary>
+    NoBlood,
 }
 
 /// <summary>
@@ -194,6 +197,10 @@ public sealed partial class AutodocTriageStep
     /// <summary>A shock rather than a surgery: the cardiac module, if one is fitted.</summary>
     [DataField]
     public bool Defibrillate;
+
+    /// <summary>Playtest 4, IV: the blood reservoir's transfusion rather than a surgery. It runs beside the queue.</summary>
+    [DataField]
+    public bool Transfuse;
 
     /// <summary>
     /// Only queue these when the body is already past the procedure's own requirements. Closing an incision

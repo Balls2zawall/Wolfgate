@@ -3614,3 +3614,75 @@ Only y is measured, because a layer offset applies in every direction and a side
 north. All 41 round-start species are listed; 16 are zero, among them human, dwarf, goblin, oni, IPC, Rodentia,
 Vulpkanin and WFCanine. The largest shifts: Resomi (and ProtoResomi) head, chest and arms down 3, hands
 down 2; Diona arms down 3; Hydrakin arms and hands down 2, legs up 2; Thaven head up 2.
+## Playtest 4, IV (2026-09-27)
+
+"We need to add IVs ... It should act exactly like the one on Nova code. SAM should also have a blood reservoir." Nova's
+drip is tgstation's (`code/game/machinery/iv_drip.dm`; Nova's override only turns off mouse-drop). The owner then
+corrected the blood half: one blood type, the existing `Bloodpack` stack, no bag variants and no mismatch logic.
+
+**What already existed.** No IV drip anywhere in the tree (no `iv_drip`, `IVDrip` or IV bag in any fork layer). No
+blood typing either: a hand-applied `Bloodpack` adds 30 u (`Healing` `ModifyBloodLevel`) through
+`BloodstreamSystem.TryModifyBloodLevel`, which always adds the patient's own `BloodReagent`, so the pack is universal;
+the pod's beaker transfusion (`DrawFluid`) takes only the patient's own reagent or saline; `Blood` in the chemical
+stream only heals a Bloodsucker (its Medicine metabolism), so another species' blood injected from a beaker does
+nothing to anyone else.
+
+**The drip** (`WFWolfmedIvDrip`, `Content.Server/_WF/Wolfmed/Medical/WolfmedIvDripSystem.cs`), tg's behaviour:
+- One container slot, filled by clicking with the item: a `Bloodpack` stack (tag), or anything with `FitsInDispenser`
+  or `DrainableSolution` (tg's `drip_containers`). The flow, mode, container and fill show on the sprite (Nova's
+  `iv_drip.dmi`: the stand by mode and flow, `beakeridle`/`beakeractive`, the `reagentNN` overlay at tg's thresholds
+  0, 10, 25, 50, 75, 80, 90, tinted by the contents; a pack's fill is the stack's units left against a full stack, in
+  the patient's blood colour) and on examine.
+- Attach: a verb per body with blood in reach of the stand, or drag the stand onto the patient; one second's do-after
+  (`wolfmed.iv_attach_seconds`), "begins attaching". Detach: a verb, or the patient more than a tile away, which rips
+  the needle out: `wolfmed.iv_rip_damage` (3) Piercing into a random arm (the chest without one) through the routing,
+  a LargeCaution popup to the patient and a line to the room. 3 Piercing alone opens a puncture at severity 3, and a
+  puncture bleeds only from 9, so the torn wound is raised to `wolfmed.iv_rip_wound_severity` (10), the way tg adds a
+  moderate pierce wound on top of its 3 brute. A patient put in a pod, a locker or any container is
+  detached cleanly.
+- Inject: a pack gives the patient's own blood reagent at the flow, spending one pack of the stack every
+  `wolfmed.iv_units_per_pack` (30, the hand-applied pack's figure), and nothing into a full bloodstream. A beaker or jug
+  is injected as a hypospray does (Injection reaction, into the chemical stream); the part of it that is the patient's
+  own blood reagent goes back into their blood instead. Take: the patient's blood reagent into a beaker or jug at the
+  flow; full, the drip "pings." (a chat emote and a sound) and drops the flow to the minimum, as tg does; under
+  `wolfmed.iv_beep_below` (0.85, tg's BLOOD_VOLUME_SAFE) it "beeps loudly." at `wolfmed.iv_beep_chance` (0.025) a
+  second, tg's 5% a two-second tick. A pack cannot be refilled: take mode with a pack hung moves nothing and examine says
+  why.
+- Blood packs follow their own damage-container rule (`Healing` `damageContainers`, Biological), so a chassis is never
+  given blood; examine says so.
+- Flow: `wolfmed.iv_rate_default` 5, `_min` 0, `_max` 15 (Nova's tripled maximum), `_step` 0.01 (tg's rounding), units
+  a second, moved once a second (tg moves on its two-second machine tick).
+
+**The pod's blood reservoir** (`AutodocSystem.Blood.cs`): an `autodoc_blood` slot for a `Bloodpack` stack. A
+`transfuse: true` triage step heads `WFWolfmedAutodocTriage`; when the planner reaches it (PLAN, FIX ME, AUTO) with the
+occupant under `wolfmed.pod_transfuse_below` (0.85) it starts a transfusion of the occupant's own blood at
+`wolfmed.pod_transfuse_rate` (5 u/s) that runs beside the queue until `wolfmed.pod_transfuse_to` (0.95, the last push cut
+to the target) or the stack is gone. It queues nothing, so a patient short only of blood gets no procedure and no
+NOTHING MORE I CAN DO while it runs. Every place the pod already topped blood up from its beakers (`TryTransfuse`: before
+each procedure, the defib's blood gate, the end of the queue) schedules it too, and with the autofix module on the pod
+watches the blood every second. With no pack and no fluid in the beakers the pod could use, it says "NO BLOOD LOADED."
+(a new Urgent line, 1.31 s, generated like the rest) once and the readout shows NO BLOOD LOADED after the state, never
+beside TRANSFUSING; the fault is the pod waiting on blood, so a stack loaded afterwards starts the transfusion by itself.
+The reservoir panel gets a fourth row, "blood: blood pack x5", against a full stack's units. Unpowered or emagged, the
+transfusion holds. A body packs cannot help (a chassis) is left to the beakers as before, with no fault.
+
+**Measured.** Human at 0.6 with a stack of five on the drip at 5 u/s: 0.9 after 19 s (18 predicted; the first push is a
+second after the needle goes in), 90 u given and exactly three packs spent. Take mode into an empty 60 u beaker: full
+after 12 pushes, the ping 14 s after the needle went in (on the first push that finds no room), the patient down
+exactly 60 u, the flow at 0. The rip: a `PiercingWound` at severity 10 on an arm bleeding 0.45 u/s on a human (at 3
+without the raise, and not bleeding). A Slime person on a pack: Slime 180 to 215 u in 8 s and no Blood. The pod: 0.6
+to 0.95 in 21 s (21 predicted), 105 u from three and a half packs, stopping at 0.950.
+
+**Differs from the spec, and why.**
+1. **The owner's correction** replaced the bag variants, `WFWolfmedBloodBag` and the mismatch path with the existing
+   `Bloodpack` stack; test 4 is the Slime patient getting Slime; the pod's only fault is NO BLOOD LOADED. No blood bag
+   sprite was shipped, since there is no bag entity.
+2. **The flow is verbs, not a slider**: a Flow rate category with Stop (the minimum), Slow (half the default),
+   Normal (the default) and Fast (the maximum), each labelled with its u/s. A BUI would have doubled the package.
+3. **Alt-click is tg's right-click** (take the needle out, else take the container down, else switch the mode), not
+   tg's alt-click (flow to minimum or maximum); the mode verb is always there, as tg's is.
+4. **No "IV connected" alert, no line drawn to the patient and no tug** toward the stand: none was asked for.
+5. **Not buildable**: no crafting recipe, lathe entry or map placement; spawn `WFWolfmedIvDrip`.
+6. **Nothing is spent into a full bloodstream**, where tg keeps pushing blood past normal.
+7. **The torn wound is raised to severity 10** so it bleeds, as the spec's "opens a real wound and bleeds" asks; 3
+   Piercing on its own opens one that does not.

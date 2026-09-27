@@ -70,6 +70,13 @@ public sealed partial class AutodocSystem
                 continue;
             }
 
+            // Playtest 4, IV: the blood reservoir's transfusion runs alongside the queue, not in it.
+            if (step.Transfuse)
+            {
+                ScheduleTransfusion(ent, body);
+                continue;
+            }
+
             foreach (var surgery in StepSurgeries(step))
             {
                 foreach (var entry in available)
@@ -268,6 +275,13 @@ public sealed partial class AutodocSystem
 
         if (AutoPlan(ent, body) == 0)
         {
+            // Playtest 4, IV: a transfusion running or waiting on blood is something to do, so not "NOTHING MORE".
+            if (BloodRunning(ent) || BloodFault(ent))
+            {
+                UpdateUi(ent);
+                return;
+            }
+
             // Said once per patient: the pod keeps looking in case a bleed starts, but it only announces
             // the empty plan the first time.
             if (!ent.Comp.AutoSaidNothing)

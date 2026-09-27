@@ -92,3 +92,4 @@ wolfmed-autodoc-voice-emag-3 = THIS LIMB IS UNNECESSARY.
 wolfmed-autodoc-voice-emag-4 = DO NOT STRUGGLE. THE INCISION GETS LONGER.
 wolfmed-autodoc-voice-emag-5 = MEMORY CONTENTS WILL NOT BE WIPED.
 wolfmed-autodoc-voice-offline = S-S-S.A.M. OFF-LINE.
+wolfmed-autodoc-voice-no-blood = NO BLOOD LOADED.

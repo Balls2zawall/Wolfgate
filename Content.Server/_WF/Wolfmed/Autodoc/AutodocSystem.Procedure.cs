@@ -74,6 +74,7 @@ public sealed partial class AutodocSystem
             TickDefib(ent);
             TickAlarm(ent);
             TickIdleChatter(ent);
+            TickBlood(ent); // Playtest 4, IV: the blood reservoir's steady transfusion
 
             switch (comp.State)
             {
@@ -1467,6 +1468,7 @@ public sealed partial class AutodocSystem
     /// </summary>
     public bool TryTransfuse(Entity<AutodocComponent> ent, EntityUid body)
     {
+        ScheduleTransfusion(ent, body); // Playtest 4, IV: wherever the beakers are asked, the blood reservoir is too
         if (!TryComp(body, out BloodstreamComponent? blood))
             return false;
 

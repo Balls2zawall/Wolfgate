@@ -117,3 +117,9 @@ wolfmed-autodoc-organ-penisorgan = penis
 wolfmed-autodoc-organ-testiclesorgan = testicles
 wolfmed-autodoc-organ-vaginaorgan = vagina
 wolfmed-autodoc-organ-womborgan = womb
+
+# Playtest 4, IV: the blood reservoir.
+wolfmed-autodoc-slot-blood = Blood reservoir
+wolfmed-autodoc-status-no-blood = NO BLOOD LOADED
+wolfmed-autodoc-reservoir-blood = blood: { $name } x{ $count }
+wolfmed-autodoc-reservoir-blood-empty = blood: empty

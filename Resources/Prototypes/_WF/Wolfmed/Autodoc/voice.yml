@@ -457,6 +457,11 @@
         path: /Audio/_WF/Wolfmed/Autodoc/voice/offline.ogg
       message: wolfmed-autodoc-voice-offline
       priority: Info
+    no-blood:
+      sound:
+        path: /Audio/_WF/Wolfmed/Autodoc/voice/no-blood.ogg
+      message: wolfmed-autodoc-voice-no-blood
+      priority: Urgent
   events:
     Boot: [boot]
     Greeting: [greeting-1, greeting-2, greeting-3]
@@ -537,3 +542,4 @@
     Idle: [idle-1, idle-2, idle-3, idle-4, idle-5]
     Emag: [emag-1, emag-2, emag-3, emag-4, emag-5]
     Offline: [offline]
+    NoBlood: [no-blood]

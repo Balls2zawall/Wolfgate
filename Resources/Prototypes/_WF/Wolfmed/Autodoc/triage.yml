@@ -5,6 +5,10 @@
 - type: autodocTriage
   id: WFWolfmedAutodocTriage
   steps:
+  # Playtest 4, IV: blood out of the blood reservoir, started first and running beside everything below. It queues
+  # nothing; with no blood loaded for a patient who needs it the pod says NO BLOOD LOADED.
+  - transfuse: true
+
   # 1. A heart that is not beating comes before every surgery, and the module is the only thing that helps.
   - defibrillate: true
     condition: Arrest

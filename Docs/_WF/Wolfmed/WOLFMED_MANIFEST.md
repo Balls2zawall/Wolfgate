@@ -5165,4 +5165,29 @@ Two marked upstream edits, one marked Onyx edit, the rest `_WF` (DECISIONS "Play
 | `Content.IntegrationTests/Tests/_WF/Wolfmed/Scenarios/WolfmedPainHudTest.cs` | new | Hidden under 5; severity 0, 3, 7; cleared at 0; paindd in a faint; a machine gets the mechanical alert. |
 | `Content.IntegrationTests/Tests/_WF/Wolfmed/WolfmedWoundOverlayTest.cs` | new | Drip, stream, old on dressing, no layer on an unhurt limb, none on a machine, the layer order under the jumpsuit; rot on each arm, the septic chest, cleared by antibiotics and amputation; every state exists. |
 | `Content.Server/_WF/Wolfmed/README.md` | regenerated | `modules.py --write`. |
+## Playtest 4, IV (2026-09-27)
+
+All `_WF` (DECISIONS "Playtest 4, IV"). The pod's existing files carry one-line hooks into the new partial.
+
+| File | Kind | Change |
+| --- | --- | --- |
+| `Content.Shared/_WF/Wolfmed/Medical/WolfmedIvDripComponent.cs` | new | The drip's component (whitelist, range, interval, sounds, mode, rate, patient, pack use), its mode, appearance keys, layers and attach do-after event. |
+| `Content.Shared/_WF/Wolfmed/Medical/SharedWolfmedIvDripSystem.cs` | new | The client half: the stand can be dragged and dropped on a body. |
+| `Content.Server/_WF/Wolfmed/Medical/WolfmedIvDripSystem.cs` | new | Hanging and removing a container, attaching (verb, drag, 1 s do-after), inject and take at the flow, the rip, pings and beeps, verbs, examine, appearance; `TransfuseFromPack` and `PacksCanTreat`, which the pod shares. |
+| `Content.Client/_WF/Wolfmed/Medical/WolfmedIvDripVisualizerSystem.cs` | new | tg's icon states: the stand by mode and flow, `beakeridle`/`beakeractive`, the `reagentNN` fill tinted by the contents. |
+| `Resources/Prototypes/_WF/Wolfmed/Entities/iv_drip.yml` | new | `WFWolfmedIvDrip`: a wheeled, walk-through stand with one container slot. |
+| `Resources/Textures/_WF/Wolfmed/Medical/iv_drip.rsi` | new | Nova's `icons/obj/medical/iv_drip.dmi`, 14 states (CC-BY-SA-3.0). |
+| `Resources/Locale/en-US/_WF/Wolfmed/iv-drip.ftl` | new | The drip's verbs, popups, emotes and examine. |
+| `Content.Shared/_WF/Wolfmed/Autodoc/WolfmedAutodocBloodComponent.cs` | new | The pod's blood reservoir state. |
+| `Content.Server/_WF/Wolfmed/Autodoc/AutodocSystem.Blood.cs` | new | The transfusion step, its tick, the NO BLOOD LOADED fault, the status text and the reservoir row. |
+| `Content.Server/_WF/Wolfmed/Autodoc/AutodocSystem.cs`, `.Procedure.cs`, `.Triage.cs`, `.Ui.cs` | modified | Hooks: `InitializeBlood`, `TickBlood`, `ScheduleTransfusion` at the top of `TryTransfuse` and for the triage `transfuse` step, AUTO and PLAN quiet while blood is running or waited on, the status, TRANSFUSING flag and blood row. |
+| `Content.Shared/_WF/Wolfmed/Autodoc/AutodocPrototypes.cs` | modified | `AutodocVoiceEvent.NoBlood`, `AutodocTriageStep.Transfuse`. |
+| `Resources/Prototypes/_WF/Wolfmed/Autodoc/autodoc.yml`, `triage.yml` | modified | The `autodoc_blood` slot (tag `Bloodpack`), `WolfmedAutodocBlood`, the step at the top of the triage. |
+| `Tools/_WF/Wolfmed/gen_autodoc_voice.py`, `gen_autodoc_voice_protos.py` | modified | The `no-blood` line, "NO BLOOD LOADED.", Urgent. |
+| `Resources/Audio/_WF/Wolfmed/Autodoc/voice/no-blood.ogg`, `attributions.yml`, `Resources/Prototypes/_WF/Wolfmed/Autodoc/voice.yml`, `Resources/Locale/en-US/_WF/Wolfmed/autodoc-voice.ftl` | new, generated | The line, 1.31 s (eSpeak NG). |
+| `Resources/Locale/en-US/_WF/Wolfmed/autodoc.ftl` | modified | The slot name, the fault, the reservoir row. |
+| `Content.Shared/_WF/Wolfmed/CCVar/WolfmedCVars.cs` | modified | `wolfmed.iv_rate_default/_min/_max/_step`, `iv_units_per_pack`, `iv_attach_seconds`, `iv_rip_damage`, `iv_rip_wound_severity`, `iv_beep_below`, `iv_beep_chance`, `pod_transfuse_below/_rate/_to`. |
+| `Content.IntegrationTests/Tests/_WF/Wolfmed/WolfmedIvDripTest.cs` | new | Pack refill at the flow rate, take mode fills and pings, the rip and the clean detach into a pod, Slime blood for a Slime person. |
+| `Content.IntegrationTests/Tests/_WF/Wolfmed/PodBloodTest.cs` | new | The pod transfuses to 0.95 from its packs; an empty reservoir says NO BLOOD LOADED and starts when a stack goes in. |
+| `Content.Server/_WF/Wolfmed/README.md` | generated | The file list. |
 | `Docs/_WF/Wolfmed/DECISIONS.md`, this file | modified | This section. |

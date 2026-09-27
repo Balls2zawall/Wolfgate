@@ -62,6 +62,8 @@
     nitrogen: 0.79
   # Crawling into a surgical pod is exactly what a Downed player needs to be able to do.
   - type: WolfmedDownedReachable
+  # Playtest 4, IV: the blood reservoir. A Bloodpack stack in autodoc_blood is transfused as the occupant's own blood.
+  - type: WolfmedAutodocBlood
   - type: ContainerContainer
     containers:
       # The occupant stays drawn: with the lid open they lie on the bed, with it closed the lid covers them.
@@ -75,6 +77,7 @@
       autodoc_beaker1: !type:ContainerSlot
       autodoc_beaker2: !type:ContainerSlot
       autodoc_beaker3: !type:ContainerSlot
+      autodoc_blood: !type:ContainerSlot
       machine_board: !type:Container
       machine_parts: !type:Container
   - type: ItemSlots
@@ -117,6 +120,11 @@
           components:
           - FitsInDispenser
           - DrainableSolution # WOLFGATE: bottles and jugs too, not only beakers.
+      autodoc_blood:
+        name: wolfmed-autodoc-slot-blood
+        whitelist:
+          tags:
+          - Bloodpack
   - type: UserInterface
     interfaces:
       enum.AutodocUiKey.Key:
@@ -172,6 +180,7 @@
     - autodoc_beaker1
     - autodoc_beaker2
     - autodoc_beaker3
+    - autodoc_blood
   - type: StaticPrice
     price: 2500
   - type: GuideHelp

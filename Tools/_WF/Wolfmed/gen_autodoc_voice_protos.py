@@ -96,6 +96,7 @@ EVENTS = [
     ("Idle", ["idle-1", "idle-2", "idle-3", "idle-4", "idle-5"]),
     ("Emag", ["emag-1", "emag-2", "emag-3", "emag-4", "emag-5"]),
     ("Offline", ["offline"]),
+    ("NoBlood", ["no-blood"]),
 ]
 
 

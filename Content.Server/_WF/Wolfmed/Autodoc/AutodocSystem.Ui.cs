@@ -160,7 +160,7 @@ public sealed partial class AutodocSystem
                     if (ent.Comp.SelfService)
                         TryStart(ent, actor);
                 }
-                else
+                else if (!BloodRunning(ent) && !BloodFault(ent)) // Playtest 4, IV: transfusing is something to do
                 {
                     Speak(ent, AutodocVoiceEvent.AutoNothing);
                 }
@@ -194,11 +194,12 @@ public sealed partial class AutodocSystem
             return;
 
         var occupant = GetOccupant(ent);
-        ent.Comp.Transfusing = occupant is { } bleeding && NeedsTransfusion(bleeding);
+        // Playtest 4, IV: not TRANSFUSING beside NO BLOOD LOADED, and TRANSFUSING while the blood reservoir runs.
+        ent.Comp.Transfusing = occupant is { } bleeding && NeedsTransfusion(bleeding) && !BloodFault(ent) || BloodRunning(ent);
         var state = new AutodocBuiState
         {
             State = ent.Comp.State,
-            Status = StatusLine(ent) + AnaesthesiaStatus(occupant),
+            Status = StatusLine(ent) + BloodStatus(ent) + AnaesthesiaStatus(occupant), // Playtest 4, IV: NO BLOOD LOADED
             ClothingBlocked = ent.Comp.BlockedReason == StepInvalidReason.Armor,
             Transfusing = ent.Comp.Transfusing,
             CurrentStep = ent.Comp.CurrentStep?.Id,
@@ -221,6 +222,7 @@ public sealed partial class AutodocSystem
             LastLine = ent.Comp.LastLine,
             Seal = GetSeal(ent), // Playtest 3: the pod's own air
         };
+        AddBloodReservoir(ent, state.Reservoir); // Playtest 4, IV: the blood slot's row
 
         if (occupant is { } body)
         {
