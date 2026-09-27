@@ -15,6 +15,23 @@
     WFWolfmedStimPen: 2 # WOLFGATE(Wolfmed): CONSC: thirty seconds on your feet, then the crash.
     WFWolfmedNaloxonePen: 2 # WOLFGATE(Wolfmed): M2: OD14, the opioid antagonist that reverses an overdose.
     WFWolfmedSplint: 4 # WOLFGATE(Wolfmed): V5: field treatment for a fracture, short of the table.
+    Tourniquet: 4 # WOLFGATE(Wolfmed): ITEMS: stops a limb bleeding out; the standard kit's first tool.
+    MedicalPatchMakeshift: 4 # WOLFGATE(Wolfmed): ITEMS: the cheap patch, for when nobody has cloth.
+    MedicatedSuture: 2 # WOLFGATE(Wolfmed): ITEMS: closes cuts and punctures and stops their bleeding.
+    RegenerativeMesh: 2 # WOLFGATE(Wolfmed): ITEMS: the advanced burn dressing.
+    WFWolfmedAnalgesicPillCanister: 3 # WOLFGATE(Wolfmed): ITEMS: the weak rung by the canister.
+    WFWolfmedIbuprofenPillCanister: 2 # WOLFGATE(Wolfmed): ITEMS: a mild painkiller that eases bruising.
+    WFWolfmedKetorolacPillCanister: 2 # WOLFGATE(Wolfmed): ITEMS: the strongest mild painkiller.
+    WFWolfmedTramadolChemistryBottle: 2 # WOLFGATE(Wolfmed): ITEMS: a strong painkiller that sedates.
+    WFWolfmedOxycodoneChemistryBottle: 1 # WOLFGATE(Wolfmed): ITEMS: the strongest painkiller, easy to overdose.
+    WFWolfmedOsteogenPillCanister: 3 # WOLFGATE(Wolfmed): ITEMS: knits a simple fracture without surgery.
+    WFWolfmedOsteogenChemistryBottle: 2 # WOLFGATE(Wolfmed): ITEMS: osteogen for a syringe or a pill press.
+    Cautery: 1 # WOLFGATE(Wolfmed): ITEMS: the surgical basics a wound procedure names.
+    Hemostat: 1 # WOLFGATE(Wolfmed): ITEMS
+    Bonesetter: 1 # WOLFGATE(Wolfmed): ITEMS
+    BoneGel: 1 # WOLFGATE(Wolfmed): ITEMS
+    WFWolfmedIvDripFlatpack: 2 # WOLFGATE(Wolfmed): ITEMS: the IV drip had no source at all.
+    WFMedkitSyntheticFilled: 2 # WOLFGATE(Wolfmed): ITEMS: a first aid kit for synthetic crew.
     PillCanisterTricordrazine: 3 # Mono
     Syringe: 5
     BoxBottle: 3

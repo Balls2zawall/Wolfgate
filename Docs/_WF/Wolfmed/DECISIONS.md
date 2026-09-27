@@ -4152,3 +4152,97 @@ wearing a full-body fur, scale or feather marking the wound went under the pelt.
 marking layers (`DamageVisualsSystem.MarkingTop`), still under the clothing, and a marking applied after the wound was
 drawn puts the wound back over it. The stump, drip and artery layers were already on top of everything. The sweep
 loads each species' default profile so the default markings are on, and pins the chest glyph above them.
+## Playtest 5, ITEMS (2026-09-28)
+
+"Add all of the new items to medical vending machines, and add them to relevant medkits; the standard medkit should
+come with a tourniquet and a splint and some painkillers in a bottle ... perhaps an IPC medical kit sold at the vending
+machines with a bunch of synthetic specific stuff. People should be able to get this stuff readily. And make sure
+there's an autodoc flatpack in John Wolfgate." Branch `wolfmed-items` from `c520d1fa76`; spec
+`C:/Users/jzo12/Documents/Wolfmed/plan/p9/ITEMS-spec.md`, inventory `ITEMS-scout.md` beside it. "John Wolfgate" is the
+trader `WFTraderWolfgate`, whose shop sells `WFWolfgateVendInventory`.
+
+**What the model reads.** `WolfmedPainRelief` (the CONSC tier) is on Wolfmed's three rungs and on all four Onyx
+painkillers: ibuprofen (Weak, 14, and a slow brute heal), ketorolac (Weak, 26, thins the blood from 12 u), tramadol
+(Strong, 45) and oxycodone (Strong, 80); each also carries Onyx's `SuppressPain`. Osteogen's `MendFractures` knits a
+Simple or lesser fracture and is a step of the `BoneFractureWound` and `CondFracture` procedures. None of those five
+had a form outside the DEBUG medbox, so each got one by the ladder's own rule (`painkillers.yml`): a pill for a weak
+rung, a bottle for a strong one.
+
+**New items** (`_WF/Wolfmed/Entities/`, names inline):
+- `painkillers.yml`: `WFWolfmedAnalgesicPillCanister` (7 analgesic pills), `WFWolfmedIbuprofenPill` (10 u) and its
+  canister (5), `WFWolfmedKetorolacPill` (10 u, under the 12 u bleed line) and its canister (5),
+  `WFWolfmedTramadolChemistryBottle` and `WFWolfmedOxycodoneChemistryBottle` (30 u).
+- `medicine.yml`: `WFWolfmedOsteogenPill` (15 u: 1 severity a second at the default 0.5 u/s rate, a whole Simple
+  break), `WFWolfmedOsteogenPillCanister` (5), `WFWolfmedOsteogenChemistryBottle` (30 u).
+- `synthetic_kit.yml`: `WFMedkitSynthetic` "synthetic repair kit" (BaseStorageItem like `MedkitCombat`, the unused
+  `multikit` state and inhands, 6x2 grid, maxItemSize Small, Item Normal `0,0,2,1`, tag Medkit) and
+  `WFMedkitSyntheticFilled`: CableApcStack10, WelderMini, Wrench, Multitool, two WFWolfmedHydraulicFluidPack, 11 of 12
+  cells. The tools are the ones Wolfmed already gave the synthetic surgery steps (servo kit, hull weld, hull plate,
+  core probe); the fluid pack is the only synthetic consumable. The empty kit is in `EmptyMedkitsStatic` with a recipe
+  parented to `Medkit`'s (Plastic 300), named by `lathe-recipe-WFMedkitSynthetic-name` in the new `items.ftl`.
+- `flatpacks.yml`: `WFMachineAutodocFlatpack` and `WFWolfmedIvDripFlatpack`, `BaseNFFlatpack` with the
+  `medical_lathe` box Frontier's stasis bed and cryo pod flatpacks wear. `BaseNFFlatpack` replaces the base's
+  overlay layer, so the board-colour convention only applies to flatpacker-made packs; a prototype flatpack picks its
+  box. Unpacking needs only fixtures on the target, so the wheeled drip unpacks onto the tile like the janicart does
+  (`FlatpacksUnpackTest` does both).
+
+**Standard medkit.** `Medkit`'s grid is 6x2 (`0,0,5,1`, a marked block keeping the old line); every typed kit
+inherits it. `MedkitFilled` adds Tourniquet, WFWolfmedSplint and the analgesic canister ahead of the tricordrazine:
+Brutepack, Ointment, Gauze, Tourniquet and the splint stand in five columns, the two canisters share the sixth, 12 of
+12 cells.
+
+**Other kits, beyond the spec's one kit.** The owner asked for "relevant medkits", and the wider grid makes room:
+- `MedkitAdvancedFilled` gets back the tourniquet PROTO E put there and WP12-9 withdrew when the 4x2 grid overflowed
+  (the withdrawal comment said to re-add it with a bigger grid). 10 of 12.
+- `MedkitBruteFilled` gets the osteogen canister beside its splint: the kit for blunt force, which is what breaks
+  bones. 9 of 12.
+- `MedkitCombat` has its own 4x2 grid and is full; untouched. The burn kit's and brute kit's cell-count comments are
+  updated.
+
+**Vendors** (counts; CM `4294967295` = infinite):
+
+| item | NanoMed Plus | NanoMed wall | CiviMed | Wolfgate shop | Robotech |
+|---|---|---|---|---|---|
+| Tourniquet | 4 | 2 | inf | 6 | |
+| MedicalPatchMakeshift | 4 | 2 | inf | 6 | |
+| MedicatedSuture, RegenerativeMesh | 2 each | | | 2 each | |
+| WFWolfmedAnalgesicPillCanister | 3 | 2 | inf | 4 | |
+| WFWolfmedIbuprofenPillCanister, WFWolfmedKetorolacPillCanister | 2 each | 1 each | inf | 3 each | |
+| WFWolfmedTramadolChemistryBottle | 2 | | | 3 | |
+| WFWolfmedOxycodoneChemistryBottle | 1 | | | 2 | |
+| WFWolfmedOsteogenPillCanister | 3 | 2 | inf | 4 | |
+| WFWolfmedOsteogenChemistryBottle | 2 | 1 | | 3 | |
+| Cautery, Hemostat, Bonesetter, BoneGel | 1 each | | inf | 2 each | |
+| WFWolfmedIvDripFlatpack | 2 | | inf | 3 | |
+| WFMedkitSyntheticFilled | 2 | | inf | 3 | 2 |
+| WFMachineAutodocFlatpack | | | | 2 | |
+
+The strong bottles follow `WFWolfmedOpiateChemistryBottle`: NanoMed Plus and the shop only, never the wall unit or
+CiviMed, which stocks no bottles at all. The osteogen bottle sits in the wall unit beside its epinephrine bottles.
+
+**The autodoc flatpack is shop-only.** Flatpacks are lathe-printed here only for board-less structures (janicart, ore
+box, solar assembly); every board-built machine's flatpack comes from the flatpacker, which already takes
+`WFAutodocMachineCircuitboard` from `MedicalBoardsStatic`. A lathe recipe for the finished pack would skip the board's
+two manipulators, two matter bins and capacitor.
+
+**Prices.** A canister's or kit's appraisal leaves out its contents, so the vend price would have been a few credits
+for seven pills; the canisters carry `vendPrice` (analgesic 300, ibuprofen 200, ketorolac 250, osteogen 300, against
+a loose analgesic pill's 60 at a x3 NanoMed) and the synthetic kit 400, with `price: 0` so the sale value is still the
+contents. The autodoc flatpack's StaticPrice is 3200, above the pod's own 2500 plus its board and parts, or buying one
+and selling the unpacked pod pays; `FlatpacksUnpackTest` checks that for both flatpacks.
+
+**Fixed in passing.** `WFWolfmedAnalgesicPill` sets `pillType: 6`: the client's `PillSystem` redraws a pill as
+`pill{pillType + 1}` on every state, so it showed as `pill1` in hand.
+
+**Left out.** No lathe recipe for either flatpack (above) and no IV drip at a lathe (the spec did not ask; the vendors
+cover it). No spare `OrganIPCPump` in the synthetic kit: an organ is a surgery part, not field kit. No Onyx
+painkiller in the NanoMed wall unit beyond the two mild canisters. No map change: Caelestinus Central still has no
+autodoc; the shop's flatpack is the route.
+
+**Tests.** `WolfmedAvailabilityTest`: `ObtainableItems` has every new id plus the naloxone pen, fluid pack,
+tourniquet, makeshift patch, autodoc and drip, and counts an item reachable when a vended or printed item holds it
+(a StorageFill entry or a flatpack's target); `Fills` adds MedkitFilled, MedkitAdvancedFilled, the brute kit's
+canister and the synthetic kit, and now checks every certain entry of each fill, not only the named one; new
+`PillCanistersSpawnFullTest` (each canister's count, each pill's reagent, each bottle's 30 u) and
+`FlatpacksUnpackTest` (a multitool unpacks each onto the grid, the pack is used up, the pack costs at least what it
+builds).

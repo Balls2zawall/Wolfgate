@@ -9,6 +9,9 @@
   suffix: Wolfmed
   description: A chalky painkiller. Takes the edge off a bad limb; heals nothing at all.
   components:
+  # The client redraws a pill as pill{pillType + 1} on every state, so the type has to match the sprite.
+  - type: Pill
+    pillType: 6
   - type: Sprite
     sprite: _DV/Objects/Specific/Chemistry/pills.rsi
     state: pill7
@@ -141,3 +144,121 @@
           Quantity: 5
   - type: StaticPrice
     price: 15
+
+# Playtest 5, ITEMS: the analgesic pill by the canister, the "painkillers in a bottle" the standard medkit carries.
+# A canister's own price leaves its pills out, so the vend price is set for what is inside.
+- type: entity
+  parent: PillCanister
+  id: WFWolfmedAnalgesicPillCanister
+  suffix: Analgesic, 7
+  components:
+  - type: Label
+    currentLabel: reagent-name-wolfmed-analgesic
+  - type: StorageFill
+    contents:
+    - id: WFWolfmedAnalgesicPill
+      amount: 7
+  - type: StaticPrice
+    price: 0
+    vendPrice: 300
+
+# Playtest 5, ITEMS: the Onyx painkillers each carry a Wolfmed tier (WolfmedPainRelief), so each is a rung of the
+# ladder above and gets the same form: the two weak ones as pills, the two strong ones as bottles.
+- type: entity
+  parent: Pill
+  id: WFWolfmedIbuprofenPill
+  name: ibuprofen pill
+  description: A common anti-inflammatory. Dulls a sore limb and slowly eases bruising; weaker than an analgesic.
+  components:
+  - type: Pill
+    pillType: 10
+  - type: Sprite
+    sprite: _DV/Objects/Specific/Chemistry/pills.rsi
+    state: pill11
+  - type: SolutionContainerManager
+    solutions:
+      food:
+        maxVol: 20
+        reagents:
+        - ReagentId: Ibuprofen
+          Quantity: 10
+
+- type: entity
+  parent: PillCanister
+  id: WFWolfmedIbuprofenPillCanister
+  suffix: Ibuprofen 10u, 5
+  components:
+  - type: Label
+    currentLabel: reagent-name-ibuprofen
+  - type: StorageFill
+    contents:
+    - id: WFWolfmedIbuprofenPill
+      amount: 5
+  - type: StaticPrice
+    price: 0
+    vendPrice: 200
+
+# 10 u stays under the 12 u at which ketorolac starts to thin the blood.
+- type: entity
+  parent: Pill
+  id: WFWolfmedKetorolacPill
+  name: ketorolac pill
+  description: The strongest of the mild painkillers. Two at once thin the blood and keep a wound bleeding.
+  components:
+  - type: Pill
+    pillType: 11
+  - type: Sprite
+    sprite: _DV/Objects/Specific/Chemistry/pills.rsi
+    state: pill12
+  - type: SolutionContainerManager
+    solutions:
+      food:
+        maxVol: 20
+        reagents:
+        - ReagentId: Ketorolac
+          Quantity: 10
+
+- type: entity
+  parent: PillCanister
+  id: WFWolfmedKetorolacPillCanister
+  suffix: Ketorolac 10u, 5
+  components:
+  - type: Label
+    currentLabel: reagent-name-ketorolac
+  - type: StorageFill
+    contents:
+    - id: WFWolfmedKetorolacPill
+      amount: 5
+  - type: StaticPrice
+    price: 0
+    vendPrice: 250
+
+- type: entity
+  parent: BaseChemistryBottleFilled
+  id: WFWolfmedTramadolChemistryBottle
+  suffix: tramadol
+  components:
+  - type: Label
+    currentLabel: reagent-name-tramadol
+  - type: SolutionContainerManager
+    solutions:
+      drink: # This solution name and target volume is hard-coded in ChemMasterComponent
+        maxVol: 30
+        reagents:
+        - ReagentId: Tramadol
+          Quantity: 30
+
+- type: entity
+  parent: BaseChemistryBottleFilled
+  id: WFWolfmedOxycodoneChemistryBottle
+  suffix: oxycodone
+  components:
+  - type: Label
+    currentLabel: reagent-name-oxycodone
+  - type: SolutionContainerManager
+    solutions:
+      drink: # This solution name and target volume is hard-coded in ChemMasterComponent
+        maxVol: 30
+        reagents:
+        - ReagentId: Oxycodone
+          Quantity: 30

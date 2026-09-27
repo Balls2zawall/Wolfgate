@@ -5296,3 +5296,27 @@ shock is sepsis's named late stage (DECISIONS "Playtest 4, INFECTION SPREAD").
 | `Content.IntegrationTests/Tests/_WF/Wolfmed/WolfmedLocaleCoverageTest.cs`, `WolfmedVisualInspectionTest.cs` | modified | The new keys. |
 | `Content.Server/_WF/Wolfmed/README.md` | regenerated | `modules.py --write`. |
 | `Docs/_WF/Wolfmed/DECISIONS.md`, this file | modified | This section. |
+
+## Playtest 5, ITEMS (2026-09-28)
+
+The Wolfmed items where players can get them: the standard medkit's tourniquet, splint and painkillers, pill and
+bottle forms of the painkillers and osteogen, the synthetic repair kit, the autodoc and IV drip flatpacks, and the
+vendor stock (DECISIONS "Playtest 5, ITEMS").
+
+| File | Kind | Change |
+| --- | --- | --- |
+| `Resources/Prototypes/_WF/Wolfmed/Entities/painkillers.yml` | modified | `WFWolfmedAnalgesicPillCanister`; ibuprofen and ketorolac pills and canisters; tramadol and oxycodone bottles; the analgesic pill's `pillType`. |
+| `Resources/Prototypes/_WF/Wolfmed/Entities/medicine.yml` | modified | Osteogen pill, canister and bottle. |
+| `Resources/Prototypes/_WF/Wolfmed/Entities/synthetic_kit.yml` | new | `WFMedkitSynthetic`, `WFMedkitSyntheticFilled`. |
+| `Resources/Prototypes/_WF/Wolfmed/Entities/flatpacks.yml` | new | `WFMachineAutodocFlatpack`, `WFWolfmedIvDripFlatpack`. |
+| `Resources/Prototypes/_WF/Wolfmed/Recipes/lathes.yml` | modified | The empty synthetic kit's recipe. |
+| `Resources/Locale/en-US/_WF/Wolfmed/items.ftl` | new | The synthetic kit's lathe name. |
+| `Resources/Prototypes/Entities/Objects/Specific/Medical/medkits.yml` | modified, `# WOLFGATE` | `Medkit`'s grid 6x2. |
+| `Resources/Prototypes/Catalog/Fills/Items/firstaidkits.yml` | modified, `# WOLFGATE` | The standard kit's tourniquet, splint and analgesic canister; the advanced kit's tourniquet back; the brute kit's osteogen canister; cell-count comments. |
+| `Resources/Prototypes/Catalog/VendingMachines/Inventories/medical.yml`, `wallmed.yml`, `robotics.yml` | modified, `# WOLFGATE` | NanoMed Plus, NanoMed and Robotech stock. |
+| `Resources/Prototypes/_NF/Catalog/VendingMachines/Inventories/civimed.yml` | modified, `# WOLFGATE` | CiviMed stock. |
+| `Resources/Prototypes/Recipes/Lathes/Packs/medical.yml` | modified, `# WOLFGATE` | `WFMedkitSynthetic` in `EmptyMedkitsStatic`. |
+| `Resources/Prototypes/_WF/Traders/Catalog/VendingMachines/Inventories/wolfgate.yml` | modified | The Wolfgate shop's stock and the autodoc flatpack. |
+| `Content.IntegrationTests/Tests/_WF/Wolfmed/WolfmedAvailabilityTest.cs` | modified | Reachability through fills and flatpacks, the new ids and kits, every fill entry, `PillCanistersSpawnFullTest`, `FlatpacksUnpackTest`. |
+| `Content.Server/_WF/Wolfmed/README.md` | regenerated | `modules.py --write`. |
+| `Docs/_WF/Wolfmed/DECISIONS.md`, this file | modified | This section. |

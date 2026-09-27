@@ -8,3 +8,10 @@
   materials:
     Plastic: 50
     Cloth: 50
+
+# Playtest 5, ITEMS: the empty synthetic repair kit sits with the other empty kits in EmptyMedkitsStatic, at their cost.
+- type: latheRecipe
+  parent: Medkit
+  id: WFMedkitSynthetic
+  result: WFMedkitSynthetic
+  name: lathe-recipe-WFMedkitSynthetic-name

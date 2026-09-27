@@ -9,6 +9,12 @@
       - id: Brutepack
       - id: Ointment
       - id: Gauze
+      # WOLFGATE(Wolfmed) START: ITEMS: the standard kit's tourniquet, splint and painkillers in a bottle.
+      # Twelve of Medkit's twelve cells with the tricordrazine; WolfmedAvailabilityTest spawns the kit.
+      - id: Tourniquet
+      - id: WFWolfmedSplint
+      - id: WFWolfmedAnalgesicPillCanister
+      # WOLFGATE END
       - id: PillCanisterTricordrazine
       # see https://github.com/tgstation/blob/master/code/game/objects/items/storage/firstaid.dm for example contents
 
@@ -23,8 +29,8 @@
         amount: 2
       - id: PillCanisterKelotane
       - id: PillCanisterDermaline
-      # WOLFGATE(Wolfmed): W7: charring is a burn and nothing else in this kit reaches it. Five entries in an
-      # eight-cell grid - WolfmedAvailabilityTest spawns the kit so an overflow fails a test, not a round.
+      # WOLFGATE(Wolfmed): W7: charring is a burn and nothing else in this kit reaches it.
+      # Eight of twelve cells - WolfmedAvailabilityTest spawns the kit so an overflow fails a test, not a round.
       - id: WFWolfmedSkinGraft
 
 - type: entity
@@ -38,9 +44,10 @@
       - id: Gauze
       - id: PillCanisterIron
       - id: PillCanisterCopper
-      # WOLFGATE(Wolfmed): V5: bones break from blunt force, which is what this kit is for. Five entries in an
-      # eight-cell grid - WolfmedAvailabilityTest spawns the kit so an overflow fails a test, not a round.
+      # WOLFGATE(Wolfmed): V5: bones break from blunt force, which is what this kit is for.
+      # Nine of twelve cells - WolfmedAvailabilityTest spawns the kit so an overflow fails a test, not a round.
       - id: WFWolfmedSplint
+      - id: WFWolfmedOsteogenPillCanister # WOLFGATE(Wolfmed): ITEMS: knits the simple break the splint holds.
 
 - type: entity
   id: MedkitToxinFilled
@@ -91,13 +98,9 @@
       - id: RegenerativeMesh
       - id: Bloodpack
         amount: 2
-      # WOLFGATE(Wolfmed): PROTO E, P4-2, WITHDRAWN in WP12-9: `- id: Tourniquet` here overflows the kit.
-      # MedkitAdvanced inherits Medkit's `grid: [0,0,3,1]` (8 cells, maxItemSize Small) and the four
-      # entries above already fill it, so StorageFill logged `[ERRO] system.storage: ... but can't.
-      # reason: No room!` on every spawn and failed EntityTest. The `Tourniquet` id is unchanged and
-      # still reaches players through its eight existing spawn references (sec/gib vending, security
-      # spawners, job belts, cmo_webbing, two _NF loot fills, nfsdtec). Re-add only together with a
-      # bigger grid on MedkitAdvanced - see WP12-9's report.
+      # WOLFGATE(Wolfmed): PROTO E, P4-2: the tourniquet is back now that Medkit's grid is 6x2 (ITEMS).
+      # WP12-9 withdrew it when the 4x2 grid overflowed. Ten of twelve cells; WolfmedAvailabilityTest spawns the kit.
+      - id: Tourniquet
 
 - type: entity
   id: MedkitCombatFilled

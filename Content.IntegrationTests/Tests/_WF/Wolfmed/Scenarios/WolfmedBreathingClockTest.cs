@@ -820,6 +820,8 @@ public sealed class WolfmedBreathingClockTest : GameTest
     [Test]
     public async Task PainShockNoArrestTest()
     {
+        await OverrideCVar(Side.Server, WolfmedCVars.PainScale, 1f); // playtest 5: Blunt 60 + 40 reaches the shock line at Onyx's figures
+
         await PinClock();
         var map = await Pair.CreateTestMap();
         var s = new WolfmedScenario(SEntMan);

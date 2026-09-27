@@ -71,6 +71,7 @@
   - MedkitAdvanced
   - MedkitRadiation
   - MedkitCombat
+  - WFMedkitSynthetic # WOLFGATE(Wolfmed): ITEMS: the empty synthetic repair kit beside the other empty kits.
   - SyringeCase
   - SyringeCaseAlt
 

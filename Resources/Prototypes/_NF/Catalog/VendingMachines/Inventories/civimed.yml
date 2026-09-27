@@ -15,6 +15,18 @@
     WFWolfmedAnalgesicPen: 4294967295 # WOLFGATE(Wolfmed): playtest 1: Infinite
     WFWolfmedOpiatePen: 40 # WOLFGATE(Wolfmed): playtest 1: limited, it sedates.
     WFWolfmedNaloxonePen: 40 # WOLFGATE(Wolfmed): M2: OD14, reverses an overdose.
+    Tourniquet: 4294967295 # WOLFGATE(Wolfmed): ITEMS: Infinite
+    MedicalPatchMakeshift: 4294967295 # WOLFGATE(Wolfmed): ITEMS: Infinite
+    WFWolfmedAnalgesicPillCanister: 4294967295 # WOLFGATE(Wolfmed): ITEMS: Infinite
+    WFWolfmedIbuprofenPillCanister: 4294967295 # WOLFGATE(Wolfmed): ITEMS: Infinite
+    WFWolfmedKetorolacPillCanister: 4294967295 # WOLFGATE(Wolfmed): ITEMS: Infinite
+    WFWolfmedOsteogenPillCanister: 4294967295 # WOLFGATE(Wolfmed): ITEMS: Infinite
+    Cautery: 4294967295 # WOLFGATE(Wolfmed): ITEMS: Infinite, the surgical basics a wound procedure names.
+    Hemostat: 4294967295 # WOLFGATE(Wolfmed): ITEMS: Infinite
+    Bonesetter: 4294967295 # WOLFGATE(Wolfmed): ITEMS: Infinite
+    BoneGel: 4294967295 # WOLFGATE(Wolfmed): ITEMS: Infinite
+    WFWolfmedIvDripFlatpack: 4294967295 # WOLFGATE(Wolfmed): ITEMS: Infinite
+    WFMedkitSyntheticFilled: 4294967295 # WOLFGATE(Wolfmed): ITEMS: Infinite, a first aid kit for synthetic crew.
     PillCanisterTricordrazine: 4294967295 # Infinite - Mono
     HypoMini: 4294967295 # Infinite - Mono
     HypoMiniLimitedEdition: 10 # Limited because its a direct upgrade, and can be found on expeds 

@@ -436,6 +436,7 @@ Skipped ("dirty-disposed").
 - [`Resources/Prototypes/_WF/Wolfmed/Entities/Debugging/debug_medbox.yml`](../../../Resources/Prototypes/_WF/Wolfmed/Entities/Debugging/debug_medbox.yml)
 - [`Resources/Prototypes/_WF/Wolfmed/Entities/Debugging/range_spawner.yml`](../../../Resources/Prototypes/_WF/Wolfmed/Entities/Debugging/range_spawner.yml)
 - [`Resources/Prototypes/_WF/Wolfmed/Entities/effects.yml`](../../../Resources/Prototypes/_WF/Wolfmed/Entities/effects.yml)
+- [`Resources/Prototypes/_WF/Wolfmed/Entities/flatpacks.yml`](../../../Resources/Prototypes/_WF/Wolfmed/Entities/flatpacks.yml)
 - [`Resources/Prototypes/_WF/Wolfmed/Entities/gore.yml`](../../../Resources/Prototypes/_WF/Wolfmed/Entities/gore.yml)
 - [`Resources/Prototypes/_WF/Wolfmed/Entities/hydraulics.yml`](../../../Resources/Prototypes/_WF/Wolfmed/Entities/hydraulics.yml)
 - [`Resources/Prototypes/_WF/Wolfmed/Entities/iv_drip.yml`](../../../Resources/Prototypes/_WF/Wolfmed/Entities/iv_drip.yml)
@@ -443,6 +444,7 @@ Skipped ("dirty-disposed").
 - [`Resources/Prototypes/_WF/Wolfmed/Entities/painkillers.yml`](../../../Resources/Prototypes/_WF/Wolfmed/Entities/painkillers.yml)
 - [`Resources/Prototypes/_WF/Wolfmed/Entities/removed_objects.yml`](../../../Resources/Prototypes/_WF/Wolfmed/Entities/removed_objects.yml)
 - [`Resources/Prototypes/_WF/Wolfmed/Entities/splint.yml`](../../../Resources/Prototypes/_WF/Wolfmed/Entities/splint.yml)
+- [`Resources/Prototypes/_WF/Wolfmed/Entities/synthetic_kit.yml`](../../../Resources/Prototypes/_WF/Wolfmed/Entities/synthetic_kit.yml)
 - [`Resources/Prototypes/_WF/Wolfmed/Guidebook/medical.yml`](../../../Resources/Prototypes/_WF/Wolfmed/Guidebook/medical.yml)
 - [`Resources/Prototypes/_WF/Wolfmed/health_icons.yml`](../../../Resources/Prototypes/_WF/Wolfmed/health_icons.yml)
 - [`Resources/Prototypes/_WF/Wolfmed/Hud/synthetic_hud.yml`](../../../Resources/Prototypes/_WF/Wolfmed/Hud/synthetic_hud.yml)
@@ -493,6 +495,7 @@ Skipped ("dirty-disposed").
 - [`Resources/Locale/en-US/_WF/Wolfmed/guidebook/wounds.ftl`](../../../Resources/Locale/en-US/_WF/Wolfmed/guidebook/wounds.ftl)
 - [`Resources/Locale/en-US/_WF/Wolfmed/healing-popup.ftl`](../../../Resources/Locale/en-US/_WF/Wolfmed/healing-popup.ftl)
 - [`Resources/Locale/en-US/_WF/Wolfmed/hydraulics.ftl`](../../../Resources/Locale/en-US/_WF/Wolfmed/hydraulics.ftl)
+- [`Resources/Locale/en-US/_WF/Wolfmed/items.ftl`](../../../Resources/Locale/en-US/_WF/Wolfmed/items.ftl)
 - [`Resources/Locale/en-US/_WF/Wolfmed/iv-drip.ftl`](../../../Resources/Locale/en-US/_WF/Wolfmed/iv-drip.ftl)
 - [`Resources/Locale/en-US/_WF/Wolfmed/look.ftl`](../../../Resources/Locale/en-US/_WF/Wolfmed/look.ftl)
 - [`Resources/Locale/en-US/_WF/Wolfmed/organs.ftl`](../../../Resources/Locale/en-US/_WF/Wolfmed/organs.ftl)
@@ -1546,6 +1549,9 @@ Skipped ("dirty-disposed").
   - playtest 1: Infinite
   - playtest 1: limited, it sedates.
   - M2: OD14, reverses an overdose.
+  - ITEMS: Infinite
+  - ITEMS: Infinite, the surgical basics a wound procedure names.
+  - ITEMS: Infinite, a first aid kit for synthetic crew.
 - [`Resources/Prototypes/_NF/Entities/Clothing/Head/hardsuit-helmets.yml`](../../../Resources/Prototypes/_NF/Entities/Clothing/Head/hardsuit-helmets.yml): P6, P3-D6: locational armour coverage
 - [`Resources/Prototypes/_NF/Entities/Clothing/Head/headwear_punks.yml`](../../../Resources/Prototypes/_NF/Entities/Clothing/Head/headwear_punks.yml): P6, P3-D6: locational armour coverage
 - [`Resources/Prototypes/_NF/Entities/Clothing/OuterClothing/armor.yml`](../../../Resources/Prototypes/_NF/Entities/Clothing/OuterClothing/armor.yml): P6, P3-D6: locational armour coverage
@@ -1665,9 +1671,11 @@ Skipped ("dirty-disposed").
   - W7: infection cure, orderable without chemistry.
   - W4: the graft step's tool, beside the bone gel it mirrors.
 - [`Resources/Prototypes/Catalog/Fills/Items/firstaidkits.yml`](../../../Resources/Prototypes/Catalog/Fills/Items/firstaidkits.yml)
-  - W7: charring is a burn and nothing else in this kit reaches it. Five entries in an
-  - V5: bones break from blunt force, which is what this kit is for. Five entries in an
-  - PROTO E, P4-2, WITHDRAWN in WP12-9: `- id: Tourniquet` here overflows the kit.
+  - ITEMS: the standard kit's tourniquet, splint and painkillers in a bottle.
+  - W7: charring is a burn and nothing else in this kit reaches it.
+  - V5: bones break from blunt force, which is what this kit is for.
+  - ITEMS: knits the simple break the splint holds.
+  - PROTO E, P4-2: the tourniquet is back now that Medkit's grid is 6x2 (ITEMS).
 - [`Resources/Prototypes/Catalog/VendingMachines/Inventories/medical.yml`](../../../Resources/Prototypes/Catalog/VendingMachines/Inventories/medical.yml)
   - W7: the only cure for a spread infection (W5).
   - W7: the only treatment for charring (W4).
@@ -1677,6 +1685,22 @@ Skipped ("dirty-disposed").
   - CONSC: thirty seconds on your feet, then the crash.
   - M2: OD14, the opioid antagonist that reverses an overdose.
   - V5: field treatment for a fracture, short of the table.
+  - ITEMS: stops a limb bleeding out; the standard kit's first tool.
+  - ITEMS: the cheap patch, for when nobody has cloth.
+  - ITEMS: closes cuts and punctures and stops their bleeding.
+  - ITEMS: the advanced burn dressing.
+  - ITEMS: the weak rung by the canister.
+  - ITEMS: a mild painkiller that eases bruising.
+  - ITEMS: the strongest mild painkiller.
+  - ITEMS: a strong painkiller that sedates.
+  - ITEMS: the strongest painkiller, easy to overdose.
+  - ITEMS: knits a simple fracture without surgery.
+  - ITEMS: osteogen for a syringe or a pill press.
+  - ITEMS: the surgical basics a wound procedure names.
+  - ITEMS
+  - ITEMS: the IV drip had no source at all.
+  - ITEMS: a first aid kit for synthetic crew.
+- [`Resources/Prototypes/Catalog/VendingMachines/Inventories/robotics.yml`](../../../Resources/Prototypes/Catalog/VendingMachines/Inventories/robotics.yml): ITEMS: a first aid kit for synthetic crew, beside the robotics tools.
 - [`Resources/Prototypes/Catalog/VendingMachines/Inventories/wallmed.yml`](../../../Resources/Prototypes/Catalog/VendingMachines/Inventories/wallmed.yml)
   - playtest 3 IPC 2: a chassis's refill, beside the blood packs.
   - V5: field fracture care.
@@ -1685,6 +1709,13 @@ Skipped ("dirty-disposed").
   - playtest 1: a painkiller a Downed player can use on themselves.
   - playtest 1: the strong rung as a pen.
   - M2: OD14, reverses an overdose.
+  - ITEMS: stops a limb bleeding out.
+  - ITEMS: the cheap patch.
+  - ITEMS: the weak rung by the canister.
+  - ITEMS: a mild painkiller that eases bruising.
+  - ITEMS: the strongest mild painkiller.
+  - ITEMS: knits a simple fracture without surgery.
+  - ITEMS: osteogen beside the epinephrine bottles.
 - [`Resources/Prototypes/Entities/Clothing/Eyes/glasses.yml`](../../../Resources/Prototypes/Entities/Clothing/Eyes/glasses.yml): P6, P3-D6: locational armour coverage
 - [`Resources/Prototypes/Entities/Clothing/Eyes/hud.yml`](../../../Resources/Prototypes/Entities/Clothing/Eyes/hud.yml): playtest 3: the IPC's container, so its bar shows
 - [`Resources/Prototypes/Entities/Clothing/Hands/gloves.yml`](../../../Resources/Prototypes/Entities/Clothing/Hands/gloves.yml): P6, P3-D6: locational armour coverage
@@ -1716,6 +1747,7 @@ Skipped ("dirty-disposed").
   - W0: a suture closes open wounds, not bruises.
   - PROTO D, P4-D9: the Healing block is replaced in place by the Tourniquet system.
 - [`Resources/Prototypes/Entities/Objects/Specific/Medical/healthanalyzer.yml`](../../../Resources/Prototypes/Entities/Objects/Specific/Medical/healthanalyzer.yml): health analyzers no longer need a power cell. The slot stays so existing fills and maps load;
+- [`Resources/Prototypes/Entities/Objects/Specific/Medical/medkits.yml`](../../../Resources/Prototypes/Entities/Objects/Specific/Medical/medkits.yml): ITEMS: 6x2, room for the tourniquet, splint and painkillers the standard kit carries.
 - [`Resources/Prototypes/Entities/Objects/Specific/Robotics/mmi.yml`](../../../Resources/Prototypes/Entities/Objects/Specific/Robotics/mmi.yml): BRAIN: organ health, so a chassis can be killed
 - [`Resources/Prototypes/Entities/Objects/Tools/cable_coils.yml`](../../../Resources/Prototypes/Entities/Objects/Tools/cable_coils.yml)
   - W6: the surgery tool for the servo step. Servo damage carries no damage type, so the coil's
@@ -1750,6 +1782,7 @@ Skipped ("dirty-disposed").
   - PROTO J: Onyx's \<Onyx-PartPain> block on Happiness. Group is Narcotic, not Onyx's
 - [`Resources/Prototypes/Recipes/Lathes/Packs/medical.yml`](../../../Resources/Prototypes/Recipes/Lathes/Packs/medical.yml)
   - W7: charring has no other exit, so the graft must be printable.
+  - ITEMS: the empty synthetic repair kit beside the other empty kits.
   - AUTODOC
 - [`Resources/Prototypes/Research/civilianservices.yml`](../../../Resources/Prototypes/Research/civilianservices.yml): AUTODOC: the program disks and modules the medical lathe lists, behind the same research as the rest of surgery.
 - [`Resources/Prototypes/SoundCollections/gasp.yml`](../../../Resources/Prototypes/SoundCollections/gasp.yml): the dying gasp is Bobstation's (owner's pick, playtest 4); organic bodies only
