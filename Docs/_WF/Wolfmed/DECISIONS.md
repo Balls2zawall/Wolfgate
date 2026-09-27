@@ -3392,3 +3392,22 @@ wall over a bright `#C0C0C0` ambient. The vacuum: a grid's tiles breathe the gri
 atmosphere, and the generator's grid got one (the mass rule in `AutomaticAtmosSystem`) with every tile empty. The
 generator now runs `fixgridatmos` on the grid before saving, so the file carries standard air on every tile, and
 `WolfmedRangeMapTest` asserts oxygen at both pods.]*
+
+## Organs take nine heavy hits (playtest 4, 2026-09-26)
+
+On the range a kobold with a machete (Slash 32, 36.8 on a Skrell at 1.15) put the owner into arrest in three hits.
+Measured (`WolfmedMacheteTest`): organs held 15 under `wolfmed.organ_hit_cap` 5, so any organ a heavy hit reached
+died on the third of them. A human chest shares the reach damage across five organs by a roll, so three hits cost it
+the lungs and liver and left the heart at 7.7; a Skrell's torso carries Wolfmed data on its heart and lungs only, so
+the same damage fell on two organs at the full cap each and the heart went on hit 3. About eighty-five species organ
+prototypes (Vox, Thaven, Resomi, Shadekin, Hydrakin, Goblin, Avali, Arachnid, Dwarf, Yowie, Synth, the Protogen
+subspecies and more) lack the data the same way. The owner chose balance over parity: species are allowed to differ,
+but no torso should fall to three hits. The Wolfmed torso bases (`WFWolfmedOrganHeart`, `Lungs`, `Liver`, `Stomach`,
+`Kidneys`) now set 25, and `wolfmed.organ_hit_cap` is 3 (was 5), so a heavy hit needs nine of its kind to fail the
+organ it reaches, whatever else shares the torso. The brain and eyes keep the component's 15. The IPC core (40) and
+pump (25) keep their own `hitCap` 2.5. Measured after: machete to the chest, human heart on hit 8 to 10 (the roll),
+Skrell on hit 9, both Downed by pain on hit 3 with the heart intact; turret rounds (Piercing 22), human lungs and
+heart on hit 9, pump on hit 10, core on hit 16 (`IpcTorsoLastsAsLongAsAHumanChestTest` now asks only that the pump
+outlast the heart); rifle rounds (Piercing 14), lungs impaired on hit 10 and failed on hit 14, the heart still beating
+at 4.4 when the routing stops taking hits on that torso around hit 19 (`OrganCalibrationTest`: a rifle takes the
+lungs, never the heart). Rifles were already killing by blood and pain long before either.

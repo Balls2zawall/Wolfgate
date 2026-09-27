@@ -559,15 +559,19 @@ public sealed class WolfmedCVars
 
     /// <summary>
     /// Organ damage per point of a hit past its part's reach line, before the organ's own per-type multiplier
-    /// and weight share (plan §8). Set so an unarmoured rifle round (Piercing 14) to the chest impairs the lungs
-    /// on hit 4 and fails the heart on hit 13; destroyed organs leave the split, so the survivors take more.
+    /// and weight share (plan §8). With torso organs at 25 (playtest 4) an unarmoured rifle round (Piercing 14) to the
+    /// chest impairs the lungs on hit 10 and fails the heart on hit 27; destroyed organs leave the split, so the
+    /// survivors take more. Heavy hits are what wolfmed.organ_hit_cap bounds.
     /// </summary>
     public static readonly CVarDef<float> OrganDamageScale =
         CVarDef.Create("wolfmed.organ_damage_scale", 3.4f, CVar.SERVERONLY);
 
-    /// <summary>Most health one organ loses to one hit through the reach lines.</summary>
+    /// <summary>
+    /// Most health one organ loses to one hit through the reach lines. 3 since playtest 4 (was 5): with organs at 25,
+    /// a heavy hit that reaches an organ needs nine of its kind to fail it, whatever else shares the torso.
+    /// </summary>
     public static readonly CVarDef<float> OrganHitCap =
-        CVarDef.Create("wolfmed.organ_hit_cap", 5f, CVar.SERVERONLY);
+        CVarDef.Create("wolfmed.organ_hit_cap", 3f, CVar.SERVERONLY);
 
     /// <summary>
     /// Damaged lungs as a breathing input (plan §3.3): (impaired line - lung health fraction) / impaired line,

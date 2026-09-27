@@ -289,6 +289,7 @@ Skipped ("dirty-disposed").
 - [`Content.IntegrationTests/Tests/_WF/Wolfmed/Scenarios/WolfmedIpcDeathTest.cs`](../../../Content.IntegrationTests/Tests/_WF/Wolfmed/Scenarios/WolfmedIpcDeathTest.cs)
 - [`Content.IntegrationTests/Tests/_WF/Wolfmed/Scenarios/WolfmedIpcFluidLossTest.cs`](../../../Content.IntegrationTests/Tests/_WF/Wolfmed/Scenarios/WolfmedIpcFluidLossTest.cs)
 - [`Content.IntegrationTests/Tests/_WF/Wolfmed/Scenarios/WolfmedLeftoversTest.cs`](../../../Content.IntegrationTests/Tests/_WF/Wolfmed/Scenarios/WolfmedLeftoversTest.cs)
+- [`Content.IntegrationTests/Tests/_WF/Wolfmed/Scenarios/WolfmedMacheteTest.cs`](../../../Content.IntegrationTests/Tests/_WF/Wolfmed/Scenarios/WolfmedMacheteTest.cs)
 - [`Content.IntegrationTests/Tests/_WF/Wolfmed/Scenarios/WolfmedMedicInfoTest.cs`](../../../Content.IntegrationTests/Tests/_WF/Wolfmed/Scenarios/WolfmedMedicInfoTest.cs)
 - [`Content.IntegrationTests/Tests/_WF/Wolfmed/Scenarios/WolfmedMedicLinesTest.cs`](../../../Content.IntegrationTests/Tests/_WF/Wolfmed/Scenarios/WolfmedMedicLinesTest.cs)
 - [`Content.IntegrationTests/Tests/_WF/Wolfmed/Scenarios/WolfmedPainkillerTest.cs`](../../../Content.IntegrationTests/Tests/_WF/Wolfmed/Scenarios/WolfmedPainkillerTest.cs)

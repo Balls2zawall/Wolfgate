@@ -176,8 +176,8 @@ public sealed class WolfmedOrganTest : GameTest
         {
             // WOLFGATE: every literal below is WP11-2's MEASURED resolution of PROTO A, cross-checked
             // against ONYX Resources/Prototypes/Body/base_organs.yml. WolfmedOrganComponent defaults
-            // Health/MaxHealth to 15, which is Onyx's own C# default and is overridden by no prototype in
-            // either tree, so the organ YAML deliberately omits them.
+            // Health/MaxHealth to 15, which is Onyx's own C# default; since playtest 4 the torso bases set 25 and
+            // the brain and eyes keep the default (AssertOrgan checks both).
             AssertOrgan(entities, map.GridCoords, "OrganHumanBrain", 0.8f, 0.75f, "Piercing", 0.42f, null, 0);
             AssertOrgan(entities, map.GridCoords, "OrganHumanEyes", 0.7f, 0.2275f, "Piercing", 0.4375f, null, 0);
             AssertOrgan(entities, map.GridCoords, "OrganHumanLungs", 1f, 1.38f, "Heat", 0.165f,
@@ -526,8 +526,10 @@ public sealed class WolfmedOrganTest : GameTest
 
         Assert.Multiple(() =>
         {
-            Assert.That(health.Health, Is.EqualTo(FixedPoint2.New(15)), $"{prototype} health");
-            Assert.That(health.MaxHealth, Is.EqualTo(FixedPoint2.New(15)), $"{prototype} maxHealth");
+            // Playtest 4: torso organs carry 25 in the Wolfmed bases; the brain and eyes keep the component's 15.
+            var expected = prototype.EndsWith("Brain") || prototype.EndsWith("Eyes") ? 15 : 25;
+            Assert.That(health.Health, Is.EqualTo(FixedPoint2.New(expected)), $"{prototype} health");
+            Assert.That(health.MaxHealth, Is.EqualTo(FixedPoint2.New(expected)), $"{prototype} maxHealth");
             Assert.That(policy.HitChance, Is.EqualTo(hitChance).Within(0.0001f), $"{prototype} hitChance");
             Assert.That(policy.SelectionWeight, Is.EqualTo(selectionWeight).Within(0.0001f),
                 $"{prototype} selectionWeight");

@@ -57,6 +57,8 @@
   abstract: true
   components:
   - type: WolfmedOrgan
+    health: 25
+    maxHealth: 25 # playtest 4: 15 fell to three capped hits; with wolfmed.organ_hit_cap 3 an organ takes nine
     destructionWound: InternalBleedingWound
     destructionWoundSeverity: 45
     # M3 (plan §8): under half health the heart is impaired, and blood regenerates at half the rate.
@@ -77,6 +79,8 @@
   abstract: true
   components:
   - type: WolfmedOrgan
+    health: 25
+    maxHealth: 25 # playtest 4: 15 fell to three capped hits; with wolfmed.organ_hit_cap 3 an organ takes nine
     destructionWound: InternalBleedingWound
     destructionWoundSeverity: 35
   - type: OrganDamage
@@ -94,6 +98,8 @@
   abstract: true
   components:
   - type: WolfmedOrgan
+    health: 25
+    maxHealth: 25 # playtest 4: 15 fell to three capped hits; with wolfmed.organ_hit_cap 3 an organ takes nine
     destructionWound: InternalBleedingWound
     destructionWoundSeverity: 40
     # M5 (plan §3.8, OD13): under half health the liver clears Poison at half wolfmed.toxin_clearance; failed, none.
@@ -113,6 +119,8 @@
   abstract: true
   components:
   - type: WolfmedOrgan
+    health: 25
+    maxHealth: 25 # playtest 4: 15 fell to three capped hits; with wolfmed.organ_hit_cap 3 an organ takes nine
     destructionWound: InternalBleedingWound
     destructionWoundSeverity: 25
   - type: OrganDamage
@@ -131,6 +139,8 @@
   abstract: true
   components:
   - type: WolfmedOrgan
+    health: 25
+    maxHealth: 25 # playtest 4: 15 fell to three capped hits; with wolfmed.organ_hit_cap 3 an organ takes nine
     destructionWound: InternalBleedingWound
     destructionWoundSeverity: 30
   - type: OrganDamage

@@ -430,30 +430,30 @@ public sealed class WolfmedWoundSurgeryTest : GameTest
             var step = entities.SpawnEntity("WolfmedStepHealHeartTest", map.GridCoords);
 
             // SetHealth directly rather than through damage: PLAN3 §8.4 measured the per-hit organ roll at
-            // ~1-4 %, which would make this flaky. MaxHealth is WolfmedOrganComponent's 15, overridden by no
-            // organ prototype in either tree.
-            Assert.That(health.MaxHealth, Is.EqualTo(FixedPoint2.New(15)));
-            organHealth.SetHealth((heart, health), FixedPoint2.New(6));
+            // ~1-4 %, which would make this flaky. MaxHealth is 25 on the Wolfmed heart base since playtest 4 (the
+            // component default is 15).
+            Assert.That(health.MaxHealth, Is.EqualTo(FixedPoint2.New(25)));
+            organHealth.SetHealth((heart, health), FixedPoint2.New(16));
 
             Assert.That(StepIncomplete(entities, step, body, torso), Is.True);
 
-            // `amount: 3` is P4-D23's balance number: five 2 s repeats from zero, three from 6.
+            // `amount: 3` is P4-D23's balance number: five 2 s repeats from zero, three from 16.
             RaiseStep(entities, step, body, torso);
-            Assert.That(health.Health, Is.EqualTo(FixedPoint2.New(9)));
+            Assert.That(health.Health, Is.EqualTo(FixedPoint2.New(19)));
             RaiseStep(entities, step, body, torso);
-            Assert.That(health.Health, Is.EqualTo(FixedPoint2.New(12)));
+            Assert.That(health.Health, Is.EqualTo(FixedPoint2.New(22)));
             Assert.That(StepIncomplete(entities, step, body, torso), Is.True);
 
             RaiseStep(entities, step, body, torso);
             Assert.Multiple(() =>
             {
-                Assert.That(health.Health, Is.EqualTo(FixedPoint2.New(15)));
+                Assert.That(health.Health, Is.EqualTo(FixedPoint2.New(25)));
                 Assert.That(StepIncomplete(entities, step, body, torso), Is.False);
             });
 
             // SetHealth clamps to [0, MaxHealth], so a further raise cannot overshoot.
             RaiseStep(entities, step, body, torso);
-            Assert.That(health.Health, Is.EqualTo(FixedPoint2.New(15)));
+            Assert.That(health.Health, Is.EqualTo(FixedPoint2.New(25)));
         });
     }
 

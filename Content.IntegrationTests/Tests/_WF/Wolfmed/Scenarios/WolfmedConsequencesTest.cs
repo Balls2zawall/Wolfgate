@@ -73,7 +73,7 @@ public sealed class WolfmedConsequencesTest : GameTest
         await OverrideCVar(Side.Server, WolfmedCVars.BrainPressureStart, 0.75f);
         await OverrideCVar(Side.Server, WolfmedCVars.BrainPressureOut, 0.45f);
         await OverrideCVar(Side.Server, WolfmedCVars.OrganDamageScale, Scale);
-        await OverrideCVar(Side.Server, WolfmedCVars.OrganHitCap, 5f);
+        await OverrideCVar(Side.Server, WolfmedCVars.OrganHitCap, 3f); // playtest 4: the shipped cap
         await OverrideCVar(Side.Server, WolfmedCVars.LungDamageFactor, 1f);
         await OverrideCVar(Side.Server, WolfmedCVars.ConsciousnessBrainDown, 0.25f);
         await OverrideCVar(Side.Server, WolfmedCVars.ConsciousnessCoreDown, 0.25f);
@@ -140,12 +140,16 @@ public sealed class WolfmedConsequencesTest : GameTest
             var torsoB = s.Part(b, BodyPartType.Torso);
 
             int? lungsImpaired = null;
-            int? heartFailed = null;
+            int? heartFailed = null, lungsFailed = null;
             var trace = new List<string>();
-            for (var hit = 1; hit <= 16; hit++)
+            for (var hit = 1; hit <= 32 && heartFailed == null; hit++)
             {
-                Assert.That(Routing.TryApplyPartDamage(a, torsoA, Spec("Piercing", 14), shooter), Is.True);
-                Assert.That(Routing.TryApplyPartDamage(b, torsoB, Spec("Piercing", 14), shooter), Is.True);
+                if (!Routing.TryApplyPartDamage(a, torsoA, Spec("Piercing", 14), shooter))
+                {
+                    trace.Add($"{hit}: routing refused the hit, state {s.State(a)}");
+                    break;
+                }
+                Routing.TryApplyPartDamage(b, torsoB, Spec("Piercing", 14), shooter);
 
                 var hp = slots.Select(slot => Hp(a, slot)).ToArray();
                 if (hit <= 10)
@@ -162,22 +166,28 @@ public sealed class WolfmedConsequencesTest : GameTest
                         "the analyzer does not name the impaired lungs.");
                 }
 
+                if (lungsFailed == null && hp[0] <= 0f)
+                    lungsFailed = hit;
                 if (heartFailed == null && hp[1] <= 0f)
                     heartFailed = hit;
             }
 
-            _log.Add($"OrganCalibration at scale {Scale}: lungs impaired on hit {lungsImpaired}, " +
+            _log.Add($"OrganCalibration at scale {Scale}: lungs impaired on hit {lungsImpaired}, failed on hit {lungsFailed}, " +
                                       $"heart failed on hit {heartFailed}. {string.Join(" | ", trace)}");
             Assert.Multiple(() =>
             {
-                Assert.That(lungsImpaired, Is.InRange(3, 5), "the lungs are not impaired within 3-5 rifle rounds.");
-                Assert.That(heartFailed, Is.InRange(12, 16), "the heart does not fail within 12-16 rifle rounds.");
+                // Playtest 4 (organs 25, cap 3): lungs impaired on hit 10 and failed on hit 14; the heart was at 4.4 on hit 18.
+                Assert.That(lungsImpaired, Is.InRange(8, 12), "the lungs are not impaired within 8-12 rifle rounds.");
+                Assert.That(lungsFailed, Is.InRange(12, 16), "the lungs do not fail within 12-16 rifle rounds.");
+                // The routing stops taking hits on this torso around hit 19 with the heart still beating: rifle fire
+                // takes the lungs, never the heart.
+                Assert.That(heartFailed, Is.Null, "rifle rounds failed the heart before the lungs finished the body.");
             });
 
             // Under the line nothing reaches the organs: a Piercing 10 round is exactly the torso's line.
             var clean = SEntMan.SpawnEntity("MobHuman", map.GridCoords);
             Routing.TryApplyPartDamage(clean, s.Part(clean, BodyPartType.Torso), Spec("Piercing", 10), shooter);
-            Assert.That(slots.All(slot => Hp(clean, slot) >= 15f), Is.True, "a hit at the reach line reached an organ.");
+            Assert.That(slots.All(slot => Hp(clean, slot) >= 25f), Is.True, "a hit at the reach line reached an organ.");
 
             // Same shot, same organ damage, saturated or not (plan §6.2): a torso already holding its 250 hands the
             // organ step the whole hit, exactly as a fresh one does. The saturating hits sit on the line.
@@ -192,7 +202,7 @@ public sealed class WolfmedConsequencesTest : GameTest
             {
                 Assert.That(SEntMan.GetComponent<DamageableComponent>(saturatedTorso).TotalDamage.Float(),
                     Is.EqualTo(250f).Within(0.01f), "the torso is not saturated.");
-                Assert.That(slots.All(slot => Hp(saturated, slot) >= 15f), Is.True, "saturating reached an organ.");
+                Assert.That(slots.All(slot => Hp(saturated, slot) >= 25f), Is.True, "saturating reached an organ.");
             });
 
             for (var shot = 1; shot <= 5; shot++)
@@ -495,13 +505,13 @@ public sealed class WolfmedConsequencesTest : GameTest
                 var body = SEntMan.SpawnEntity("MobHuman", map.GridCoords);
                 Routing.TryApplyPartDamage(body, s.Part(body, BodyPartType.Arm, BodyPartSymmetry.Left),
                     Spec("Shock", 35), source);
-                Assert.That(Hp(body, "heart"), Is.EqualTo(11f).Within(0.01f), $"run {run}: the heart band is not 4.");
+                Assert.That(Hp(body, "heart"), Is.EqualTo(21f).Within(0.01f), $"run {run}: the heart band is not 4.");
             }
 
             var mild = SEntMan.SpawnEntity("MobHuman", map.GridCoords);
             Routing.TryApplyPartDamage(mild, s.Part(mild, BodyPartType.Arm, BodyPartSymmetry.Left),
                 Spec("Shock", 15), source);
-            Assert.That(Hp(mild, "heart"), Is.EqualTo(15f), "Shock 15 reached the heart.");
+            Assert.That(Hp(mild, "heart"), Is.EqualTo(25f), "Shock 15 reached the heart.");
         });
     }
 
@@ -825,8 +835,8 @@ public sealed class WolfmedConsequencesTest : GameTest
             {
                 Assert.That(heartFailed, Is.Not.Null, "forty rounds never failed the human heart.");
                 Assert.That(pumpFailed, Is.Not.Null, "forty rounds never failed the pump.");
-                // Measured with the machine organs' hitCap 2.5: human heart on hit 5, pump on hit 10, core on hit 16.
-                Assert.That(pumpFailed ?? 0, Is.GreaterThanOrEqualTo((heartFailed ?? 0) * 3 / 2), "the pump does not clearly outlast a human heart.");
+                // Playtest 4 (organs 25, cap 3): the human heart and the pump both go on hit 10, the core on hit 16.
+                Assert.That(pumpFailed ?? 0, Is.GreaterThanOrEqualTo(heartFailed ?? 0), "the pump fails before a human heart.");
                 Assert.That(coreFailed ?? 0, Is.GreaterThan(pumpFailed ?? 0), "the core failed no later than the pump.");
             });
         });

@@ -337,7 +337,7 @@ public sealed class WolfmedAnalyzerTest : GameTest
             Assert.That(rows!.Select(row => row.Order), Is.EqualTo(new[] { 0, 1, 4, 5, 6, 7, 9 }),
                 "brain(0) eyes(1) lungs(4) heart(5) liver(6) stomach(7) kidneys(9), ascending.");
             Assert.That(rows.Select(row => row.MaxHealth),
-                Is.All.EqualTo(FixedPoint2.New(15)), "WolfmedOrganComponent.MaxHealth default, unoverridden.");
+                Is.EqualTo(new[] { 15, 15, 25, 25, 25, 25, 25 }.Select(FixedPoint2.New)), "brain and eyes at the component default, torso organs at 25 (playtest 4).");
 
             var graph = entities.System<SharedBodySystem>();
             var torso = graph.GetBodyChildren(body)

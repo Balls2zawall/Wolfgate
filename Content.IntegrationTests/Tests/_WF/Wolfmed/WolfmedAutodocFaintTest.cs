@@ -78,7 +78,9 @@ public sealed class WolfmedAutodocFaintTest : GameTest
     private void BreakLegs(EntityUid body)
     {
         var spec = new DamageSpecifier { DamageDict = { [new ProtoId<DamageTypePrototype>("Blunt")] = FixedPoint2.New(60) } };
-        foreach (var target in new[] { TargetBodyPart.LeftLeg, TargetBodyPart.RightLeg })
+        // Playtest 4: a leg holds 90 pain at most, so the two legs alone no longer reach the 189 faint line; the torso
+        // makes up the rest.
+        foreach (var target in new[] { TargetBodyPart.LeftLeg, TargetBodyPart.RightLeg, TargetBodyPart.Torso })
             SEntMan.System<DamageableSystem>().TryChangeDamage(body, spec, origin: null, targetPart: target);
     }
 

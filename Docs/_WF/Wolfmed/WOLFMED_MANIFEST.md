@@ -5083,3 +5083,15 @@ All `_WF`, tests and one generated map (DECISIONS "Limbs hold less pain" and "Th
 | `Resources/Prototypes/_WF/Wolfmed/Entities/Debugging/range_spawner.yml` | new | `WFWolfmedRangeSpawner`, the self-deleting marker that spawns one species on map init. |
 | `Resources/Maps/_WF/Wolfmed/wolfmed_range.yml` | new, generated | The range; `loadmap 100 /Maps/_WF/Wolfmed/wolfmed_range.yml`. |
 | `Docs/_WF/Wolfmed/DECISIONS.md`, this file | modified | The two sections. |
+
+## Playtest 4, organs take nine heavy hits (2026-09-26)
+
+All `_WF` YAML, one CVar default and tests (DECISIONS "Organs take nine heavy hits").
+
+| File | Kind | Change |
+| --- | --- | --- |
+| `Resources/Prototypes/_WF/Wolfmed/Body/organs.yml` | modified | `health`/`maxHealth` 25 on the heart, lungs, liver, stomach and kidney bases. |
+| `Content.Shared/_WF/Wolfmed/CCVar/WolfmedCVars.cs` | modified | `wolfmed.organ_hit_cap` 3 (was 5); the reach-line comment carries the new rifle numbers. |
+| `Content.IntegrationTests/Tests/_WF/Wolfmed/Scenarios/WolfmedMacheteTest.cs` | new | Machete to a human and a Skrell chest: heart intact and no faint on hit 3, heart failed within hits 7-12. |
+| `Content.IntegrationTests/Tests/_WF/Wolfmed/WolfmedOrganTest.cs`, `Scenarios/WolfmedConsequencesTest.cs`, `WolfmedAnalyzerTest.cs`, `WolfmedWoundSurgeryTest.cs`, `WolfmedAutodocFaintTest.cs` | modified | Organ health 25 on torso organs (rows, heal steps, the shock band at 21); the rifle calibration reads lungs 8-12 impaired, 12-16 failed, heart never; the IPC pump only has to outlast the heart; both pin cap 3; the autodoc faint fixture adds a torso hit since two legs cap at 180 pain. |
+| `Docs/_WF/Wolfmed/DECISIONS.md`, this file | modified | This section. |
