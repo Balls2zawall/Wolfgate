@@ -3,10 +3,11 @@
 
 - type: wolfmedInfectionProfile
   id: WFWolfmedDefaultInfection
-  # Six a minute against a hundred: an untreated ordinary cut has about four minutes before it starts to
-  # hurt, ten before it spreads and seventeen before the wound itself is septic. A bad wound (risk 2 or 2.5)
-  # halves that, a dressing all but stops it.
-  progressPerMinute: 6
+  # Playtest 5: four a minute against a hundred (six until the owner asked for infection to be far slower to spread
+  # and to reach sepsis). An untreated ordinary cut has about six minutes before it starts to hurt, fifteen before
+  # it spreads and twenty-five before the wound itself is septic. A bad wound (risk 2 or 2.5) halves that, a dressing
+  # all but stops it.
+  progressPerMinute: 4
   localAt: 25
   spreadingAt: 60
   sepsisAt: 100
@@ -27,19 +28,21 @@
   feverRise: 0.05
   # M5 (OD13): spreadingPoisonPerMinute and sepsisPoisonPerMinute are gone. Neither stage deals Poison any more;
   # sepsis kills through its own brain drain, and the toxin load is a route of its own.
-  # INFECTION: a part's own infection, 0 to 100 (100 is Septic). A spreading wound feeds its part 10 a minute (a
-  # septic one 20); a spreading or septic part feeds its parent 8 a minute, towards the torso only (hand to arm to
+  # INFECTION: a part's own infection, 0 to 100 (100 is Septic). A spreading wound feeds its part 4 a minute (a
+  # septic one 8); a spreading or septic part feeds its parent 3 a minute, towards the torso only (hand to arm to
   # torso, foot to leg to torso, head to torso); a necrotic part is pinned at 100; an unfed part recovers 4 a minute.
-  # An untreated cut on a hand: the hand spreads at about 16 minutes, the arm at 23, the torso at 31, and sepsis
-  # starts there; a cut on the chest or head starts it at about 16. A dead arm starts it 7.5 minutes after it dies.
+  # Playtest 5 (was 10 and 8): an untreated cut on a hand spreads at 15 minutes, the hand itself at about 27, the
+  # arm at 47, the torso at 67, and sepsis starts there; a cut on the chest or head starts it at about 27. A dead
+  # arm starts it 20 minutes after it dies.
   partLocalAt: 25
   partSpreadingAt: 60
-  partFromWoundPerMinute: 10
-  partSpreadPerMinute: 8
+  partFromWoundPerMinute: 4
+  partSpreadPerMinute: 3
   partRecoveryPerMinute: 4
   partAntibioticPerUnit: 8
-  # Per source: a torso or head that is spreading or septic, so 0 to 2 sources.
-  sepsisPerMinute: 12
+  # Per source: a torso or head that is spreading or septic, so 0 to 2 sources. Playtest 5 (was 12): septic shock
+  # (wolfmed.septic_shock_at, 80) twenty minutes after sepsis starts with one source, ten with two.
+  sepsisPerMinute: 4
   sepsisRecoveryPerMinute: 8
   sepsisAntibioticPerUnit: 6
   # Playtest 4 (SEPSIS): past wolfmed.sepsis_organ_damage_from sepsis takes wolfmed.sepsis_organ_damage_per_minute

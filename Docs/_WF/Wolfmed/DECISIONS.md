@@ -4329,3 +4329,15 @@ the owner's call; left as it plays.
   medicine I use: opiate, analgesic, Spaceacillin..." rather than a refusal of medicine in general. The pod still pushes
   nothing it has no role for; bicaridine in a beaker stays there. `PodAntibioticsTest` pins the course, the fault and
   the cure.
+- **"The tissue rupture won't go away after sorting it (from a cut-off arm)."** The stump wound a torn-off limb leaves
+  on its parent (`DismembermentWound`, "tissue rupture") never heals by itself, by design (`healingMultiplier: 0`), and
+  nothing closed it when the limb went back on, so it outlived the reattachment and the Stop Bleeding surgery for ever.
+  Onyx never removed it either. `WolfmedStumpTagSystem.CloseStumps`, off the lifecycle system's part-added hook, takes
+  the stump tagged with the attached part's type and side off the parent when that part, or a replacement for it, is
+  put back; the amputation consequence wound stays for its surgery. `WolfmedReattachTest.ReattachmentClosesTheStumpTest`.
+- **"Infections need to be far slower to spread and cause sepsis."** The profile's shape, not the rate cvar:
+  `progressPerMinute` 6 to 4 (a cut spreads at 15 minutes instead of 10), `partFromWoundPerMinute` 10 to 4 (a part
+  spreads 12 minutes after its wound does instead of 6), `partSpreadPerMinute` 8 to 3 (a 20-minute hop between parts
+  instead of 7.5) and `sepsisPerMinute` 12 to 4 (septic shock 20 minutes after sepsis starts instead of 7). A chest cut
+  now starts sepsis at about 27 minutes untreated (was 16) and reaches shock at 47 (was 23); a hand cut starts it at
+  67 (was 31). The tests that walk the clock were moved with it.

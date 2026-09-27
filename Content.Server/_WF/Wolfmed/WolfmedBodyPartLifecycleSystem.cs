@@ -22,6 +22,7 @@ public sealed class WolfmedBodyPartLifecycleSystem : EntitySystem
     [Dependency] private Damage.WolfmedTreatmentVisualsSystem _treatments = default!;
     [Dependency] private IPrototypeManager _prototypes = default!;
     [Dependency] private Life.WolfmedLifeSystem _life = default!;
+    [Dependency] private Wounds.WolfmedStumpTagSystem _stumps = default!;
 
     /// <inheritdoc/>
     public override void Initialize()
@@ -56,6 +57,9 @@ public sealed class WolfmedBodyPartLifecycleSystem : EntitySystem
             var inserted = new OrganGotInsertedEvent(body);
             RaiseLocalEvent(part, ref inserted);
         }
+
+        // Playtest 5: the stump this limb (or its replacement) was torn off is closed by putting one back.
+        _stumps.CloseStumps(body, args.Part.Owner);
 
         // V3: the limb's wounds now show on the body's sprite instead of on the limb's own.
         _degradation.Refresh(args.Part.Owner);

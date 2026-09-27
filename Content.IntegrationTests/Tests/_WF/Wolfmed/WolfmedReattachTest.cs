@@ -8,6 +8,8 @@ using Content.Shared._Shitmed.Medical.Surgery; // WOLFGATE: SurgeryStepEvent.
 using Content.Shared._Shitmed.Medical.Surgery.Conditions; // WOLFGATE: SurgeryValidEvent, the HOOK 25 seam.
 using Content.Shared._WF.Wolfmed.Body; // WOLFGATE: D8, WolfmedBodyPartSystem.Get
 using Content.Shared._WF.Wolfmed.Compat; // WOLFGATE: Onyx's SharedBodySystem.TryDetachPart lives on WolfmedBodySystem here.
+using Content.Shared._WF.Wolfmed.Damage;
+using Content.Shared._WF.Wolfmed.Wounds;
 using Content.Shared.Body.Part;
 using Content.Shared.Body.Systems;
 using Content.Shared.Damage;
@@ -235,4 +237,48 @@ public sealed class WolfmedReattachTest : GameTest
     {
         DamageDict = { [new ProtoId<DamageTypePrototype>(type)] = FixedPoint2.New(amount) },
     };
+
+    /// <summary>
+    /// Playtest 5: "the tissue rupture won't go away after sorting it". The stump wound a torn-off arm leaves on the
+    /// torso never heals by itself; putting the arm back closes it, and the stump overlay with it, while the damage the
+    /// tearing did (the amputation consequence) stays for its surgery.
+    /// </summary>
+    [Test]
+    public async Task ReattachmentClosesTheStumpTest()
+    {
+        var server = Pair.Server;
+        await server.WaitIdleAsync();
+        var entities = server.ResolveDependency<IEntityManager>();
+        var map = await Pair.CreateTestMap();
+
+        await server.WaitAssertion(() =>
+        {
+            var body = entities.SpawnEntity("MobHuman", map.GridCoords);
+            var graph = entities.System<SharedBodySystem>();
+            var wounds = entities.System<WoundSystem>();
+            var torso = graph.GetBodyChildren(body).Single(part => part.Component.PartType == BodyPartType.Torso).Id;
+            var arm = graph.GetBodyChildren(body)
+                .Single(part => part.Component is { PartType: BodyPartType.Arm, Symmetry: BodyPartSymmetry.Left }).Id;
+            var host = entities.GetComponent<WoundHostComponent>(body);
+
+            Assert.That(entities.System<AmputationSystem>().TryAmputate(body, arm), Is.True, "the arm did not come off.");
+            List<Entity<WoundComponent>> Stumps() => wounds.GetWounds(torso)
+                .Where(wound => entities.HasComponent<WolfmedStumpComponent>(wound)).ToList();
+            Assert.That(Stumps(), Has.Count.EqualTo(1), "the torn-off arm left no tagged stump on the torso.");
+            Assert.That(Stumps()[0].Comp.Prototype, Is.EqualTo(host.DismembermentWound));
+
+            Assert.That(graph.AttachPart(torso, "left arm", arm), Is.True, "the arm did not go back on.");
+            var overlays = entities.System<Content.Server._WF.Wolfmed.Damage.WolfmedWoundOverlaySystem>();
+            overlays.Refresh(body);
+            var prototypes = wounds.GetWounds(torso).Select(wound => wound.Comp.Prototype).ToList();
+            Assert.Multiple(() =>
+            {
+                Assert.That(Stumps(), Is.Empty, "the stump wound survived the arm going back on.");
+                Assert.That(prototypes, Does.Not.Contain(host.DismembermentWound));
+                Assert.That(prototypes, Does.Contain(host.AmputationConsequenceWound), "the tearing's own damage went with the stump.");
+                Assert.That(entities.GetComponent<PartDamageVisualsComponent>(body).Stumps.GetValueOrDefault(WolfmedArterySite.LArm),
+                    Is.EqualTo(WolfmedWoundOverlay.None), "the stump is still drawn.");
+            });
+        });
+    }
 }

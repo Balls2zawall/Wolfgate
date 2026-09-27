@@ -50,7 +50,7 @@ public sealed class WolfmedInfectionSpreadTest : GameTest
 
     /// <summary>
     /// <c>HandInfectionTravelsToTheTorsoTest</c>: an untreated cut on the left hand infects the hand, then the arm, then
-    /// the torso, one 7.5-minute hop at a time, and sepsis starts on the tick the torso spreads, never before. The arm
+    /// the torso, one 20-minute hop at a time (playtest 5), and sepsis starts on the tick the torso spreads, never before. The arm
     /// and torso carry no wound of their own; the analyzer shows the arm's tissue infection on the arm's card.
     /// </summary>
     [Test]
@@ -72,7 +72,7 @@ public sealed class WolfmedInfectionSpreadTest : GameTest
             float? handAt = null, armAt = null, torsoAt = null, sepsisAt = null;
             var sepsisEarly = false;
             var cardChecked = false;
-            for (var t = Tick; t <= 45 * 60f && sepsisAt == null; t += Tick)
+            for (var t = Tick; t <= 90 * 60f && sepsisAt == null; t += Tick)
             {
                 infection.Update(Tick);
                 var minute = t / 60f;
@@ -101,9 +101,9 @@ public sealed class WolfmedInfectionSpreadTest : GameTest
                 $"arm {armAt:0.00}, torso {torsoAt:0.00}, sepsis {sepsisAt:0.00}.");
             Assert.Multiple(() =>
             {
-                Assert.That(handAt, Is.InRange(15f, 17f), "the hand did not spread about six minutes after its cut.");
-                Assert.That(armAt - handAt, Is.InRange(7f, 8.5f), "the arm did not follow the hand by one 7.5-minute hop.");
-                Assert.That(torsoAt - armAt, Is.InRange(7f, 8.5f), "the torso did not follow the arm by one hop.");
+                Assert.That(handAt, Is.InRange(26f, 29f), "the hand did not spread about twelve minutes after its cut spread.");
+                Assert.That(armAt - handAt, Is.InRange(19f, 21.5f), "the arm did not follow the hand by one 20-minute hop.");
+                Assert.That(torsoAt - armAt, Is.InRange(19f, 21.5f), "the torso did not follow the arm by one hop.");
                 Assert.That(sepsisAt, Is.EqualTo(torsoAt), "sepsis did not start on the tick the torso spread.");
                 Assert.That(sepsisEarly, Is.False, "sepsis started while only the hand and arm were infected.");
                 Assert.That(cardChecked, Is.True, "the torso spread on the same tick as the arm.");
@@ -137,8 +137,8 @@ public sealed class WolfmedInfectionSpreadTest : GameTest
             var torso = Part(body, BodyPartType.Torso);
             Cut(hand);
 
-            // About 21 minutes: the arm is past local and still under spreading.
-            for (var t = Tick; t <= 45 * 60f && infection.GetPartProgress(arm) < 35f; t += Tick)
+            // About 39 minutes (playtest 5): the arm is past local and still under spreading.
+            for (var t = Tick; t <= 60 * 60f && infection.GetPartProgress(arm) < 35f; t += Tick)
                 infection.Update(Tick);
 
             var armProgress = infection.GetPartProgress(arm);
@@ -190,7 +190,7 @@ public sealed class WolfmedInfectionSpreadTest : GameTest
             Cut(head);
 
             var sepsisAt = -1f;
-            for (var t = Tick; t <= 30 * 60f && sepsisAt < 0f; t += Tick)
+            for (var t = Tick; t <= 45 * 60f && sepsisAt < 0f; t += Tick)
             {
                 infection.Update(Tick);
                 if (SEntMan.HasComponent<WolfmedSepsisComponent>(body))
@@ -204,7 +204,7 @@ public sealed class WolfmedInfectionSpreadTest : GameTest
             log = ($"HeadInfectionStartsSepsisTest: sepsis at {sepsisAt:0.00} min.");
             Assert.Multiple(() =>
             {
-                Assert.That(sepsisAt, Is.InRange(15f, 17f), "a spreading head did not start sepsis.");
+                Assert.That(sepsisAt, Is.InRange(26f, 29f), "a spreading head did not start sepsis.");
                 Assert.That(infection.GetPartStage(head), Is.GreaterThanOrEqualTo(WolfmedInfectionStage.Spreading));
                 Assert.That(limbs, Is.Not.Empty);
                 Assert.That(limbs.Any(limb => SEntMan.HasComponent<WolfmedPartInfectionComponent>(limb)), Is.False,
@@ -234,7 +234,7 @@ public sealed class WolfmedInfectionSpreadTest : GameTest
             var torso = Part(body, BodyPartType.Torso);
             var wound = Cut(hand);
 
-            for (var t = Tick; t <= 45 * 60f && !SEntMan.HasComponent<WolfmedSepsisComponent>(body); t += Tick)
+            for (var t = Tick; t <= 90 * 60f && !SEntMan.HasComponent<WolfmedSepsisComponent>(body); t += Tick)
                 infection.Update(Tick);
 
             Assert.That(SEntMan.HasComponent<WolfmedSepsisComponent>(body), Is.True, "the hand never reached sepsis.");
