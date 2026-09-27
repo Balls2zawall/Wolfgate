@@ -1686,7 +1686,6 @@ Skipped ("dirty-disposed").
   - M2: OD14, the opioid antagonist that reverses an overdose.
   - V5: field treatment for a fracture, short of the table.
   - ITEMS: stops a limb bleeding out; the standard kit's first tool.
-  - ITEMS: the cheap patch, for when nobody has cloth.
   - ITEMS: closes cuts and punctures and stops their bleeding.
   - ITEMS: the advanced burn dressing.
   - ITEMS: the weak rung by the canister.
@@ -1710,7 +1709,6 @@ Skipped ("dirty-disposed").
   - playtest 1: the strong rung as a pen.
   - M2: OD14, reverses an overdose.
   - ITEMS: stops a limb bleeding out.
-  - ITEMS: the cheap patch.
   - ITEMS: the weak rung by the canister.
   - ITEMS: a mild painkiller that eases bruising.
   - ITEMS: the strongest mild painkiller.
