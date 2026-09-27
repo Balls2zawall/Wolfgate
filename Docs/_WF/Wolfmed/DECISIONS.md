@@ -3385,3 +3385,10 @@ change that. `wolfmedrange` (`Content.Server/_WF/Wolfmed/Range/WolfmedRangeComma
 file with `InitializeMaps = true` and moves the caller to the middle of the grid, so it is the way in. The room is now
 34 x 34 (32 floor tiles across, the species in three rows of sixteen), with an always-powered wall light every six
 tiles on each wall turned to face in, over a dim `#303030` ambient so nothing is ever pitch black.]*
+
+*[Second correction: still too big, and no oxygen. The room is now 16 x 16 (14 floor tiles across, the species in
+four rows of fourteen, tables holding six supplies or two arms each), with a wall light every three tiles on every
+wall over a bright `#C0C0C0` ambient. The vacuum: a grid's tiles breathe the grid's own `GridAtmosphere`, not the map
+atmosphere, and the generator's grid got one (the mass rule in `AutomaticAtmosSystem`) with every tile empty. The
+generator now runs `fixgridatmos` on the grid before saving, so the file carries standard air on every tile, and
+`WolfmedRangeMapTest` asserts oxygen at both pods.]*

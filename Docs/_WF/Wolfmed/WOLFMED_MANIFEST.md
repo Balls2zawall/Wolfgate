@@ -5077,9 +5077,9 @@ All `_WF`, tests and one generated map (DECISIONS "Limbs hold less pain" and "Th
 | `Content.Shared/_WF/Wolfmed/CCVar/WolfmedCVars.cs` | modified | `wolfmed.part_pain_cap_arm` 80, `_hand` 50, `_leg` 90, `_foot` 50. |
 | `Content.Shared/_WF/Wolfmed/Consciousness/WolfmedBodyPainSystem.cs` | modified | `OnPainInit` sets a limb's `SoftPainCap` from its type's line; `PartPainCap(BodyPartType)`. |
 | `Content.IntegrationTests/Tests/_WF/Wolfmed/Scenarios/WolfmedPartPainCapTest.cs` | new | One arm caps at 80 and stays Up; arm + leg Down; four limbs faint; the torso keeps 135. |
-| `Content.IntegrationTests/Tests/_WF/Wolfmed/Range/WolfmedRangeMapGenerator.cs` | new | `[Explicit]` generator for the range map (34 x 34, wall lights, species markers). |
+| `Content.IntegrationTests/Tests/_WF/Wolfmed/Range/WolfmedRangeMapGenerator.cs` | new | `[Explicit]` generator for the range map (16 x 16, wall lights, air via fixgridatmos, species markers). |
 | `Content.Server/_WF/Wolfmed/Range/WolfmedRangeCommand.cs`, `Resources/Locale/en-US/_WF/Wolfmed/range.ftl` | new | `wolfmedrange`: loads the range initialised and teleports the caller; `loadmap` would leave it inert. |
-| `Content.IntegrationTests/Tests/_WF/Wolfmed/Range/WolfmedRangeMapTest.cs` | new | Loads the committed range: one humanoid per playable species, both pods powered. |
+| `Content.IntegrationTests/Tests/_WF/Wolfmed/Range/WolfmedRangeMapTest.cs` | new | Loads the committed range: one humanoid per playable species, both pods powered, oxygen at both pods. |
 | `Resources/Prototypes/_WF/Wolfmed/Entities/Debugging/range_spawner.yml` | new | `WFWolfmedRangeSpawner`, the self-deleting marker that spawns one species on map init. |
 | `Resources/Maps/_WF/Wolfmed/wolfmed_range.yml` | new, generated | The range; `loadmap 100 /Maps/_WF/Wolfmed/wolfmed_range.yml`. |
 | `Docs/_WF/Wolfmed/DECISIONS.md`, this file | modified | The two sections. |
