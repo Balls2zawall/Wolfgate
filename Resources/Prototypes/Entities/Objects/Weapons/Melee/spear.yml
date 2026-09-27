@@ -42,7 +42,7 @@
     angle: 0
     animation: WeaponArcThrust
     soundHit:
-      collection: WFWolfmedChop # WOLFGATE(Wolfmed): playtest 4, Bob's chop; an owner-chosen collection also beats the stab
+      path: /Audio/Weapons/bladeslice.ogg
   - type: DamageOtherOnHit
     damage:
       types:

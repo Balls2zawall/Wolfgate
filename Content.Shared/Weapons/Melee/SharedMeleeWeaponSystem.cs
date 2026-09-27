@@ -608,6 +608,7 @@ public abstract partial class SharedMeleeWeaponSystem : EntitySystem
         }
 
         _meleeSound.PlayHitSound(target.Value, playerUid, GetHighestDamageSound(modifiedDamage, _protoManager), hitEvent.HitSoundOverride ?? _wolfmedSounds.GetHitSound(target.Value, modifiedDamage, meleeUid, user, component), component); // WOLFGATE(Wolfmed): flesh takes Bob's stab or melee sound
+        _wolfmedSounds.PlayHitOverlays(target.Value, playerUid, meleeUid, modifiedDamage); // WOLFGATE(Wolfmed): playtest 4, the crowbar's clang and the heavy chop over the hit sound
 
         if (damageResult?.GetTotal() > FixedPoint2.Zero)
         {
@@ -778,6 +779,7 @@ public abstract partial class SharedMeleeWeaponSystem : EntitySystem
         {
             var target = entities.First();
             _meleeSound.PlayHitSound(target, playerUid, GetHighestDamageSound(appliedDamage, _protoManager), hitEvent.HitSoundOverride ?? _wolfmedSounds.GetHitSound(target, appliedDamage, meleeUid, user, component), component); // WOLFGATE(Wolfmed): flesh takes Bob's stab or melee sound
+            _wolfmedSounds.PlayHitOverlays(target, playerUid, meleeUid, appliedDamage); // WOLFGATE(Wolfmed): playtest 4, as above
         }
 
         if (appliedDamage.GetTotal() > FixedPoint2.Zero)

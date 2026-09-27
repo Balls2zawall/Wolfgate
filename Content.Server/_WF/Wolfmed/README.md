@@ -64,6 +64,7 @@ Skipped ("dirty-disposed").
 - [`Content.Server/_WF/Wolfmed/Explosion/WolfmedExplosionSystem.cs`](Explosion/WolfmedExplosionSystem.cs)
 - [`Content.Server/_WF/Wolfmed/Gore/WolfmedBleedSpurtSystem.cs`](Gore/WolfmedBleedSpurtSystem.cs)
 - [`Content.Server/_WF/Wolfmed/Gore/WolfmedCleanSplatsReaction.cs`](Gore/WolfmedCleanSplatsReaction.cs)
+- [`Content.Server/_WF/Wolfmed/Gore/WolfmedGibDecalSystem.cs`](Gore/WolfmedGibDecalSystem.cs)
 - [`Content.Server/_WF/Wolfmed/Gore/WolfmedGoreSystem.cs`](Gore/WolfmedGoreSystem.cs)
 - [`Content.Server/_WF/Wolfmed/Gore/WolfmedMachineSparkSystem.cs`](Gore/WolfmedMachineSparkSystem.cs)
 - [`Content.Server/_WF/Wolfmed/Hud/WolfmedSyntheticHudSystem.cs`](Hud/WolfmedSyntheticHudSystem.cs)
@@ -206,6 +207,7 @@ Skipped ("dirty-disposed").
 - [`Content.Shared/_WF/Wolfmed/Reagents/WolfmedPainRelief.cs`](../../../Content.Shared/_WF/Wolfmed/Reagents/WolfmedPainRelief.cs)
 - [`Content.Shared/_WF/Wolfmed/Reagents/WolfmedPainReliefComponent.cs`](../../../Content.Shared/_WF/Wolfmed/Reagents/WolfmedPainReliefComponent.cs)
 - [`Content.Shared/_WF/Wolfmed/Reagents/WolfmedPainReliefSystem.cs`](../../../Content.Shared/_WF/Wolfmed/Reagents/WolfmedPainReliefSystem.cs)
+- [`Content.Shared/_WF/Wolfmed/Sounds/WolfmedHitOverlaySoundComponent.cs`](../../../Content.Shared/_WF/Wolfmed/Sounds/WolfmedHitOverlaySoundComponent.cs)
 - [`Content.Shared/_WF/Wolfmed/Sounds/WolfmedOrganicSoundSystem.cs`](../../../Content.Shared/_WF/Wolfmed/Sounds/WolfmedOrganicSoundSystem.cs)
 - [`Content.Shared/_WF/Wolfmed/Surgery/SharedSurgerySystem.Autodoc.cs`](../../../Content.Shared/_WF/Wolfmed/Surgery/SharedSurgerySystem.Autodoc.cs)
 - [`Content.Shared/_WF/Wolfmed/Surgery/SharedSurgerySystem.Tend.cs`](../../../Content.Shared/_WF/Wolfmed/Surgery/SharedSurgerySystem.Tend.cs)
@@ -303,6 +305,7 @@ Skipped ("dirty-disposed").
 - [`Content.IntegrationTests/Tests/_WF/Wolfmed/Scenarios/WolfmedCrawlingActionsTest.cs`](../../../Content.IntegrationTests/Tests/_WF/Wolfmed/Scenarios/WolfmedCrawlingActionsTest.cs)
 - [`Content.IntegrationTests/Tests/_WF/Wolfmed/Scenarios/WolfmedDownedSidearmTest.cs`](../../../Content.IntegrationTests/Tests/_WF/Wolfmed/Scenarios/WolfmedDownedSidearmTest.cs)
 - [`Content.IntegrationTests/Tests/_WF/Wolfmed/Scenarios/WolfmedFireHelplessnessTest.cs`](../../../Content.IntegrationTests/Tests/_WF/Wolfmed/Scenarios/WolfmedFireHelplessnessTest.cs)
+- [`Content.IntegrationTests/Tests/_WF/Wolfmed/Scenarios/WolfmedGibDecalTest.cs`](../../../Content.IntegrationTests/Tests/_WF/Wolfmed/Scenarios/WolfmedGibDecalTest.cs)
 - [`Content.IntegrationTests/Tests/_WF/Wolfmed/Scenarios/WolfmedHonestEndingTest.cs`](../../../Content.IntegrationTests/Tests/_WF/Wolfmed/Scenarios/WolfmedHonestEndingTest.cs)
 - [`Content.IntegrationTests/Tests/_WF/Wolfmed/Scenarios/WolfmedHydraulicFluidTest.cs`](../../../Content.IntegrationTests/Tests/_WF/Wolfmed/Scenarios/WolfmedHydraulicFluidTest.cs)
 - [`Content.IntegrationTests/Tests/_WF/Wolfmed/Scenarios/WolfmedIpcDeathTest.cs`](../../../Content.IntegrationTests/Tests/_WF/Wolfmed/Scenarios/WolfmedIpcDeathTest.cs)
@@ -422,6 +425,7 @@ Skipped ("dirty-disposed").
 - [`Resources/Prototypes/_WF/Wolfmed/Damage/overlay_offsets.yml`](../../../Resources/Prototypes/_WF/Wolfmed/Damage/overlay_offsets.yml)
 - [`Resources/Prototypes/_WF/Wolfmed/Damage/treatment_overlays.yml`](../../../Resources/Prototypes/_WF/Wolfmed/Damage/treatment_overlays.yml)
 - [`Resources/Prototypes/_WF/Wolfmed/Decals/blood.yml`](../../../Resources/Prototypes/_WF/Wolfmed/Decals/blood.yml)
+- [`Resources/Prototypes/_WF/Wolfmed/Decals/gibs.yml`](../../../Resources/Prototypes/_WF/Wolfmed/Decals/gibs.yml)
 - [`Resources/Prototypes/_WF/Wolfmed/Entities/Debugging/debug_medbox.yml`](../../../Resources/Prototypes/_WF/Wolfmed/Entities/Debugging/debug_medbox.yml)
 - [`Resources/Prototypes/_WF/Wolfmed/Entities/Debugging/range_spawner.yml`](../../../Resources/Prototypes/_WF/Wolfmed/Entities/Debugging/range_spawner.yml)
 - [`Resources/Prototypes/_WF/Wolfmed/Entities/effects.yml`](../../../Resources/Prototypes/_WF/Wolfmed/Entities/effects.yml)
@@ -499,6 +503,7 @@ Skipped ("dirty-disposed").
 - [`Resources/Textures/_WF/Wolfmed/Damage/rot.rsi/`](../../../Resources/Textures/_WF/Wolfmed/Damage/rot.rsi/)
 - [`Resources/Textures/_WF/Wolfmed/Damage/wounds.rsi/`](../../../Resources/Textures/_WF/Wolfmed/Damage/wounds.rsi/)
 - [`Resources/Textures/_WF/Wolfmed/Effects/blood_splatter.rsi/`](../../../Resources/Textures/_WF/Wolfmed/Effects/blood_splatter.rsi/)
+- [`Resources/Textures/_WF/Wolfmed/Effects/gibs.rsi/`](../../../Resources/Textures/_WF/Wolfmed/Effects/gibs.rsi/)
 - [`Resources/Textures/_WF/Wolfmed/Effects/part_degradation.rsi/`](../../../Resources/Textures/_WF/Wolfmed/Effects/part_degradation.rsi/)
 - [`Resources/Textures/_WF/Wolfmed/Interface/Alerts/downed.rsi/`](../../../Resources/Textures/_WF/Wolfmed/Interface/Alerts/downed.rsi/)
 - [`Resources/Textures/_WF/Wolfmed/Interface/Alerts/pain.rsi/`](../../../Resources/Textures/_WF/Wolfmed/Interface/Alerts/pain.rsi/)
@@ -608,7 +613,6 @@ Skipped ("dirty-disposed").
 - [`Resources/Audio/_WF/Wolfmed/Autodoc/voice/transfuse.ogg`](../../../Resources/Audio/_WF/Wolfmed/Autodoc/voice/transfuse.ogg)
 - [`Resources/Audio/_WF/Wolfmed/Autodoc/voice/unconscious.ogg`](../../../Resources/Audio/_WF/Wolfmed/Autodoc/voice/unconscious.ogg)
 - [`Resources/Audio/_WF/Wolfmed/Autodoc/voice/wrong-item.ogg`](../../../Resources/Audio/_WF/Wolfmed/Autodoc/voice/wrong-item.ogg)
-- [`Resources/Audio/_WF/Wolfmed/Bleeding/artery1.ogg`](../../../Resources/Audio/_WF/Wolfmed/Bleeding/artery1.ogg)
 - [`Resources/Audio/_WF/Wolfmed/Bleeding/artery3.ogg`](../../../Resources/Audio/_WF/Wolfmed/Bleeding/artery3.ogg)
 - [`Resources/Audio/_WF/Wolfmed/Bleeding/attributions.yml`](../../../Resources/Audio/_WF/Wolfmed/Bleeding/attributions.yml)
 - [`Resources/Audio/_WF/Wolfmed/Bleeding/blood1.ogg`](../../../Resources/Audio/_WF/Wolfmed/Bleeding/blood1.ogg)
@@ -707,10 +711,8 @@ Skipped ("dirty-disposed").
 - [`Resources/Audio/_WF/Wolfmed/Impacts/ric_flesh4.ogg`](../../../Resources/Audio/_WF/Wolfmed/Impacts/ric_flesh4.ogg)
 - [`Resources/Audio/_WF/Wolfmed/Melee/attributions.yml`](../../../Resources/Audio/_WF/Wolfmed/Melee/attributions.yml)
 - [`Resources/Audio/_WF/Wolfmed/Melee/chop2.ogg`](../../../Resources/Audio/_WF/Wolfmed/Melee/chop2.ogg)
-- [`Resources/Audio/_WF/Wolfmed/Melee/chop3.ogg`](../../../Resources/Audio/_WF/Wolfmed/Melee/chop3.ogg)
 - [`Resources/Audio/_WF/Wolfmed/Melee/chop4.ogg`](../../../Resources/Audio/_WF/Wolfmed/Melee/chop4.ogg)
 - [`Resources/Audio/_WF/Wolfmed/Melee/chop5.ogg`](../../../Resources/Audio/_WF/Wolfmed/Melee/chop5.ogg)
-- [`Resources/Audio/_WF/Wolfmed/Melee/chop6.ogg`](../../../Resources/Audio/_WF/Wolfmed/Melee/chop6.ogg)
 - [`Resources/Audio/_WF/Wolfmed/Melee/crowbarhit1.ogg`](../../../Resources/Audio/_WF/Wolfmed/Melee/crowbarhit1.ogg)
 - [`Resources/Audio/_WF/Wolfmed/Melee/crowbarhit2.ogg`](../../../Resources/Audio/_WF/Wolfmed/Melee/crowbarhit2.ogg)
 - [`Resources/Audio/_WF/Wolfmed/Melee/melee1.ogg`](../../../Resources/Audio/_WF/Wolfmed/Melee/melee1.ogg)
@@ -744,6 +746,7 @@ Skipped ("dirty-disposed").
 - [`Tools/_WF/Wolfmed/gen_autodoc_voice_protos.py`](../../../Tools/_WF/Wolfmed/gen_autodoc_voice_protos.py)
 - [`Tools/_WF/Wolfmed/gen_overlay_offsets.py`](../../../Tools/_WF/Wolfmed/gen_overlay_offsets.py)
 - [`Tools/_WF/Wolfmed/gen_part_degradation_rsi.py`](../../../Tools/_WF/Wolfmed/gen_part_degradation_rsi.py)
+- [`Tools/_WF/Wolfmed/gen_wolfmed_gibs.py`](../../../Tools/_WF/Wolfmed/gen_wolfmed_gibs.py)
 - [`Tools/_WF/Wolfmed/gen_wolfmed_overlays.py`](../../../Tools/_WF/Wolfmed/gen_wolfmed_overlays.py)
 - [`Tools/_WF/Wolfmed/import_cm_autodoc.py`](../../../Tools/_WF/Wolfmed/import_cm_autodoc.py)
 - [`Tools/_WF/Wolfmed/import_nova_blood.py`](../../../Tools/_WF/Wolfmed/import_nova_blood.py)
@@ -1421,7 +1424,9 @@ Skipped ("dirty-disposed").
   - Bob's stab and melee hit sounds on flesh
   - W1: tool = the weapon, so Wolfmed's wound rules can tell melee from gunfire.
   - flesh takes Bob's stab or melee sound
+  - playtest 4, the crowbar's clang and the heavy chop over the hit sound
   - W1: tool = the weapon, see the light attack above.
+  - playtest 4, as above
 - [`Content.Shared/Weapons/Ranged/Systems/SharedGunSystem.cs`](../../../Content.Shared/Weapons/Ranged/Systems/SharedGunSystem.cs)
   - playtest 1: despawn
   - playtest 1: not for a casing left in a revolver's cylinder
@@ -1696,7 +1701,7 @@ Skipped ("dirty-disposed").
 - [`Resources/Prototypes/Entities/Objects/Tools/cable_coils.yml`](../../../Resources/Prototypes/Entities/Objects/Tools/cable_coils.yml)
   - W6: the surgery tool for the servo step. Servo damage carries no damage type, so the coil's
   - P5-3: matches ONYX cable_coils.yml:179 and Wolfgate's own damageContainers: [Silicon] intent. Without it the default [Biological] (HealingComponent.cs:72-73) overlaps OrganicBodyPartProfile and the coil heals human Heat/Shock wounds at -3/-3 per 0.6s, because HOOK 8 skips the damageContainers check for wound hosts (HealingSystem.cs:201-210) and WoundHealingSystem.IsCompatiblePart never reads it (:154-166).
-- [`Resources/Prototypes/Entities/Objects/Tools/crowbars.yml`](../../../Resources/Prototypes/Entities/Objects/Tools/crowbars.yml): playtest 4, Bob's crowbar hits
+- [`Resources/Prototypes/Entities/Objects/Tools/crowbars.yml`](../../../Resources/Prototypes/Entities/Objects/Tools/crowbars.yml): playtest 4, Bob's crowbar hits over the thud on flesh
 - [`Resources/Prototypes/Entities/Objects/Tools/tools.yml`](../../../Resources/Prototypes/Entities/Objects/Tools/tools.yml)
   - W6: panel-beating. WeldingHealableSystem gates on this component, not on being a welder;
   - EVISC: the surgery step that seats a torn chassis panel
@@ -1707,8 +1712,6 @@ Skipped ("dirty-disposed").
   - P5-D5, PROTO S: MobIPC moves to the WFSiliconWolfmed container in WP13-2;
   - V124: the welder loop covers the pass; this is the seam cooling at the end of it.
 - [`Resources/Prototypes/Entities/Objects/Weapons/Guns/Ammunition/Projectiles/grenade_shrapnel.yml`](../../../Resources/Prototypes/Entities/Objects/Weapons/Guns/Ammunition/Projectiles/grenade_shrapnel.yml): W1: cluster pellets leave fragments behind.
-- [`Resources/Prototypes/Entities/Objects/Weapons/Melee/fireaxe.yml`](../../../Resources/Prototypes/Entities/Objects/Weapons/Melee/fireaxe.yml): playtest 4, Bob's chop instead of the thud
-- [`Resources/Prototypes/Entities/Objects/Weapons/Melee/spear.yml`](../../../Resources/Prototypes/Entities/Objects/Weapons/Melee/spear.yml): playtest 4, Bob's chop; an owner-chosen collection also beats the stab
 - [`Resources/Prototypes/Entities/StatusEffects/misc.yml`](../../../Resources/Prototypes/Entities/StatusEffects/misc.yml): Onyx's status effect bases, ported without its standing base or concrete effects.
 - [`Resources/Prototypes/Entities/Structures/Machines/lathe.yml`](../../../Resources/Prototypes/Entities/Structures/Machines/lathe.yml): AUTODOC: the four program disks, behind the same research as the rest of medbay.
 - [`Resources/Prototypes/Guidebook/medical.yml`](../../../Resources/Prototypes/Guidebook/medical.yml)

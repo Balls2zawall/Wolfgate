@@ -3913,13 +3913,35 @@ sounds and overlays organic-only, the pain HUD for machines too) are in the spec
   icon, the hover text names both bands.
 - **"The flatline tone very quiet too."** `WolfmedCritHeartbeatSystem` plays it at -18 dB (was -6).
 - **Second round of Bob sounds (same morning).** Fists: the `Punch` collection now lists the owner's `punch1-3`
-  (marked; it replaces the Skyrat punches WOLFGATE(Weapons) had put there). The fire axe's `MetalThud` and the
-  spear's blade slice are `WFWolfmedChop` (`chop2`, `chop4`, `chop5`; the owner dropped 3 and 6); every spear and the flaming axe inherit it. Crowbars
-  (`BaseCrowbar`) are `WFWolfmedCrowbarHit` (`crowbarhit1-2`). `WolfmedOrganicSoundSystem.GetHitSound` keeps any
-  `WFWolfmed*` collection a weapon already carries, so the spear chops rather than stabs; the stab still takes the
-  other piercing weapons. Arterial sprays: `artery3` joins the splatter (the owner dropped `artery1`) in `WFWolfmedBleedSpurt` and
-  `WFWolfmedBleedStump`. `WolfmedBobMeleeSoundsTest` pins the prototypes and the precedence.
+  (marked; it replaces the Skyrat punches WOLFGATE(Weapons) had put there). The chop is not a weapon's sound but
+  a hit's: "for super heavy hits that things like the axe would inflict, a meaty chop", so
+  `WolfmedOrganicSoundSystem.PlayHitOverlays` plays `WFWolfmedChop` (`chop2`, `chop4`, `chop5`; the owner dropped 3
+  and 6) as a second sound over the weapon's own whenever a Blunt plus Slash hit on flesh reaches
+  `wolfmed.chop_sound_damage` (40: a wielded fire axe at 45 chops, a machete at 32 does not, a stab never). Every
+  weapon keeps its own `soundHit` ("the thud should still play"); the owner first asked for one merged file per
+  hit, then for the chop to be its own sound keyed on weight, so the mixes were dropped. Crowbars (`BaseCrowbar`,
+  six prototypes) carry `WolfmedHitOverlaySoundComponent` with `WFWolfmedCrowbarHit` (`crowbarhit1-2`), played over
+  their thud on flesh the same way. Both overlays are predicted like the hit sound and never play on a chassis or a
+  structure. Arterial sprays: `artery3` joins the splatter (the owner dropped `artery1`).
+  `WolfmedBobMeleeSoundsTest` pins the crowbar overlay, the axe's and spear's untouched sounds and the chop line.
 - **Bullet impacts on flesh.** The Skyrat flesh impacts WOLFGATE(Weapons) ported (`MeatBulletImpact`, nine files)
   are the owner's `ric_flesh1-4` now, under `Resources/Audio/_WF/Wolfmed/Impacts` (marked in `gun_impacts.yml`),
   encoded at 0.6 gain, 3 dB under the mono originals: "quieten the bullet hit sounds by maybe 30 %" (0.7 only bought
   2 dB because the source peaks are clipped).
+
+## Gibs on the deck (playtest 4, 2026-09-27)
+
+"Port these decals from Escape From Nevado's `icons/effects/blood.dmi`: gibmid1, gib1-6, as effects for extreme
+traumatic events (dismemberment, disembowelling, etc.); the red should be the blood colour and the flesh-coloured
+bits in gib2 and gib6 the mob's skin colour." `Tools/_WF/Wolfmed/gen_wolfmed_gibs.py` splits each state into
+layers by hue: the reds become a greyscale blood mask (`WFWolfmedGib_<state>`, tinted with the blood reagent's
+colour like the floor splats), the peach and orange a greyscale flesh mask (`_flesh`, tinted with
+`HumanoidAppearance.SkinColor`, a default skin for bodies without one), and the magenta-pink innards in gib1, gib2
+and gib4 keep their own colours (`_meat`). Four-direction states become four states. Everything is a cleanable
+decal (`Resources/Prototypes/_WF/Wolfmed/Decals/gibs.yml`, generated) stacked in that order.
+`WolfmedGibDecalSystem` (server, GORE) throws them within `wolfmed.gib_spread` (1.5) tiles, on tiles that exist,
+organic bodies only: a limb off (`WolfmedPartAmputatedEvent`) leaves `wolfmed.gibs_dismemberment` (2) from the
+splats and streaks; an opened belly (the torso overflow after `WolfmedEviscerationSystem` has marked it)
+`wolfmed.gibs_evisceration` (3) from the ones with guts; a gibbed body (`BeingGibbedEvent` on the wound host)
+`wolfmed.gibs_gib` (7) from all of them. `wolfmed.gib_decals` turns the lot off. `WolfmedGibDecalTest`: an arm off
+leaves two, colours as above and cleanable; the gib adds seven; an IPC leaves none.

@@ -1,6 +1,9 @@
 using System;
 using Content.Shared._EinsteinEngines.Silicon.Components;
 using Content.Shared._Onyx.Wounds;
+using Robust.Shared.Configuration;
+using Robust.Shared.Audio.Systems;
+using Content.Shared._WF.Wolfmed.CCVar;
 using Content.Shared._WF.Wolfmed.Wounds;
 using Content.Shared.Body.Components;
 using Content.Shared.Body.Part;
@@ -26,6 +29,8 @@ public sealed class WolfmedOrganicSoundSystem : EntitySystem
     /// <summary>A mostly Blunt or Slash hit from a weapon with no hit sound of its own.</summary>
     public static readonly ProtoId<SoundCollectionPrototype> MeleeCollection = "WFWolfmedMelee";
 
+    [Dependency] private SharedAudioSystem _audio = default!;
+    [Dependency] private IConfigurationManager _cfg = default!;
     [Dependency] private SharedBodySystem _body = default!;
     [Dependency] private WolfmedWoundTraitSystem _traits = default!;
 
@@ -48,6 +53,43 @@ public sealed class WolfmedOrganicSoundSystem : EntitySystem
         return !HasComp<SiliconComponent>(body);
     }
 
+    /// <summary>The meaty chop a super heavy hit on flesh gets over the weapon's own sound (playtest 4).</summary>
+    public static readonly ProtoId<SoundCollectionPrototype> ChopCollection = "WFWolfmedChop";
+
+    /// <summary>
+    /// The sounds a melee hit plays on top of the weapon's own (playtest 4): the weapon's overlay
+    /// (<see cref="WolfmedHitOverlaySoundComponent"/>, the crowbar's clang) and, for a Blunt or Slash hit at or past
+    /// wolfmed.chop_sound_damage, the meaty chop. Flesh only; predicted like the hit sound itself.
+    /// </summary>
+    public void PlayHitOverlays(EntityUid target, EntityUid? user, EntityUid weapon, DamageSpecifier damage)
+    {
+        if (!IsOrganicBody(target))
+            return;
+
+        if (TryComp(weapon, out WolfmedHitOverlaySoundComponent? overlay))
+            _audio.PlayPredicted(overlay.Sound, target, user);
+
+        if (IsChop(damage))
+            _audio.PlayPredicted(new SoundCollectionSpecifier(ChopCollection), target, user);
+    }
+
+    /// <summary>A hit heavy enough for the chop: Blunt plus Slash at or past wolfmed.chop_sound_damage.</summary>
+    public bool IsChop(DamageSpecifier damage)
+    {
+        var line = _cfg.GetCVar(WolfmedCVars.ChopSoundDamage);
+        if (line <= 0f)
+            return false;
+
+        var heavy = 0f;
+        foreach (var (type, amount) in damage.DamageDict)
+        {
+            if (type is "Blunt" or "Slash")
+                heavy += amount.Float();
+        }
+
+        return heavy >= line;
+    }
+
     /// <summary>
     /// The Bob sound a melee hit on this target makes instead of today's, or null to keep today's. Only flesh
     /// changes: a chassis, a borg and a structure keep whatever they played before.
@@ -59,12 +101,6 @@ public sealed class WolfmedOrganicSoundSystem : EntitySystem
         EntityUid user,
         MeleeWeaponComponent component)
     {
-        // Playtest 4: a weapon the owner gave one of the Bob collections (the fire axe's and spear's chop, the
-        // crowbar's hits) keeps it, stab or not.
-        if (component.HitSound is SoundCollectionSpecifier { Collection: { } own } &&
-            own.StartsWith("WFWolfmed", StringComparison.Ordinal))
-            return null;
-
         if (!IsOrganicBody(target) ||
             PickCollection(damage, weapon != user, component.HitSound != null) is not { } collection)
             return null;

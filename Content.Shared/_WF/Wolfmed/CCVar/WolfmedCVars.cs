@@ -450,6 +450,33 @@ public sealed class WolfmedCVars
         CVarDef.Create("wolfmed.pain_loose_recovery", 3f, CVar.SERVERONLY);
 
     /// <summary>
+    /// Blunt plus Slash a single melee hit on flesh must deal for the meaty chop (Bob's chop2/4/5) to play over the
+    /// weapon's own sound (playtest 4). 40: a wielded fire axe (45) chops, a machete (32) does not. Zero turns it off.
+    /// </summary>
+    public static readonly CVarDef<float> ChopSoundDamage =
+        CVarDef.Create("wolfmed.chop_sound_damage", 40f, CVar.SERVER | CVar.REPLICATED);
+
+    /// <summary>Whether extreme trauma leaves gib decals (playtest 4, GORE). Off skips them entirely.</summary>
+    public static readonly CVarDef<bool> GibDecals =
+        CVarDef.Create("wolfmed.gib_decals", true, CVar.SERVERONLY);
+
+    /// <summary>How far, in tiles, a gib can land from the body.</summary>
+    public static readonly CVarDef<float> GibSpread =
+        CVarDef.Create("wolfmed.gib_spread", 1.5f, CVar.SERVERONLY);
+
+    /// <summary>Gibs a limb coming off leaves.</summary>
+    public static readonly CVarDef<int> GibsDismemberment =
+        CVarDef.Create("wolfmed.gibs_dismemberment", 2, CVar.SERVERONLY);
+
+    /// <summary>Gibs an opened belly leaves.</summary>
+    public static readonly CVarDef<int> GibsEvisceration =
+        CVarDef.Create("wolfmed.gibs_evisceration", 3, CVar.SERVERONLY);
+
+    /// <summary>Gibs a whole body coming apart leaves.</summary>
+    public static readonly CVarDef<int> GibsGib =
+        CVarDef.Create("wolfmed.gibs_gib", 7, CVar.SERVERONLY);
+
+    /// <summary>
     /// Seconds between two "You feel your wounds painfully close!" lines on one body (playtest 1). Vacuum deals a
     /// little Heat every second, and each tick on a bleeding body used to say it again.
     /// </summary>
