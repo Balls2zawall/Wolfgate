@@ -4141,3 +4141,14 @@ rapidly fall if the wound isn't getting worse. Adjust it slightly at first."
   over `wolfmed.pain_floor_settle_seconds` (20): a hit hurts in full, then settles to three fifths within twenty
   seconds unless it gets hit again, which puts the whole floor back. A floor set by hand (a test) holds whole.
   `WolfmedPainSettleTest` pins both.
+
+## Wounds under the fur (playtest 5, 2026-09-28)
+
+"Some species don't have their stump/bleed overlays: yowies, reptilians, rodentia, resomi." The overlay logic was
+species-blind, and a headless sweep over every organic round-start species (`WolfmedSpeciesOverlayTest`) drew the
+lot. The difference in play is the markings: `HumanoidAppearanceSystem.ApplyMarking` inserts a marking straight above
+its body part, and the wound glyph, the rot and the degradation layers were inserted there too, so on any species
+wearing a full-body fur, scale or feather marking the wound went under the pelt. Those layers now go above the limb's
+marking layers (`DamageVisualsSystem.MarkingTop`), still under the clothing, and a marking applied after the wound was
+drawn puts the wound back over it. The stump, drip and artery layers were already on top of everything. The sweep
+loads each species' default profile so the default markings are on, and pins the chest glyph above them.

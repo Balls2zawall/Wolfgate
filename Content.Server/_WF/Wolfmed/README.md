@@ -383,6 +383,7 @@ Skipped ("dirty-disposed").
 - [`Content.IntegrationTests/Tests/_WF/Wolfmed/WolfmedSlashBiteWoundTest.cs`](../../../Content.IntegrationTests/Tests/_WF/Wolfmed/WolfmedSlashBiteWoundTest.cs)
 - [`Content.IntegrationTests/Tests/_WF/Wolfmed/WolfmedSpawnedGearUnequipTest.cs`](../../../Content.IntegrationTests/Tests/_WF/Wolfmed/WolfmedSpawnedGearUnequipTest.cs)
 - [`Content.IntegrationTests/Tests/_WF/Wolfmed/WolfmedSpeciesConformanceTest.cs`](../../../Content.IntegrationTests/Tests/_WF/Wolfmed/WolfmedSpeciesConformanceTest.cs)
+- [`Content.IntegrationTests/Tests/_WF/Wolfmed/WolfmedSpeciesOverlayTest.cs`](../../../Content.IntegrationTests/Tests/_WF/Wolfmed/WolfmedSpeciesOverlayTest.cs)
 - [`Content.IntegrationTests/Tests/_WF/Wolfmed/WolfmedSpeciesProfileTest.cs`](../../../Content.IntegrationTests/Tests/_WF/Wolfmed/WolfmedSpeciesProfileTest.cs)
 - [`Content.IntegrationTests/Tests/_WF/Wolfmed/WolfmedSpeciesSpawnTest.cs`](../../../Content.IntegrationTests/Tests/_WF/Wolfmed/WolfmedSpeciesSpawnTest.cs)
 - [`Content.IntegrationTests/Tests/_WF/Wolfmed/WolfmedSplintTest.cs`](../../../Content.IntegrationTests/Tests/_WF/Wolfmed/WolfmedSplintTest.cs)
@@ -1205,6 +1206,7 @@ Skipped ("dirty-disposed").
   - M1a
   - M1a: the shock's threshold, re-arm and adrenaline length are CVars now
   - `new ModifyPainGainEvent()` binds to the record struct's implicit parameterless
+  - playtest 5, the floor settles
   - M1a: OD5, pain never moved
   - M1a: OD5, adrenaline no longer takes 30% off every reading; it no longer stands anyone up.
   - M1a: P13, the share is of the sum of the parts, not of the capped body value, so the

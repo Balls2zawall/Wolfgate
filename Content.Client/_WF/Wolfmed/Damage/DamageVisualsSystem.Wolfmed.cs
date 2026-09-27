@@ -4,6 +4,7 @@ using Content.Shared.Body.Part;
 using Content.Shared.Damage;
 using Content.Shared.FixedPoint;
 using Content.Shared.Humanoid;
+using Content.Shared.Humanoid.Markings;
 using System.Numerics;
 using Robust.Client.Animations;
 using Robust.Client.GameObjects;
@@ -142,7 +143,7 @@ public sealed partial class DamageVisualsSystem
             // has no humanoid layer map to begin with, so its one overlay goes on top.
             int? insert = null;
             if (SpriteSystem.LayerMapTryGet((uid, sprite), layer, out var limb, false))
-                insert = limb + 1;
+                insert = Math.Max(limb, MarkingTop(uid, sprite, layer)) + 1; // playtest 5: over the fur
             else if (!severed)
                 return;
 
@@ -406,7 +407,17 @@ public sealed partial class DamageVisualsSystem
                     insert = Math.Max(insert, under);
             }
 
+            // Playtest 5: a fur, scale or feather marking is inserted right above its limb and covered the wound on
+            // every species that wears one; the wound goes above the limb's markings, still under the clothing.
+            insert = Math.Max(insert, MarkingTop(uid, sprite, layer));
             index = SpriteSystem.AddLayer((uid, sprite), new SpriteSpecifier.Rsi(rsi, state), insert + 1);
+            SpriteSystem.LayerMapSet((uid, sprite), key, index);
+        }
+        else if (state != null && MarkingTop(uid, sprite, layer) is var top && top >= index)
+        {
+            // A marking applied after the wound was drawn landed above it: put the wound back over the fur.
+            SpriteSystem.RemoveLayer((uid, sprite), index);
+            index = SpriteSystem.AddLayer((uid, sprite), new SpriteSpecifier.Rsi(rsi, state), top);
             SpriteSystem.LayerMapSet((uid, sprite), key, index);
         }
 
@@ -419,6 +430,36 @@ public sealed partial class DamageVisualsSystem
         SpriteSystem.LayerSetOffset((uid, sprite), index, offset);
         if (colour is { } tint)
             SpriteSystem.LayerSetColor((uid, sprite), index, tint);
+    }
+
+    /// <summary>
+    /// The highest sprite layer a marking on this limb draws at, or -1 with none. The humanoid appearance inserts a
+    /// marking straight above its body part, so a full-body fur or scale marking covers anything put there after it.
+    /// </summary>
+    public int MarkingTop(EntityUid uid, SpriteComponent sprite, HumanoidVisualLayers layer)
+    {
+        var top = -1;
+        if (!TryComp(uid, out HumanoidAppearanceComponent? humanoid))
+            return top;
+
+        foreach (var markings in humanoid.MarkingSet.Markings.Values)
+        {
+            foreach (var marking in markings)
+            {
+                if (!_prototypeManager.TryIndex(marking.MarkingId, out MarkingPrototype? prototype) ||
+                    prototype.BodyPart != layer)
+                    continue;
+
+                foreach (var specifier in prototype.Sprites)
+                {
+                    if (specifier is SpriteSpecifier.Rsi rsi &&
+                        SpriteSystem.LayerMapTryGet((uid, sprite), $"{prototype.ID}-{rsi.RsiState}", out var index, false))
+                        top = Math.Max(top, index);
+                }
+            }
+        }
+
+        return top;
     }
 
     // --- Option B: severed-limb wound rendering (P3-D18) ---
