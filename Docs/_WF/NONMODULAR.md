@@ -62,6 +62,7 @@ Standalone edits outside `_WF` that serve no module: files with an untagged `WOL
   - hash only what MemberwiseEquals compares by value
   - removed - Appearance hashed by reference, broke equal profiles hashing alike
   - the company is part of the hash
+- [`Content.Shared/Projectiles/SharedProjectileSystem.cs`](../../Content.Shared/Projectiles/SharedProjectileSystem.cs): the client replays a thrown embed's collision in prediction, and the projectile is already in
 - [`Content.Shared/Weapons/Ranged/Systems/SharedGunSystem.Revolver.cs`](../../Content.Shared/Weapons/Ranged/Systems/SharedGunSystem.Revolver.cs): C# % keeps the sign, index 0 gave -1 and crashed the server
 - [`README.md`](../../README.md)
   - dropped Discord link
