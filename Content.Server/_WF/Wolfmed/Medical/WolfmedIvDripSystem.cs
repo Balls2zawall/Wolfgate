@@ -236,38 +236,41 @@ public sealed partial class WolfmedIvDripSystem : EntitySystem
     /// <summary>One transfer of up to <paramref name="units"/>, in the drip's mode.</summary>
     private void Transfer(Entity<WolfmedIvDripComponent> ent, EntityUid patient, float units)
     {
-        if (units <= 0f || GetContainer(ent) is not { } container)
+        if (units <= 0f)
             return;
 
+        var container = GetContainer(ent);
         if (ent.Comp.Mode == WolfmedIvMode.Inject)
         {
-            if (IsPack(ent, container))
+            // Playtest 5: the opened pack keeps giving with nothing hung; only a fresh one needs the stack.
+            var pack = container is { } hung && IsPack(ent, hung) ? hung : (EntityUid?) null;
+            if (container == null || pack != null)
             {
-                if (PacksCanTreat(patient, container))
-                    TransfuseFromPack(container, ref ent.Comp.PackUsed, patient, units);
+                if ((pack != null || ent.Comp.PackOpened > 0f) && PacksCanTreat(patient, pack))
+                    TransfuseFromPack(pack, ref ent.Comp.PackOpened, patient, units);
             }
             else
             {
-                InjectSolution(ent, container, patient, units);
+                InjectSolution(ent, container.Value, patient, units);
             }
         }
-        else if (!IsPack(ent, container))
+        else if (container is { } beaker && !IsPack(ent, beaker))
         {
-            TakeBlood(ent, container, patient, units);
+            TakeBlood(ent, beaker, patient, units);
         }
 
         UpdateAppearance(ent);
     }
 
     /// <summary>
-    /// Gives up to <paramref name="units"/> of the body's own blood reagent out of a Bloodpack stack, spending one pack
-    /// every <c>wolfmed.iv_units_per_pack</c>; <paramref name="used"/> carries what the top pack has already given.
-    /// Nothing is spent on a full bloodstream. Returns the units given. Shared with the pod's blood reservoir.
+    /// Gives up to <paramref name="units"/> of the body's own blood reagent out of the opened pack, then out of a
+    /// Bloodpack stack a pack at a time. Playtest 5: a pack is spent from the stack the moment it is opened, and
+    /// <paramref name="opened"/> carries what is left of it, so a stack taken away and hung again gives nothing
+    /// back. Nothing is spent on a full bloodstream. Returns the units given. Shared with the pod's blood reservoir.
     /// </summary>
-    public float TransfuseFromPack(EntityUid pack, ref float used, EntityUid body, float units)
+    public float TransfuseFromPack(EntityUid? pack, ref float opened, EntityUid body, float units)
     {
-        if (!TryComp(pack, out StackComponent? stack) || stack.Count <= 0 ||
-            !TryComp(body, out BloodstreamComponent? bloodstream) ||
+        if (!TryComp(body, out BloodstreamComponent? bloodstream) ||
             !_solutions.ResolveSolution(body, bloodstream.BloodSolutionName, ref bloodstream.BloodSolution, out var blood))
             return 0f;
 
@@ -275,37 +278,37 @@ public sealed partial class WolfmedIvDripSystem : EntitySystem
         units = MathF.Min(units, room);
         var given = 0f;
 
-        // A pack's worth at a time, so a stack of one runs out on its last unit rather than a tick early.
-        while (units > 0.005f && stack.Count > 0 && !TerminatingOrDeleted(pack))
+        while (units > 0.005f)
         {
-            var take = MathF.Min(units, MathF.Max(0f, _unitsPerPack - used));
-            if (take > 0f && _bloodstream.TryModifyBloodLevel(body, FixedPoint2.New(take), bloodstream))
+            if (opened <= 0.005f)
             {
-                used += take;
-                given += take;
-                units -= take;
+                if (pack is not { } stackUid || TerminatingOrDeleted(stackUid) ||
+                    !TryComp(stackUid, out StackComponent? stack) || stack.Count <= 0 ||
+                    !_stacks.Use(stackUid, 1, stack))
+                    break;
+
+                opened = _unitsPerPack;
             }
-            else if (take > 0f)
-            {
+
+            var take = MathF.Min(units, opened);
+            if (!_bloodstream.TryModifyBloodLevel(body, FixedPoint2.New(take), bloodstream))
                 break;
-            }
 
-            if (used < _unitsPerPack - 0.005f)
-                continue;
-
-            used = 0f;
-            _stacks.Use(pack, 1, stack);
+            opened -= take;
+            given += take;
+            units -= take;
         }
 
         return given;
     }
 
-    /// <summary>Units of blood left in a Bloodpack stack, counting what the top pack has already given.</summary>
-    public float PackUnitsLeft(EntityUid pack, float used)
+    /// <summary>Units of blood left: the opened pack plus every unopened pack of the stack, if there is one.</summary>
+    public float PackUnitsLeft(EntityUid? pack, float opened)
     {
-        return TryComp(pack, out StackComponent? stack) && stack.Count > 0
-            ? MathF.Max(0f, stack.Count * _unitsPerPack - used)
+        var stacked = pack is { } stackUid && TryComp(stackUid, out StackComponent? stack) && stack.Count > 0
+            ? stack.Count * _unitsPerPack
             : 0f;
+        return MathF.Max(0f, stacked + opened);
     }
 
     /// <summary>Units of blood one pack is worth.</summary>
@@ -573,7 +576,6 @@ public sealed partial class WolfmedIvDripSystem : EntitySystem
         if (args.Container.ID != WolfmedIvDripComponent.ContainerId)
             return;
 
-        ent.Comp.PackUsed = 0f;
         UpdateAppearance(ent);
     }
 
@@ -582,7 +584,6 @@ public sealed partial class WolfmedIvDripSystem : EntitySystem
         if (args.Container.ID != WolfmedIvDripComponent.ContainerId || TerminatingOrDeleted(ent))
             return;
 
-        ent.Comp.PackUsed = 0f;
         UpdateAppearance(ent);
     }
 
@@ -760,13 +761,15 @@ public sealed partial class WolfmedIvDripSystem : EntitySystem
 
             if (GetContainer(ent) is not { } container)
             {
-                args.PushMarkup(Loc.GetString("wolfmed-iv-examine-nothing"));
+                args.PushMarkup(ent.Comp.PackOpened > 0f
+                    ? Loc.GetString("wolfmed-iv-examine-opened", ("units", MathF.Round(ent.Comp.PackOpened)))
+                    : Loc.GetString("wolfmed-iv-examine-nothing"));
             }
             else if (IsPack(ent, container))
             {
                 args.PushMarkup(Loc.GetString("wolfmed-iv-examine-packs",
                     ("count", _stacks.GetCount(container)),
-                    ("units", MathF.Round(PackUnitsLeft(container, ent.Comp.PackUsed)))));
+                    ("units", MathF.Round(PackUnitsLeft(container, ent.Comp.PackOpened)))));
                 if (ent.Comp.Mode == WolfmedIvMode.Take)
                     args.PushMarkup(Loc.GetString("wolfmed-iv-examine-pack-take"));
                 else if (ent.Comp.Patient is { } treated && !PacksCanTreat(treated, container))
@@ -801,22 +804,24 @@ public sealed partial class WolfmedIvDripSystem : EntitySystem
         _appearance.SetData(ent.Owner, WolfmedIvDripVisuals.Flowing, attached && ent.Comp.Rate > 0f, appearance);
 
         var container = GetContainer(ent);
-        _appearance.SetData(ent.Owner, WolfmedIvDripVisuals.Container, container != null, appearance);
-        if (container is not { } hung)
+        // Playtest 5: an opened pack still hangs on the line after its stack is gone.
+        var opened = container == null && ent.Comp.PackOpened > 0f;
+        _appearance.SetData(ent.Owner, WolfmedIvDripVisuals.Container, container != null || opened, appearance);
+        if (container is not { } hung && !opened)
             return;
 
         float fraction;
         Color colour;
-        if (IsPack(ent, hung))
+        if (container == null || IsPack(ent, container.Value))
         {
-            var max = _stacks.GetMaxCount(hung) * _unitsPerPack;
-            fraction = max > 0f ? PackUnitsLeft(hung, ent.Comp.PackUsed) / max : 0f;
+            var max = (container is { } stack ? _stacks.GetMaxCount(stack) : 1) * _unitsPerPack;
+            fraction = max > 0f ? PackUnitsLeft(container, ent.Comp.PackOpened) / max : 0f;
             var reagent = ent.Comp.Patient is { } patient && TryComp(patient, out BloodstreamComponent? stream)
                 ? stream.BloodReagent
                 : PackColourReagent;
             colour = _protos.TryIndex(reagent, out var proto) ? proto.SubstanceColor : Color.DarkRed;
         }
-        else if (TryGetSolution(hung, out _, out var solution))
+        else if (TryGetSolution(container.Value, out _, out var solution))
         {
             fraction = solution.MaxVolume > FixedPoint2.Zero ? (solution.Volume / solution.MaxVolume).Float() : 0f;
             colour = solution.GetColor(_protos);

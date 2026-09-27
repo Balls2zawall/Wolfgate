@@ -4274,3 +4274,44 @@ the owner's call; left as it plays.
   `WFWolfmed`) and nothing else, so a spilled cup does not wash a mapper's cleanable paint; space cleaner still takes
   everything. `WolfmedGoreTest.WaterWashesTheBloodOffTheTileTest` and `WolfmedAutodocTest.WhatComesOffInsideLeavesThePodTest`
   pin both.
+
+## Playtest 5 basics (2026-09-28)
+
+- **"Medipens filled 5/15 u, showing a used sprite."** The Wolfmed pens inherit `ChemicalMedipen`'s 15 u chamber and
+  hold their dose (3, 5 or 10 u) in it; the fill visual has one level, and 5/15 rounds to empty, so a fresh naloxone or
+  opiate pen drew as a spent one and examined as 5/15. Each pen's chamber is now its dose, and its injector pushes
+  exactly that.
+- **"An IPC used to heal with the nanite applicator."** The applicator's `WeldingHealing` lists the damage containers it
+  repairs, and the Wolfmed half of `WeldingHealableSystem` checks the *part's* container: an IPC's parts sit in
+  `WFInorganicWolfmed`, which the welder lists and the applicator did not, so it did nothing on any IPC limb. Listed.
+- **"Welding a chassis breach doesn't fix it."** The repair went to the part the aiming doll pointed at, and only there:
+  with the doll on the chest (the default) and the breach on a leg, the welder did nothing and said nothing. The analyzer
+  says "weld the fluid leak" without saying where. The doll still decides when it points at something to repair;
+  otherwise the tool goes to the part with the most to repair, and a chassis with nothing to repair now says so.
+  `WolfmedWeldingRepairTest.ToolFindsTheBreachWhereverTheDollAimsTest` pins both, with the applicator and with a chassis
+  repairing itself.
+- **"Infinite blood if you use two blood packs."** The pod and the IV drip spent a pack from the stack only when it ran
+  dry, and remembered how much of the top pack was given in their own component, which a stack taken out and put back
+  reset: two stacks swapped in and out gave a fresh pack every swap. A pack now leaves the stack the moment it is opened
+  (`WolfmedIvDripSystem.TransfuseFromPack`), and what is left of it belongs to the device (`PackOpened` on the drip and on
+  the pod's blood component), runs on with the slot empty and shows as "opened pack" on the readout and on examine. A
+  stack split or merged elsewhere carries nothing extra, since nothing opened travels with it.
+  `PodBloodTest.AnOpenedPackCannotBePutBackFullTest` pins two packs at two packs' worth.
+- **"Cannot properly queue more than one surgery manually."** A patient who climbs in by themselves puts the pod in
+  self-service, which is one procedure at a time with no queue, and the flag outlived them: the medic who then came to
+  the console inherited it, and every ADD replaced the queue. Self-service is now the occupant choosing for themselves;
+  anybody else who opens the terminal, presses a button or adds a procedure is an operator with a queue (`NoteTerminalUser`).
+  A procedure the subject's condition no longer allows is refused out loud ("THAT DOES NOT APPLY TO THE SUBJECT NOW")
+  instead of silently. `WolfmedAutodocTest.OperatorQueuesMoreThanOneAfterTheOccupantClimbedInTest`.
+- **"The autodoc won't fix its own mistakes without being removed and reinserted."** Everything a run makes on the
+  occupant is marked the pod's own (`WolfmedPodWoundComponent`) so the planner does not read a suture as a new problem,
+  and the marks lasted the whole stay: a burn a cautery left, an incision a stalled procedure left open, were invisible
+  to every plan until the patient was taken out and put back, which clears the marks. Once a run is over and the grace
+  window has passed (`ScheduleLeftoverRelease`, `TickLeftovers`), the marks come off and the next plan, the module's or
+  PLAN's, sees the leftovers as the patient's. Twice per occupant (`LeftoverPassLimit`), since a run always leaves
+  something behind and one that listed again every time would have the pod operate for ever.
+  `WolfmedPodLeftoversTest` pins the release and the bound.
+- **"The 'delivery tray' meaning is unclear."** It is the slot on the pod's side that takes the limb, organ or tool a
+  step asks for, and that the pod puts what it takes off the patient into. Renamed the parts tray on the terminal, the
+  slot, the examine line, the guidebook and the three voice lines that ask for something, with a tooltip on the terminal
+  row that says what goes in and what comes out.

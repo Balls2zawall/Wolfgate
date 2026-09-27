@@ -111,4 +111,59 @@ public sealed class WolfmedWeldingRepairTest : GameTest
                 Is.LessThanOrEqualTo(fuelBefore - 5), "A successful repair must consume its fuel cost.");
         });
     }
+
+    /// <summary>
+    /// Playtest 5: "welding a chassis breach doesn't seem to fix it" and "an IPC used to heal with the nanite
+    /// applicator". The analyzer says weld the fluid leak without saying where, so the tool finds the breach with the
+    /// aiming doll left on the chest; the applicator lists the IPC part container again; and a chassis repairs itself
+    /// with either, at the self-repair delay.
+    /// </summary>
+    [TestCase("Welder", false, TargetBodyPart.Torso)]
+    [TestCase("Welder", true, TargetBodyPart.Torso)]
+    [TestCase("NaniteApplicator", false, TargetBodyPart.RightLeg)]
+    [TestCase("NaniteApplicator", true, TargetBodyPart.Torso)]
+    public async Task ToolFindsTheBreachWhereverTheDollAimsTest(string toolId, bool self, TargetBodyPart aim)
+    {
+        var server = Pair.Server;
+        await server.WaitIdleAsync();
+        var entities = server.ResolveDependency<IEntityManager>();
+        var map = await Pair.CreateTestMap();
+        EntityUid body = default, leg = default, tool = default;
+        var passes = toolId == "NaniteApplicator" ? 2 : 1;
+
+        await server.WaitAssertion(() =>
+        {
+            body = entities.SpawnEntity("MobIPC", map.GridCoords);
+            var user = self ? body : entities.SpawnEntity("MobHuman", map.GridCoords);
+            entities.RemoveComponent<BarotraumaComponent>(body);
+            entities.RemoveComponent<TemperatureComponent>(body);
+            entities.RemoveComponent<BarotraumaComponent>(user);
+            entities.RemoveComponent<TemperatureComponent>(user);
+            var graph = entities.System<SharedBodySystem>();
+            leg = graph.GetBodyChildrenOfType(body, BodyPartType.Leg, symmetry: BodyPartSymmetry.Right).Single().Id;
+            var slash = server.ResolveDependency<IPrototypeManager>().Index<DamageTypePrototype>("Slash");
+            Assert.That(entities.System<WoundDamageRoutingSystem>()
+                .TryApplyPartDamage(body, leg, new DamageSpecifier(slash, 15), ignoreResistances: true), Is.True);
+            Assert.That(entities.System<WoundSystem>().GetWounds(leg).Any(), Is.True, "no breach to weld.");
+            Assert.That(entities.GetComponent<BloodstreamComponent>(body).BleedAmount, Is.GreaterThan(0f), "the breach does not leak.");
+
+            tool = entities.SpawnEntity(toolId, map.GridCoords);
+            Assert.That(entities.System<SharedHandsSystem>().TryPickupAnyHand(user, tool), Is.True);
+            if (entities.HasComponent<Content.Shared.Item.ItemToggle.Components.ItemToggleComponent>(tool))
+                Assert.That(entities.System<ItemToggleSystem>().TryActivate(tool, user), Is.True);
+            entities.GetComponent<TargetingComponent>(user).Target = aim;
+            var interact = new InteractUsingEvent(user, tool, body, map.GridCoords);
+            entities.EventBus.RaiseLocalEvent(body, interact);
+            Assert.That(interact.Handled, Is.True, "the tool did not start on the breach.");
+        });
+
+        // The tool's delay, three times over for self-repair, once per pass it takes to close the breach.
+        await Pair.RunSeconds((self ? 9 : 3) * passes + 2);
+
+        await server.WaitAssertion(() =>
+        {
+            Assert.That(entities.System<WoundSystem>().GetWounds(leg).ToList(), Is.Empty, "the breach is still open.");
+            Assert.That(entities.GetComponent<BloodstreamComponent>(body).BleedAmount, Is.Zero, "the leak did not stop.");
+        });
+    }
 }

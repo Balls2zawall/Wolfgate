@@ -55,9 +55,12 @@ public sealed partial class WolfmedIvDripComponent : Component
     [ViewVariables]
     public EntityUid? Patient;
 
-    /// <summary>Units already given from the top pack of a hung Bloodpack stack; the pack is used up at the per-pack figure.</summary>
+    /// <summary>
+    /// Playtest 5: units left in the pack the drip has opened. A pack leaves the stack the moment it is opened, so
+    /// taking the stack down and hanging it again gives nothing back, and the opened pack runs on with nothing hung.
+    /// </summary>
     [ViewVariables]
-    public float PackUsed;
+    public float PackOpened;
 
     [ViewVariables]
     public TimeSpan NextUpdate;

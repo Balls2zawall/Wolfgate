@@ -143,7 +143,7 @@ public sealed class PodBloodTest : GameTest
             var given = (level - start) * pool.Float();
             var blood = SEntMan.GetComponent<WolfmedAutodocBloodComponent>(pod);
             var spent = (5 - SEntMan.GetComponent<StackComponent>(pack!.Value).Count) * SEntMan.System<WolfmedIvDripSystem>().UnitsPerPack
-                        + blood.PackUsed;
+                        - blood.PackOpened;
             TestContext.Out.WriteLine($"level {level:F3}, given {given:F1} u, spent {spent:F1} u.");
             Assert.Multiple(() =>
             {
@@ -205,6 +205,66 @@ public sealed class PodBloodTest : GameTest
             Assert.That(Autodoc.BloodFault(pod), Is.False, "the fault stayed up with blood loaded.");
             Assert.That(Bloodstream.GetBloodLevelPercentage(body), Is.GreaterThan(level + 0.03f), "no blood went in.");
             Assert.That(Readout(pod)?.Status, Does.Not.Contain("NO BLOOD LOADED"));
+        });
+    }
+
+    /// <summary>
+    /// Playtest 5: "infinite blood if you use two blood packs". A pack is spent from the stack the moment the pod opens
+    /// it and what is left of it stays in the pod, so a stack taken out and put back cannot start over, and the opened
+    /// pack keeps running with the slot empty. One pack, then another: two packs' worth, and then NO BLOOD LOADED.
+    /// </summary>
+    [Test]
+    public async Task AnOpenedPackCannotBePutBackFullTest()
+    {
+        var (pod, body, pack) = await PodWith(0.6f, packs: 1);
+        float start = 0f, perPack = 0f;
+        FixedPoint2 pool = default;
+
+        await Server.WaitAssertion(() =>
+        {
+            start = Bloodstream.GetBloodLevelPercentage(body);
+            pool = SEntMan.GetComponent<BloodstreamComponent>(body).BloodMaxVolume;
+            perPack = SEntMan.System<WolfmedIvDripSystem>().UnitsPerPack;
+            Assert.That(Autodoc.TryPlan(pod), Is.Zero);
+            Assert.That(Autodoc.BloodRunning(pod), Is.True, "the plan did not start the blood reservoir.");
+        });
+
+        // Two seconds at the reservoir's rate: the one pack is opened and a third of it given.
+        await RunSeconds(2);
+
+        await Server.WaitAssertion(() =>
+        {
+            var blood = SEntMan.GetComponent<WolfmedAutodocBloodComponent>(pod);
+            var slots = SEntMan.System<ItemSlotsSystem>();
+            Assert.Multiple(() =>
+            {
+                Assert.That(SEntMan.Deleted(pack!.Value), Is.True, "the opened pack was not spent from the stack.");
+                Assert.That(slots.GetItemOrNull(pod.Owner, WolfmedAutodocBloodComponent.SlotId), Is.Null, "the slot still holds the spent stack.");
+                Assert.That(blood.PackOpened, Is.InRange(1f, perPack - 1f), "what is left of the opened pack is not in the pod.");
+                Assert.That(Autodoc.BloodRunning(pod), Is.True, "the opened pack stopped when its stack went.");
+            });
+
+            // The second pack goes in while the first is still running.
+            var next = SEntMan.SpawnEntity(WolfmedIvDripSystem.PackPrototype, SEntMan.GetComponent<TransformComponent>(pod).Coordinates);
+            SEntMan.System<SharedStackSystem>().SetCount(next, 1);
+            Assert.That(slots.TryInsert(pod.Owner, WolfmedAutodocBloodComponent.SlotId, next, null), Is.True, "the blood slot refused the second pack.");
+        });
+
+        var took = await SecondsUntil(40, () => !Autodoc.BloodRunning(pod));
+        Assert.That(took, Is.Not.Null, "the transfusion never stopped.");
+
+        await Server.WaitAssertion(() =>
+        {
+            var level = Bloodstream.GetBloodLevelPercentage(body);
+            var given = (level - start) * pool.Float();
+            var blood = SEntMan.GetComponent<WolfmedAutodocBloodComponent>(pod);
+            TestContext.Out.WriteLine($"two packs gave {given:F1} u; opened remainder {blood.PackOpened:F1} u.");
+            Assert.Multiple(() =>
+            {
+                Assert.That(given, Is.EqualTo(2 * perPack).Within(1f), "two packs gave something other than two packs' worth.");
+                Assert.That(level, Is.LessThan(0.95f), "two packs from 0.6 should not reach the target.");
+                Assert.That(Autodoc.BloodFault(pod), Is.True, "with both packs spent the pod does not say NO BLOOD LOADED.");
+            });
         });
     }
 }

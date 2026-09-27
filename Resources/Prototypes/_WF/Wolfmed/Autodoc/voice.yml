@@ -462,6 +462,21 @@
         path: /Audio/_WF/Wolfmed/Autodoc/voice/no-blood.ogg
       message: wolfmed-autodoc-voice-no-blood
       priority: Urgent
+    queue-refused:
+      sound:
+        path: /Audio/_WF/Wolfmed/Autodoc/voice/queue-refused.ogg
+      message: wolfmed-autodoc-voice-queue-refused
+      priority: Info
+    antibiotics:
+      sound:
+        path: /Audio/_WF/Wolfmed/Autodoc/voice/antibiotics.ogg
+      message: wolfmed-autodoc-voice-antibiotics
+      priority: Info
+    no-antibiotic:
+      sound:
+        path: /Audio/_WF/Wolfmed/Autodoc/voice/no-antibiotic.ogg
+      message: wolfmed-autodoc-voice-no-antibiotic
+      priority: Urgent
   events:
     Boot: [boot]
     Greeting: [greeting-1, greeting-2, greeting-3]
@@ -543,3 +558,6 @@
     Emag: [emag-1, emag-2, emag-3, emag-4, emag-5]
     Offline: [offline]
     NoBlood: [no-blood]
+    QueueRefused: [queue-refused]
+    Antibiotics: [antibiotics]
+    NoAntibiotic: [no-antibiotic]

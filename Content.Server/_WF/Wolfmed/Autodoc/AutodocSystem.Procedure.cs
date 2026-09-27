@@ -90,6 +90,7 @@ public sealed partial class AutodocSystem
             }
 
             TickPodWounds(ent);
+            TickLeftovers(ent); // Playtest 5
             SweepTile(ent); // Playtest 5
         }
     }
@@ -807,6 +808,45 @@ public sealed partial class AutodocSystem
             MarkPodWounds(ent, body);
     }
 
+    /// <summary>
+    /// Playtest 5: "the autodoc won't fix its own mistakes without being removed and reinserted". Everything a run
+    /// makes on the occupant is marked the pod's own so the planner does not read a suture as a new problem, and the
+    /// marks used to last the whole stay: a burn a cautery left, an incision a stalled procedure left open, stayed
+    /// invisible to every plan until the patient was taken out and put back. Once the run is over and the grace
+    /// window has passed, the marks come off and the next plan sees the leftovers as the patient's; a bounded number
+    /// of times, since a run always leaves something behind.
+    /// </summary>
+    public void ScheduleLeftoverRelease(Entity<AutodocComponent> ent)
+    {
+        ent.Comp.LeftoverReleaseAt = _timing.CurTime + TimeSpan.FromSeconds(MathF.Max(0f, ent.Comp.PodWoundGrace) + 0.25f);
+    }
+
+    private void TickLeftovers(Entity<AutodocComponent> ent)
+    {
+        if (ent.Comp.LeftoverReleaseAt is not { } due || _timing.CurTime < due || IsRunning(ent))
+            return;
+
+        ent.Comp.LeftoverReleaseAt = null;
+        if (GetOccupant(ent) is not { } body || ent.Comp.LeftoverPasses >= ent.Comp.LeftoverPassLimit)
+            return;
+
+        var released = 0;
+        foreach (var wound in OccupantWounds(body).ToArray())
+        {
+            if (RemComp<WolfmedPodWoundComponent>(wound))
+                released++;
+        }
+
+        if (released == 0)
+            return;
+
+        ent.Comp.LeftoverPasses++;
+        // The module looks again at once; a hand-run pod shows the leftovers on the next PLAN.
+        ent.Comp.AutoSignature = null;
+        ent.Comp.AutoNextPlan = TimeSpan.Zero;
+        UpdateUi(ent);
+    }
+
     /// <summary>What the patient walked in with. Taken at the start of every procedure.</summary>
     private void SnapshotWounds(Entity<AutodocComponent> ent, EntityUid body)
     {
@@ -1061,6 +1101,7 @@ public sealed partial class AutodocSystem
         }
 
         EndAutoRun(ent);
+        ScheduleLeftoverRelease(ent); // Playtest 5
         Speak(ent, AutodocVoiceEvent.QueueComplete);
         WakeOccupant(ent);
         ent.Comp.State = AutodocState.Complete;
@@ -1077,6 +1118,7 @@ public sealed partial class AutodocSystem
         if (GetOccupant(ent) is { } aborted)
             MarkPodWounds(ent, aborted);
 
+        ScheduleLeftoverRelease(ent); // Playtest 5
         Speak(ent, AutodocVoiceEvent.Aborted);
         ent.Comp.AutoSession = false; // Playtest 3 SAM: an abort ends the run
         WakeOccupant(ent);

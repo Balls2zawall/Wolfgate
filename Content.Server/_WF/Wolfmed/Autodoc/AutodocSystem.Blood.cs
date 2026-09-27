@@ -81,7 +81,8 @@ public sealed partial class AutodocSystem
         if (!_iv.PacksCanTreat(body, pack))
             return;
 
-        if (pack == null)
+        // Playtest 5: an opened pack in the pod counts as blood loaded.
+        if (pack == null && blood.PackOpened <= 0f)
         {
             var fault = !HasReservoirFluid(ent, stream.BloodReagent.Id);
             if (fault && !blood.NoBloodSaid)
@@ -137,17 +138,10 @@ public sealed partial class AutodocSystem
 
         blood.NextUpdate = _timing.CurTime + TimeSpan.FromSeconds(BloodInterval);
 
-        // A pack arriving clears the fault's "said once", so an empty slot is reported again after it runs dry. A
-        // different stack starts on a fresh pack.
+        // A pack arriving clears the fault's "said once", so an empty slot is reported again after it runs dry.
         var loaded = GetBloodPack(ent);
         if (loaded != null)
             blood.NoBloodSaid = false;
-
-        if (loaded != blood.Pack)
-        {
-            blood.Pack = loaded;
-            blood.PackUsed = 0f;
-        }
 
         // A raised fault is the pod waiting for blood, as it waits for material: it starts once some is loaded. The
         // autofix module watches the blood on its own.
@@ -157,7 +151,8 @@ public sealed partial class AutodocSystem
         if (!blood.Active)
             return;
 
-        if (GetBloodPack(ent) is not { } pack)
+        // Playtest 5: the opened pack runs on with the slot empty; only a fresh pack needs the stack.
+        if (loaded == null && blood.PackOpened <= 0f)
         {
             blood.Active = false;
             ScheduleTransfusion(ent, patient);
@@ -170,7 +165,7 @@ public sealed partial class AutodocSystem
         FixedPoint2 pool = TryComp(patient, out BloodstreamComponent? stream) ? stream.BloodMaxVolume : FixedPoint2.Zero;
         var toTarget = (_bloodTo - level) * pool.Float();
         var given = toTarget > 0.005f
-            ? _iv.TransfuseFromPack(pack, ref blood.PackUsed, patient, MathF.Min(_bloodRate * BloodInterval, toTarget))
+            ? _iv.TransfuseFromPack(loaded, ref blood.PackOpened, patient, MathF.Min(_bloodRate * BloodInterval, toTarget))
             : 0f;
 
         if (given <= 0f || _bloodstream.GetBloodLevelPercentage(patient) >= _bloodTo - 0.001f)
@@ -219,16 +214,20 @@ public sealed partial class AutodocSystem
         if (!HasComp<WolfmedAutodocBloodComponent>(ent))
             return;
 
-        var used = TryComp(ent, out WolfmedAutodocBloodComponent? blood) ? blood.PackUsed : 0f;
-        if (GetBloodPack(ent) is not { } pack)
+        var opened = TryComp(ent, out WolfmedAutodocBloodComponent? blood) ? blood.PackOpened : 0f;
+        var pack = GetBloodPack(ent);
+        if (pack == null && opened <= 0f)
         {
             rows.Add(new AutodocReservoirEntry(Loc.GetString("wolfmed-autodoc-reservoir-blood-empty"), 0f, 1f, false));
             return;
         }
 
-        var left = _iv.PackUnitsLeft(pack, used);
-        var max = MathF.Max(left, _stacks.GetMaxCount(pack) * _iv.UnitsPerPack);
-        rows.Add(new AutodocReservoirEntry(Loc.GetString("wolfmed-autodoc-reservoir-blood",
-            ("name", Name(pack)), ("count", _stacks.GetCount(pack))), left, max, true));
+        // Playtest 5: with the stack gone the row is the opened pack alone.
+        var left = _iv.PackUnitsLeft(pack, opened);
+        var max = MathF.Max(left, (pack is { } stack ? _stacks.GetMaxCount(stack) : 1) * _iv.UnitsPerPack);
+        var name = pack is { } loaded
+            ? Loc.GetString("wolfmed-autodoc-reservoir-blood", ("name", Name(loaded)), ("count", _stacks.GetCount(loaded)))
+            : Loc.GetString("wolfmed-autodoc-reservoir-blood-opened");
+        rows.Add(new AutodocReservoirEntry(name, left, max, true));
     }
 }

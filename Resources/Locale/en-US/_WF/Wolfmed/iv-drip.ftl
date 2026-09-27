@@ -38,6 +38,7 @@ wolfmed-iv-examine-packs = Attached { $count ->
     [one] is a blood pack
    *[other] are { $count } blood packs
 }, { $units } u of blood left.
+wolfmed-iv-examine-opened = An opened blood pack hangs on the line with { $units } u left.
 wolfmed-iv-examine-pack-take = A blood pack can't be refilled: taking blood needs a beaker or a jug.
 wolfmed-iv-examine-pack-refused = Blood packs can't help { THE($target) }.
 wolfmed-iv-examine-container = Attached is { THE($container) } with { $units } u of liquid.

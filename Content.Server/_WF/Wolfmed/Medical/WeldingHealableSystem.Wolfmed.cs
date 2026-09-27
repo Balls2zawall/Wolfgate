@@ -3,6 +3,7 @@ using Content.Server._EinsteinEngines.Silicon.WeldingHealing;
 using Content.Server.Atmos.EntitySystems;
 using Content.Shared._Onyx.Wounds;
 using Content.Shared._WF.Wolfmed.Wounds;
+using Content.Shared.Body.Systems;
 using Content.Shared.Damage;
 using Content.Shared.FixedPoint;
 using Content.Shared.Interaction;
@@ -20,6 +21,7 @@ public sealed partial class WeldingHealableSystem
     [Dependency] private WoundDamageRoutingSystem _woundRouting = default!;
     [Dependency] private ItemToggleSystem _repairToggle = default!;
     [Dependency] private AudioSystem _repairAudio = default!;
+    [Dependency] private SharedBodySystem _repairBody = default!;
 
     private void InitializeWoundRepair()
     {
@@ -42,8 +44,22 @@ public sealed partial class WeldingHealableSystem
 
         var selected = _woundHealing.ResolveHealingPart(body, requested, healing.Damage,
             null, RepairCapabilities, null, 0f, healWounds: true);
+
+        // Playtest 5: the aiming doll decides only when it points at something to repair. The analyzer says "weld
+        // the fluid leak" without saying where, and a doll left on the chest used to make the welder do nothing, and
+        // say nothing, about a breach on a leg.
+        if (selected is not { } aimed || !CanRepairPart(body, aimed, healing))
+            selected = _woundHealing.ResolveHealingPart(body, null, healing.Damage,
+                null, RepairCapabilities, null, 0f, healWounds: true);
+
         if (selected is not { } partUid || !CanRepairPart(body, partUid, healing))
+        {
+            // A chassis with nothing to repair hears so; flesh is left to the welder's other uses.
+            if (HasRepairableParts(body))
+                _popup.PopupEntity(Loc.GetString("wolfmed-repair-nothing", ("target", body.Owner), ("tool", args.Used)),
+                    body, args.User);
             return;
+        }
 
         var delay = healing.DoAfterDelay * (body.Owner == args.User ? healing.SelfHealPenalty : 1f);
         args.Handled = StartWoundRepair(body, partUid, args.User, args.Used, healing, delay);
@@ -55,6 +71,18 @@ public sealed partial class WeldingHealableSystem
         (body != user || healing.AllowSelfHeal) &&
         _toolSystem.HasQuality(tool, healing.QualityNeeded) &&
         (healing.FuelCost <= 0 || _toolSystem.GetWelderFuelAndCapacity(tool).fuel >= healing.FuelCost);
+
+    /// <summary>Whether any part of this body is one a repair tool works on at all.</summary>
+    private bool HasRepairableParts(EntityUid body)
+    {
+        foreach (var (part, _) in _repairBody.GetBodyChildren(body))
+        {
+            if (_woundHealing.IsCompatiblePart(body, part, null, RepairCapabilities))
+                return true;
+        }
+
+        return false;
+    }
 
     private bool CanRepairPart(EntityUid body, EntityUid part, WeldingHealingComponent healing)
     {

@@ -355,6 +355,8 @@ public sealed partial class AutodocSystem : EntitySystem
             ent.Comp.AutoReplans = 0;
             ent.Comp.PreProcedureWounds.Clear();
             ent.Comp.OccupantWasDead = false;
+            ent.Comp.LeftoverReleaseAt = null; // Playtest 5
+            ent.Comp.LeftoverPasses = 0;
 
             // Playtest 3 SAM: a new patient is a new run, with its own counts and nothing stuck on them yet.
             ent.Comp.AutoSession = false;
@@ -388,6 +390,8 @@ public sealed partial class AutodocSystem : EntitySystem
             ent.Comp.AutoReplans = 0;
             ent.Comp.PreProcedureWounds.Clear();
             ent.Comp.OccupantWasDead = false;
+            ent.Comp.LeftoverReleaseAt = null; // Playtest 5
+            ent.Comp.LeftoverPasses = 0;
             Reset(ent);
             _ui.CloseUis(ent.Owner);
         }

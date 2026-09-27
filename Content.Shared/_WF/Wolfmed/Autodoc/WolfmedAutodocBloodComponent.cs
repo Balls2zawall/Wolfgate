@@ -27,13 +27,12 @@ public sealed partial class WolfmedAutodocBloodComponent : Component
     [ViewVariables]
     public bool NoBloodSaid;
 
-    /// <summary>The stack <see cref="PackUsed"/> belongs to; another stack starts from a fresh pack.</summary>
+    /// <summary>
+    /// Playtest 5: units left in the pack the pod has opened. A pack leaves the stack the moment it is opened, so a
+    /// stack taken out and put back cannot start its top pack over, and the opened pack runs on with the slot empty.
+    /// </summary>
     [ViewVariables]
-    public EntityUid? Pack;
-
-    /// <summary>Units already given from the top pack of the loaded stack.</summary>
-    [ViewVariables]
-    public float PackUsed;
+    public float PackOpened;
 
     [ViewVariables]
     public TimeSpan NextUpdate;

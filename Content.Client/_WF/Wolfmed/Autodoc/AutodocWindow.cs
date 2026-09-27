@@ -213,6 +213,7 @@ public sealed class AutodocWindow : DefaultWindow
         _moduleLabel = Text(string.Empty, 11);
         _autofixLabel = Text(string.Empty, 11);
         _trayLabel = Text(string.Empty, 11);
+        _trayLabel.ToolTip = Loc.GetString("wolfmed-autodoc-ui-tray-hint"); // Playtest 5: "delivery tray" meant nothing
         _modeLabel = Text(string.Empty, 11, AmberDim);
         hardwareColumn.AddChild(_diskLabel);
         hardwareColumn.AddChild(_moduleLabel);

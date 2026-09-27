@@ -7,6 +7,8 @@ using Content.Server.Construction;
 using Content.Shared.Construction;
 using Content.Shared.DoAfter;
 using Content.Shared.Interaction;
+using Content.Shared._Shitmed.Targeting;
+using Robust.Shared.Prototypes;
 
 namespace Content.Server._WF.Wolfmed.Autodoc;
 
@@ -59,17 +61,47 @@ public sealed partial class AutodocSystem
 
     private void OnUiOpened(Entity<AutodocComponent> ent, ref BoundUIOpenedEvent args)
     {
+        NoteTerminalUser(ent, args.Actor);
         UpdateUi(ent);
+    }
+
+    /// <summary>
+    /// Playtest 5: self-service is the occupant choosing for themselves, one procedure at a time. Anybody else at the
+    /// terminal is an operator with a queue, whoever put the patient in; a patient who climbed in by themselves used
+    /// to leave the pod in self-service for the medic who then came to the console, and every ADD replaced the queue.
+    /// </summary>
+    private void NoteTerminalUser(Entity<AutodocComponent> ent, EntityUid? actor)
+    {
+        if (actor != null && ent.Comp.SelfService && actor != GetOccupant(ent))
+        {
+            ent.Comp.SelfService = false;
+            UpdateUi(ent);
+        }
     }
 
     private void OnQueueAdd(Entity<AutodocComponent> ent, ref AutodocQueueAddMessage args)
     {
+        QueueByHand(ent, args.Actor, args.Surgery, args.Part);
+    }
+
+    /// <summary>
+    /// One press of ADD. Public so a test drives the same path a player does. Playtest 5: a procedure the subject's
+    /// condition no longer allows is refused out loud rather than silently.
+    /// </summary>
+    public bool QueueByHand(Entity<AutodocComponent> ent, EntityUid? actor, EntProtoId surgery, TargetBodyPart part)
+    {
+        NoteTerminalUser(ent, actor);
+
         // Self-service picks exactly one procedure and has no queue at all.
         if (ent.Comp.SelfService && ent.Comp.Queue.Count > 0)
             ent.Comp.Queue.Clear();
 
-        TryQueue(ent, args.Surgery, args.Part);
+        var queued = TryQueue(ent, surgery, part);
+        if (!queued && IsKnown(ent, surgery))
+            Speak(ent, AutodocVoiceEvent.QueueRefused);
+
         UpdateUi(ent);
+        return queued;
     }
 
     private void OnQueueRemove(Entity<AutodocComponent> ent, ref AutodocQueueRemoveMessage args)
@@ -115,6 +147,7 @@ public sealed partial class AutodocSystem
 
     private void OnControl(Entity<AutodocComponent> ent, ref AutodocControlMessage args)
     {
+        NoteTerminalUser(ent, args.Actor);
         Control(ent, args.Control, args.Actor);
     }
 

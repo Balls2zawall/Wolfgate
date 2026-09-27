@@ -1192,4 +1192,47 @@ public sealed class WolfmedAutodocTest : GameTest
     {
         DamageDict = { [new ProtoId<DamageTypePrototype>(type)] = FixedPoint2.New(amount) },
     };
+
+    /// <summary>
+    /// Playtest 5: "cannot properly queue more than one surgery manually". A patient who climbs in by themselves puts
+    /// the pod in self-service, one procedure at a time, and the medic who then came to the console inherited it: every
+    /// ADD replaced the queue. Anybody but the occupant at the terminal is an operator with a queue.
+    /// </summary>
+    [Test]
+    public async Task OperatorQueuesMoreThanOneAfterTheOccupantClimbedInTest()
+    {
+        var server = Pair.Server;
+        await server.WaitIdleAsync();
+        var entities = server.ResolveDependency<IEntityManager>();
+        var map = await Pair.CreateTestMap();
+
+        await server.WaitAssertion(() =>
+        {
+            var autodoc = entities.System<AutodocSystem>();
+            var body = entities.SpawnEntity("MobHuman", map.GridCoords);
+            var medic = entities.SpawnEntity("MobHuman", map.GridCoords);
+            Slash(entities, body, TargetBodyPart.Torso, 40);
+            Blunt(entities, body, TargetBodyPart.LeftArm, 60);
+            var pod = Pod(entities, map);
+            Assert.That(autodoc.TryInsert(pod, body), Is.True);
+            pod.Comp.SelfService = true; // what climbing in by yourself sets
+
+            var available = autodoc.GetAvailable(pod, body).Where(entry => entry.Known)
+                .GroupBy(entry => entry.Surgery).Select(group => group.First()).Take(2).ToList();
+            Assert.That(available, Has.Count.EqualTo(2), "the wounded body lists fewer than two procedures.");
+            foreach (var entry in available)
+                Assert.That(autodoc.QueueByHand(pod, medic, entry.Surgery, entry.Part), Is.True, $"{entry.Surgery} was refused.");
+
+            Assert.Multiple(() =>
+            {
+                Assert.That(pod.Comp.Queue, Has.Count.EqualTo(2), "the operator's second ADD replaced the first.");
+                Assert.That(pod.Comp.SelfService, Is.False, "an operator at the terminal left the pod in self-service.");
+            });
+
+            // The occupant choosing for themselves is still one at a time.
+            pod.Comp.SelfService = true;
+            Assert.That(autodoc.QueueByHand(pod, body, available[0].Surgery, available[0].Part), Is.True);
+            Assert.That(pod.Comp.Queue, Has.Count.EqualTo(1), "self-service kept a queue.");
+        });
+    }
 }

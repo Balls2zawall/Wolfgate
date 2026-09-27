@@ -398,6 +398,25 @@ public sealed partial class AutodocComponent : Component
     [DataField]
     public float PodWoundGrace = 1f;
 
+    /// <summary>
+    /// Playtest 5: when the pod next hands what it made on the occupant back to them as ordinary wounds, so a plan
+    /// after a run treats the burn a cautery left or the incision a stalled procedure left open. Set at the end of a
+    /// run, past <see cref="PodWoundGrace"/>; null when nothing is due.
+    /// </summary>
+    [ViewVariables]
+    public TimeSpan? LeftoverReleaseAt;
+
+    /// <summary>Times the pod has handed its leftovers back for the occupant now in it.</summary>
+    [ViewVariables]
+    public int LeftoverPasses;
+
+    /// <summary>
+    /// How many times per occupant the pod may treat its own leftovers. Bounded because a run always ends with wounds
+    /// that were not there before, and one that listed again every time would have the pod operate for ever.
+    /// </summary>
+    [DataField]
+    public int LeftoverPassLimit = 2;
+
     /// <summary>Game time that window closes at.</summary>
     [ViewVariables]
     public TimeSpan PodWoundUntil;

@@ -172,7 +172,7 @@ public sealed class WolfmedIvDripTest : GameTest
         await Server.WaitAssertion(() =>
         {
             var given = BloodVolume(patient).Float() - start;
-            var spent = (5 - SEntMan.GetComponent<StackComponent>(pack).Count) * perPack + drip.Comp.PackUsed;
+            var spent = (5 - SEntMan.GetComponent<StackComponent>(pack).Count) * perPack - drip.Comp.PackOpened;
             Assert.That(spent, Is.EqualTo(given).Within(0.1f), "the packs spent do not match the blood given.");
             Assert.That(BloodSolution(patient).Contents.All(reagent => reagent.Reagent.Prototype == "Blood"), Is.True,
                 "the human was given something other than Blood.");

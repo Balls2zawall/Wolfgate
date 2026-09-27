@@ -73,9 +73,9 @@ LINES = [
     ("step-cavity", "CAVITY.", None, "Step"),
     ("step-generic", "PROCEEDING.", None, "Step"),
 
-    ("require-part", "PLACE ONE { $item } IN THE TRAY.", "Place one body part in the tray.", "Urgent"),
-    ("require-organ", "PLACE ONE { $item } IN THE TRAY.", "Place one organ in the tray.", "Urgent"),
-    ("require-item", "PLACE ONE { $item } IN THE TRAY.", "Place one item in the tray.", "Urgent"),
+    ("require-part", "PLACE ONE { $item } IN THE PARTS TRAY.", "Place one body part in the parts tray.", "Urgent"),
+    ("require-organ", "PLACE ONE { $item } IN THE PARTS TRAY.", "Place one organ in the parts tray.", "Urgent"),
+    ("require-item", "PLACE ONE { $item } IN THE PARTS TRAY.", "Place one item in the parts tray.", "Urgent"),
     ("wrong-item", "THAT IS NOT A { $item }.", "That is not it.", "Urgent"),
     ("item-accepted", "THANK YOU.", None, "Info"),
     ("reagent-missing", "I REQUIRE MORE ANAESTHETIC.", None, "Urgent"),
@@ -144,6 +144,10 @@ LINES = [
 
     # Playtest 4, IV: the patient needs blood and the blood reservoir is empty.
     ("no-blood", "NO BLOOD LOADED.", None, "Urgent"),
+    # Playtest 5.
+    ("queue-refused", "THAT DOES NOT APPLY TO THE SUBJECT NOW.", None, "Info"),
+    ("antibiotics", "ANTIBIOTICS STARTED.", None, "Info"),
+    ("no-antibiotic", "NO ANTIBIOTIC LOADED.", None, "Urgent"),
 ]
 
 ATTRIBUTIONS = """- files: ["{files}"]

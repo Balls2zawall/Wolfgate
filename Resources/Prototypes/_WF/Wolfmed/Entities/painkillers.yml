@@ -55,10 +55,12 @@
     maxFillLevels: 1
     changeColor: false
     emptySpriteName: medipen_empty
+  - type: Injector
+    transferAmount: 10
   - type: SolutionContainerManager
     solutions:
       pen:
-        maxVol: 15
+        maxVol: 10
         reagents:
         - ReagentId: WFWolfmedStim
           Quantity: 10
@@ -82,10 +84,12 @@
     maxFillLevels: 1
     changeColor: false
     emptySpriteName: medipen_empty
+  - type: Injector
+    transferAmount: 10
   - type: SolutionContainerManager
     solutions:
       pen:
-        maxVol: 15
+        maxVol: 10
         reagents:
         - ReagentId: WFWolfmedAnalgesic
           Quantity: 10
@@ -108,10 +112,12 @@
     maxFillLevels: 1
     changeColor: false
     emptySpriteName: medipen_empty
+  - type: Injector
+    transferAmount: 3
   - type: SolutionContainerManager
     solutions:
       pen:
-        maxVol: 15
+        maxVol: 3
         reagents:
         - ReagentId: WFWolfmedOpiate
           Quantity: 3
@@ -136,10 +142,12 @@
     maxFillLevels: 1
     changeColor: false
     emptySpriteName: medipen_empty
+  - type: Injector
+    transferAmount: 5
   - type: SolutionContainerManager
     solutions:
       pen:
-        maxVol: 15
+        maxVol: 5
         reagents:
         - ReagentId: WFWolfmedNaloxone
           Quantity: 5

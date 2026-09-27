@@ -49,7 +49,7 @@ The pod beeps over a patient who is losing ground: every four seconds while they
 
 ## The tray and the reservoir
 
-When a step needs a limb, an organ or an implant, the pod stops, opens its delivery tray and asks for exactly that item. Put the wrong thing in and it hands it straight back. The queue shows every requirement and whether it is loaded.
+When a step needs a limb, an organ or an implant, the pod stops, opens its parts tray (the slot on its side) and asks for exactly that item. Put the wrong thing in and it hands it straight back. The queue shows every requirement and whether it is loaded.
 
 Three beaker slots feed the reservoir. S.A.M. will only draw from a short list of reagents: the Wolfmed painkillers, spaceacillin, ethanol, saline, blood and the dexalin family. Anything else in a beaker is ignored and it will tell you so. A procedure that opens the body takes 15 units of anaesthetic before the first incision and 10 units of antibiotic after it closes, unless the procedure says otherwise. With no anaesthetic loaded it operates anyway, and the patient feels all of it.
 

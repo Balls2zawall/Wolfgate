@@ -378,6 +378,7 @@ Skipped ("dirty-disposed").
 - [`Content.IntegrationTests/Tests/_WF/Wolfmed/WolfmedOverheatTest.cs`](../../../Content.IntegrationTests/Tests/_WF/Wolfmed/WolfmedOverheatTest.cs)
 - [`Content.IntegrationTests/Tests/_WF/Wolfmed/WolfmedPainTest.cs`](../../../Content.IntegrationTests/Tests/_WF/Wolfmed/WolfmedPainTest.cs)
 - [`Content.IntegrationTests/Tests/_WF/Wolfmed/WolfmedPlaytestFixesTest.cs`](../../../Content.IntegrationTests/Tests/_WF/Wolfmed/WolfmedPlaytestFixesTest.cs)
+- [`Content.IntegrationTests/Tests/_WF/Wolfmed/WolfmedPodLeftoversTest.cs`](../../../Content.IntegrationTests/Tests/_WF/Wolfmed/WolfmedPodLeftoversTest.cs)
 - [`Content.IntegrationTests/Tests/_WF/Wolfmed/WolfmedPredictionTest.cs`](../../../Content.IntegrationTests/Tests/_WF/Wolfmed/WolfmedPredictionTest.cs)
 - [`Content.IntegrationTests/Tests/_WF/Wolfmed/WolfmedReagentTreatmentTest.cs`](../../../Content.IntegrationTests/Tests/_WF/Wolfmed/WolfmedReagentTreatmentTest.cs)
 - [`Content.IntegrationTests/Tests/_WF/Wolfmed/WolfmedReattachTest.cs`](../../../Content.IntegrationTests/Tests/_WF/Wolfmed/WolfmedReattachTest.cs)
@@ -502,6 +503,7 @@ Skipped ("dirty-disposed").
 - [`Resources/Locale/en-US/_WF/Wolfmed/organs.ftl`](../../../Resources/Locale/en-US/_WF/Wolfmed/organs.ftl)
 - [`Resources/Locale/en-US/_WF/Wolfmed/range.ftl`](../../../Resources/Locale/en-US/_WF/Wolfmed/range.ftl)
 - [`Resources/Locale/en-US/_WF/Wolfmed/remaining-causes.ftl`](../../../Resources/Locale/en-US/_WF/Wolfmed/remaining-causes.ftl)
+- [`Resources/Locale/en-US/_WF/Wolfmed/repair.ftl`](../../../Resources/Locale/en-US/_WF/Wolfmed/repair.ftl)
 - [`Resources/Locale/en-US/_WF/Wolfmed/revival.ftl`](../../../Resources/Locale/en-US/_WF/Wolfmed/revival.ftl)
 - [`Resources/Locale/en-US/_WF/Wolfmed/species.ftl`](../../../Resources/Locale/en-US/_WF/Wolfmed/species.ftl)
 - [`Resources/Locale/en-US/_WF/Wolfmed/surgery-popup.ftl`](../../../Resources/Locale/en-US/_WF/Wolfmed/surgery-popup.ftl)
@@ -535,6 +537,7 @@ Skipped ("dirty-disposed").
 - [`Resources/Audio/_WF/Wolfmed/attributions.yml`](../../../Resources/Audio/_WF/Wolfmed/attributions.yml)
 - [`Resources/Audio/_WF/Wolfmed/Autodoc/voice/aborted.ogg`](../../../Resources/Audio/_WF/Wolfmed/Autodoc/voice/aborted.ogg)
 - [`Resources/Audio/_WF/Wolfmed/Autodoc/voice/anaesthetic.ogg`](../../../Resources/Audio/_WF/Wolfmed/Autodoc/voice/anaesthetic.ogg)
+- [`Resources/Audio/_WF/Wolfmed/Autodoc/voice/antibiotics.ogg`](../../../Resources/Audio/_WF/Wolfmed/Autodoc/voice/antibiotics.ogg)
 - [`Resources/Audio/_WF/Wolfmed/Autodoc/voice/attributions.yml`](../../../Resources/Audio/_WF/Wolfmed/Autodoc/voice/attributions.yml)
 - [`Resources/Audio/_WF/Wolfmed/Autodoc/voice/auto-engaged.ogg`](../../../Resources/Audio/_WF/Wolfmed/Autodoc/voice/auto-engaged.ogg)
 - [`Resources/Audio/_WF/Wolfmed/Autodoc/voice/auto-nothing.ogg`](../../../Resources/Audio/_WF/Wolfmed/Autodoc/voice/auto-nothing.ogg)
@@ -577,6 +580,7 @@ Skipped ("dirty-disposed").
 - [`Resources/Audio/_WF/Wolfmed/Autodoc/voice/item-accepted.ogg`](../../../Resources/Audio/_WF/Wolfmed/Autodoc/voice/item-accepted.ogg)
 - [`Resources/Audio/_WF/Wolfmed/Autodoc/voice/lid-forced.ogg`](../../../Resources/Audio/_WF/Wolfmed/Autodoc/voice/lid-forced.ogg)
 - [`Resources/Audio/_WF/Wolfmed/Autodoc/voice/no-anaesthetic.ogg`](../../../Resources/Audio/_WF/Wolfmed/Autodoc/voice/no-anaesthetic.ogg)
+- [`Resources/Audio/_WF/Wolfmed/Autodoc/voice/no-antibiotic.ogg`](../../../Resources/Audio/_WF/Wolfmed/Autodoc/voice/no-antibiotic.ogg)
 - [`Resources/Audio/_WF/Wolfmed/Autodoc/voice/no-blood.ogg`](../../../Resources/Audio/_WF/Wolfmed/Autodoc/voice/no-blood.ogg)
 - [`Resources/Audio/_WF/Wolfmed/Autodoc/voice/no-occupant.ogg`](../../../Resources/Audio/_WF/Wolfmed/Autodoc/voice/no-occupant.ogg)
 - [`Resources/Audio/_WF/Wolfmed/Autodoc/voice/offline.ogg`](../../../Resources/Audio/_WF/Wolfmed/Autodoc/voice/offline.ogg)
@@ -587,6 +591,7 @@ Skipped ("dirty-disposed").
 - [`Resources/Audio/_WF/Wolfmed/Autodoc/voice/power-restored.ogg`](../../../Resources/Audio/_WF/Wolfmed/Autodoc/voice/power-restored.ogg)
 - [`Resources/Audio/_WF/Wolfmed/Autodoc/voice/queue-complete.ogg`](../../../Resources/Audio/_WF/Wolfmed/Autodoc/voice/queue-complete.ogg)
 - [`Resources/Audio/_WF/Wolfmed/Autodoc/voice/queue-empty.ogg`](../../../Resources/Audio/_WF/Wolfmed/Autodoc/voice/queue-empty.ogg)
+- [`Resources/Audio/_WF/Wolfmed/Autodoc/voice/queue-refused.ogg`](../../../Resources/Audio/_WF/Wolfmed/Autodoc/voice/queue-refused.ogg)
 - [`Resources/Audio/_WF/Wolfmed/Autodoc/voice/reagent-ignored.ogg`](../../../Resources/Audio/_WF/Wolfmed/Autodoc/voice/reagent-ignored.ogg)
 - [`Resources/Audio/_WF/Wolfmed/Autodoc/voice/reagent-missing.ogg`](../../../Resources/Audio/_WF/Wolfmed/Autodoc/voice/reagent-missing.ogg)
 - [`Resources/Audio/_WF/Wolfmed/Autodoc/voice/removing.ogg`](../../../Resources/Audio/_WF/Wolfmed/Autodoc/voice/removing.ogg)
@@ -1538,7 +1543,9 @@ Skipped ("dirty-disposed").
 - [`Resources/Prototypes/_Mono/Entities/Clothing/OuterClothing/Armor/bulletproof_vests.yml`](../../../Resources/Prototypes/_Mono/Entities/Clothing/OuterClothing/Armor/bulletproof_vests.yml): WP11-3, P3-D6: locational armour coverage
 - [`Resources/Prototypes/_Mono/Entities/Clothing/OuterClothing/Vests/vests.yml`](../../../Resources/Prototypes/_Mono/Entities/Clothing/OuterClothing/Vests/vests.yml): P6, P3-D6: locational armour coverage
 - [`Resources/Prototypes/_Mono/Entities/Mobs/Species/protogen.yml`](../../../Resources/Prototypes/_Mono/Entities/Mobs/Species/protogen.yml): D21/D32 -> P5-D9: the exclusion was lifted in phase 5. BaseMobProtogen is biologically organic
-- [`Resources/Prototypes/_Mono/Entities/Objects/Tools/nanite_applicator.yml`](../../../Resources/Prototypes/_Mono/Entities/Objects/Tools/nanite_applicator.yml): P5-D5, PROTO T: as welders.yml - MobIPC moves to WFSiliconWolfmed in WP13-2 and
+- [`Resources/Prototypes/_Mono/Entities/Objects/Tools/nanite_applicator.yml`](../../../Resources/Prototypes/_Mono/Entities/Objects/Tools/nanite_applicator.yml)
+  - P5-D5, PROTO T: as welders.yml - MobIPC moves to WFSiliconWolfmed in WP13-2 and
+  - playtest 5, an IPC's parts sit in this container, as the welder lists
 - [`Resources/Prototypes/_Mono/Entities/Objects/Weapons/Guns/Ammunition/Projectiles/12_gauge.yml`](../../../Resources/Prototypes/_Mono/Entities/Objects/Weapons/Guns/Ammunition/Projectiles/12_gauge.yml): W1: buckshot leaves fragments, not a clean channel.
 - [`Resources/Prototypes/_NF/Body/Organs/goblin_organs.yml`](../../../Resources/Prototypes/_NF/Body/Organs/goblin_organs.yml): M4: OD16 parity, Wolfmed lung data (plan 9.2 group A-prime)
 - [`Resources/Prototypes/_NF/Catalog/VendingMachines/Inventories/civimed.yml`](../../../Resources/Prototypes/_NF/Catalog/VendingMachines/Inventories/civimed.yml)

@@ -160,6 +160,15 @@ public enum AutodocVoiceEvent : byte
 
     /// <summary>Playtest 4, IV: the occupant needs blood and the blood reservoir is empty.</summary>
     NoBlood,
+
+    /// <summary>Playtest 5: ADD was pressed on a procedure the subject's condition no longer allows.</summary>
+    QueueRefused,
+
+    /// <summary>Playtest 5: the antibiotic course out of the reservoir has started.</summary>
+    Antibiotics,
+
+    /// <summary>Playtest 5: the occupant is infected and no antibiotic is loaded.</summary>
+    NoAntibiotic,
 }
 
 /// <summary>
