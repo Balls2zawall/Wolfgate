@@ -19,25 +19,31 @@ using Robust.Shared.Prototypes;
 
 namespace Content.Server._WF.Wolfmed.Wounds;
 
-/// <summary>Wound infection, from a contaminated cut through spreading infection to a body dying of sepsis.</summary>
+/// <summary>
+/// Wound infection, from a contaminated cut through an infected limb to a body dying of sepsis and septic shock.
+/// </summary>
 /// <remarks>
-/// One tick walks only wounds that are already contaminated and bodies that are already septic, so the
-/// cost is in injuries rather than in players. Everything here is server-side: wound creation, damage,
-/// temperature and pain all are. <see cref="Update"/> advances by whatever time has accumulated, so a
-/// test can hand it ten minutes in one call.
+/// One tick walks only wounds that are already contaminated, parts that are already infected and bodies that are
+/// already septic, so the cost is in injuries rather than in players. Everything here is server-side: wound
+/// creation, damage, temperature and pain all are. <see cref="Update"/> advances by whatever time has accumulated,
+/// so a test can hand it ten minutes in one call; an infection moves one part per call.
 /// </remarks>
 // A wound with WolfmedInfectionRiskBehavior carries WolfmedInfectionComponent and gains progress on a slow batched
 // tick, scaled by that risk, by what has been done to the wound and by whether something dirty has been in it. Past
-// the profile's thresholds it goes local (hurts and widens), then spreading (feverish), then feeds
-// WolfmedSepsisComponent on the body, the stage that kills. Neither stage deals Poison; the toxin load is its own
-// route.
+// the profile's thresholds it goes local (hurts and widens), then spreading (feverish). INFECTION: a spreading wound
+// infects its part (WolfmedPartInfectionComponent), a spreading part infects its parent, towards the torso, and only
+// an infected torso or head feeds WolfmedSepsisComponent on the body, the stage that kills. Neither stage deals
+// Poison; the toxin load is its own route.
 public sealed class WolfmedInfectionSystem : EntitySystem
 {
     /// <summary>The shipped profile. A downstream server retunes the prototype, not this file.</summary>
     public const string DefaultProfile = "WFWolfmedDefaultInfection";
 
-    /// <summary>Alert shown while the patient is septic.</summary>
+    /// <summary>Alert shown while the patient is septic. Severity 0 is sepsis, 1 septic shock.</summary>
     public static readonly ProtoId<AlertPrototype> SepsisAlert = "WFWolfmedSepsis";
+
+    /// <summary>INFECTION: a part's infection runs 0 to this; at it the part is Septic.</summary>
+    public const float PartSepticAt = 100f;
 
     /// <summary>Seconds between batches. Nothing in the model needs finer resolution than this.</summary>
     private const float TickSeconds = 5f;
@@ -162,6 +168,9 @@ public sealed class WolfmedInfectionSystem : EntitySystem
         var minutes = elapsed / 60f * _config.GetCVar(WolfmedCVars.InfectionRate);
         var profile = Profile;
 
+        // Every body running a fever this tick, so each gets one rise however many sources it has.
+        var fevered = new HashSet<EntityUid>();
+
         // Buffered: a tick removes the component, and its damage can create wounds that gain one.
         var dueWounds = new List<Entity<WolfmedInfectionComponent, WoundComponent>>();
         var wounds = EntityQueryEnumerator<WolfmedInfectionComponent, WoundComponent>();
@@ -171,8 +180,11 @@ public sealed class WolfmedInfectionSystem : EntitySystem
         foreach (var due in dueWounds)
         {
             if (!TerminatingOrDeleted(due) && HasComp<WolfmedInfectionComponent>(due))
-                TickWound(due, profile, minutes);
+                TickWound(due, profile, minutes, fevered);
         }
+
+        TickParts(profile, minutes, fevered);
+        SeedSepsis();
 
         var dueSepsis = new List<Entity<WolfmedSepsisComponent>>();
         var sepsis = EntityQueryEnumerator<WolfmedSepsisComponent>();
@@ -182,13 +194,20 @@ public sealed class WolfmedInfectionSystem : EntitySystem
         foreach (var due in dueSepsis)
         {
             if (!TerminatingOrDeleted(due) && HasComp<WolfmedSepsisComponent>(due))
-                TickSepsis(due, profile, minutes);
+                TickSepsis(due, profile, minutes, fevered);
+        }
+
+        foreach (var body in fevered)
+        {
+            if (!TerminatingOrDeleted(body))
+                Fever(body, profile, minutes);
         }
     }
 
     private void TickWound(Entity<WolfmedInfectionComponent, WoundComponent> wound,
         WolfmedInfectionProfilePrototype profile,
-        float minutes)
+        float minutes,
+        HashSet<EntityUid> fevered)
     {
         var (infection, core) = (wound.Comp1, wound.Comp2);
         var part = core.HoldingPart;
@@ -251,19 +270,110 @@ public sealed class WolfmedInfectionSystem : EntitySystem
         }
 
         // A corpse does not run a fever. M5 (OD13): a spreading infection no longer deals Poison; toxins are their own
-        // route, and sepsis has its own brain drain.
-        if (infection.Stage < WolfmedInfectionStage.Spreading || body is not { } host || _mobState.IsDead(host))
+        // route, and sepsis has its own brain drain. INFECTION: a septic wound no longer starts sepsis; it infects its
+        // part (TickParts), and only the torso and head feed sepsis.
+        if (infection.Stage >= WolfmedInfectionStage.Spreading && body is { } host && !_mobState.IsDead(host))
+            fevered.Add(host);
+    }
+
+    /// <summary>
+    /// INFECTION: every part's own infection. A part is fed by each spreading wound on it (a septic one twice) and by
+    /// each child part that is spreading or septic; a necrotic part is pinned at the top; an unfed part recovers.
+    /// The stages are read as the pass starts, so an infection moves one part a tick whatever order they come in.
+    /// </summary>
+    private void TickParts(WolfmedInfectionProfilePrototype profile, float minutes, HashSet<EntityUid> fevered)
+    {
+        // Per minute per part; an infected part with nothing feeding it is in here at 0 and recovers.
+        var feed = new Dictionary<EntityUid, float>();
+        var pinned = new HashSet<EntityUid>();
+
+        var spreading = new List<EntityUid>();
+        var infected = EntityQueryEnumerator<WolfmedPartInfectionComponent>();
+        while (infected.MoveNext(out var uid, out var infection))
+        {
+            feed.TryAdd(uid, 0f);
+            if (infection.Stage >= WolfmedInfectionStage.Spreading)
+                spreading.Add(uid);
+        }
+
+        // Towards the torso only: a part feeds the part it hangs off, never its own children.
+        foreach (var part in spreading)
+        {
+            if (!TerminatingOrDeleted(part) && _body.GetParentPartOrNull(part) is { } parent && CanCarry(parent))
+                feed[parent] = feed.GetValueOrDefault(parent) + profile.PartSpreadPerMinute;
+        }
+
+        var wounds = EntityQueryEnumerator<WolfmedInfectionComponent, WoundComponent>();
+        while (wounds.MoveNext(out _, out var infection, out var wound))
+        {
+            if (infection.Stage < WolfmedInfectionStage.Spreading ||
+                wound.State is WoundState.Healed or WoundState.Scarred ||
+                TerminatingOrDeleted(wound.HoldingPart) || !CanCarry(wound.HoldingPart))
+                continue;
+
+            var rate = profile.PartFromWoundPerMinute * (infection.Stage == WolfmedInfectionStage.Septic ? 2f : 1f);
+            feed[wound.HoldingPart] = feed.GetValueOrDefault(wound.HoldingPart) + rate;
+        }
+
+        var necrotic = EntityQueryEnumerator<WolfmedNecrosisComponent>();
+        while (necrotic.MoveNext(out var uid, out var necrosis))
+        {
+            if (!necrosis.Necrotic || TerminatingOrDeleted(uid) || !CanCarry(uid))
+                continue;
+
+            pinned.Add(uid);
+            feed.TryAdd(uid, 0f);
+        }
+
+        foreach (var (part, perMinute) in feed)
+        {
+            if (TerminatingOrDeleted(part))
+                continue;
+
+            var current = CompOrNull<WolfmedPartInfectionComponent>(part)?.Progress ?? 0f;
+            var progress = pinned.Contains(part) ? PartSepticAt
+                : perMinute > 0f ? current + perMinute * minutes
+                : current - profile.PartRecoveryPerMinute * minutes;
+
+            if (SetPartProgress(part, progress, profile) is not { } stage ||
+                CompOrNull<BodyPartComponent>(part)?.Body is not { } body)
+                continue;
+
+            // The part's own effects: it hurts from Local, as a local wound does, and runs a fever from Spreading.
+            if (stage >= WolfmedInfectionStage.Local)
+                _pain.ChangePain(part, profile.LocalPainPerMinute * minutes);
+
+            if (stage >= WolfmedInfectionStage.Spreading && !_mobState.IsDead(body))
+                fevered.Add(body);
+        }
+    }
+
+    /// <summary>INFECTION: a living body whose torso or head is spreading or septic goes septic.</summary>
+    private void SeedSepsis()
+    {
+        if (!_config.GetCVar(WolfmedCVars.SepsisEnabled))
             return;
 
-        Fever(host, profile, minutes);
+        // Buffered, so nothing is added while the query is walked.
+        var septic = new List<EntityUid>();
+        var parts = EntityQueryEnumerator<WolfmedPartInfectionComponent, BodyPartComponent>();
+        while (parts.MoveNext(out _, out var infection, out var part))
+        {
+            if (infection.Stage >= WolfmedInfectionStage.Spreading && IsCore(part) && part.Body is { } body)
+                septic.Add(body);
+        }
 
-        if (infection.Stage == WolfmedInfectionStage.Septic && _config.GetCVar(WolfmedCVars.SepsisEnabled))
-            EnsureComp<WolfmedSepsisComponent>(host);
+        foreach (var body in septic)
+        {
+            if (!TerminatingOrDeleted(body) && !_mobState.IsDead(body))
+                EnsureComp<WolfmedSepsisComponent>(body);
+        }
     }
 
     private void TickSepsis(Entity<WolfmedSepsisComponent> body,
         WolfmedInfectionProfilePrototype profile,
-        float minutes)
+        float minutes,
+        HashSet<EntityUid> fevered)
     {
         if (TerminatingOrDeleted(body))
             return;
@@ -276,9 +386,11 @@ public sealed class WolfmedInfectionSystem : EntitySystem
             100f);
 
         // Pinned at 100 is the common case for a patient nobody is treating; do not send that every tick.
-        if (progress != body.Comp.Progress)
+        var shock = progress >= _config.GetCVar(WolfmedCVars.SepticShockAt);
+        if (progress != body.Comp.Progress || shock != body.Comp.Shock)
         {
             body.Comp.Progress = progress;
+            body.Comp.Shock = shock;
             Dirty(body);
         }
 
@@ -288,12 +400,13 @@ public sealed class WolfmedInfectionSystem : EntitySystem
             return;
         }
 
-        _alerts.ShowAlert(body, SepsisAlert);
+        // INFECTION: severity 1 is septic shock.
+        _alerts.ShowAlert(body, SepsisAlert, (short) (shock ? 1 : 0));
         if (_mobState.IsDead(body))
             return;
 
         // M5 (OD13): sepsis deals no Poison. It kills through its own brain drain past wolfmed.arrest_sepsis.
-        Fever(body, profile, minutes);
+        fevered.Add(body);
 
         // Playtest 4 (SEPSIS): past wolfmed.sepsis_organ_damage_from it eats the torso organs as well, the route for a
         // body whose brain is kept topped up while nobody treats the infection.
@@ -311,6 +424,14 @@ public sealed class WolfmedInfectionSystem : EntitySystem
         _config.GetCVar(WolfmedCVars.SepsisOrganDamagePerMinute) > 0f &&
         GetSepsis(body) >= _config.GetCVar(WolfmedCVars.SepsisOrganDamageFrom) &&
         !_mobState.IsDead(body);
+
+    /// <summary>
+    /// INFECTION: the body's sepsis is at or past wolfmed.septic_shock_at, the late stage whose effects are the brain
+    /// drain and the organ damage. The alert, the analyzer and the examine text name it.
+    /// </summary>
+    public bool InSepticShock(EntityUid body) =>
+        TryComp(body, out WolfmedSepsisComponent? sepsis) &&
+        sepsis.Progress >= _config.GetCVar(WolfmedCVars.SepticShockAt);
 
     /// <summary>
     /// Takes the per-minute rate, times the profile's weight for each organ's slot, off every Wolfmed organ in the
@@ -353,8 +474,8 @@ public sealed class WolfmedInfectionSystem : EntitySystem
     }
 
     /// <summary>
-    /// Playtest 4 (SEPSIS): a fever is running, the state <see cref="Fever"/> keeps: the body is septic, or an
-    /// infection on it has spread.
+    /// Playtest 4 (SEPSIS): a fever is running, the state <see cref="Fever"/> keeps: the body is septic, or a wound
+    /// or (INFECTION) a part on it is spreading.
     /// </summary>
     public bool HasFever(EntityUid body)
     {
@@ -363,31 +484,34 @@ public sealed class WolfmedInfectionSystem : EntitySystem
 
         foreach (var part in Parts(body))
         {
-            if (GetPartStage(part) >= WolfmedInfectionStage.Spreading)
+            if (GetPartStage(part) >= WolfmedInfectionStage.Spreading ||
+                GetWorstWoundStage(part) >= WolfmedInfectionStage.Spreading)
                 return true;
         }
 
         return false;
     }
 
-    /// <summary>Spreading wounds and dead limbs, both of which keep a systemic infection fed.</summary>
+    /// <summary>INFECTION: the torso and the head that are spreading or septic. Nothing else feeds sepsis.</summary>
     private int CountSources(EntityUid body)
     {
         var sources = 0;
-        foreach (var part in Parts(body))
+        foreach (var (part, component) in _body.GetBodyChildren(body))
         {
-            if (CompOrNull<WolfmedNecrosisComponent>(part)?.Necrotic == true)
+            if (IsCore(component) && GetPartStage(part) >= WolfmedInfectionStage.Spreading)
                 sources++;
-
-            foreach (var wound in _wounds.GetWounds(part))
-            {
-                if (CompOrNull<WolfmedInfectionComponent>(wound)?.Stage >= WolfmedInfectionStage.Spreading)
-                    sources++;
-            }
         }
 
         return sources;
     }
+
+    /// <summary>INFECTION: the parts sepsis starts from.</summary>
+    private static bool IsCore(BodyPartComponent part) => part.PartType is BodyPartType.Torso or BodyPartType.Head;
+
+    /// <summary>INFECTION: a part that can hold an infection of its own: woundable living tissue.</summary>
+    private bool CanCarry(EntityUid part) =>
+        HasComp<BodyPartComponent>(part) && TryComp(part, out WoundableComponent? woundable) &&
+        _traits.IsOrganic((part, woundable));
 
     private void Fever(EntityUid body, WolfmedInfectionProfilePrototype profile, float minutes)
     {
@@ -431,6 +555,39 @@ public sealed class WolfmedInfectionSystem : EntitySystem
             Dirty(wound.Owner, infection);
     }
 
+    /// <summary>
+    /// INFECTION: sets a part's infection, adding the component on the first progress and removing it at 0. Returns
+    /// the stage, or null once the part is clear.
+    /// </summary>
+    private WolfmedInfectionStage? SetPartProgress(EntityUid part, float progress, WolfmedInfectionProfilePrototype profile)
+    {
+        progress = Math.Clamp(progress, 0f, PartSepticAt);
+        if (progress <= 0f)
+        {
+            RemComp<WolfmedPartInfectionComponent>(part);
+            return null;
+        }
+
+        var infection = EnsureComp<WolfmedPartInfectionComponent>(part);
+        var stage = progress switch
+        {
+            >= PartSepticAt => WolfmedInfectionStage.Septic,
+            var value when value >= profile.PartSpreadingAt => WolfmedInfectionStage.Spreading,
+            var value when value >= profile.PartLocalAt => WolfmedInfectionStage.Local,
+            _ => WolfmedInfectionStage.None,
+        };
+
+        // A necrotic limb sits pinned at the top; only send a state that moved.
+        if (infection.Progress != progress || infection.Stage != stage)
+        {
+            infection.Progress = progress;
+            infection.Stage = stage;
+            Dirty(part, infection);
+        }
+
+        return stage;
+    }
+
     private IEnumerable<EntityUid> Parts(EntityUid body)
     {
         foreach (var (part, _) in _body.GetBodyChildren(body))
@@ -460,7 +617,8 @@ public sealed class WolfmedInfectionSystem : EntitySystem
 
     /// <summary>
     /// Antiseptic over every open wound on the body. Returns how many it reached. Cleaning is prevention:
-    /// it sheds a local infection over the next minute but does nothing for one that has already spread.
+    /// it sheds a local infection over the next minute but does nothing for one that has already spread,
+    /// nor (INFECTION) for a part's own infection.
     /// </summary>
     public int Clean(EntityUid body)
     {
@@ -487,15 +645,15 @@ public sealed class WolfmedInfectionSystem : EntitySystem
     }
 
     /// <summary>
-    /// An antibiotic dose: clears contamination everywhere at once and pulls sepsis back. Returns whether
-    /// there was anything to treat.
+    /// An antibiotic dose: clears contamination everywhere at once, (INFECTION) the parts' own infections with it,
+    /// and pulls sepsis back. Returns whether there was anything to treat.
     /// </summary>
     public bool Treat(EntityUid body, float units)
     {
         var profile = Profile;
         var treated = false;
 
-        foreach (var part in Parts(body))
+        foreach (var part in Parts(body).ToArray())
         {
             foreach (var wound in _wounds.GetWounds(part).ToArray())
             {
@@ -507,6 +665,12 @@ public sealed class WolfmedInfectionSystem : EntitySystem
                     infection.Progress - profile.AntibioticPerUnit * units,
                     profile);
             }
+
+            if (!TryComp(part, out WolfmedPartInfectionComponent? partInfection))
+                continue;
+
+            treated |= partInfection.Progress > 0f;
+            SetPartProgress(part, partInfection.Progress - profile.PartAntibioticPerUnit * units, profile);
         }
 
         if (!TryComp(body, out WolfmedSepsisComponent? sepsis))
@@ -516,7 +680,10 @@ public sealed class WolfmedInfectionSystem : EntitySystem
         if (sepsis.Progress <= 0f)
             RemComp<WolfmedSepsisComponent>(body);
         else
+        {
+            sepsis.Shock = sepsis.Progress >= _config.GetCVar(WolfmedCVars.SepticShockAt);
             Dirty(body, sepsis);
+        }
 
         return true;
     }
@@ -526,7 +693,7 @@ public sealed class WolfmedInfectionSystem : EntitySystem
         CompOrNull<WolfmedInfectionComponent>(wound)?.Stage ?? WolfmedInfectionStage.None;
 
     /// <summary>The worst infection stage among a part's wounds.</summary>
-    public WolfmedInfectionStage GetPartStage(Entity<WoundableComponent?> part)
+    public WolfmedInfectionStage GetWorstWoundStage(Entity<WoundableComponent?> part)
     {
         var stage = WolfmedInfectionStage.None;
         foreach (var wound in _wounds.GetWounds(part))
@@ -534,6 +701,14 @@ public sealed class WolfmedInfectionSystem : EntitySystem
 
         return stage;
     }
+
+    /// <summary>INFECTION: the part's own infection stage, which travels towards the torso.</summary>
+    public WolfmedInfectionStage GetPartStage(EntityUid part) =>
+        CompOrNull<WolfmedPartInfectionComponent>(part)?.Stage ?? WolfmedInfectionStage.None;
+
+    /// <summary>INFECTION: the part's own infection progress, 0 to 100.</summary>
+    public float GetPartProgress(EntityUid part) =>
+        CompOrNull<WolfmedPartInfectionComponent>(part)?.Progress ?? 0f;
 
     /// <summary>How far the body's systemic infection has got, or 0 when it has none.</summary>
     public float GetSepsis(EntityUid body) => CompOrNull<WolfmedSepsisComponent>(body)?.Progress ?? 0f;

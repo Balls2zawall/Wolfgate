@@ -253,7 +253,9 @@ public sealed partial class WolfmedDiagnosticPanel
                 WolfmedWoundStyle.Necrosis,
                 SepsisText(msg.WoundDiagnostics),
                 "sepsis",
-                out var sepsis));
+                out var sepsis,
+                // INFECTION: the late stage is titled for itself; its procedure is still sepsis's.
+                label: msg.WoundDiagnostics.Vitals is { SepticShock: true } ? "septic-shock" : null));
             _sepsisLabel = sepsis;
         }
 
@@ -325,7 +327,8 @@ public sealed partial class WolfmedDiagnosticPanel
         if (msg.WoundDiagnostics is not { } diagnostics)
             return text.Append("|none").ToString();
 
-        text.Append(diagnostics.Sepsis > 0f ? "|sep" : "|-");
+        text.Append(diagnostics.Sepsis > 0f ? "|sep" : "|-")
+            .Append(diagnostics.Vitals is { SepticShock: true } ? 'S' : '-'); // INFECTION: the banner's title
         // BRAIN: the states, never the numbers that drift with them.
         text.Append(diagnostics.CardiacArrest ? 'a' : '-')
             .Append(diagnostics.BrainDead ? 'b' : '-')
@@ -348,6 +351,7 @@ public sealed partial class WolfmedDiagnosticPanel
                 .Append((int) diagnostic.Fracture).Append((int) diagnostic.FractureTreatment)
                 .Append((int) diagnostic.BleedingTreatment).Append((int) diagnostic.ClottingPhase)
                 .Append((int) diagnostic.Functionality).Append((int) diagnostic.Infection)
+                .Append((int) diagnostic.PartInfection) // INFECTION
                 .Append((int) diagnostic.Treatments).Append(',')
                 .Append(diagnostic.EmbeddedObjects).Append(',')
                 .Append(diagnostic.BleedingRate > 0f ? '1' : '0')
@@ -483,12 +487,15 @@ public sealed partial class WolfmedDiagnosticPanel
     }
 
     // Playtest 4 (SEPSIS): the banner says so once the sepsis is damaging the organs, which the vitals routes carry.
-    private static string SepsisText(HealthAnalyzerWoundDiagnostics diagnostics) =>
-        Loc.GetString(
-            diagnostics.Vitals is { } vitals && (vitals.Routes & WolfmedRoutes.SepsisOrgans) != 0
-                ? "health-analyzer-wound-sepsis-organs"
-                : "health-analyzer-wound-sepsis",
-            ("percent", (int) MathF.Round(diagnostics.Sepsis)));
+    // INFECTION: past wolfmed.septic_shock_at it reads "SEPTIC SHOCK".
+    private static string SepsisText(HealthAnalyzerWoundDiagnostics diagnostics)
+    {
+        var stem = diagnostics.Vitals is { SepticShock: true }
+            ? "health-analyzer-wound-septic-shock"
+            : "health-analyzer-wound-sepsis";
+        var organs = diagnostics.Vitals is { } vitals && (vitals.Routes & WolfmedRoutes.SepsisOrgans) != 0;
+        return Loc.GetString(organs ? stem + "-organs" : stem, ("percent", (int) MathF.Round(diagnostics.Sepsis)));
+    }
 
     /// <summary>CONSC: the tier, the time left, and the reminder that none of it treats anything.</summary>
     private static string PainReliefText(HealthAnalyzerWoundDiagnostics diagnostics) =>
@@ -829,6 +836,16 @@ public sealed partial class WolfmedDiagnosticPanel
                 WolfmedTreatmentAdvice.InfectionCondition(diagnostic.Infection), mech));
         }
 
+        // INFECTION: the part's own infection, travelling towards the torso; it needs no wound on this part.
+        if (diagnostic.PartInfection != WolfmedInfectionStage.None)
+        {
+            var stage = diagnostic.PartInfection.ToString().ToLowerInvariant();
+            chips.Add(CreateChip(part, "infection", WolfmedWoundStyle.Infection,
+                Loc.GetString($"health-analyzer-part-infection-{stage}-short"),
+                Loc.GetString($"health-analyzer-part-infection-{stage}"),
+                WolfmedTreatmentAdvice.PartInfectionCondition(diagnostic.PartInfection), mech));
+        }
+
         // W6: a hot part reads as hot even once the wound itself has cooled past its first stage.
         if (diagnostic.Overheating)
         {
@@ -1157,6 +1174,8 @@ public sealed partial class WolfmedDiagnosticPanel
             "necrosis-risk" => diagnostic.NecrosisRisk && !diagnostic.Necrotic,
             "overheating" => diagnostic.Overheating,
             _ => condition == WolfmedTreatmentAdvice.InfectionCondition(diagnostic.Infection) ||
+                 diagnostic.PartInfection != WolfmedInfectionStage.None && // INFECTION
+                 condition == WolfmedTreatmentAdvice.PartInfectionCondition(diagnostic.PartInfection) ||
                  condition == WolfmedTreatmentAdvice.FunctionalityCondition(diagnostic.Functionality),
         };
 

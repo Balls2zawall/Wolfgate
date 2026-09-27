@@ -1,10 +1,15 @@
-# Sepsis (W5). Shown while WolfmedSepsisComponent is on the body, cleared when it leaves.
+# Sepsis (W5). Shown while WolfmedSepsisComponent is on the body, cleared when it leaves. INFECTION: severity 1 is
+# septic shock (wolfmed.septic_shock_at), the same icon with the pain HUD's flashing red border.
 
 - type: alert
   id: WFWolfmedSepsis
   icons:
   - sprite: /Textures/_WF/Wolfmed/Interface/Alerts/sepsis.rsi
     state: sepsis
+  - sprite: /Textures/_WF/Wolfmed/Interface/Alerts/sepsis.rsi
+    state: septicshock
+  minSeverity: 0
+  maxSeverity: 1
   name: alerts-wolfmed-sepsis-name
   description: alerts-wolfmed-sepsis-desc
 

@@ -97,6 +97,15 @@ public static class WolfmedTreatmentAdvice
         "infection-" + stage.ToString().ToLowerInvariant();
 
     /// <summary>
+    /// INFECTION: the condition for a part's own infection. Antiseptic never reaches it, so a local one takes the
+    /// spreading advice (antibiotics) rather than the local wound's.
+    /// </summary>
+    public static string PartInfectionCondition(WolfmedInfectionStage stage) =>
+        InfectionCondition(stage == WolfmedInfectionStage.Septic
+            ? WolfmedInfectionStage.Septic
+            : WolfmedInfectionStage.Spreading);
+
+    /// <summary>
     /// A PascalCase prototype id as the kebab-case tail of a locale key. The module's <c>WF</c> id prefix is left
     /// out: it is a namespace rather than a word, so <c>WFWolfmedGrazeWound</c> keys <c>wolfmed-graze-wound</c>.
     /// </summary>

@@ -8,8 +8,8 @@ namespace Content.Server._WF.Wolfmed.Wounds;
 
 /// <summary>
 /// What a full heal has to undo that is not a wound. <c>WoundSystem.ClearWounds</c> deletes every wound
-/// entity, but sepsis lives on the body and dead tissue and tourniquets live on the parts, so without this
-/// an <c>aheal</c> left the patient septic forever off a necrotic limb that the analyzer no longer showed.
+/// entity, but sepsis lives on the body and dead tissue, tourniquets and part infections live on the parts, so
+/// without this an <c>aheal</c> left the patient septic forever off a necrotic limb that the analyzer no longer showed.
 /// </summary>
 /// <remarks>
 /// Answers <see cref="WolfmedRejuvenateEvent"/>, the broadcast the two Onyx rejuvenate handlers raise,
@@ -51,6 +51,8 @@ public sealed class WolfmedRejuvenateSystem : EntitySystem
 
             RemComp<WolfmedNecrosisComponent>(part);
             RemComp<WolfmedTourniquetComponent>(part);
+            // INFECTION: a part's own infection is not a wound either, and a torso left infected restarts sepsis.
+            RemComp<WolfmedPartInfectionComponent>(part);
         }
 
         _degradation.Refresh(target);

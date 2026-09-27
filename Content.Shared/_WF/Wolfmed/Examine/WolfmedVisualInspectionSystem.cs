@@ -163,12 +163,13 @@ public sealed class WolfmedVisualInspectionSystem : EntitySystem
             lines++;
         }
 
-        // Sepsis is the one finding that belongs to the whole patient rather than to a part.
+        // Sepsis is the one finding that belongs to the whole patient rather than to a part. INFECTION: in septic shock
+        // the flush gives way to grey, clammy skin.
         if (detailed && TryComp(examined, out WolfmedSepsisComponent? sepsis) &&
-            sepsis.Progress >= profile.SepsisVisibleAt)
+            (sepsis.Shock || sepsis.Progress >= profile.SepsisVisibleAt))
         {
-            report.Notes.Add(Loc.GetString(self ? "wolfmed-look-sepsis-self" : "wolfmed-look-sepsis-other",
-                ("target", identity)));
+            var key = sepsis.Shock ? "wolfmed-look-septic-shock" : "wolfmed-look-sepsis";
+            report.Notes.Add(Loc.GetString(self ? key + "-self" : key + "-other", ("target", identity)));
             lines++;
         }
 

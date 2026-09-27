@@ -16,6 +16,9 @@ wolfmed-look-hidden = [color=DarkGray]Nothing shows through { POSS-ADJ($target) 
 wolfmed-look-distant = [color=DarkGray]You are too far away to make out more.[/color]
 wolfmed-look-sepsis-self = [color=crimson]You are flushed and sweating.[/color]
 wolfmed-look-sepsis-other = [color=crimson]{ CAPITALIZE(SUBJECT($target)) } { CONJUGATE-BE($target) } flushed and sweating.[/color]
+# INFECTION: septic shock, sepsis past wolfmed.septic_shock_at. Replaces the flush.
+wolfmed-look-septic-shock-self = [color=crimson]You are grey and clammy, and your skin is blotched.[/color]
+wolfmed-look-septic-shock-other = [color=crimson]{ CAPITALIZE(SUBJECT($target)) } { CONJUGATE-BE($target) } grey and clammy, { POSS-ADJ($target) } skin blotched.[/color]
 
 # Part names in the lower case the sentences above want.
 wolfmed-look-part-name-head = head

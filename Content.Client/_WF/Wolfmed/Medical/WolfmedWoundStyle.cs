@@ -104,7 +104,9 @@ public static class WolfmedWoundStyle
     /// </summary>
     public static Color Accent(HealthAnalyzerWoundDiagnostic diagnostic)
     {
-        if (diagnostic.Necrotic || diagnostic.Infection == WolfmedInfectionStage.Septic)
+        // INFECTION: the part's own infection counts as the wound's does.
+        if (diagnostic.Necrotic || diagnostic.Infection == WolfmedInfectionStage.Septic ||
+            diagnostic.PartInfection == WolfmedInfectionStage.Septic)
             return Necrosis;
 
         if (diagnostic.BleedingRate > 0f || diagnostic.InternalBleedingRate > 0f)
@@ -113,7 +115,8 @@ public static class WolfmedWoundStyle
         if (diagnostic.Fracture != FractureGrade.None)
             return Fracture;
 
-        if (diagnostic.Infection != WolfmedInfectionStage.None || diagnostic.NecrosisRisk)
+        if (diagnostic.Infection != WolfmedInfectionStage.None || diagnostic.NecrosisRisk ||
+            diagnostic.PartInfection != WolfmedInfectionStage.None)
             return Infection;
 
         return CardAccentNeutral;

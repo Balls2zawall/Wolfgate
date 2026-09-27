@@ -76,8 +76,15 @@ health-analyzer-wound-necrotic-short = NECROTIC
 health-analyzer-wound-necrosis-risk-short = circulation failing
 health-analyzer-wound-sepsis = [color=#d63c2c]SEPSIS[/color] - systemic infection at { $percent }%
 
-alerts-wolfmed-sepsis-name = Sepsis
-alerts-wolfmed-sepsis-desc = The infection is in your blood. You need antibiotics, and you needed them a while ago.
+# INFECTION: AlertControl passes the alert's severity to both lines; 1 is septic shock.
+alerts-wolfmed-sepsis-name = { $severity ->
+        [1] Septic shock
+       *[other] Sepsis
+    }
+alerts-wolfmed-sepsis-desc = { $severity ->
+        [1] Septic shock. The infection is shutting your body down; without antibiotics now it stops your heart.
+       *[other] The infection is in your blood. You need antibiotics, and you needed them a while ago.
+    }
 
 reagent-name-spaceacillin = spaceacillin
 reagent-desc-spaceacillin = A broad-spectrum antibiotic. Clears an infected wound and pulls a septic patient back; a heavy dose is poisonous in its own right.
@@ -168,3 +175,16 @@ wolfmed-overheat-popup = {$name}'s circuits are overheating!
 
 # Playtest 4, SEPSIS: the sepsis banner once it damages the torso organs.
 health-analyzer-wound-sepsis-organs = [color=#d63c2c]SEPSIS[/color] - systemic infection at { $percent }%, damaging the organs
+
+# INFECTION: septic shock, the late stage of sepsis past wolfmed.septic_shock_at.
+health-analyzer-wound-septic-shock = [color=#d63c2c]SEPTIC SHOCK[/color] - systemic infection at { $percent }%
+health-analyzer-wound-septic-shock-organs = [color=#d63c2c]SEPTIC SHOCK[/color] - systemic infection at { $percent }%, damaging the organs
+
+# INFECTION: a part's own infection, which travels towards the torso with no wound on the part. The chip's label, then
+# its headline.
+health-analyzer-part-infection-local-short = tissue: local
+health-analyzer-part-infection-spreading-short = tissue: spreading
+health-analyzer-part-infection-septic-short = tissue: septic
+health-analyzer-part-infection-local = tissue infection: local
+health-analyzer-part-infection-spreading = tissue infection: spreading
+health-analyzer-part-infection-septic = tissue infection: septic

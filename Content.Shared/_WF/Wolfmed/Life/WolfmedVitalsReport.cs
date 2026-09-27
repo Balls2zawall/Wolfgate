@@ -162,6 +162,9 @@ public sealed class WolfmedVitalsReport
     /// <summary>M2 (plan §5.5): every process making the patient worse right now, each named with its first aid.</summary>
     public WolfmedRoutes Routes;
 
+    /// <summary>INFECTION: sepsis past wolfmed.septic_shock_at. The sepsis banner and aids say "septic shock".</summary>
+    public bool SepticShock;
+
     /// <summary>M2: why the heart last stopped, as an Arrest* source; None outside wolfmed.arrest_cause_memory_seconds.</summary>
     public WolfmedCauseSource RestartCause;
 
@@ -418,7 +421,7 @@ public static class WolfmedVitalsText
             var aid = circulation && refill
                 ? Loc.GetString(report.Mechanical ? "wolfmed-vitals-aid-refill" : "wolfmed-vitals-aid-transfuse",
                     ("units", Units(report.UnitsToLine)))
-                : Aid(route, report.Mechanical);
+                : Aid(route, report.Mechanical, report.SepticShock);
 
             if (!aids.Contains(aid))
                 aids.Add(aid);
@@ -430,10 +433,16 @@ public static class WolfmedVitalsText
         return Loc.GetString("wolfmed-vitals-do-first", ("aids", string.Join("; ", aids)));
     }
 
-    /// <summary>A route's first aid, a few words: "lung surgery", "antibiotics". A chassis's own words where it has them.</summary>
-    public static string Aid(WolfmedRoutes route, bool mechanical)
+    /// <summary>
+    /// A route's first aid, a few words: "lung surgery", "antibiotics". A chassis's own words where it has them;
+    /// INFECTION: the sepsis routes' septic shock words while <paramref name="shock"/>.
+    /// </summary>
+    public static string Aid(WolfmedRoutes route, bool mechanical, bool shock = false)
     {
         var key = $"wolfmed-vitals-aid-{route.ToString().ToLowerInvariant()}";
+        if (shock && Loc.TryGetString(key + "-shock", out var shocked))
+            return shocked;
+
         return mechanical && Loc.TryGetString(key + "-mechanical", out var machine) ? machine : Loc.GetString(key);
     }
 

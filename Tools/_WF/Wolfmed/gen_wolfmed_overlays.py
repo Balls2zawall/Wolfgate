@@ -23,8 +23,11 @@ stumps.rsi  Escape From Nevado's stump.dmi (its modular_septic copy), one stump 
             is the flesh as a blood mask, <site>_stump_bone the bone and the outline in their own colours, and
             <site>_stump_drip / _stump_stream the bulletwound drip and trickle glyphs hung from the bottom of the
             stump, for a stump that bleeds.
+sepsis.rsi  septicshock, the sepsis alert's severity 1: the hand-made sepsis state with paindowned's red border,
+            flashing at the same rate. The sepsis state is the source and is left as it is.
 
-Deterministic; rerunning rewrites the five RSIs byte for byte.
+Deterministic; rerunning rewrites the six RSIs byte for byte. --sepsis-only builds the last alone, which needs no
+Bobstation checkout.
 """
 import json
 import math
@@ -102,8 +105,11 @@ def load_dmi(path):
     return out
 
 
-def write_rsi(directory, copyright_text, states):
-    """states: [(name, dirs, frames[dir][frame] -> Image, delays[dir] -> [seconds] or None)]."""
+def write_rsi(directory, copyright_text, states, keep=()):
+    """
+    states: [(name, dirs, frames[dir][frame] -> Image, delays[dir] -> [seconds] or None)]. A state named in keep
+    goes into the meta but its png is left as it is.
+    """
     os.makedirs(directory, exist_ok=True)
     meta_states = []
     for name, dirs, frames, delays in states:
@@ -113,7 +119,8 @@ def write_rsi(directory, copyright_text, states):
         sheet = Image.new("RGBA", (columns * FRAME, rows * FRAME), (0, 0, 0, 0))
         for i, img in enumerate(flat):
             sheet.paste(img, ((i % columns) * FRAME, (i // columns) * FRAME))
-        sheet.save(os.path.join(directory, name + ".png"), optimize=True)
+        if name not in keep:
+            sheet.save(os.path.join(directory, name + ".png"), optimize=True)
         entry = {"name": name}
         if dirs != 1:
             entry["directions"] = dirs
@@ -499,7 +506,23 @@ def build_rot(bob):
               states)
 
 
+# --- sepsis alert ---
+
+def build_sepsis():
+    """INFECTION: septic shock, the sepsis icon with paindowned's border flashing red at paindowned's 0.4 s."""
+    directory = os.path.join(OUT, "Interface", "Alerts", "sepsis.rsi")
+    sepsis = Image.open(os.path.join(directory, "sepsis.png")).convert("RGBA").crop((0, 0, FRAME, FRAME))
+    write_rsi(directory,
+              "Made for Wolfgate (Wolfmed); septicshock bordered by Tools/_WF/Wolfmed/gen_wolfmed_overlays.py",
+              [("sepsis", 1, [[sepsis]], None),
+               ("septicshock", 1, [[bordered(sepsis), sepsis]], [[0.4, 0.4]])],
+              keep=("sepsis",))
+
+
 def main():
+    if "--sepsis-only" in sys.argv:
+        build_sepsis()
+        return
     bob = DEFAULT_BOB
     if "--bob" in sys.argv:
         bob = sys.argv[sys.argv.index("--bob") + 1]
@@ -511,6 +534,7 @@ def main():
     build_rot(bob)
     build_artery(bob)
     build_stumps(nevado, bob)
+    build_sepsis()
 
 
 if __name__ == "__main__":

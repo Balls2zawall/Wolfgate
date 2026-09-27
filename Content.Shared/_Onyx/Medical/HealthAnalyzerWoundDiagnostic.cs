@@ -31,9 +31,11 @@ public readonly record struct HealthAnalyzerWoundDiagnostic(
     WolfmedPartTreatments Treatments = WolfmedPartTreatments.None,
     // WOLFGATE(Wolfmed): EVISC: organ slots this part carries that nothing is in, which is how the procedure
     // window can tell a patient whose organs are back in from one still waiting for them.
-    ushort MissingOrgans = 0)
+    ushort MissingOrgans = 0,
+    // WOLFGATE(Wolfmed): INFECTION: the part's own infection, which travels towards the torso with no wound on it.
+    WolfmedInfectionStage PartInfection = WolfmedInfectionStage.None)
 {
-    // WOLFGATE(Wolfmed) START: the W1, W5 and W6 findings count as findings too.
+    // WOLFGATE(Wolfmed) START: the W1, W5, W6 and INFECTION findings count as findings too.
     // public bool HasFindings =>
     //     Fracture != FractureGrade.None || BleedingRate > 0f || ScarCount > 0 || Pain > FixedPoint2.Zero ||
     //     VisibleWounds.Count > 0 || Functionality != BodyPartFunctionalityState.Functional || InternalBleedingRate > 0f;
@@ -42,7 +44,7 @@ public readonly record struct HealthAnalyzerWoundDiagnostic(
         VisibleWounds.Count > 0 || Functionality != BodyPartFunctionalityState.Functional ||
         InternalBleedingRate > 0f || EmbeddedObjects > 0 ||
         Infection != WolfmedInfectionStage.None || Necrotic || NecrosisRisk ||
-        Overheating;
+        Overheating || PartInfection != WolfmedInfectionStage.None;
     // WOLFGATE END
 }
 

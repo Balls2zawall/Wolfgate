@@ -4,7 +4,7 @@
 - type: wolfmedInfectionProfile
   id: WFWolfmedDefaultInfection
   # Six a minute against a hundred: an untreated ordinary cut has about four minutes before it starts to
-  # hurt, ten before it spreads and seventeen before the patient is septic. A bad wound (risk 2 or 2.5)
+  # hurt, ten before it spreads and seventeen before the wound itself is septic. A bad wound (risk 2 or 2.5)
   # halves that, a dressing all but stops it.
   progressPerMinute: 6
   localAt: 25
@@ -27,6 +27,18 @@
   feverRise: 0.05
   # M5 (OD13): spreadingPoisonPerMinute and sepsisPoisonPerMinute are gone. Neither stage deals Poison any more;
   # sepsis kills through its own brain drain, and the toxin load is a route of its own.
+  # INFECTION: a part's own infection, 0 to 100 (100 is Septic). A spreading wound feeds its part 10 a minute (a
+  # septic one 20); a spreading or septic part feeds its parent 8 a minute, towards the torso only (hand to arm to
+  # torso, foot to leg to torso, head to torso); a necrotic part is pinned at 100; an unfed part recovers 4 a minute.
+  # An untreated cut on a hand: the hand spreads at about 16 minutes, the arm at 23, the torso at 31, and sepsis
+  # starts there; a cut on the chest or head starts it at about 16. A dead arm starts it 7.5 minutes after it dies.
+  partLocalAt: 25
+  partSpreadingAt: 60
+  partFromWoundPerMinute: 10
+  partSpreadPerMinute: 8
+  partRecoveryPerMinute: 4
+  partAntibioticPerUnit: 8
+  # Per source: a torso or head that is spreading or septic, so 0 to 2 sources.
   sepsisPerMinute: 12
   sepsisRecoveryPerMinute: 8
   sepsisAntibioticPerUnit: 6
@@ -60,7 +72,8 @@
   - !type:WoundPainBehavior
     painPerSeverity: 0.6
     minSeverity: 5
-  # Far above anything else in the system: a dead limb is a standing source of sepsis, not a risk of one.
+  # Far above anything else in the system: dead tissue is a standing source of infection, not a risk of one. The
+  # part itself is pinned at 100 and feeds its parent (INFECTION); sepsis follows once that reaches the torso.
   - !type:WolfmedInfectionRiskBehavior
     riskMultiplier: 6
   - !type:WolfmedLimbPenaltyBehavior

@@ -155,13 +155,17 @@ public sealed partial class HealthAnalyzerSystem
                 internalBleedingRate,
                 clottingPhase,
                 (ushort) Math.Clamp(_embedded.GetPartCount((part, woundable)), 0, ushort.MaxValue), // WOLFGATE (W1)
-                _infection.GetPartStage((part, woundable)), // WOLFGATE (W5)
+                _infection.GetWorstWoundStage((part, woundable)), // WOLFGATE (W5)
                 _necrosis.IsNecrotic(part), // WOLFGATE (W5)
                 _necrosis.IsAtRisk(part), // WOLFGATE (W5)
                 _traits.IsMechanical((part, woundable)), // WOLFGATE (W6): picks the chassis wording
                 _overheating.IsOverheating(part), // WOLFGATE (W6)
                 treatments, // WOLFGATE (UI4): what the procedure window ticks off
-                MissingOrgans(part, bodyPart)); // WOLFGATE (EVISC)
+                MissingOrgans(part, bodyPart), // WOLFGATE (EVISC)
+                // INFECTION: shown from Local; a part under that is still clearing and says nothing yet.
+                _infection.GetPartStage(part) is var partStage && partStage >= WolfmedInfectionStage.Local
+                    ? partStage
+                    : WolfmedInfectionStage.None);
 
             if (diagnostic.HasFindings)
                 result[target] = diagnostic;

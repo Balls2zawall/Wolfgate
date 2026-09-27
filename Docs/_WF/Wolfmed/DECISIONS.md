@@ -4030,3 +4030,94 @@ arms and legs; each is its own site, the same sites the arteries use.
   cover a missing arm), and the four keep that order whichever is created first.
 
 `WolfmedWoundOverlayTest.StumpOverlayTest` walks an arm off, its dressing and a head off, on the server and the client.
+## Playtest 4, INFECTION SPREAD (2026-09-27)
+
+"Infection should spread smartly, if you get an infection in the hand, once it's in the spreading mode, it should move
+to the arm etc, once in the chest/head, that's where sepsis/septic shock can occur ... And there doesn't need to be a
+wound to travel. And is septic shock a thing? If not, it should be what happens when you get sepsis." Branch
+`wolfmed-infection` from `1be3727edf`; spec `C:/Users/jzo12/Documents/Wolfmed/plan/p9/INFECTION-spec.md`.
+
+**Before.** A contaminated wound ran 0 to 100; at Septic (100) it created sepsis on the body, and every spreading wound
+and every necrotic part anywhere fed it 12 a minute. Where the wound was did not matter: a fingertip cut went septic as
+fast as a chest wound, and nothing travelled.
+
+**Infection lives on the parts.** New networked `WolfmedPartInfectionComponent` (`Progress` 0 to 100, `Stage`) on
+organic woundable parts only (`WolfmedWoundTraitSystem.IsOrganic`), added on a part's first progress and removed at 0.
+Stages off the profile's new `partLocalAt` (25) and `partSpreadingAt` (60); 100 is Septic. Each 5 s tick
+(`WolfmedInfectionSystem.TickParts`, after the wounds, minutes scaled by `wolfmed.infection_rate`), per part:
+- each wound on it at Spreading feeds it `partFromWoundPerMinute` (10), a Septic wound twice that. The wound's own
+  stages are unchanged; a Septic wound no longer creates sepsis.
+- a necrotic part (`WolfmedNecrosisComponent.Necrotic`) is pinned at 100.
+- each child part (the part hanging off it: a hand for its arm) at Spreading or Septic feeds it `partSpreadPerMinute`
+  (8). This is the travel: hand to arm to torso, foot to leg to torso, head to torso, with no wound on the receiving
+  part. Towards the torso only; the torso seeds nothing, sepsis is "the rest of the body". The stages are read as the
+  pass starts, so an infection moves at most one part a tick whatever order the parts come in.
+- nothing feeding it: it recovers `partRecoveryPerMinute` (4).
+- antibiotics (`Treat`) take `partAntibioticPerUnit` (8) a unit off every part; antiseptic (`Clean`) does nothing to
+  a part.
+
+The part's own effects: from Local it takes `localPainPerMinute` (4) as a local wound does; from Spreading the body
+runs the fever. A limb that comes off takes its infection with it and infects nothing (it has no parent); a limb put
+back keeps what it carries. A chassis part cannot carry one, so a cybernetic arm between an organic hand and the
+torso stops the travel.
+
+**Sepsis starts in the core.** `WolfmedSepsisComponent` is created (living bodies, `wolfmed.sepsis_enabled`) and fed
+only by the torso and head at Spreading or Septic: `sepsisPerMinute` (12) per core source, 0 to 2. Spreading wounds and
+dead limbs no longer feed it directly; they feed their part and it has to travel. Recovery (8 a minute), antibiotics,
+the alert, the analyzer line, the brain drain, the organ damage and the condition emotes all still read the same
+`Progress`. `HasFever` counts part stages beside wound stages, so an infected limb with no wound shivers.
+
+**Septic shock** is sepsis's named late stage: `wolfmed.septic_shock_at` (80, SERVERONLY), "sepsis progress from which
+the patient is in septic shock: the brain drain (`wolfmed.arrest_sepsis`) and the organ damage
+(`wolfmed.sepsis_organ_damage_from`) are its effects". `WolfmedInfectionSystem.InSepticShock(body)` reads it live.
+Nothing new kills: the drain at 80 and the organ damage at 90 are what shock does. Surfaced:
+- the `WFWolfmedSepsis` alert: severities 0 and 1 (min 0, max 1), 1 is shock. Its icon `septicshock` is the sepsis icon
+  with the red border `gen_wolfmed_overlays.py` draws for `paindowned`, flashing at the same 0.4 s (`build_sepsis`,
+  `--sepsis-only`; the hand-made `sepsis.png` is the source and is not rewritten). Name and description select on
+  `$severity` ("Septic shock"); upstream's `AlertControl` passed the severity to the description only, so the name
+  gets it too (one marked block).
+- the analyzer: `WolfmedVitalsReport.SepticShock`; the sepsis banner reads "SEPTIC SHOCK - systemic infection at N%"
+  (and ", damaging the organs"), titled "Septic shock"; "Do first" says "antibiotics now, septic shock" and
+  "antibiotics now, septic shock is damaging the organs" (`WolfmedVitalsText.Aid(route, mechanical, shock)`).
+- examine: "grey and clammy, skin blotched" in place of "flushed and sweating". The examine runs in shared code and
+  the line is a SERVERONLY CVar, so the server stamps `WolfmedSepsisComponent.Shock` (networked) on its tick and on
+  an antibiotic dose.
+
+**The analyzer's part line.** `HealthAnalyzerWoundDiagnostic.PartInfection` (a marked optional parameter; it counts as
+a finding, so an infected arm with no wound gets a card): the part's own stage from Local. The card shows an infection
+chip "tissue: spreading" (headline "tissue infection: spreading") beside the wound's "infection: spreading"; its
+advice and procedure are the wound infection's spreading one (septic for Septic), because antiseptic never reaches a
+part, and the procedure's "infection cleared" step waits for the part too. The card's accent counts it. The existing
+`Infection` field is the worst wound stage, now through `GetWorstWoundStage`; `GetPartStage` is the part's own.
+
+**Numbers** (5 s ticks, the shipped profile; `WolfmedInfectionSpreadTest` measures the first three). An untreated
+risk-1 cut on a hand: the wound spreads at 10 minutes, the hand at 16.0, the arm at 23.5, the torso at 31.0 and
+sepsis starts there (septic shock about 6.7 minutes later). A cut on the chest or the head: sepsis at 16.0 (it used to
+be 16.7, when the wound went septic). A dead arm (tourniquet, late reattachment): sepsis 7.6 minutes after it dies; a
+dead hand: 15.2 (it used to be about a minute, off the contaminated necrosis wound). An arm at 35 when its hand came
+off is clear 8.8 minutes later. 13 units of spaceacillin clear every part (100 / 8).
+
+**Differs from the spec, and why.**
+1. **One fever rise per body per tick.** `Fever` used to run once per spreading wound and once more for sepsis each
+   tick; with parts added it would have run three or four times for one infection. Each body with any source now
+   rises once (3 K a minute to the same ceiling), so several wounds no longer warm it faster.
+2. **A part's pain and fever need it attached.** A severed limb keeps ticking (its wounds still feed it) but hurts
+   nobody and infects nothing.
+3. **Guidebook and advice.** `Wounds.xml`, `WoundTreatment.xml` and the sepsis and infection advice lines now say the
+   infection travels to the chest and that sepsis starts there, and name septic shock.
+4. **Single long `Update` calls** move an infection one part per call. Tests that handed a dead limb twenty minutes in
+   one call now step 5 s at a time (`WolfmedInfectionTest.Run`).
+
+**Tests.** New `WolfmedInfectionSpreadTest`: `HandInfectionTravelsToTheTorsoTest` (the hops and their times, sepsis
+on the torso's tick and never before, no wound on the arm or torso, the arm's analyzer card),
+`AmputationStopsTheTravelTest`, `HeadInfectionStartsSepsisTest`, `AntibioticsClearThePartsTest` (and antiseptic does
+not), `SepticShockTest` (`InSepticShock` at 79.99 and 80, alert severity, the shock flag, the analyzer flag and aid,
+the examine line, and the flip when the CVar moves to 95), `MachineNeverCarriesAPartInfectionTest` (an IPC with
+wounds forced septic). Updated: `WolfmedInfectionTest.SepsisShowsAndAntibioticsClearItTest` (the torso part, cleared
+by the dose), `TourniquetLeftOnKillsTheLimbTest` (no sepsis at 7 minutes, sepsis by 8),
+`RejuvenateClearsSepsisAndNecrosisTest` (10 minutes of 5 s ticks; the heal clears the part infections),
+`LateReattachmentKillsTheLimbTest` (a dead hand: arm spreading and no sepsis at 14.5 minutes, sepsis by 16),
+`AnalyzerAndNamesExistTest`; `WolfmedSepsisTest.SepsisOrganDamageTest` and `WolfmedMedicInfoTest.AnalyzerVitalsTest`
+(the shock aids); `WolfmedConditionEmoteTest.InfectedLimbShiversTest` (new: a spreading arm, no wound, shivers);
+`WolfmedLocaleCoverageTest` and `WolfmedVisualInspectionTest` (the new keys). `WolfmedRejuvenateSystem` clears
+`WolfmedPartInfectionComponent`.

@@ -25,11 +25,11 @@ public sealed partial class WolfmedInfectionProfilePrototype : IPrototype
     [DataField]
     public float LocalAt = 25f;
 
-    /// <summary>Progress at which the infection leaves the wound: fever and toxins.</summary>
+    /// <summary>Progress at which the infection leaves the wound: fever, and it infects its part.</summary>
     [DataField]
     public float SpreadingAt = 60f;
 
-    /// <summary>Progress at which the body goes septic.</summary>
+    /// <summary>The wound's top: Septic, where it infects its part twice as fast.</summary>
     [DataField]
     public float SepsisAt = 100f;
 
@@ -94,9 +94,35 @@ public sealed partial class WolfmedInfectionProfilePrototype : IPrototype
 
     // M5 (OD13): the spreading stage and sepsis dealt Poison here; they no longer do, so both fields are gone.
 
+    // INFECTION: a part's own infection, 0 to 100 (100 is Septic). It travels towards the torso.
+
+    /// <summary>Part progress at which the part itself hurts (the profile's LocalPainPerMinute on it).</summary>
+    [DataField]
+    public float PartLocalAt = 25f;
+
+    /// <summary>Part progress at which the part runs a fever and infects its parent part.</summary>
+    [DataField]
+    public float PartSpreadingAt = 60f;
+
+    /// <summary>Part progress per minute from each spreading wound on the part; a septic wound counts twice.</summary>
+    [DataField]
+    public float PartFromWoundPerMinute = 10f;
+
+    /// <summary>Part progress per minute from each child part (a hand for its arm) that is spreading or septic.</summary>
+    [DataField]
+    public float PartSpreadPerMinute = 8f;
+
+    /// <summary>Part progress shed per minute while nothing feeds the part.</summary>
+    [DataField]
+    public float PartRecoveryPerMinute = 4f;
+
+    /// <summary>Part progress an antibiotic clears per unit metabolised, off every part at once.</summary>
+    [DataField]
+    public float PartAntibioticPerUnit = 8f;
+
     // Sepsis.
 
-    /// <summary>Sepsis progress gained per minute per source (a spreading wound, a necrotic part).</summary>
+    /// <summary>Sepsis progress gained per minute per source: a torso or head that is spreading or septic.</summary>
     [DataField]
     public float SepsisPerMinute = 12f;
 

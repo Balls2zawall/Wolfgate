@@ -365,6 +365,7 @@ Skipped ("dirty-disposed").
 - [`Content.IntegrationTests/Tests/_WF/Wolfmed/WolfmedExplosionTest.cs`](../../../Content.IntegrationTests/Tests/_WF/Wolfmed/WolfmedExplosionTest.cs)
 - [`Content.IntegrationTests/Tests/_WF/Wolfmed/WolfmedGoreTest.cs`](../../../Content.IntegrationTests/Tests/_WF/Wolfmed/WolfmedGoreTest.cs)
 - [`Content.IntegrationTests/Tests/_WF/Wolfmed/WolfmedHealingTargetTest.cs`](../../../Content.IntegrationTests/Tests/_WF/Wolfmed/WolfmedHealingTargetTest.cs)
+- [`Content.IntegrationTests/Tests/_WF/Wolfmed/WolfmedInfectionSpreadTest.cs`](../../../Content.IntegrationTests/Tests/_WF/Wolfmed/WolfmedInfectionSpreadTest.cs)
 - [`Content.IntegrationTests/Tests/_WF/Wolfmed/WolfmedInfectionTest.cs`](../../../Content.IntegrationTests/Tests/_WF/Wolfmed/WolfmedInfectionTest.cs)
 - [`Content.IntegrationTests/Tests/_WF/Wolfmed/WolfmedIvDripTest.cs`](../../../Content.IntegrationTests/Tests/_WF/Wolfmed/WolfmedIvDripTest.cs)
 - [`Content.IntegrationTests/Tests/_WF/Wolfmed/WolfmedLocaleCoverageTest.cs`](../../../Content.IntegrationTests/Tests/_WF/Wolfmed/WolfmedLocaleCoverageTest.cs)
@@ -797,7 +798,9 @@ Skipped ("dirty-disposed").
   - wound hosts can carry damage past the threshold
   - clamp, projected damage can exceed the dead threshold
 - [`Content.Client/Overlays/ShowHealthIconsSystem.cs`](../../../Content.Client/Overlays/ShowHealthIconsSystem.cs): ARREST: a stopped heart reads as a flatline, not as ordinary crit.
-- [`Content.Client/UserInterface/Systems/Alerts/Controls/AlertControl.cs`](../../../Content.Client/UserInterface/Systems/Alerts/Controls/AlertControl.cs): VISUALS: the severity reaches the text, so the pain HUD's hover names its band
+- [`Content.Client/UserInterface/Systems/Alerts/Controls/AlertControl.cs`](../../../Content.Client/UserInterface/Systems/Alerts/Controls/AlertControl.cs)
+  - INFECTION: the name gets the severity too, so the sepsis alert can say septic shock
+  - VISUALS: the severity reaches the text, so the pain HUD's hover names its band
 - [`Content.Client/UserInterface/Systems/DamageOverlays/DamageOverlayUiController.cs`](../../../Content.Client/UserInterface/Systems/DamageOverlays/DamageOverlayUiController.cs): HOOK 16 — pain owns the vignette on wound hosts
 - [`Content.Client/UserInterface/Systems/DamageOverlays/Overlays/DamageOverlay.cs`](../../../Content.Client/UserInterface/Systems/DamageOverlays/Overlays/DamageOverlay.cs)
   - the dead view and a synthetic body's readout are Wolfmed's; the white fade-out here never cleared.
@@ -1140,7 +1143,8 @@ Skipped ("dirty-disposed").
   - W6: the part is running too hot to work properly.
   - UI4: what has already been done here. A clamped, sutured or cauterised wound bleeds at
   - EVISC: organ slots this part carries that nothing is in, which is how the procedure
-  - the W1, W5 and W6 findings count as findings too.
+  - INFECTION: the part's own infection, which travels towards the torso with no wound on it.
+  - the W1, W5, W6 and INFECTION findings count as findings too.
   - UI2 and UI3 add the category and the prototype id to Onyx's visible wound.
   - W5, CONSC, BRAIN and M1a body-level readouts beside the parts.
   - M1a: units to transfuse after a successful shock.

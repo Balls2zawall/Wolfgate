@@ -17,6 +17,7 @@ wolfmed-treatment-guidebook-button = Open guidebook
 health-analyzer-wound-targeted-tag = targeted
 health-analyzer-wound-target-part-hint = Aim at this part.
 health-analyzer-wound-banner-sepsis = Sepsis
+health-analyzer-wound-banner-septic-shock = Septic shock
 health-analyzer-wound-banner-blood-low = Low blood
 health-analyzer-wound-banner-brain-death = Brain death
 health-analyzer-wound-banner-cardiac-arrest = Cardiac arrest
@@ -391,15 +392,15 @@ wolfmed-treatment-step-cond-infection-local-2 = Close the wound. Sutures or caut
 wolfmed-treatment-step-cond-infection-local-3 = Gauze alone cuts the rate to about a seventh, and a tourniquet halves it.
 wolfmed-treatment-avoid-cond-infection-local-1 = Antiseptic does nothing once the infection has spread past the wound.
 
-wolfmed-treatment-short-cond-infection-spreading = The infection has left the wound. The patient runs a fever, and sepsis is next.
+wolfmed-treatment-short-cond-infection-spreading = The infection has left the wound and is in the tissue, travelling towards the torso. The patient runs a fever, and sepsis starts once it reaches the torso or head.
 wolfmed-treatment-step-cond-infection-spreading-1 = Give spaceacillin in the bloodstream. Antiseptic on the skin no longer helps.
 wolfmed-treatment-step-cond-infection-spreading-2 = Bottles come from the medical vendor and the medical supplies crate. Chemistry makes it from cryptobiolin and inaprovaline in equal parts.
 wolfmed-treatment-step-cond-infection-spreading-3 = Close or clean the wound underneath, or it will simply infect again.
 wolfmed-treatment-avoid-cond-infection-spreading-1 = More than about 25 units of spaceacillin is poisonous in its own right. Treat and stop.
 
 wolfmed-treatment-short-cond-infection-septic = The infection is in the blood. Sepsis kills if nobody acts.
-wolfmed-treatment-step-cond-infection-septic-1 = Give spaceacillin now. It clears every wound at once and pulls the sepsis back.
-wolfmed-treatment-step-cond-infection-septic-2 = Find the source. Sepsis keeps growing while a spreading wound or a necrotic part is still there.
+wolfmed-treatment-step-cond-infection-septic-1 = Give spaceacillin now. It clears every wound and every infected part at once and pulls the sepsis back.
+wolfmed-treatment-step-cond-infection-septic-2 = Find the source. Sepsis keeps growing while the torso or head is infected, and an infected limb keeps feeding them.
 wolfmed-treatment-step-cond-infection-septic-3 = A necrotic limb has to come off. Nothing else stops it feeding the sepsis.
 wolfmed-treatment-avoid-cond-infection-septic-1 = More than about 25 units of spaceacillin is poisonous in its own right. Treat and stop.
 
@@ -434,9 +435,9 @@ wolfmed-treatment-step-cond-unavailable-1 = Stop the bleeding from the stump: a 
 wolfmed-treatment-step-cond-unavailable-2 = Run Repair Amputation Damage on the stump before you attach anything.
 wolfmed-treatment-step-cond-unavailable-3 = A severed limb keeps for five minutes. Put it back inside that, or fit a replacement part.
 
-wolfmed-treatment-short-cond-sepsis = Systemic infection. It grows while any source is alive and it kills if it is left alone.
-wolfmed-treatment-step-cond-sepsis-1 = Give spaceacillin now. It clears every wound at once and pulls the sepsis back.
-wolfmed-treatment-step-cond-sepsis-2 = Find the source: a spreading infection on some part, or dead tissue.
+wolfmed-treatment-short-cond-sepsis = Systemic infection. It grows while the torso or head is infected, and it kills if it is left alone: its late stage, septic shock, starves the brain and eats the organs.
+wolfmed-treatment-step-cond-sepsis-1 = Give spaceacillin now. It clears every wound and every infected part at once and pulls the sepsis back.
+wolfmed-treatment-step-cond-sepsis-2 = Find the source: an infected torso or head, fed by a wound there or by an infection that travelled up a limb from a wound or dead tissue.
 wolfmed-treatment-step-cond-sepsis-3 = Amputate a necrotic limb. While it is attached the sepsis keeps climbing.
 wolfmed-treatment-avoid-cond-sepsis-1 = More than about 25 units of spaceacillin is poisonous in its own right. Treat and stop.
 

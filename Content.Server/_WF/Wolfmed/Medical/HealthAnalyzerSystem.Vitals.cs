@@ -140,6 +140,7 @@ public sealed partial class HealthAnalyzerSystem
     private void SetRoutesAndRestart(EntityUid body, WolfmedVitalsReport report)
     {
         report.Routes = _life.GetActiveRoutes(body);
+        report.SepticShock = _infection.InSepticShock(body); // INFECTION
         _vitalsCard.MarkExamined(body);
 
         if (_life.GetRestartMemory(body) is { } memory)

@@ -15,11 +15,28 @@ public enum WolfmedInfectionStage : byte
     /// <summary>Local: the wound hurts and keeps reopening.</summary>
     Local,
 
-    /// <summary>Spreading: fever and toxins.</summary>
+    /// <summary>Spreading: fever, and the infection moves on to the part (from a wound) or towards the torso.</summary>
     Spreading,
 
-    /// <summary>The wound has fed a systemic infection; see <see cref="WolfmedSepsisComponent"/>.</summary>
+    /// <summary>The top stage. A spreading or septic torso or head feeds <see cref="WolfmedSepsisComponent"/>.</summary>
     Septic,
+}
+
+/// <summary>
+/// INFECTION: infection in a body part's own tissue, which travels towards the torso (hand to arm to torso, foot to
+/// leg to torso, head to torso) with no wound on the receiving part. Organic parts only; added by
+/// <c>WolfmedInfectionSystem</c> when the part first gains progress and removed when it is back at 0.
+/// </summary>
+[RegisterComponent, NetworkedComponent, AutoGenerateComponentState]
+public sealed partial class WolfmedPartInfectionComponent : Component
+{
+    /// <summary>0 to 100; 100 is Septic.</summary>
+    [DataField, AutoNetworkedField]
+    public float Progress;
+
+    /// <summary>Cached from <see cref="Progress"/> against the profile's part thresholds.</summary>
+    [DataField, AutoNetworkedField]
+    public WolfmedInfectionStage Stage;
 }
 
 /// <summary>
@@ -52,14 +69,21 @@ public sealed partial class WolfmedInfectionComponent : Component
 
 /// <summary>
 /// A systemic infection. On the body, not on a part: this is the stage that kills, and it outlives the
-/// wound that started it.
+/// wound that started it. INFECTION: fed only by an infected torso or head.
 /// </summary>
 [RegisterComponent, NetworkedComponent, AutoGenerateComponentState]
 public sealed partial class WolfmedSepsisComponent : Component
 {
-    /// <summary>0 to 100. The toxin rate scales with it and it only falls while every source is gone.</summary>
+    /// <summary>0 to 100. It only falls while neither the torso nor the head is spreading.</summary>
     [DataField, AutoNetworkedField]
     public float Progress;
+
+    /// <summary>
+    /// INFECTION: past wolfmed.septic_shock_at as of the server's last tick. Networked so shared code (the examine
+    /// text) can read a line the client does not have.
+    /// </summary>
+    [DataField, AutoNetworkedField]
+    public bool Shock;
 
     /// <summary>
     /// Playtest 4 (SEPSIS), server: organ damage owed but not yet taken, per organ. Organ health is in hundredths, and

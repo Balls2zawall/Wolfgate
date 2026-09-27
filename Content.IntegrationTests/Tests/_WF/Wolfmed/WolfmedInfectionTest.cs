@@ -29,9 +29,10 @@ namespace Content.IntegrationTests.Tests._WF.Wolfmed;
 
 /// <summary>
 /// W5: what an untreated wound turns into, and what stops it. Infection accumulates on the wound, spreads
-/// to the body as fever and toxins, and ends as sepsis; a dressing all but prevents it, antiseptic drains
-/// a local one and an antibiotic clears it at any stage. Necrosis is the other half: a tourniquet nobody
-/// took off kills the limb under it, and dead tissue keeps the patient septic until it is amputated.
+/// to the body as fever, travels through the parts to the torso (INFECTION, <see cref="WolfmedInfectionSpreadTest"/>)
+/// and ends as sepsis; a dressing all but prevents it, antiseptic drains a local one and an antibiotic clears it at
+/// any stage. Necrosis is the other half: a tourniquet nobody took off kills the limb under it, and dead tissue keeps
+/// the patient septic until it is amputated.
 /// </summary>
 /// <remarks>
 /// Both systems batch on a five-second timer and advance by whatever time has accumulated, so the tests
@@ -277,11 +278,14 @@ public sealed class WolfmedInfectionTest : GameTest
             Damage(entities, body, TargetBodyPart.Torso, "Slash", 20);
             var wound = FindWound(entities, torso, "SlashWound");
 
-            // Seventeen minutes of nobody doing anything is what the profile costs.
+            // INFECTION: a chest wound spreads at ten minutes and infects the torso itself, which spreads six minutes
+            // later and starts sepsis: about sixteen minutes of nobody doing anything. One 20-minute call covers the one
+            // hop from the wound to its own part.
             infection.Update(Minutes(20));
             Assert.Multiple(() =>
             {
                 Assert.That(infection.GetStage(wound), Is.EqualTo(WolfmedInfectionStage.Septic));
+                Assert.That(infection.GetPartStage(torso), Is.EqualTo(WolfmedInfectionStage.Septic));
                 Assert.That(entities.HasComponent<WolfmedSepsisComponent>(body), Is.True);
             });
 
@@ -293,10 +297,11 @@ public sealed class WolfmedInfectionTest : GameTest
                 Assert.That(alerts.IsShowingAlert(body, WolfmedInfectionSystem.SepsisAlert), Is.True);
             });
 
-            // A full course: every wound cleared, then the bloodstream.
+            // A full course: every wound and every infected part cleared, then the bloodstream.
             Assert.That(infection.Treat(body, 20f), Is.True);
             Assert.That(infection.GetStage(wound), Is.EqualTo(WolfmedInfectionStage.None),
                 "the antibiotic reaches contamination no dressing could.");
+            Assert.That(infection.GetPartStage(torso), Is.EqualTo(WolfmedInfectionStage.None));
 
             infection.Treat(body, 40f);
             Assert.Multiple(() =>
@@ -349,9 +354,24 @@ public sealed class WolfmedInfectionTest : GameTest
                     "there is nothing left for the tourniquet to save.");
             });
 
-            // Dead tissue keeps the patient septic on its own, with no other wound involved.
-            infection.Update(Minutes(20));
-            Assert.That(entities.HasComponent<WolfmedSepsisComponent>(body), Is.True);
+            // Dead tissue keeps the patient septic on its own, with no other wound involved. INFECTION: later than it
+            // used to (about a minute, off the necrosis wound itself): the dead arm is pinned at 100 and has to infect
+            // the torso at 8 a minute before sepsis can start, so none at 7 minutes and sepsis by 8 (derived 7.6).
+            Run(infection, 7f);
+            Assert.Multiple(() =>
+            {
+                Assert.That(infection.GetPartStage(arm), Is.EqualTo(WolfmedInfectionStage.Septic));
+                Assert.That(entities.HasComponent<WolfmedSepsisComponent>(body), Is.False,
+                    "sepsis started before the arm's infection reached the torso.");
+            });
+
+            Run(infection, 1f);
+            Assert.Multiple(() =>
+            {
+                Assert.That(infection.GetPartStage(Part(entities, body, BodyPartType.Torso)),
+                    Is.GreaterThanOrEqualTo(WolfmedInfectionStage.Spreading));
+                Assert.That(entities.HasComponent<WolfmedSepsisComponent>(body), Is.True);
+            });
         });
     }
 
@@ -416,11 +436,14 @@ public sealed class WolfmedInfectionTest : GameTest
 
             Assert.That(tourniquet.Apply(body, arm), Is.True);
             necrosis.Update((float) infection.Profile.TourniquetOnset.TotalSeconds + 120f);
-            infection.Update(Minutes(20));
+            // INFECTION: the dead arm infects the torso before sepsis starts, 7.6 minutes (TourniquetLeftOnKillsTheLimbTest).
+            Run(infection, 10f);
+            var torso = Part(entities, body, BodyPartType.Torso);
             Assert.Multiple(() =>
             {
                 Assert.That(necrosis.IsNecrotic(arm), Is.True);
                 Assert.That(entities.HasComponent<WolfmedSepsisComponent>(body), Is.True);
+                Assert.That(entities.HasComponent<WolfmedPartInfectionComponent>(torso), Is.True);
             });
 
             entities.EventBus.RaiseLocalEvent(body, new RejuvenateEvent());
@@ -431,6 +454,9 @@ public sealed class WolfmedInfectionTest : GameTest
                 Assert.That(entities.HasComponent<WolfmedNecrosisComponent>(arm), Is.False);
                 Assert.That(entities.HasComponent<WolfmedTourniquetComponent>(arm), Is.False);
                 Assert.That(Prototypes(entities, arm), Does.Not.Contain("WFWolfmedNecrosisWound"));
+                // INFECTION: nor any part's own infection, or an infected torso would start sepsis again.
+                Assert.That(entities.HasComponent<WolfmedPartInfectionComponent>(arm), Is.False);
+                Assert.That(entities.HasComponent<WolfmedPartInfectionComponent>(torso), Is.False);
             });
 
             // And it stays gone: the dead limb was the source that used to drive sepsis straight back up.
@@ -580,6 +606,27 @@ public sealed class WolfmedInfectionTest : GameTest
                 Assert.That(necrosis.IsNecrotic(arm), Is.True);
                 Assert.That(Prototypes(entities, arm), Does.Contain("WFWolfmedNecrosisWound"));
             });
+
+            // INFECTION: a hand put back dead reaches sepsis through the arm and then the torso, two 7.5-minute hops
+            // (derived 15.2 minutes); it used to be about a minute, off the necrosis wound directly.
+            var infection = entities.System<WolfmedInfectionSystem>();
+            var other = entities.SpawnEntity("MobHuman", map.GridCoords);
+            var hand = Part(entities, other, BodyPartType.Hand, BodyPartSymmetry.Left);
+            necrosis.OnDetached(hand);
+            entities.GetComponent<WolfmedNecrosisComponent>(hand).DetachedAt = timing.CurTime - TimeSpan.FromMinutes(30);
+            Assert.That(necrosis.OnAttached(hand), Is.True);
+
+            Run(infection, 14.5f);
+            Assert.Multiple(() =>
+            {
+                Assert.That(infection.GetPartStage(Part(entities, other, BodyPartType.Arm, BodyPartSymmetry.Left)),
+                    Is.GreaterThanOrEqualTo(WolfmedInfectionStage.Spreading), "the dead hand never infected the arm.");
+                Assert.That(entities.HasComponent<WolfmedSepsisComponent>(other), Is.False,
+                    "sepsis started before the infection reached the torso.");
+            });
+
+            Run(infection, 1.5f);
+            Assert.That(entities.HasComponent<WolfmedSepsisComponent>(other), Is.True, "a dead hand never reached sepsis.");
         });
     }
 
@@ -663,6 +710,8 @@ public sealed class WolfmedInfectionTest : GameTest
             Assert.Multiple(() =>
             {
                 Assert.That(torso.Infection, Is.EqualTo(WolfmedInfectionStage.Septic));
+                // INFECTION: the torso's own tissue, on its own line.
+                Assert.That(torso.PartInfection, Is.EqualTo(WolfmedInfectionStage.Septic));
                 Assert.That(diagnostics.Sepsis, Is.GreaterThanOrEqualTo(0f));
 
                 Assert.That(prototypes.HasIndex<AlertPrototype>(WolfmedInfectionSystem.SepsisAlert));
@@ -685,6 +734,9 @@ public sealed class WolfmedInfectionTest : GameTest
                 Assert.That(locale.HasString("health-analyzer-wound-necrosis-risk-short"));
                 Assert.That(locale.HasString("health-analyzer-wound-sepsis"));
                 Assert.That(locale.HasString("alerts-wolfmed-sepsis-name"));
+                Assert.That(locale.HasString("alerts-wolfmed-sepsis-desc"));
+                Assert.That(locale.HasString("health-analyzer-part-infection-spreading"));
+                Assert.That(locale.HasString("health-analyzer-wound-septic-shock"));
                 Assert.That(locale.HasString("reagent-name-spaceacillin"));
             });
         });
@@ -790,6 +842,16 @@ public sealed class WolfmedInfectionTest : GameTest
     }
 
     private static float Minutes(float minutes) => minutes * 60f;
+
+    /// <summary>
+    /// INFECTION: model minutes in the real 5 s batches. A part infects its parent once per call, so a single long
+    /// call would hold an infection at the first part it reached.
+    /// </summary>
+    private static void Run(WolfmedInfectionSystem infection, float minutes)
+    {
+        for (var t = 0f; t < minutes * 60f - 0.01f; t += 5f)
+            infection.Update(5f);
+    }
 
     private static float Progress(IEntityManager entities, EntityUid wound) =>
         entities.TryGetComponent(wound, out WolfmedInfectionComponent? infection) ? infection.Progress : 0f;

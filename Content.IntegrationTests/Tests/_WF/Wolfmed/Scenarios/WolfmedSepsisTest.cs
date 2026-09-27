@@ -147,7 +147,9 @@ public sealed class WolfmedSepsisTest : GameTest
                         string.Join(", ", organs.Select(o => $"{o.Key} {o.Value.Health.Health}")));
                     Assert.That(report.Routes & WolfmedRoutes.SepsisOrgans, Is.Not.EqualTo(WolfmedRoutes.None),
                         "sepsis at 100 does not read as damaging the organs.");
-                    Assert.That(line, Does.Contain(WolfmedVitalsText.Aid(WolfmedRoutes.SepsisOrgans, false)),
+                    // INFECTION: 100 is past wolfmed.septic_shock_at (80), so the organ aid names septic shock.
+                    Assert.That(report.SepticShock, Is.True, "sepsis at 100 does not read as septic shock.");
+                    Assert.That(line, Does.Contain(WolfmedVitalsText.Aid(WolfmedRoutes.SepsisOrgans, false, shock: true)),
                         "\"Do first\" does not mention the organ damage.");
                     Assert.That(line, Does.Not.Contain("; " + WolfmedVitalsText.Aid(WolfmedRoutes.Sepsis, false) + ";"),
                         "\"Do first\" says antibiotics twice.");

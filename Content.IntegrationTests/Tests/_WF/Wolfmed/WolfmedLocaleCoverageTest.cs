@@ -37,6 +37,8 @@ public sealed class WolfmedLocaleCoverageTest : GameTest
         ("health-analyzer-wound-clotting-", typeof(HealthAnalyzerClottingPhase),
             ["NotApplicable", "None"], true),
         ("health-analyzer-wound-infection-", typeof(WolfmedInfectionStage), ["None"], false),
+        // INFECTION: a part's own infection, its chip's headline.
+        ("health-analyzer-part-infection-", typeof(WolfmedInfectionStage), ["None"], false),
         ("health-analyzer-wound-functionality-", typeof(BodyPartFunctionalityState), ["Functional"], false),
         // CONSC: the analyzer names the tier by enum member, None included (the guidebook prints it).
         ("wolfmed-pain-relief-tier-", typeof(WolfmedPainReliefTier), [], false),
@@ -87,6 +89,17 @@ public sealed class WolfmedLocaleCoverageTest : GameTest
         ("health-analyzer-wound-sedation", [""]),
         ("alerts-wolfmed-downed-name", [""]),
         ("alerts-wolfmed-downed-desc", [""]),
+        // INFECTION: the part chip's label, septic shock's banner, title and aids, and the sepsis alert.
+        ("health-analyzer-part-infection-local-short", [""]),
+        ("health-analyzer-part-infection-spreading-short", [""]),
+        ("health-analyzer-part-infection-septic-short", [""]),
+        ("health-analyzer-wound-sepsis", ["-organs"]),
+        ("health-analyzer-wound-septic-shock", ["", "-organs"]),
+        ("health-analyzer-wound-banner-septic-shock", [""]),
+        ("wolfmed-vitals-aid-sepsis-shock", [""]),
+        ("wolfmed-vitals-aid-sepsisorgans-shock", [""]),
+        ("alerts-wolfmed-sepsis-name", [""]),
+        ("alerts-wolfmed-sepsis-desc", [""]),
     ];
 
     /// <summary>Every wound prototype names itself and its stages in a locale file.</summary>

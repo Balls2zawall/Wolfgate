@@ -54,6 +54,8 @@ public sealed class WolfmedVisualInspectionTest : GameTest
         "wolfmed-look-part-other", "wolfmed-look-none-self", "wolfmed-look-none-other",
         "wolfmed-look-covered", "wolfmed-look-hidden", "wolfmed-look-distant", "wolfmed-look-sepsis-self",
         "wolfmed-look-sepsis-other",
+        // INFECTION: septic shock replaces the flush.
+        "wolfmed-look-septic-shock-self", "wolfmed-look-septic-shock-other",
         // M1a: the chest and the pulse.
         "wolfmed-look-gasping-self", "wolfmed-look-gasping-other", "wolfmed-look-breathing-slow-self",
         "wolfmed-look-breathing-slow-other", "wolfmed-look-pale-self", "wolfmed-look-pale-other",

@@ -17,8 +17,8 @@ namespace Content.Server._WF.Wolfmed.Wounds;
 
 /// <summary>Tissue death from a forgotten tourniquet, a deep burn or freeze, or a limb reattached late.</summary>
 // All three accumulate on WolfmedNecrosisComponent on the part and end the same way: a WFWolfmedNecrosisWound that
-// nothing treats, a limb that no longer works properly and a standing source of sepsis, until the part is amputated
-// and replaced.
+// nothing treats, a limb that no longer works properly and a standing source of infection (INFECTION: the part is
+// pinned at the top and infects the part it hangs off, towards the torso), until the part is amputated and replaced.
 /// <remarks>
 /// The patient gets one warning popup before it happens, and the analyzer flags the part from the moment
 /// the clock starts. <see cref="Update"/> advances by whatever time has accumulated so a test can hand it
@@ -231,7 +231,7 @@ public sealed class WolfmedNecrosisSystem : EntitySystem
     }
 
     /// <summary>
-    /// Kills the part: a wound nothing treats, already infected enough to feed sepsis. Returns the wound,
+    /// Kills the part: a wound nothing treats, contaminated from the start. Returns the wound,
     /// or null when the part cannot carry one. Public so a test and the reattachment path can skip the wait.
     /// </summary>
     public EntityUid? MakeNecrotic(EntityUid part)

@@ -38,7 +38,7 @@ public enum WolfmedStepCheck : byte
     /// <summary>The part reports no fracture at all.</summary>
     FractureMended,
 
-    /// <summary>The part carries no infection.</summary>
+    /// <summary>The part carries no infection, in a wound or (INFECTION) in its own tissue.</summary>
     InfectionCleared,
 
     /// <summary>The part is no longer bleeding internally.</summary>
@@ -164,7 +164,9 @@ public static class WolfmedStepChecks
             WolfmedStepCheck.FractureReduced =>
                 part.Fracture == FractureGrade.None || part.FractureTreatment != FractureTreatment.None,
             WolfmedStepCheck.FractureMended => part.Fracture == FractureGrade.None,
-            WolfmedStepCheck.InfectionCleared => part.Infection == WolfmedInfectionStage.None,
+            // INFECTION: neither a wound on the part nor the part's own tissue.
+            WolfmedStepCheck.InfectionCleared => part.Infection == WolfmedInfectionStage.None &&
+                                                 part.PartInfection == WolfmedInfectionStage.None,
             WolfmedStepCheck.InternalBleedingStopped => part.InternalBleedingRate <= 0f,
             WolfmedStepCheck.Cooled => !part.Overheating,
             WolfmedStepCheck.NecrosisRiskCleared => !part.NecrosisRisk && !part.Necrotic,

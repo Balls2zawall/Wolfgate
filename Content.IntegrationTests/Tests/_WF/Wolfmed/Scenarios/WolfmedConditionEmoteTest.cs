@@ -10,6 +10,7 @@ using Content.Shared._WF.Wolfmed.Body;
 using Content.Shared._WF.Wolfmed.CCVar;
 using Content.Shared._WF.Wolfmed.Wounds;
 using Content.Shared.Body.Components;
+using Content.Shared.Body.Part;
 using Content.Shared.Body.Systems;
 using Content.Shared.FixedPoint;
 using Content.Shared.Mobs.Systems;
@@ -175,5 +176,40 @@ public sealed class WolfmedConditionEmoteTest : GameTest
             Assert.That(seen[ipc], Is.Empty, "a chassis emoted.");
             Assert.That(Vomits(dead) + Vomits(ipc), Is.Zero, "a dead body or a chassis vomited.");
         });
+    }
+
+    /// <summary>
+    /// <c>InfectedLimbShiversTest</c> (INFECTION): a fever counts the parts' own infections, so a body whose arm is
+    /// spreading, with no wound and no sepsis, shivers.
+    /// </summary>
+    [Test]
+    public async Task InfectedLimbShiversTest()
+    {
+        await Pin();
+        var map = await Pair.CreateTestMap();
+        var s = new WolfmedScenario(SEntMan);
+        EntityUid body = default;
+        await Server.WaitPost(() =>
+        {
+            s.SetAir(map.MapUid, true);
+            s.KeepGrid(map.Grid);
+            body = SEntMan.SpawnEntity("MobHuman", map.GridCoords);
+        });
+        await RunSeconds(2);
+
+        await Server.WaitAssertion(() =>
+        {
+            // 70 falls 4 a minute with nothing feeding it: spreading for the whole watch.
+            var arm = s.Part(body, BodyPartType.Arm, BodyPartSymmetry.Left);
+            var infection = SEntMan.EnsureComponent<WolfmedPartInfectionComponent>(arm);
+            infection.Progress = 70f;
+            infection.Stage = WolfmedInfectionStage.Spreading;
+            Assert.That(SEntMan.System<Content.Server._WF.Wolfmed.Wounds.WolfmedInfectionSystem>().HasFever(body),
+                Is.True, "a spreading arm runs no fever.");
+        });
+
+        var seen = (await Watch(24, new[] { body }))[body];
+        TestContext.Out.WriteLine($"InfectedLimbShiversTest: {string.Join(", ", seen)}");
+        Assert.That(seen, Does.Contain(WolfmedConditionEmoteSystem.Shiver.Id), "a spreading arm never shivered.");
     }
 }

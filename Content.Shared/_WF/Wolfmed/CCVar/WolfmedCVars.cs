@@ -55,7 +55,10 @@ public sealed class WolfmedCVars
     public static readonly CVarDef<float> InfectionRate =
         CVarDef.Create("wolfmed.infection_rate", 1f, CVar.SERVERONLY);
 
-    /// <summary>Whether a spreading infection can go systemic. False caps the model at the fever stage.</summary>
+    /// <summary>
+    /// Whether an infection that has reached the torso or head can go systemic. False caps the model at the fever
+    /// stage; part infections still travel.
+    /// </summary>
     public static readonly CVarDef<bool> SepsisEnabled =
         CVarDef.Create("wolfmed.sepsis_enabled", true, CVar.SERVERONLY);
 
@@ -818,6 +821,14 @@ public sealed class WolfmedCVars
     /// </summary>
     public static readonly CVarDef<float> SepsisOrganDamagePerMinute =
         CVarDef.Create("wolfmed.sepsis_organ_damage_per_minute", 1.5f, CVar.SERVERONLY);
+
+    /// <summary>
+    /// INFECTION: sepsis progress from which the patient is in septic shock: the brain drain (wolfmed.arrest_sepsis)
+    /// and the organ damage (wolfmed.sepsis_organ_damage_from) are its effects. 80, the drain's line. It names the
+    /// stage on the alert, the analyzer and the examine text; it adds nothing lethal of its own.
+    /// </summary>
+    public static readonly CVarDef<float> SepticShockAt =
+        CVarDef.Create("wolfmed.septic_shock_at", 80f, CVar.SERVERONLY);
 
     /// <summary>
     /// Seconds between checks of every wound host for a condition emote (a cough, a retch). 8: often enough that a sick

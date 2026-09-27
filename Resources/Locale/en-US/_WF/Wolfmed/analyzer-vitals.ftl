@@ -124,3 +124,8 @@ wolfmed-vitals-aid-hypothermia = warm them
 ## Playtest 4, SEPSIS: sepsis past the organ-damage line. Replaces the plain sepsis aid while it runs.
 
 wolfmed-vitals-aid-sepsisorgans = antibiotics now, sepsis is damaging the organs
+
+## INFECTION: septic shock, sepsis past wolfmed.septic_shock_at. Replaces the two sepsis aids while it holds.
+
+wolfmed-vitals-aid-sepsis-shock = antibiotics now, septic shock
+wolfmed-vitals-aid-sepsisorgans-shock = antibiotics now, septic shock is damaging the organs

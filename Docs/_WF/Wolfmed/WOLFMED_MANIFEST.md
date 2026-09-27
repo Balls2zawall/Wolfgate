@@ -5260,3 +5260,35 @@ Three marked upstream edits and `_WF` (DECISIONS "Playtest 4, SOUNDS").
 | `Content.Server/_WF/Wolfmed/Wounds/WoundBleedingSystem.Wolfmed.cs` | modified | `IsTiedOff`. |
 | `Content.IntegrationTests/Tests/_WF/Wolfmed/Scenarios/WolfmedTourniquetHoldsTest.cs` | new | The strap holds through Blunt and Slash, ties off the foot, leaves the other leg alone. |
 | `Docs/_WF/Wolfmed/DECISIONS.md`, this file | modified | This section. |
+
+## Playtest 4, INFECTION SPREAD (2026-09-27)
+
+Infection lives on the parts and travels towards the torso, only an infected torso or head feeds sepsis, and septic
+shock is sepsis's named late stage (DECISIONS "Playtest 4, INFECTION SPREAD").
+
+| File | Kind | Change |
+| --- | --- | --- |
+| `Content.Shared/_WF/Wolfmed/Wounds/WolfmedInfectionComponents.cs` | modified | `WolfmedPartInfectionComponent` (networked `Progress`, `Stage`); `WolfmedSepsisComponent.Shock` (networked). |
+| `Content.Shared/_WF/Wolfmed/Wounds/WolfmedInfectionProfilePrototype.cs`, `Resources/Prototypes/_WF/Wolfmed/Wounds/infection.yml` | modified | `partLocalAt` 25, `partSpreadingAt` 60, `partFromWoundPerMinute` 10, `partSpreadPerMinute` 8, `partRecoveryPerMinute` 4, `partAntibioticPerUnit` 8; the timings in the comments. |
+| `Content.Shared/_WF/Wolfmed/CCVar/WolfmedCVars.cs` | modified | `wolfmed.septic_shock_at` 80; `sepsis_enabled`'s summary. |
+| `Content.Server/_WF/Wolfmed/Wounds/WolfmedInfectionSystem.cs` | modified | `TickParts` (wound, necrosis and child feeders, recovery, pain, fever), `SeedSepsis` from the torso and head, `CountSources` over the core parts, one fever per body per tick, the shock flag and alert severity, parts in `Treat`, `InSepticShock`, `GetPartStage` / `GetPartProgress`, `GetWorstWoundStage` (was `GetPartStage`). |
+| `Content.Server/_WF/Wolfmed/Wounds/WolfmedRejuvenateSystem.cs` | modified | Clears `WolfmedPartInfectionComponent`. |
+| `Content.Server/_WF/Wolfmed/Wounds/WolfmedNecrosisSystem.cs` | modified | Comments: dead tissue infects towards the torso. |
+| `Content.Shared/_Onyx/Medical/HealthAnalyzerWoundDiagnostic.cs` | modified, `// WOLFGATE` | `PartInfection` parameter; counts as a finding. |
+| `Content.Server/_WF/Wolfmed/Medical/HealthAnalyzerSystem.Wolfmed.cs`, `HealthAnalyzerSystem.Vitals.cs` | modified | The part's stage from Local; `SepticShock` on the vitals report. |
+| `Content.Shared/_WF/Wolfmed/Life/WolfmedVitalsReport.cs` | modified | `SepticShock`; `Aid(route, mechanical, shock)` picks the `-shock` aids. |
+| `Content.Client/_WF/Wolfmed/Medical/WolfmedDiagnosticPanel.Wounds.cs`, `WolfmedWoundStyle.cs` | modified | The "tissue" chip per part, the SEPTIC SHOCK banner and title, the signature, the card accent. |
+| `Content.Shared/_WF/Wolfmed/Wounds/WolfmedTreatmentAdvice.cs`, `WolfmedStepChecks.cs` | modified | `PartInfectionCondition`; "infection cleared" waits for the part. |
+| `Content.Shared/_WF/Wolfmed/Examine/WolfmedVisualInspectionSystem.cs`, `Resources/Locale/en-US/_WF/Wolfmed/look.ftl` | modified | "Grey and clammy" in septic shock. |
+| `Content.Client/UserInterface/Systems/Alerts/Controls/AlertControl.cs` | modified, `// WOLFGATE` | The alert name gets the severity. |
+| `Resources/Prototypes/_WF/Wolfmed/Alerts/alerts.yml` | modified | `WFWolfmedSepsis` severities 0 and 1. |
+| `Tools/_WF/Wolfmed/gen_wolfmed_overlays.py`, `Resources/Textures/_WF/Wolfmed/Interface/Alerts/sepsis.rsi` | modified, new state | `build_sepsis` (`--sepsis-only`), `write_rsi(keep=)`; `septicshock.png`. |
+| `Resources/Locale/en-US/_WF/Wolfmed/wounds.ftl`, `analyzer-vitals.ftl`, `treatment-advice.ftl` | modified | The alert's severity lines, the shock banner, the part chip, the shock aids and banner title, the advice lines. |
+| `Resources/ServerInfo/_WF/Wolfmed/Guidebook/Medical/Wounds.xml`, `WoundTreatment.xml` | modified | Travel, sepsis from the chest, septic shock. |
+| `Content.IntegrationTests/Tests/_WF/Wolfmed/WolfmedInfectionSpreadTest.cs` | new | Hand to arm to torso, amputation, head, antibiotics, septic shock, IPC. |
+| `Content.IntegrationTests/Tests/_WF/Wolfmed/WolfmedInfectionTest.cs` | modified | The dead limb's new sepsis timing in 5 s ticks; the part in the analyzer and the heal. |
+| `Content.IntegrationTests/Tests/_WF/Wolfmed/Scenarios/WolfmedSepsisTest.cs`, `WolfmedMedicInfoTest.cs` | modified | The shock aids. |
+| `Content.IntegrationTests/Tests/_WF/Wolfmed/Scenarios/WolfmedConditionEmoteTest.cs` | modified | `InfectedLimbShiversTest`. |
+| `Content.IntegrationTests/Tests/_WF/Wolfmed/WolfmedLocaleCoverageTest.cs`, `WolfmedVisualInspectionTest.cs` | modified | The new keys. |
+| `Content.Server/_WF/Wolfmed/README.md` | regenerated | `modules.py --write`. |
+| `Docs/_WF/Wolfmed/DECISIONS.md`, this file | modified | This section. |

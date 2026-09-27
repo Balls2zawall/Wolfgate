@@ -184,7 +184,8 @@ public sealed class WolfmedMedicInfoTest : GameTest
                 Assert.That(bleederLine, Does.Contain(WolfmedVitalsText.Aid(WolfmedRoutes.Bleeding, false)));
                 Assert.That(bleederLine, Does.Contain(Loc.GetString("wolfmed-vitals-aid-transfuse",
                     ("units", WolfmedVitalsText.Units(bleederReport.UnitsToLine)))));
-                Assert.That(septicLine, Does.Contain(WolfmedVitalsText.Aid(WolfmedRoutes.Sepsis, false)));
+                // INFECTION: 85, still past wolfmed.septic_shock_at (80) after 16 s of recovery, is septic shock.
+                Assert.That(septicLine, Does.Contain(WolfmedVitalsText.Aid(WolfmedRoutes.Sepsis, false, shock: true)));
                 Assert.That(overdoseLine, Does.Contain(WolfmedVitalsText.Aid(WolfmedRoutes.Sedation, false)));
                 Assert.That(s.AnalyzerLines(bleeder), Does.Contain(bleederLine), "the routes line is not in the block.");
             });
