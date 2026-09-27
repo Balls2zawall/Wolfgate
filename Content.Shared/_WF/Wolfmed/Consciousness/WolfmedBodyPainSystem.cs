@@ -27,6 +27,40 @@ public sealed class WolfmedBodyPainSystem : EntitySystem
 
     public float AdrenalineCrawlMultiplier => MathF.Max(0f, _cfg.GetCVar(WolfmedCVars.AdrenalineCrawlMultiplier));
 
+    public override void Initialize()
+    {
+        base.Initialize();
+        SubscribeLocalEvent<PainComponent, ComponentInit>(OnPainInit);
+    }
+
+    /// <summary>
+    /// Playtest 4: a limb holds less pain than the body. The part's soft cap comes from the wolfmed.part_pain_cap_*
+    /// line for its type when the type has one; head and torso keep Onyx's cap, so they alone still reach Downed
+    /// and the faint. Read once when the part gains its pain, so a changed line applies to bodies made after it.
+    /// </summary>
+    private void OnPainInit(Entity<PainComponent> ent, ref ComponentInit args)
+    {
+        if (!TryComp(ent, out BodyPartComponent? part))
+            return;
+
+        var cap = PartPainCap(part.PartType);
+        if (cap > 0f)
+            ent.Comp.SoftPainCap = FixedPoint2.New(cap);
+    }
+
+    /// <summary>The wolfmed.part_pain_cap_* line for a part type, or 0 when the type keeps its own cap.</summary>
+    public float PartPainCap(BodyPartType type)
+    {
+        return type switch
+        {
+            BodyPartType.Arm => _cfg.GetCVar(WolfmedCVars.PartPainCapArm),
+            BodyPartType.Hand => _cfg.GetCVar(WolfmedCVars.PartPainCapHand),
+            BodyPartType.Leg => _cfg.GetCVar(WolfmedCVars.PartPainCapLeg),
+            BodyPartType.Foot => _cfg.GetCVar(WolfmedCVars.PartPainCapFoot),
+            _ => 0f,
+        };
+    }
+
     /// <summary>
     /// P13: the pain a body with feeling parts carries is the sum of the parts, capped at its soft cap,
     /// whatever anything tries to set it to. False for a part, or a body with no part that feels pain.

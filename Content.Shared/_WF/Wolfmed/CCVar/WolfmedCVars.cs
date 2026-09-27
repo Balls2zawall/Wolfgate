@@ -382,6 +382,25 @@ public sealed class WolfmedCVars
         CVarDef.Create("wolfmed.pain_shock_rearm", 110f, CVar.SERVER | CVar.REPLICATED);
 
     /// <summary>
+    /// Most pain one arm can hold (playtest 4). Onyx caps every part at the body's 135, so bullets into one arm
+    /// reached the Downed line on their own. Zero keeps the part's own cap.
+    /// </summary>
+    public static readonly CVarDef<float> PartPainCapArm =
+        CVarDef.Create("wolfmed.part_pain_cap_arm", 80f, CVar.SERVER | CVar.REPLICATED);
+
+    /// <summary>Most pain one hand can hold (playtest 4).</summary>
+    public static readonly CVarDef<float> PartPainCapHand =
+        CVarDef.Create("wolfmed.part_pain_cap_hand", 50f, CVar.SERVER | CVar.REPLICATED);
+
+    /// <summary>Most pain one leg can hold (playtest 4).</summary>
+    public static readonly CVarDef<float> PartPainCapLeg =
+        CVarDef.Create("wolfmed.part_pain_cap_leg", 90f, CVar.SERVER | CVar.REPLICATED);
+
+    /// <summary>Most pain one foot can hold (playtest 4).</summary>
+    public static readonly CVarDef<float> PartPainCapFoot =
+        CVarDef.Create("wolfmed.part_pain_cap_foot", 50f, CVar.SERVER | CVar.REPLICATED);
+
+    /// <summary>
     /// Seconds of adrenaline a pain shock gives. It no longer stands anyone up (OD5): it speeds the crawl and
     /// lifts the Downed do-after penalty.
     /// </summary>
