@@ -15,9 +15,10 @@ wounds.rsi  bulletwound.dmi is one 3x3 wound glyph with a drip under it, drawn i
             a direction where the part is hidden behind others gets an empty frame.
 rot.rsi     rot_parts.dmi in its own colour, renamed <Part>_rot. Wolfgate has no groin part, so rot_chest and
             rot_groin are composited into Chest_rot.
-artery.rsi  artery.dmi's head_artery0/1 and neck_artery0/1 as they are (they are drawn in place on the human frame),
-            recoloured to grey the same way as the wounds: the still artery (0) and the spraying one (1, three
-            frames). The head one is an arterial bleed on the head, the neck one the stump where a head was.
+artery.rsi  artery.dmi's <site>_artery0/1 as they are (they are drawn in place on the human frame), recoloured to
+            grey the same way as the wounds: the still artery (0) and the spray (1, three frames, played once per
+            blood spurt). head is the head's own artery, neck the stump where a head was, r_arm .. l_foot the limb's
+            artery, cut or a stump.
 
 Deterministic; rerunning rewrites the four RSIs byte for byte.
 """
@@ -294,7 +295,8 @@ def build_wounds(bob):
 
 # --- artery overlays ---
 
-ARTERY_STATES = ["head_artery0", "head_artery1", "neck_artery0", "neck_artery1"]
+ARTERY_SITES = ["head", "neck", "r_arm", "l_arm", "r_hand", "l_hand", "r_leg", "l_leg", "r_foot", "l_foot"]
+ARTERY_STATES = [f"{site}_artery{look}" for site in ARTERY_SITES for look in (0, 1)]
 
 
 def build_artery(bob):
@@ -308,7 +310,7 @@ def build_artery(bob):
         delays = [seconds(source["delay"], source["frames"]) for _ in range(4)] if source["frames"] > 1 else None
         states.append((name, 4, frames, delays))
     write_rsi(os.path.join(OUT, "Damage", "artery.rsi"),
-              f"head_artery0/1 and neck_artery0/1 from modular_septic/icons/mob/human/overlays/artery.dmi, {BOB_REPO}, "
+              f"<site>_artery0/1 from modular_septic/icons/mob/human/overlays/artery.dmi, {BOB_REPO}, "
               "recoloured to grey by Tools/_WF/Wolfmed/gen_wolfmed_overlays.py for Wolfgate (Wolfmed)",
               states)
 

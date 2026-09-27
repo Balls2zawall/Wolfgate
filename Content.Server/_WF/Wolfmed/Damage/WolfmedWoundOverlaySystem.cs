@@ -38,6 +38,7 @@ public sealed class WolfmedWoundOverlaySystem : EntitySystem
     private readonly Dictionary<HumanoidVisualLayers, WolfmedWoundOverlay> _woundScratch = new();
     private readonly HashSet<HumanoidVisualLayers> _rotScratch = new();
     private readonly Dictionary<WolfmedArterySite, WolfmedArteryOverlay> _arteryScratch = new();
+    private readonly HashSet<(BodyPartType, BodyPartSymmetry)> _presentScratch = new();
     private TimeSpan _nextSweep;
 
     /// <inheritdoc/>
@@ -47,6 +48,24 @@ public sealed class WolfmedWoundOverlaySystem : EntitySystem
         SubscribeLocalEvent<WolfmedWoundLifecycleEvent>(OnWoundLifecycle);
         // Free pair: the treatment overlay holds this event on WoundComponent, Onyx raises it and subscribes nothing.
         SubscribeLocalEvent<WoundBleedingComponent, WoundBleedingChangedEvent>(OnBleedingChanged);
+        SubscribeLocalEvent<WolfmedBleedSpurtEvent>(OnBleedSpurt);
+    }
+
+    /// <summary>A blood spurt moves the spray counter when an artery on the sprite is spurting, so the client plays the spray.</summary>
+    private void OnBleedSpurt(ref WolfmedBleedSpurtEvent args)
+    {
+        if (!TryComp(args.Body, out PartDamageVisualsComponent? visual))
+            return;
+
+        foreach (var look in visual.Arteries.Values)
+        {
+            if (look != WolfmedArteryOverlay.Bleeding)
+                continue;
+
+            visual.ArterySpray++;
+            Dirty(args.Body, visual);
+            return;
+        }
     }
 
     private void OnWoundLifecycle(ref WolfmedWoundLifecycleEvent args) => Queue(args.Part);
@@ -92,17 +111,16 @@ public sealed class WolfmedWoundOverlaySystem : EntitySystem
         var wounds = _woundScratch;
         var rot = _rotScratch;
         var arteries = _arteryScratch;
+        var present = _presentScratch;
         wounds.Clear();
         rot.Clear();
         arteries.Clear();
-        var hasHead = false;
-        var neck = WolfmedArteryOverlay.None;
+        present.Clear();
+        foreach (var (_, bodyPart) in _body.GetBodyChildren(body))
+            present.Add((bodyPart.PartType, bodyPart.Symmetry));
 
         foreach (var (part, bodyPart) in _body.GetBodyChildren(body))
         {
-            if (bodyPart.PartType == BodyPartType.Head)
-                hasHead = true;
-
             if (!_projection.TryGetVisualLayer(part, out var layer) || !TryComp(part, out WoundableComponent? woundable) ||
                 !_traits.IsOrganic((part, woundable)))
                 continue;
@@ -115,22 +133,8 @@ public sealed class WolfmedWoundOverlaySystem : EntitySystem
             if (IsRotting((part, woundable)))
                 rot.Add(layer);
 
-            // Playtest 4: the arteries. The head's own when an arterial bleed is on it; the neck's is the torso's stump,
-            // shown once the head is gone.
-            if (bodyPart.PartType == BodyPartType.Head)
-            {
-                var artery = GetArteryOverlay((part, woundable));
-                if (artery != WolfmedArteryOverlay.None)
-                    arteries[WolfmedArterySite.Head] = artery;
-            }
-            else if (bodyPart.PartType == BodyPartType.Torso)
-            {
-                neck = GetStumpOverlay((part, woundable), host.DismembermentWound);
-            }
+            CollectArteries((part, bodyPart, woundable), host.DismembermentWound, present, arteries);
         }
-
-        if (!hasHead && neck != WolfmedArteryOverlay.None)
-            arteries[WolfmedArterySite.Neck] = neck;
 
         var colour = _gore.GetBloodColor(body) ?? FallbackBlood;
         if (Same(visual.Wounds, wounds) && visual.Rot.SetEquals(rot) && visual.WoundColor == colour &&
@@ -145,42 +149,45 @@ public sealed class WolfmedWoundOverlaySystem : EntitySystem
     }
 
     /// <summary>
-    /// The head's artery: the spray while any arterial bleed on the part pumps, the still artery once every one of them
-    /// has been clamped, dressed to a stop or has clotted, nothing when the part has no cut artery.
+    /// Playtest 4: the arteries this part puts on the sprite. A cut artery on the part itself is the part's own site;
+    /// a stump wound on it is the site of the part that was torn off, unless that part is back on. The look follows the
+    /// blood spurts' rule (<c>WolfmedBleedSpurtSystem.HasSpurtSource</c>): a stump spurts while it bleeds untreated, a
+    /// cut artery while it bleeds at all; anything else open is the still artery. The worse look wins a shared site.
     /// </summary>
-    public WolfmedArteryOverlay GetArteryOverlay(Entity<WoundableComponent> part)
+    public void CollectArteries(Entity<BodyPartComponent, WoundableComponent> part, ProtoId<WoundPrototype> stump,
+        HashSet<(BodyPartType, BodyPartSymmetry)> present, Dictionary<WolfmedArterySite, WolfmedArteryOverlay> arteries)
     {
-        var look = WolfmedArteryOverlay.None;
-        foreach (var wound in _wounds.GetWounds(part.AsNullable()))
+        foreach (var wound in _wounds.GetWounds((part.Owner, part.Comp2)))
         {
-            if (wound.Comp.State != WoundState.Open || !_traits.TryGetBehavior(wound.Owner, out WolfmedArterialBleedBehavior _))
+            if (wound.Comp.State != WoundState.Open)
                 continue;
 
-            if (TryComp(wound, out WoundBleedingComponent? bleeding) && bleeding.CurrentRate > 0f)
-                return WolfmedArteryOverlay.Bleeding;
+            WolfmedArterySite? site;
+            var spurting = TryComp(wound, out WoundBleedingComponent? bleeding) && bleeding.CurrentRate > 0f;
+            if (wound.Comp.Prototype == stump)
+            {
+                if (!TryComp(wound, out WolfmedStumpComponent? tag) || present.Contains((tag.PartType, tag.Symmetry)))
+                    continue;
 
-            look = WolfmedArteryOverlay.Still;
-        }
+                site = WolfmedArterySites.ForPart(tag.PartType, tag.Symmetry, true);
+                spurting &= bleeding!.Treatment == BleedingTreatment.None;
+            }
+            else if (_traits.TryGetBehavior(wound.Owner, out WolfmedArterialBleedBehavior _))
+            {
+                site = WolfmedArterySites.ForPart(part.Comp1.PartType, part.Comp1.Symmetry, false);
+            }
+            else
+            {
+                continue;
+            }
 
-        return look;
-    }
-
-    /// <summary>The neck's artery: the torso's open stump, spraying while it bleeds and still once it has stopped.</summary>
-    public WolfmedArteryOverlay GetStumpOverlay(Entity<WoundableComponent> part, ProtoId<WoundPrototype> stump)
-    {
-        var look = WolfmedArteryOverlay.None;
-        foreach (var wound in _wounds.GetWounds(part.AsNullable()))
-        {
-            if (wound.Comp.State != WoundState.Open || wound.Comp.Prototype != stump)
+            if (site is not { } at)
                 continue;
 
-            if (TryComp(wound, out WoundBleedingComponent? bleeding) && bleeding.CurrentRate > 0f)
-                return WolfmedArteryOverlay.Bleeding;
-
-            look = WolfmedArteryOverlay.Still;
+            var look = spurting ? WolfmedArteryOverlay.Bleeding : WolfmedArteryOverlay.Still;
+            if (!arteries.TryGetValue(at, out var current) || look > current)
+                arteries[at] = look;
         }
-
-        return look;
     }
 
     /// <summary>

@@ -5,8 +5,10 @@ using Content.Shared.Damage;
 using Content.Shared.FixedPoint;
 using Content.Shared.Humanoid;
 using System.Numerics;
+using Robust.Client.Animations;
 using Robust.Client.GameObjects;
 using Robust.Client.Graphics;
+using Robust.Shared.Animations;
 using Robust.Shared.Utility;
 
 namespace Content.Client.Damage;
@@ -14,6 +16,8 @@ namespace Content.Client.Damage;
 /// <summary>Per-limb damage sprites for wound hosts (P3-4). Body of HOOK 20's insertions in DamageVisualsSystem.cs.</summary>
 public sealed partial class DamageVisualsSystem
 {
+    [Dependency] private AnimationPlayerSystem _wfAnimation = default!;
+
     /// <summary>Re-runs the damage visuals when a wound host's per-part damage projection changes.</summary>
     private void OnPartDamageVisualsState(Entity<PartDamageVisualsComponent> ent, ref AfterAutoHandleStateEvent args)
     {
@@ -239,17 +243,61 @@ public sealed partial class DamageVisualsSystem
         }
 
         // Playtest 4: the arteries go on top of everything. The spray leaves the body, so hair, a helmet or a collar
-        // must not hide it. Both sit with the head, so both take the head's species shift.
-        var headShift = species is { } headSpecies && offsets != null
-            ? offsets.Get(headSpecies, HumanoidVisualLayers.Head)
-            : Vector2i.Zero;
-        var headOffset = new Vector2(headShift.X, headShift.Y) / EyeManager.PixelsPerMeter;
+        // must not hide it. Each shows the still artery; the spray plays once on every spurting one per blood spurt.
+        var spray = damage.LastArterySpray >= 0 && damage.ArterySpray != damage.LastArterySpray;
+        damage.LastArterySpray = damage.ArterySpray;
         foreach (var site in Enum.GetValues<WolfmedArterySite>())
         {
-            UpdateTopLayer(uid, sprite, $"WolfmedArtery{site}", WolfmedWoundOverlays.ArteryRsi,
-                WolfmedWoundOverlays.GetArteryState(site, damage.Arteries.GetValueOrDefault(site)), headOffset,
-                damage.WoundColor);
+            var look = damage.Arteries.GetValueOrDefault(site);
+            var key = $"WolfmedArtery{site}";
+            var shift = species is { } at && offsets != null ? offsets.Get(at, WolfmedArterySites.Layer(site)) : Vector2i.Zero;
+            var offset = new Vector2(shift.X, shift.Y) / EyeManager.PixelsPerMeter;
+            var still = look == WolfmedArteryOverlay.None
+                ? null
+                : WolfmedWoundOverlays.GetArteryState(site, WolfmedArteryOverlay.Still);
+            UpdateTopLayer(uid, sprite, key, WolfmedWoundOverlays.ArteryRsi, still, offset, damage.WoundColor);
+
+            if (look != WolfmedArteryOverlay.Bleeding)
+            {
+                if (_wfAnimation.HasRunningAnimation(uid, key))
+                    _wfAnimation.Stop(uid, key);
+            }
+            else if (spray)
+            {
+                Spray(uid, sprite, key, site);
+            }
         }
+    }
+
+    /// <summary>Plays the site's spray once, then returns the layer to the still artery.</summary>
+    private void Spray(EntityUid uid, SpriteComponent sprite, string key, WolfmedArterySite site)
+    {
+        var spraying = WolfmedWoundOverlays.GetArteryState(site, WolfmedArteryOverlay.Bleeding)!;
+        var still = WolfmedWoundOverlays.GetArteryState(site, WolfmedArteryOverlay.Still)!;
+        if (SpriteSystem.LayerGetEffectiveRsi((uid, sprite), key, spraying) is not { } rsi ||
+            !rsi.TryGetState(spraying, out var state))
+            return;
+
+        var length = MathF.Max(0.1f, state.AnimationLength);
+        if (_wfAnimation.HasRunningAnimation(uid, key))
+            _wfAnimation.Stop(uid, key);
+
+        _wfAnimation.Play(uid, new Animation
+        {
+            Length = TimeSpan.FromSeconds(length + 0.05f),
+            AnimationTracks =
+            {
+                new AnimationTrackSpriteFlick
+                {
+                    LayerKey = key,
+                    KeyFrames =
+                    {
+                        new AnimationTrackSpriteFlick.KeyFrame(spraying, 0f),
+                        new AnimationTrackSpriteFlick.KeyFrame(still, length),
+                    },
+                },
+            },
+        }, key);
     }
 
     /// <summary>Creates (once, appended above every layer the sprite has) and updates one artery layer.</summary>

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Content.IntegrationTests.Fixtures;
 using Content.Server._WF.Wolfmed.Damage;
+using Content.Server._WF.Wolfmed.Gore;
 using Content.Server._WF.Wolfmed.Wounds;
 using Content.Shared._Onyx.Wounds;
 using Content.Shared._WF.Wolfmed.Damage;
@@ -184,9 +185,10 @@ public sealed class WolfmedWoundOverlayTest : GameTest
     }
 
     /// <summary>
-    /// Playtest 4: an arterial bleed on the head sprays from the head's artery and shows the still artery once clamped; a
-    /// head off sprays from the neck and shows the still neck once the stump is dressed to a stop. The client draws the
-    /// artery above everything, tinted with the blood colour.
+    /// Playtest 4: every artery on the sprite. A cut artery on the head is the head's, a limb off is that limb's stump
+    /// (spurting while it bleeds untreated, still once dressed), a hand off then the arm off moves the site up the limb,
+    /// a head off is the neck. The client draws the still artery above everything, tinted with the blood colour, and
+    /// plays the spray once per blood spurt.
     /// </summary>
     [Test]
     public async Task ArteryOverlayTest()
@@ -206,8 +208,8 @@ public sealed class WolfmedWoundOverlayTest : GameTest
             Assert.Multiple(() =>
             {
                 Assert.That(visual.Arteries.GetValueOrDefault(WolfmedArterySite.Head), Is.EqualTo(WolfmedArteryOverlay.Bleeding),
-                    "a pumping artery on the head does not spray.");
-                Assert.That(visual.Arteries.ContainsKey(WolfmedArterySite.Neck), Is.False, "a head still on shows the neck.");
+                    "a pumping artery on the head does not spurt.");
+                Assert.That(visual.Arteries, Has.Count.EqualTo(1), "an unhurt body shows more than the head's artery.");
             });
         });
 
@@ -220,7 +222,8 @@ public sealed class WolfmedWoundOverlayTest : GameTest
                 "the client never added the artery layer.");
             Assert.Multiple(() =>
             {
-                Assert.That(sprites.LayerGetRsiState((clientBody, sprite), artery).Name, Is.EqualTo("head_artery1"));
+                Assert.That(sprites.LayerGetRsiState((clientBody, sprite), artery).Name, Is.EqualTo("head_artery0"),
+                    "the artery loops its spray instead of resting on the still frame.");
                 Assert.That(sprites.TryGetLayer((clientBody, sprite), artery, out var layer, false) && layer.Visible, Is.True);
                 Assert.That(layer!.Color, Is.EqualTo(CEntMan.GetComponent<PartDamageVisualsComponent>(clientBody).WoundColor));
                 Assert.That(sprites.LayerMapTryGet((clientBody, sprite), HumanoidVisualLayers.Hair, out var hair, false), Is.True);
@@ -235,22 +238,67 @@ public sealed class WolfmedWoundOverlayTest : GameTest
         await Server.WaitAssertion(() =>
         {
             var bleeding = SEntMan.System<WoundBleedingSystem>();
+            var amputation = SEntMan.System<AmputationSystem>();
             foreach (var wound in SEntMan.System<WoundSystem>().GetWounds(head))
                 Assert.That(bleeding.SetTreatment(wound.Owner, BleedingTreatment.Clamped), Is.True, "the clamp did not take.");
             Assert.That(bleeding.GetPartRate(head), Is.EqualTo(0f), "a clamp did not stop the artery.");
             Assert.That(Refresh(body).Arteries.GetValueOrDefault(WolfmedArterySite.Head), Is.EqualTo(WolfmedArteryOverlay.Still),
                 "a clamped artery is not the still one.");
 
-            Assert.That(SEntMan.System<AmputationSystem>().TryAmputate(body, head), Is.True, "the head did not come off.");
+            // The left arm off: its stump on the torso is the left arm's site, and the first spurt moves the counter.
+            Assert.That(amputation.TryAmputate(body, Part(body, BodyPartType.Arm, BodyPartSymmetry.Left)), Is.True);
             var visual = Refresh(body);
+            Assert.That(visual.Arteries.GetValueOrDefault(WolfmedArterySite.LArm), Is.EqualTo(WolfmedArteryOverlay.Bleeding),
+                "a fresh arm stump does not spurt.");
+            Assert.That(visual.ArterySpray, Is.EqualTo(0), "the counter moved before any spurt.");
+            Assert.That(SEntMan.System<WolfmedBleedSpurtSystem>().TrySpurt(body), Is.True, "the body did not spurt.");
+            Assert.That(visual.ArterySpray, Is.EqualTo(1), "a spurt did not move the spray counter.");
+        });
+
+        await Pair.RunTicksSync(2);
+        var sprayed = false;
+        for (var attempt = 0; attempt < 10 && !sprayed; attempt++)
+        {
+            await Pair.RunTicksSync(1);
+            await Client.WaitPost(() =>
+            {
+                var (clientBody, _) = ClientSprite(body);
+                sprayed = CEntMan.System<AnimationPlayerSystem>().HasRunningAnimation(clientBody, "WolfmedArteryLArm");
+            });
+        }
+        Assert.That(sprayed, Is.True, "the client never played the arm's spray.");
+
+        await Server.WaitAssertion(() =>
+        {
+            var bleeding = SEntMan.System<WoundBleedingSystem>();
+            var amputation = SEntMan.System<AmputationSystem>();
+            var torso = Part(body, BodyPartType.Torso);
+            Assert.That(bleeding.ReducePartBleeding(torso, 1000, dressing: true), Is.True, "the arm stump could not be dressed.");
+            Assert.That(Refresh(body).Arteries.GetValueOrDefault(WolfmedArterySite.LArm), Is.EqualTo(WolfmedArteryOverlay.Still),
+                "a dressed arm stump is not the still one.");
+
+            // The right hand off: its stump sits on the right arm; the arm off after it takes the hand's stump away.
+            Assert.That(amputation.TryAmputate(body, Part(body, BodyPartType.Hand, BodyPartSymmetry.Right)), Is.True);
+            Assert.That(Refresh(body).Arteries.GetValueOrDefault(WolfmedArterySite.RHand), Is.EqualTo(WolfmedArteryOverlay.Bleeding),
+                "a fresh hand stump does not spurt.");
+            Assert.That(amputation.TryAmputate(body, Part(body, BodyPartType.Arm, BodyPartSymmetry.Right)), Is.True);
+            var visual = Refresh(body);
+            Assert.Multiple(() =>
+            {
+                Assert.That(visual.Arteries.ContainsKey(WolfmedArterySite.RHand), Is.False, "the hand's stump outlived the arm.");
+                Assert.That(visual.Arteries.GetValueOrDefault(WolfmedArterySite.RArm), Is.EqualTo(WolfmedArteryOverlay.Bleeding),
+                    "a fresh arm stump does not spurt.");
+            });
+
+            // The head off: the neck.
+            Assert.That(amputation.TryAmputate(body, head), Is.True, "the head did not come off.");
+            visual = Refresh(body);
             Assert.Multiple(() =>
             {
                 Assert.That(visual.Arteries.ContainsKey(WolfmedArterySite.Head), Is.False, "a head that is off still shows its artery.");
                 Assert.That(visual.Arteries.GetValueOrDefault(WolfmedArterySite.Neck), Is.EqualTo(WolfmedArteryOverlay.Bleeding),
-                    "the neck does not spray.");
+                    "the neck does not spurt.");
             });
-
-            var torso = Part(body, BodyPartType.Torso);
             Assert.That(bleeding.ReducePartBleeding(torso, 1000, dressing: true), Is.True, "the neck could not be dressed.");
             Assert.That(Refresh(body).Arteries.GetValueOrDefault(WolfmedArterySite.Neck), Is.EqualTo(WolfmedArteryOverlay.Still),
                 "a dressed neck is not the still one.");
@@ -267,6 +315,9 @@ public sealed class WolfmedWoundOverlayTest : GameTest
             Assert.That(sprites.LayerMapTryGet((clientBody, sprite), "WolfmedArteryHead", out var artery, false), Is.True);
             Assert.That(sprites.TryGetLayer((clientBody, sprite), artery, out var layer, false) && layer.Visible, Is.False,
                 "the head's artery is still drawn with the head off.");
+            Assert.That(sprites.LayerMapTryGet((clientBody, sprite), "WolfmedArteryRHand", out var hand, false), Is.True);
+            Assert.That(sprites.TryGetLayer((clientBody, sprite), hand, out var handLayer, false) && handLayer.Visible, Is.False,
+                "the hand's artery is still drawn with the arm off.");
         });
     }
 

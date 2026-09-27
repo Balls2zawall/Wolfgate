@@ -121,9 +121,16 @@ public sealed partial class PartDamageVisualsComponent : Component
     [AutoNetworkedField]
     public Color WoundColor = Color.White;
 
-    /// <summary>Playtest 4: the head's artery when an arterial bleed is on the head, the neck's when the head is off.</summary>
+    /// <summary>Playtest 4: the arteries on the sprite, a cut artery on a part or the stump where a part was.</summary>
     [AutoNetworkedField]
     public Dictionary<WolfmedArterySite, WolfmedArteryOverlay> Arteries = new();
+
+    /// <summary>Counts the body's blood spurts; the client plays the spray on every spurting artery when it moves.</summary>
+    [AutoNetworkedField]
+    public int ArterySpray;
+
+    /// <summary>Client only: the last ArterySpray it played, -1 before the first state so a body seen mid-bleed does not spray on sight.</summary>
+    public int LastArterySpray = -1;
     // WOLFGATE END
 }
 

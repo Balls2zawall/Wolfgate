@@ -1,3 +1,4 @@
+using Content.Shared.Body.Part;
 using Content.Shared.Humanoid;
 using Content.Shared.Humanoid.Prototypes;
 using Robust.Shared.Prototypes;
@@ -22,28 +23,87 @@ public enum WolfmedWoundOverlay : byte
     Stream,
 }
 
-/// <summary>An artery on the humanoid sprite (playtest 4): the head's when an arterial bleed is on the head, the neck's when the head is off.</summary>
+/// <summary>
+/// An artery on the humanoid sprite (playtest 4): a cut artery on a part, or the stump where a part was. Drawn as the
+/// still artery; the spray plays once per blood spurt while the look is Bleeding.
+/// </summary>
 [Serializable, NetSerializable]
 public enum WolfmedArteryOverlay : byte
 {
     None = 0,
 
-    /// <summary>The cut artery is there but not pumping: clamped, dressed to a stop, or clotted.</summary>
+    /// <summary>The artery is open but not spurting: clamped, dressed, tied off or clotted.</summary>
     Still,
 
-    /// <summary>Pumping: the spray plays.</summary>
+    /// <summary>Spurting, by the same rule the blood spurts use: the spray plays on each of them.</summary>
     Bleeding,
 }
 
-/// <summary>Where an artery overlay is drawn.</summary>
+/// <summary>Where an artery overlay is drawn: the head's own artery, the neck once the head is off, or a limb.</summary>
 [Serializable, NetSerializable]
 public enum WolfmedArterySite : byte
 {
-    /// <summary>An arterial bleed on the head.</summary>
     Head,
-
-    /// <summary>The stump where the head was.</summary>
     Neck,
+    LArm,
+    RArm,
+    LHand,
+    RHand,
+    LLeg,
+    RLeg,
+    LFoot,
+    RFoot,
+}
+
+/// <summary>Which artery site a part stands for, and which layer's species shift the site takes.</summary>
+public static class WolfmedArterySites
+{
+    /// <summary>
+    /// The site for a part: its own artery when attached, its stump when it is off. A head off is the neck; a torso
+    /// or an unknown part has none.
+    /// </summary>
+    public static WolfmedArterySite? ForPart(BodyPartType type, BodyPartSymmetry symmetry, bool stump)
+    {
+        var left = symmetry == BodyPartSymmetry.Left;
+        return type switch
+        {
+            BodyPartType.Head => stump ? WolfmedArterySite.Neck : WolfmedArterySite.Head,
+            BodyPartType.Arm => left ? WolfmedArterySite.LArm : WolfmedArterySite.RArm,
+            BodyPartType.Hand => left ? WolfmedArterySite.LHand : WolfmedArterySite.RHand,
+            BodyPartType.Leg => left ? WolfmedArterySite.LLeg : WolfmedArterySite.RLeg,
+            BodyPartType.Foot => left ? WolfmedArterySite.LFoot : WolfmedArterySite.RFoot,
+            _ => null,
+        };
+    }
+
+    /// <summary>The humanoid layer whose species shift the site follows; the neck follows the head.</summary>
+    public static HumanoidVisualLayers Layer(WolfmedArterySite site) => site switch
+    {
+        WolfmedArterySite.Head or WolfmedArterySite.Neck => HumanoidVisualLayers.Head,
+        WolfmedArterySite.LArm => HumanoidVisualLayers.LArm,
+        WolfmedArterySite.RArm => HumanoidVisualLayers.RArm,
+        WolfmedArterySite.LHand => HumanoidVisualLayers.LHand,
+        WolfmedArterySite.RHand => HumanoidVisualLayers.RHand,
+        WolfmedArterySite.LLeg => HumanoidVisualLayers.LLeg,
+        WolfmedArterySite.RLeg => HumanoidVisualLayers.RLeg,
+        WolfmedArterySite.LFoot => HumanoidVisualLayers.LFoot,
+        _ => HumanoidVisualLayers.RFoot,
+    };
+
+    /// <summary>The RSI state prefix: head, neck, r_arm, l_foot and so on.</summary>
+    public static string Prefix(WolfmedArterySite site) => site switch
+    {
+        WolfmedArterySite.Head => "head",
+        WolfmedArterySite.Neck => "neck",
+        WolfmedArterySite.LArm => "l_arm",
+        WolfmedArterySite.RArm => "r_arm",
+        WolfmedArterySite.LHand => "l_hand",
+        WolfmedArterySite.RHand => "r_hand",
+        WolfmedArterySite.LLeg => "l_leg",
+        WolfmedArterySite.RLeg => "r_leg",
+        WolfmedArterySite.LFoot => "l_foot",
+        _ => "r_foot",
+    };
 }
 
 /// <summary>The wound and rot overlay art, and the RSI state each (layer, look) pair draws.</summary>
@@ -72,14 +132,13 @@ public static class WolfmedWoundOverlays
     public static string? GetRotState(HumanoidVisualLayers layer) =>
         WolfmedDegradationLayers.TryGetPrefix(layer, out var prefix) ? $"{prefix}_rot" : null;
 
-    /// <summary>The artery state for one site: head_artery0/1 or neck_artery0/1, null for none.</summary>
+    /// <summary>The artery state for one site: &lt;site&gt;_artery0 (still) or _artery1 (the spray), null for none.</summary>
     public static string? GetArteryState(WolfmedArterySite site, WolfmedArteryOverlay overlay)
     {
         if (overlay == WolfmedArteryOverlay.None)
             return null;
 
-        var where = site == WolfmedArterySite.Head ? "head" : "neck";
-        return $"{where}_artery{(overlay == WolfmedArteryOverlay.Bleeding ? 1 : 0)}";
+        return $"{WolfmedArterySites.Prefix(site)}_artery{(overlay == WolfmedArteryOverlay.Bleeding ? 1 : 0)}";
     }
 
     /// <summary>Which look wins when one layer has two parts behind it (a second left arm).</summary>

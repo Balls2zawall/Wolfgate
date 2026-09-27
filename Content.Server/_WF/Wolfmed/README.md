@@ -119,6 +119,7 @@ Skipped ("dirty-disposed").
 - [`Content.Server/_WF/Wolfmed/Wounds/WolfmedRejuvenateSystem.cs`](Wounds/WolfmedRejuvenateSystem.cs)
 - [`Content.Server/_WF/Wolfmed/Wounds/WolfmedShortCircuitSystem.cs`](Wounds/WolfmedShortCircuitSystem.cs)
 - [`Content.Server/_WF/Wolfmed/Wounds/WolfmedSplintSystem.cs`](Wounds/WolfmedSplintSystem.cs)
+- [`Content.Server/_WF/Wolfmed/Wounds/WolfmedStumpTagSystem.cs`](Wounds/WolfmedStumpTagSystem.cs)
 - [`Content.Server/_WF/Wolfmed/Wounds/WolfmedWoundSfxSystem.cs`](Wounds/WolfmedWoundSfxSystem.cs)
 - [`Content.Server/_WF/Wolfmed/Wounds/WoundBleedingSystem.Wolfmed.cs`](Wounds/WoundBleedingSystem.Wolfmed.cs)
 
@@ -240,6 +241,7 @@ Skipped ("dirty-disposed").
 - [`Content.Shared/_WF/Wolfmed/Wounds/WolfmedSfxProfilePrototype.cs`](../../../Content.Shared/_WF/Wolfmed/Wounds/WolfmedSfxProfilePrototype.cs)
 - [`Content.Shared/_WF/Wolfmed/Wounds/WolfmedSplintComponent.cs`](../../../Content.Shared/_WF/Wolfmed/Wounds/WolfmedSplintComponent.cs)
 - [`Content.Shared/_WF/Wolfmed/Wounds/WolfmedStepChecks.cs`](../../../Content.Shared/_WF/Wolfmed/Wounds/WolfmedStepChecks.cs)
+- [`Content.Shared/_WF/Wolfmed/Wounds/WolfmedStumpComponent.cs`](../../../Content.Shared/_WF/Wolfmed/Wounds/WolfmedStumpComponent.cs)
 - [`Content.Shared/_WF/Wolfmed/Wounds/WolfmedSutureComponents.cs`](../../../Content.Shared/_WF/Wolfmed/Wounds/WolfmedSutureComponents.cs)
 - [`Content.Shared/_WF/Wolfmed/Wounds/WolfmedTreatmentAdvice.cs`](../../../Content.Shared/_WF/Wolfmed/Wounds/WolfmedTreatmentAdvice.cs)
 - [`Content.Shared/_WF/Wolfmed/Wounds/WolfmedTreatmentProcedurePrototype.cs`](../../../Content.Shared/_WF/Wolfmed/Wounds/WolfmedTreatmentProcedurePrototype.cs)

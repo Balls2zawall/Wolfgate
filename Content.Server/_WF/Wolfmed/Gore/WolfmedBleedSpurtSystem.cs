@@ -191,6 +191,8 @@ public sealed class WolfmedBleedSpurtSystem : EntitySystem
             _audio.PlayPvs(sound, body);
 
         _dismemberment.TrySpill(body, spec.SpillVolume);
+        var spurted = new WolfmedBleedSpurtEvent(body, stump);
+        RaiseLocalEvent(ref spurted);
         return true;
     }
 

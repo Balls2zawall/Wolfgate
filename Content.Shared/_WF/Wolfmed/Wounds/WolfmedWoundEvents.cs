@@ -75,6 +75,10 @@ public readonly record struct WolfmedWoundLifecycleEvent(
 [ByRefEvent]
 public readonly record struct WolfmedPartAmputatedEvent(EntityUid Body, EntityUid Part, EntityUid Parent);
 
+/// <summary>A body has just thrown a blood spurt (GORE G2). Broadcast from <c>WolfmedBleedSpurtSystem.TrySpurt</c>.</summary>
+[ByRefEvent]
+public readonly record struct WolfmedBleedSpurtEvent(EntityUid Body, bool Stump);
+
 /// <summary>Raised on a body when antiseptic reaches its skin; handlers report how many wounds they cleaned.</summary>
 // Raised by the Shared WolfmedCleanWounds entity effect so the server-only WolfmedInfectionSystem can answer; the
 // count tells the effect whether to say anything.

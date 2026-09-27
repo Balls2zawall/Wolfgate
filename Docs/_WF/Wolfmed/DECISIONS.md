@@ -3971,21 +3971,27 @@ that the client reads the arrest (`Flatlined`) the moment the server starts one,
 
 ## The arteries on the sprite (playtest 4, 2026-09-27)
 
-"Don't see the head_artery0 or head_artery1 (0 static, 1 bleeding), nor the neck_artery0/1. Neck artery is for when a
-head is chopped off, and head is for head bleeding." Bob's artery.dmi has an artery pair per part; the head and neck
-pairs are ported as asked, grey and tinted with the blood colour like the wound glyphs, and ride
-`PartDamageVisualsComponent.Arteries` beside the wounds and rot.
+"Did you port all of the arteries for each stump? They should always stop when that stump stops profusely/arterial
+bleeding. Also, it should animate intermittently, specifically when the blood sprays happen." Bob's artery.dmi has a
+still (0) and a three-frame spray (1) for the head, the neck and each limb; all ten pairs are ported, grey and tinted
+with the blood colour like the wound glyphs, and ride `PartDamageVisualsComponent.Arteries` beside the wounds and rot.
 
-- **The head's artery** shows while the head carries an arterial bleed (`WFWolfmedArterialBleedWound`, the deep cut
-  that reached an artery): the spray while it pumps, the still artery once it is clamped, dressed to a stop or clotted.
-  An ordinary head bleed keeps the drip glyph; a spray for every scratch would say "artery" when there is none.
-- **The neck's artery** is the torso's stump once the body has no head: spraying while the stump bleeds, still once a
-  dressing has stopped it. The torso cannot tell an arm's stump from the neck's, so an arm stump bleeding on a headless
-  torso sprays from the neck too, which reads right anyway.
-- **On top of everything.** A spray leaves the body, so the two layers are appended above hair, helmets and collars
-  rather than tucked under the clothing like the wound glyphs. Both take the head's species shift.
+- **A site per part.** A cut artery (`WolfmedArterialBleedBehavior`) on an attached part is that part's site; a
+  dismemberment wound is the site of the part it is the stump of (`WolfmedStumpComponent`, tagged off the amputation
+  event by `WolfmedStumpTagSystem`, since a torso can hold a neck's and a shoulder's stump at once); a head off is the
+  neck. A part that is back on takes its stump site with it, and a hand's stump leaves with the arm.
+- **The look is the blood spurts' rule.** Bleeding while `WolfmedBleedSpurtSystem` would throw from it: a stump
+  bleeding untreated, a cut artery bleeding at all. Anything else open is the still artery, so a dressed, tied-off or
+  clotted stump stops spraying the moment the spurts do.
+- **The spray plays per spurt, not on a loop.** The layer rests on the still frame. Each spurt moves the body's
+  `ArterySpray` counter, and the client plays the spray once (a sprite flick to `_artery1` and back to `_artery0`) on
+  every site that is Bleeding. A body first seen mid-bleed does not spray on sight.
+- **On top of everything.** The spray leaves the body, so the layers are appended above hair, helmets and collars
+  rather than tucked under the clothing like the wound glyphs; each takes its own limb's species shift, the neck the
+  head's.
 
-`WolfmedWoundOverlayTest.ArteryOverlayTest` walks the four states on the server and the client.
+`WolfmedWoundOverlayTest.ArteryOverlayTest` walks the head, an arm, a hand then its arm, and the neck, on the server
+and the client, and reads the spray flick off the client's animation player.
 
 ## The gibs, checked from the client (playtest 4, 2026-09-27)
 
