@@ -275,6 +275,8 @@ Skipped ("dirty-disposed").
 ### Integration tests
 
 - [`Content.IntegrationTests/Tests/_WF/Wolfmed/PodAtmosphereTest.cs`](../../../Content.IntegrationTests/Tests/_WF/Wolfmed/PodAtmosphereTest.cs)
+- [`Content.IntegrationTests/Tests/_WF/Wolfmed/Range/WolfmedRangeMapGenerator.cs`](../../../Content.IntegrationTests/Tests/_WF/Wolfmed/Range/WolfmedRangeMapGenerator.cs)
+- [`Content.IntegrationTests/Tests/_WF/Wolfmed/Range/WolfmedRangeMapTest.cs`](../../../Content.IntegrationTests/Tests/_WF/Wolfmed/Range/WolfmedRangeMapTest.cs)
 - [`Content.IntegrationTests/Tests/_WF/Wolfmed/Scenarios/WolfmedBreathingClockTest.cs`](../../../Content.IntegrationTests/Tests/_WF/Wolfmed/Scenarios/WolfmedBreathingClockTest.cs)
 - [`Content.IntegrationTests/Tests/_WF/Wolfmed/Scenarios/WolfmedBurnScenarioTest.cs`](../../../Content.IntegrationTests/Tests/_WF/Wolfmed/Scenarios/WolfmedBurnScenarioTest.cs)
 - [`Content.IntegrationTests/Tests/_WF/Wolfmed/Scenarios/WolfmedCauseScenarioTest.cs`](../../../Content.IntegrationTests/Tests/_WF/Wolfmed/Scenarios/WolfmedCauseScenarioTest.cs)
@@ -289,6 +291,7 @@ Skipped ("dirty-disposed").
 - [`Content.IntegrationTests/Tests/_WF/Wolfmed/Scenarios/WolfmedMedicInfoTest.cs`](../../../Content.IntegrationTests/Tests/_WF/Wolfmed/Scenarios/WolfmedMedicInfoTest.cs)
 - [`Content.IntegrationTests/Tests/_WF/Wolfmed/Scenarios/WolfmedMedicLinesTest.cs`](../../../Content.IntegrationTests/Tests/_WF/Wolfmed/Scenarios/WolfmedMedicLinesTest.cs)
 - [`Content.IntegrationTests/Tests/_WF/Wolfmed/Scenarios/WolfmedPainkillerTest.cs`](../../../Content.IntegrationTests/Tests/_WF/Wolfmed/Scenarios/WolfmedPainkillerTest.cs)
+- [`Content.IntegrationTests/Tests/_WF/Wolfmed/Scenarios/WolfmedPartPainCapTest.cs`](../../../Content.IntegrationTests/Tests/_WF/Wolfmed/Scenarios/WolfmedPartPainCapTest.cs)
 - [`Content.IntegrationTests/Tests/_WF/Wolfmed/Scenarios/WolfmedPlaytestOneTest.cs`](../../../Content.IntegrationTests/Tests/_WF/Wolfmed/Scenarios/WolfmedPlaytestOneTest.cs)
 - [`Content.IntegrationTests/Tests/_WF/Wolfmed/Scenarios/WolfmedPlaytestThreeSamTest.cs`](../../../Content.IntegrationTests/Tests/_WF/Wolfmed/Scenarios/WolfmedPlaytestThreeSamTest.cs)
 - [`Content.IntegrationTests/Tests/_WF/Wolfmed/Scenarios/WolfmedPlaytestThreeTest.cs`](../../../Content.IntegrationTests/Tests/_WF/Wolfmed/Scenarios/WolfmedPlaytestThreeTest.cs)
@@ -390,6 +393,7 @@ Skipped ("dirty-disposed").
 - [`Resources/Prototypes/_WF/Wolfmed/Damage/treatment_overlays.yml`](../../../Resources/Prototypes/_WF/Wolfmed/Damage/treatment_overlays.yml)
 - [`Resources/Prototypes/_WF/Wolfmed/Decals/blood.yml`](../../../Resources/Prototypes/_WF/Wolfmed/Decals/blood.yml)
 - [`Resources/Prototypes/_WF/Wolfmed/Entities/Debugging/debug_medbox.yml`](../../../Resources/Prototypes/_WF/Wolfmed/Entities/Debugging/debug_medbox.yml)
+- [`Resources/Prototypes/_WF/Wolfmed/Entities/Debugging/range_spawner.yml`](../../../Resources/Prototypes/_WF/Wolfmed/Entities/Debugging/range_spawner.yml)
 - [`Resources/Prototypes/_WF/Wolfmed/Entities/effects.yml`](../../../Resources/Prototypes/_WF/Wolfmed/Entities/effects.yml)
 - [`Resources/Prototypes/_WF/Wolfmed/Entities/gore.yml`](../../../Resources/Prototypes/_WF/Wolfmed/Entities/gore.yml)
 - [`Resources/Prototypes/_WF/Wolfmed/Entities/hydraulics.yml`](../../../Resources/Prototypes/_WF/Wolfmed/Entities/hydraulics.yml)
@@ -568,6 +572,10 @@ Skipped ("dirty-disposed").
 - [`Resources/Audio/_WF/Wolfmed/Bleeding/splatter.ogg`](../../../Resources/Audio/_WF/Wolfmed/Bleeding/splatter.ogg)
 - [`Resources/Audio/_WF/Wolfmed/flatline.ogg`](../../../Resources/Audio/_WF/Wolfmed/flatline.ogg)
 - [`Resources/Audio/_WF/Wolfmed/heartbeat_loop.ogg`](../../../Resources/Audio/_WF/Wolfmed/heartbeat_loop.ogg)
+
+### Maps
+
+- [`Resources/Maps/_WF/Wolfmed/wolfmed_range.yml`](../../../Resources/Maps/_WF/Wolfmed/wolfmed_range.yml)
 
 ### Guidebook
 

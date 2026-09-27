@@ -5067,3 +5067,18 @@ the client.
 | `Content.Shared/Clothing/EntitySystems/HideLayerClothingSystem.cs` | modified, `// WOLFGATE` | `SetLayerVisibility` returns early when `InSlot` / `InSlotFlag` is null instead of reaching the Debug asserts. |
 | `Content.IntegrationTests/Tests/_WF/Wolfmed/WolfmedSpawnedGearUnequipTest.cs` | new | A client attached to a mob spawned wearing a hardsuit helmet takes it off through the predicted slot click; prints the client-side `InSlot` (null). |
 | `Docs/_WF/Wolfmed/DECISIONS.md`, this file | modified | This section. |
+
+## Playtest 4, limb pain caps and the range (2026-09-26)
+
+All `_WF`, tests and one generated map (DECISIONS "Limbs hold less pain" and "The Wolfmed range").
+
+| File | Kind | Change |
+| --- | --- | --- |
+| `Content.Shared/_WF/Wolfmed/CCVar/WolfmedCVars.cs` | modified | `wolfmed.part_pain_cap_arm` 80, `_hand` 50, `_leg` 90, `_foot` 50. |
+| `Content.Shared/_WF/Wolfmed/Consciousness/WolfmedBodyPainSystem.cs` | modified | `OnPainInit` sets a limb's `SoftPainCap` from its type's line; `PartPainCap(BodyPartType)`. |
+| `Content.IntegrationTests/Tests/_WF/Wolfmed/Scenarios/WolfmedPartPainCapTest.cs` | new | One arm caps at 80 and stays Up; arm + leg Down; four limbs faint; the torso keeps 135. |
+| `Content.IntegrationTests/Tests/_WF/Wolfmed/Range/WolfmedRangeMapGenerator.cs` | new | `[Explicit]` generator for the range map. |
+| `Content.IntegrationTests/Tests/_WF/Wolfmed/Range/WolfmedRangeMapTest.cs` | new | Loads the committed range: one humanoid per playable species, both pods powered. |
+| `Resources/Prototypes/_WF/Wolfmed/Entities/Debugging/range_spawner.yml` | new | `WFWolfmedRangeSpawner`, the self-deleting marker that spawns one species on map init. |
+| `Resources/Maps/_WF/Wolfmed/wolfmed_range.yml` | new, generated | The range; `loadmap 100 /Maps/_WF/Wolfmed/wolfmed_range.yml`. |
+| `Docs/_WF/Wolfmed/DECISIONS.md`, this file | modified | The two sections. |

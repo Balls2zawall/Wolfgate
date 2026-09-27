@@ -3343,3 +3343,37 @@ then reaches the assert; Release builds compile it out and carry on with `SlotFl
 nothing in the chain is ours. The marked fix returns early from `SetLayerVisibility` when the slot is unknown, since
 the server's `HiddenLayers` state carries the change anyway. Raising the equip events at inventory init on the client
 was rejected: it would fire `DidEquipEvent` on every system for every mob the client meets.
+
+## Limbs hold less pain (playtest 4, 2026-09-26)
+
+The owner asked whether an appendage's pain is capped: it should not be possible to reach pain crit from a run of
+bullets into one arm. Measured: Onyx clamps every part to its own `SoftPainCap`, which is the body's 135 on every
+part, so one arm alone reached 135 effective body pain, past the Downed line (0.95 x 135 = 128) and the pain shock
+(130), though never the faint (1.4 x 135 = 189 on the summed parts). Piercing counts 0.67 pain a point, so nine
+unarmoured 22-Piercing rounds into one arm did it. Now `WolfmedBodyPainSystem` sets a limb's soft cap when the part
+gains its `PainComponent`, from `wolfmed.part_pain_cap_arm` (80), `_hand` (50), `_leg` (90) and `_foot` (50); head and
+torso keep 135. One arm tops out at 80, so it can never Down anyone by itself; an arm and a leg (170 summed, 135
+effective) still Down; four limbs at their caps (270) still faint. Existing tests put at most 50 pain on a limb.
+The line is read once at init, so a changed CVar applies to bodies made after it (`WolfmedPartPainCapTest`).
+
+## The Wolfmed range (playtest 4, 2026-09-26)
+
+The owner asked for a map with every species lined up for testing, loaded by `loadmap`: a walled square with room,
+medical supplies, the pod, guns, melee and armour. `Resources/Maps/_WF/Wolfmed/wolfmed_range.yml` is generated, not
+hand-drawn: `WolfmedRangeMapGenerator` (an `[Explicit]` test, run with `WOLFMED_RANGE_OUT` set to the file) builds a
+48 x 48 steel room with solid walls, inherent gravity, a white ambient map light and standard air on the map
+atmosphere, saves it uninitialised (so `NoSavedPostMapInitTest` stays green) and writes the YAML out. Player mobs are
+`save: false` (`BaseMobSpecies`), so the file cannot hold them: rows along the
+north wall carry one `WFWolfmedRangeSpawner` marker (a self-deleting `RandomSpawner`) per species prototype whose
+player mob has a `HumanoidAppearance` (the cyborg "species" has
+none), each holding that mob, sorted by id, so a new species needs only a rerun. Along the west wall: tables of medkits, the analyzer,
+defibrillator, blood, tourniquets, splints, dressings, ephedrine, hydraulic fluid, a welder and cable, a body bag
+and the surgery tools; two Wolfmed debug crates; two beds and an operating table; two pods powered by an RTG into a
+substation into an APC with low-voltage cable under the pods (`ApcPowerReceiver.NeedsPower` is not a data field, so
+"always powered" cannot be saved). Along the south wall: an AK with a magazine box, an Mk58 with a box, a Kammerer,
+two laser carbines, a Mosin, and a knife, machete, fire axe, spear, energy sword and crowbar. Along the east wall:
+basic, riot, heavy and bulletproof armour, the basic and security hardsuits with helmets, and the SWAT helmet. The
+generator skips any prototype that is missing or categorised DoNotMap and prints the list. `WolfmedRangeMapTest`
+loads the committed file, counts one humanoid per playable species and checks both pods are powered, so the map
+cannot fall behind the species list quietly. In game: `loadmap 100 /Maps/_WF/Wolfmed/wolfmed_range.yml`, then
+teleport to map 100.
