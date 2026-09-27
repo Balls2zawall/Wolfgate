@@ -105,6 +105,10 @@ public sealed class WolfmedRemainingCausesTest : GameTest
     [Test]
     public async Task ToxinScenarioTest()
     {
+        // Playtest 5: a patient at the coma band retches and can vomit (the condition emotes), and a vomit purges the
+        // bloodstream, dylovene included, on a random roll. This test measures the clearance, so the roll is off.
+        await OverrideCVar(Side.Server, WolfmedCVars.ConditionEmoteChance, 0f);
+
         await Pin();
         var map = await Pair.CreateTestMap();
         var s = new WolfmedScenario(SEntMan);

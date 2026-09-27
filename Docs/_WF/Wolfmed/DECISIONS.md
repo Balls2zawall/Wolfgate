@@ -4253,3 +4253,10 @@ canisters and bottles, and the opiate and spaceacillin bottles, now carry their 
 "tramadol bottle"): the trader shop names rows from the prototype, not the label, so they all read "pill canister" and
 "bottle" there. John Wolfgate sells the autodoc flatpack at his shop's normal markup (32,000 credits on the 3,200
 price); the board route at the lathe stays the cheap one.
+
+**A coma vomits the antitoxin (2026-09-28, found by a flaky test).** `ToxinScenarioTest` failed one run in three: 15 u of
+dylovene at Poison 130 left the load at 109.7 instead of waking the patient. The condition emotes retch at the toxin
+Downed band and vomit at the coma band on a random roll, and upstream's `VomitSystem.Vomit` splits part of the
+bloodstream's chemicals into the puddle, so the injected dylovene went on the floor. The test turns the roll off
+(`wolfmed.condition_emote_chance` 0). Whether an unconscious patient should lose an injected antitoxin to a vomit is
+the owner's call; left as it plays.
