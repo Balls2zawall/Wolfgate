@@ -3329,3 +3329,17 @@ holds only the core and the pump, so both took the full `wolfmed.organ_hit_cap` 
 is death rather than arrest, went on hit 8. `WolfmedOrganComponent.HitCap` now overrides the global cap per organ; the
 positronic core and the coolant pump (IPC and synth) set 2.5. Turret rounds: pump on hit 10, core on hit 16. Standard
 rifle rounds (Piercing 14): core on hit 16 (was 13), human heart unchanged at 13. Humans and headshots are untouched.
+
+## The Debug client and gear it arrived wearing (playtest 4, 2026-09-26)
+
+The owner's client closed on a slot click right after `spawnoutfit`, and once in playtest 2, with
+`HideLayerClothingSystem.SetLayerVisibility` asserting that the item's `InSlot` is set. Measured
+(`WolfmedSpawnedGearUnequipTest`): a client that first sees a mob already dressed never gets the equip for that
+gear. The engine applies the mob's container state before the mob's `InventoryComponent` is initialised, so
+`InventorySystem.OnEntInserted` finds no slot definition, raises no `GotEquippedEvent`, and `ClothingComponent.InSlot`
+stays null on the client (the visuals come from `ClothingVisualsSystem.InitClothing` instead). Every player mob reaches
+every other client that way, and the local player's own mob when it spawns with gear. Taking a layer-hiding item off
+then reaches the assert; Release builds compile it out and carry on with `SlotFlags.NONE`. Not a Wolfmed regression:
+nothing in the chain is ours. The marked fix returns early from `SetLayerVisibility` when the slot is unknown, since
+the server's `HiddenLayers` state carries the change anyway. Raising the equip events at inventory init on the client
+was rejected: it would fire `DidEquipEvent` on every system for every mob the client meets.

@@ -5055,3 +5055,15 @@ The existing pod files only gained calls (DECISIONS "Playtest 3, pod atmosphere"
 | `Resources/Locale/en-US/_WF/Wolfmed/autodoc-atmosphere.ftl` | new | The five readout keys and four examine keys. |
 | `Content.IntegrationTests/Tests/_WF/Wolfmed/PodAtmosphereTest.cs` | new | Six tests (DECISIONS). |
 | `Docs/_WF/Wolfmed/DECISIONS.md`, this file | modified | The "Playtest 3, pod atmosphere" sections. |
+
+## Playtest 4, the Debug client and gear it arrived wearing (2026-09-26)
+
+One marked upstream edit (DECISIONS "The Debug client and gear it arrived wearing"). Not a Wolfmed regression: the
+client never learns the slot of gear a mob already wore when it first saw it, and Debug's assert on the unequip closed
+the client.
+
+| File | Kind | Change |
+| --- | --- | --- |
+| `Content.Shared/Clothing/EntitySystems/HideLayerClothingSystem.cs` | modified, `// WOLFGATE` | `SetLayerVisibility` returns early when `InSlot` / `InSlotFlag` is null instead of reaching the Debug asserts. |
+| `Content.IntegrationTests/Tests/_WF/Wolfmed/WolfmedSpawnedGearUnequipTest.cs` | new | A client attached to a mob spawned wearing a hardsuit helmet takes it off through the predicted slot click; prints the client-side `InSlot` (null). |
+| `Docs/_WF/Wolfmed/DECISIONS.md`, this file | modified | This section. |
