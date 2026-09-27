@@ -3959,3 +3959,12 @@ fracture's crawling. Three marked edits: a `Clamped` treatment survives new dama
 opens under a tourniquet starts clamped; and the strap ties off the parts below it (a leg's foot, an arm's hand).
 Every other dressing still comes off a wound that reopens. Removal is unchanged: taking the strap off unclamps
 (`WolfmedNecrosisSystem`). `WolfmedTourniquetHoldsTest`.
+
+## The flatline is heard (playtest 4, 2026-09-27)
+
+"Still don't hear the beep tone when cardiac arrest happens." The trigger was never the problem: the client's
+`WolfmedCritHeartbeatSystem` re-checks every frame and sees the networked arrest marker. The file was: the flatline
+ogg peaked at -23.5 dB, and the earlier "very quiet too" note was a complaint, not a request, so dropping the play
+volume to -18 dB buried it entirely (-41 dB peak against the heartbeat's -4). The file is normalised to -1.5 dB peak
+and plays at -6 dB again, a shade under the heartbeat. `WolfmedCritHeartbeatTest.FlatlineMarksTheArrestTest` pins
+that the client reads the arrest (`Flatlined`) the moment the server starts one, and drops it when the arrest ends.

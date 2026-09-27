@@ -108,7 +108,7 @@ public sealed class WolfmedCritHeartbeatSystem : EntitySystem
         var arrest = _player.LocalEntity is { } arrested && HasComp<WolfmedCardiacArrestComponent>(arrested);
         Flatlined = arrest;
         if (arrest && !_flatlined)
-            _audio.PlayGlobal(FlatlineSound, Filter.Local(), false, AudioParams.Default.WithVolume(-18f));
+            _audio.PlayGlobal(FlatlineSound, Filter.Local(), false, AudioParams.Default.WithVolume(-6f));
 
         _flatlined = arrest;
 

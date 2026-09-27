@@ -3,6 +3,7 @@ using System.Threading.Tasks;
 using System.Linq;
 using Content.Client._WF.Wolfmed.Audio;
 using Content.IntegrationTests.Pair;
+using Content.Server._WF.Wolfmed.Life;
 using Content.Shared._Onyx.Wounds;
 using Content.Shared._WF.Wolfmed.Consciousness;
 using Content.Shared.Body.Part;
@@ -129,6 +130,61 @@ public sealed class WolfmedCritHeartbeatTest
         }
 
         await pair.CleanReturnAsync();
+    }
+
+    /// <summary>
+    /// Playtest 4: the flat tone marks the arrest, not death. The client reads the arrest marker on its own body
+    /// the moment the server starts one, the loop is off while the heart is stopped, and a restart clears it.
+    /// </summary>
+    [Test]
+    public async Task FlatlineMarksTheArrestTest()
+    {
+        await using var pair = await PoolManager.GetServerClient(new PoolSettings { Connected = true, Dirty = true });
+        var server = pair.Server;
+        var client = pair.Client;
+        var sEntMan = server.EntMan;
+        var mindSys = sEntMan.System<SharedMindSystem>();
+        var life = sEntMan.System<WolfmedLifeSystem>();
+        var heartbeat = client.System<WolfmedCritHeartbeatSystem>();
+        var map = await pair.CreateTestMap();
+        var session = server.PlayerMan.GetSessionById(client.Session!.UserId);
+
+        EntityUid body = default;
+        await server.WaitPost(() =>
+        {
+            mindSys.WipeMind(session.ContentData()?.Mind);
+            body = sEntMan.SpawnEntity("MobHuman", map.GridCoords);
+            mindSys.TransferTo(mindSys.CreateMind(session.UserId).Owner, body);
+        });
+        await pair.RunTicksSync(30);
+        Assert.That(session.AttachedEntity, Is.EqualTo(body), "The player did not attach to the new body.");
+        await client.WaitPost(() => Assert.That(heartbeat.Flatlined, Is.False, "Precondition: a beating heart reads as flatlined."));
+
+        await server.WaitPost(() => Assert.That(life.StartArrest(body, "test"), Is.True, "the fixture did not arrest."));
+        await WaitFlatline(pair, true, "The client never saw the arrest.");
+        await server.WaitAssertion(() =>
+            Assert.That(sEntMan.System<MobStateSystem>().IsCritical(body), Is.True, "an arrest is not Critical."));
+        await client.WaitPost(() => Assert.That(heartbeat.Active, Is.False, "the heartbeat loop ran through the arrest."));
+
+        await server.WaitPost(() => Assert.That(life.EndArrest(body), Is.True, "the fixture did not restart."));
+        await WaitFlatline(pair, false, "The client never saw the restart.");
+
+        await pair.CleanReturnAsync();
+    }
+
+    private static async Task WaitFlatline(TestPair pair, bool expected, string because)
+    {
+        var heartbeat = pair.Client.System<WolfmedCritHeartbeatSystem>();
+        var flatlined = !expected;
+        for (var attempt = 0; attempt < 20; attempt++)
+        {
+            await pair.RunTicksSync(5);
+            await pair.Client.WaitPost(() => flatlined = heartbeat.Flatlined);
+            if (flatlined == expected)
+                return;
+        }
+
+        Assert.Fail($"{because} (flatlined {flatlined}).");
     }
 
     /// <summary>
