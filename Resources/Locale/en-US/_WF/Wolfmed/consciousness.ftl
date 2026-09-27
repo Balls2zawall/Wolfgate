@@ -210,3 +210,29 @@ wolfmed-limb-penalty-legs-burn = Your legs are badly burned; moving is slow.
 
 # Playtest 3: a body that is down trying to climb onto a table.
 wolfmed-downed-cant-climb = You can't climb while you're down.
+
+# Playtest 4, VISUALS: the pain HUD. AlertControl passes the alert's severity: the body's effective pain against its
+# soft cap, 0 to 7, in the light / strong / terrible / agony bands the self-examine lines use; 8 is a pain faint.
+alerts-wolfmed-pain-name = Pain
+alerts-wolfmed-pain-desc = { $severity ->
+        [0] Light pain.
+        [1] Light pain.
+        [2] Strong pain.
+        [3] Strong pain.
+        [4] Terrible pain.
+        [5] Terrible pain.
+        [6] Agony. A little more and it floors you.
+        [7] Agony, at or past the point it floors you.
+       *[other] Passed out from the pain. It passes in seconds.
+    }
+alerts-wolfmed-pain-mechanical-name = Sensor overload
+alerts-wolfmed-pain-mechanical-desc = { $severity ->
+        [0] Minor fault signals.
+        [1] Minor fault signals.
+        [2] Fault signals.
+        [3] Fault signals.
+        [4] Heavy fault signals.
+        [5] Heavy fault signals.
+        [6] Sensors near overload. A little more and they drop you.
+       *[other] Sensors overloaded, at or past the point they drop you.
+    }

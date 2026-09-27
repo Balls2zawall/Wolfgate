@@ -4,7 +4,9 @@ using Content.Shared.Body.Part;
 using Content.Shared.Damage;
 using Content.Shared.FixedPoint;
 using Content.Shared.Humanoid;
+using System.Numerics;
 using Robust.Client.GameObjects;
+using Robust.Client.Graphics;
 using Robust.Shared.Utility;
 
 namespace Content.Client.Damage;
@@ -22,6 +24,7 @@ public sealed partial class DamageVisualsSystem
         UpdateDetachedPartDamage(ent.Owner, ent.Comp);
         UpdateDegradation(ent.Owner, ent.Comp); // V3
         UpdateTreatments(ent.Owner, ent.Comp); // G3
+        UpdateWoundOverlays(ent.Owner, ent.Comp); // VISUALS
     }
 
     /// <summary>Option B: a detached part's own BodyPartComponent state changed (e.g. it was just severed).</summary>
@@ -200,6 +203,70 @@ public sealed partial class DamageVisualsSystem
         SpriteSystem.LayerSetVisible((uid, sprite), index, state != null);
         if (state != null)
             SpriteSystem.LayerSetRsiState((uid, sprite), index, state);
+    }
+
+    // --- VISUALS: open wounds and rot ---
+
+    /// <summary>
+    /// Draws each organic limb's open wound (tinted the body's blood colour) and its rot. Same shape as the
+    /// degradation overlay: one layer of each per visual layer, added once, then only toggled or re-stated, and
+    /// shifted by the species' row in <see cref="WolfmedOverlayOffsetsPrototype"/>.
+    /// </summary>
+    // Stacking on each limb: the limb, its degradation, its rot, its wound, then the clothing. A layer made later is
+    // inserted above the ones below it in that order, and an insert under it pushes it up, so the order holds
+    // whichever is created first. The torso, arms and legs sit under the jumpsuit; hands and feet, which draw over
+    // it, sit under the gloves and shoes. A severed limb draws neither: it has no humanoid layer map.
+    private void UpdateWoundOverlays(EntityUid uid, PartDamageVisualsComponent damage)
+    {
+        if (HasComp<BodyPartComponent>(uid) || !TryComp(uid, out SpriteComponent? sprite))
+            return;
+
+        var species = CompOrNull<HumanoidAppearanceComponent>(uid)?.Species;
+        _prototypeManager.TryIndex<WolfmedOverlayOffsetsPrototype>(WolfmedOverlayOffsetsPrototype.Default,
+            out var offsets);
+
+        foreach (var layer in WolfmedDegradationLayers.All)
+        {
+            var shift = species is { } id && offsets != null ? offsets.Get(id, layer) : Vector2i.Zero;
+            var offset = new Vector2(shift.X, shift.Y) / EyeManager.PixelsPerMeter;
+
+            UpdateOverlayLayer(uid, sprite, layer, $"WolfmedRot{layer}", WolfmedWoundOverlays.RotRsi,
+                damage.Rot.Contains(layer) ? WolfmedWoundOverlays.GetRotState(layer) : null, offset, null,
+                $"WolfmedDegradation{layer}");
+            UpdateOverlayLayer(uid, sprite, layer, $"WolfmedWound{layer}", WolfmedWoundOverlays.WoundRsi,
+                WolfmedWoundOverlays.GetWoundState(layer, damage.Wounds.GetValueOrDefault(layer)), offset,
+                damage.WoundColor, $"WolfmedDegradation{layer}", $"WolfmedRot{layer}");
+        }
+    }
+
+    /// <summary>Creates (once) and updates one wound or rot layer, above the limb and the overlays named below it.</summary>
+    private void UpdateOverlayLayer(EntityUid uid, SpriteComponent sprite, HumanoidVisualLayers layer, string key,
+        ResPath rsi, string? state, Vector2 offset, Color? colour, params string[] below)
+    {
+        if (!SpriteSystem.LayerMapTryGet((uid, sprite), key, out var index, false))
+        {
+            if (state == null || !SpriteSystem.LayerMapTryGet((uid, sprite), layer, out var insert, false))
+                return;
+
+            foreach (var other in below)
+            {
+                if (SpriteSystem.LayerMapTryGet((uid, sprite), other, out var under, false))
+                    insert = Math.Max(insert, under);
+            }
+
+            index = SpriteSystem.AddLayer((uid, sprite), new SpriteSpecifier.Rsi(rsi, state), insert + 1);
+            SpriteSystem.LayerMapSet((uid, sprite), key, index);
+        }
+
+        SpriteSystem.LayerSetVisible((uid, sprite), index, state != null);
+        if (state == null)
+            return;
+
+        // Re-stating an unchanged state is a no-op, so a drip does not restart on every damage update.
+        SpriteSystem.LayerSetRsiState((uid, sprite), index, state);
+        SpriteSystem.LayerSetOffset((uid, sprite), index, offset);
+        if (colour is { } tint)
+            SpriteSystem.LayerSetColor((uid, sprite), index, tint);
     }
 
     // --- Option B: severed-limb wound rendering (P3-D18) ---

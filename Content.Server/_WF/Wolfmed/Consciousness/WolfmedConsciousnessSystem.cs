@@ -44,6 +44,7 @@ public sealed class WolfmedConsciousnessSystem : SharedWolfmedConsciousnessSyste
     [Dependency] private WolfmedCallForHelpSystem _callForHelp = default!;
     [Dependency] private WolfmedConditionAlertSystem _conditionAlerts = default!;
     [Dependency] private WolfmedDyingActionsSystem _dyingActions = default!;
+    [Dependency] private WolfmedPainAlertSystem _painAlert = default!; // playtest 4, VISUALS
     [Dependency] private WolfmedPainReliefSystem _relief = default!;
     [Dependency] private WolfmedShutdownSystem _shutdown = default!;
     [Dependency] private WolfmedCrawlActionsSystem _crawlActions = default!; // M2
@@ -439,6 +440,9 @@ public sealed class WolfmedConsciousnessSystem : SharedWolfmedConsciousnessSyste
 
         if (state == WolfmedConsciousness.Up)
             _conditionAlerts.RefreshHealthSeverity(body);
+
+        // Playtest 4, VISUALS: the pain HUD follows every evaluation, as the health doll does.
+        _painAlert.Refresh(body);
     }
 
     /// <summary>

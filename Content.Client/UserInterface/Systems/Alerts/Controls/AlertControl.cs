@@ -81,7 +81,8 @@ namespace Content.Client.UserInterface.Systems.Alerts.Controls
         private Control SupplyTooltip(Control? sender)
         {
             var msg = FormattedMessage.FromMarkupOrThrow(Loc.GetString(Alert.Name));
-            var desc = FormattedMessage.FromMarkupOrThrow(Loc.GetString(Alert.Description));
+            // WOLFGATE(Wolfmed): VISUALS: the severity reaches the text, so the pain HUD's hover names its band
+            var desc = FormattedMessage.FromMarkupOrThrow(Loc.GetString(Alert.Description, ("severity", (int) (_severity ?? 0))));
             return new ActionAlertTooltip(msg, desc) { Cooldown = Cooldown };
         }
 

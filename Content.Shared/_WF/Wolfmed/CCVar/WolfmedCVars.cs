@@ -831,4 +831,27 @@ public sealed class WolfmedCVars
     /// </summary>
     public static readonly CVarDef<float> ConditionWheezeOxygenation =
         CVarDef.Create("wolfmed.condition_wheeze_oxygenation", 0.6f, CVar.SERVERONLY);
+    // Playtest 4, VISUALS: the pain HUD, wound and rot overlays.
+
+    /// <summary>
+    /// Effective body pain at or under which the pain HUD is hidden. 5 of the 135 soft cap: the pain a stubbed toe or a
+    /// fading bruise leaves is not worth an icon, and anything that has started to matter shows.
+    /// </summary>
+    public static readonly CVarDef<float> PainHudFrom =
+        CVarDef.Create("wolfmed.pain_hud_from", 5f, CVar.SERVERONLY);
+
+    /// <summary>
+    /// Bleed rate on one part, in units a second, at which its wound overlay turns from a drip into a steady trickle.
+    /// 2: a 20-severity slash bleeds 0.6 and drips, a 60-severity one 3.6 and an amputation stump 18, and both trickle.
+    /// </summary>
+    public static readonly CVarDef<float> WoundOverlayStreamRate =
+        CVarDef.Create("wolfmed.wound_overlay_stream_rate", 2f, CVar.SERVERONLY);
+
+    /// <summary>
+    /// Seconds between the sweeps that re-read every wound host's wound and rot overlays. New wounds and bleed changes
+    /// show at once; the sweep catches what raises nothing (an infection reaching Septic, a wound closing, a bleed
+    /// stopped by a drug), so this is how late those can show.
+    /// </summary>
+    public static readonly CVarDef<float> OverlayRefreshSeconds =
+        CVarDef.Create("wolfmed.overlay_refresh_seconds", 1f, CVar.SERVERONLY);
 }

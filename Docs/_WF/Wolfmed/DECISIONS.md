@@ -3543,3 +3543,74 @@ no sounds and no chat triggers, so typing "coughs" still plays upstream's Cough 
 `NoEmoteWithoutACauseTest`: healthy, dead and IPC). Run with the nearby fixtures (`WolfmedLocaleCoverageTest`,
 `WolfmedInfectionTest`, `WolfmedMedicInfoTest`, `WolfmedRevivalTest`, `SepsisNotToxinTest`): 37 total, 37 passed,
 0 failed, 0 skipped.
+## Playtest 4, VISUALS: the pain HUD, wound and rot overlays (2026-09-27)
+
+Three sprite features from the Bobstation septic icons, converted by `Tools/_WF/Wolfmed/gen_wolfmed_overlays.py` (rerun
+it to rebuild all three RSIs) and drawn on the humanoid through the existing `PartDamageVisualsComponent` path.
+
+**The pain HUD.** `WFWolfmedPain`, an alert in a category of its own (`WFWolfmedPain`, ordered straight under
+Health so it never replaces the health doll). `WolfmedPainAlertSystem` sets severity round(effective body pain / soft
+cap x 7), where effective pain is what the Downed line reads (the body's value, min(135, sum of parts), less relief);
+8 (the `paindd` icon) while a pain faint holds the body; hidden at or under `wolfmed.pain_hud_from` (5) and on the
+dead. At the 135 cap the bands are: 0 from 5 to 9.6, 1 to 28.9, 2 to 48.2, 3 to 67.5, 4 to 86.8, 5 to 106.1, 6 to
+125.4 and 7 above it (Downed at 128). It takes no subscription: `WolfmedConsciousnessSystem.Apply`, which already runs
+on every pain change, relief poll and faint, calls it at the end, beside the health doll's own refresh. A machine
+shows the same icons as `WFWolfmedPainMechanical`, whose text is sensor overload; the Downed alerts are unchanged.
+The icons are Bob's bare 32 x 32 glyphs composited onto the backing the Crescent health alerts draw inside their own
+sprites (the alert control draws none): alternating rows of `#0D0D0F` and `#17171B` with the four corners
+transparent, read row by row off the side margins of `bleed.rsi/bleed3`, which the drop never reaches. Hover text:
+the analyzer prints pain only as a number per part, so there is no analyzer band to reuse; the text uses the light /
+strong / terrible / agony words of the self-examine lines (0-1, 2-3, 4-5, 6-7) and "passed out" at 8.
+`AlertControl` now passes the alert's severity to its description (one marked line) so the text can follow it.
+
+**The spec's premise about `bulletwound.dmi` does not hold.** It is one 3 x 3 wound glyph with a drip under it,
+drawn in the frame's corner (x 0-2, y 24-31), and each `_south/_north/_east/_west` state has pixels only in its own
+facing: Bob placed it by pixel offset in code (the file is not referenced by any Bob code today). The `bullet`,
+`1bullet` and `2bullet` sets sit at the same spot; they differ in pace, not height: `bullet` holds 1.5 s then drips in
+three 0.1 s frames, `1bullet` drips in 0.2 s frames, `2bullet` is a continuous trickle (0.5, 0.2, 0.2 or 0.3, 0.2 s);
+`obullet` is the glyph alone. So the generator bakes the glyph onto each of the ten human parts in each direction, at
+the pixel nearest the centre of the part's eroded visible area (the share no later layer draws over; a part fully
+hidden in a direction, the far arm side-on, gets an empty frame). Glyph centres (south, north, east, west): Chest
+(15,16) (15,16) (17,17) (14,17); Head (15,6) (15,6) (16,7) (15,7); RArm (9,15) (21,15) (13,14) hidden; LArm (21,15)
+(9,15) hidden (18,14); RHand (8,19) (21,19) (13,19) (11,19); LHand (21,19) (8,19) (20,19) (17,19); RLeg (12,25)
+(17,25) (13,25) (14,27); LLeg (17,25) (12,25) (15,25) (16,25); RFoot (11,30) (18,30) (15,30) (14,30); LFoot (18,30)
+(11,30) (19,30) (18,30). The per-part set choice became: `drip` is `bullet` on the torso and head and the slower
+`1bullet` on limbs (the two drips on one body fall out of step); `stream` is `2bullet` on any part once the part
+bleeds at `wolfmed.wound_overlay_stream_rate` (2 u/s: a 20-severity slash bleeds 0.6, a 60 one 3.6, a stump 18);
+`old` is `obullet`, shown while the part has an open wound whose bleed has clotted or been dressed (the bleeding
+component stays, at rate 0) or an open `DismembermentWound` stump. Grey: luminance normalised so the brightest pixel
+(Bob's `#970004`, luminance 45.6) is white, alpha kept; the client multiplies it by the body's blood reagent colour,
+which the server writes as `PartDamageVisualsComponent.WoundColor` because `BloodstreamComponent` is server-only
+(`#800000` for a body with no bloodstream).
+
+**Rot.** `rot_parts.dmi` in its own colour, 4 directions x 10 frames at 0.15 s, renamed `<Part>_rot`; `rot_chest` and
+`rot_groin` are composited into `Chest_rot`, since Wolfgate has no groin. Checked against the human parts: every frame
+lands on its own part (most 100 %, the worst 80 %), except Bob's `rot_r_hand` north frame, a copy of its south frame
+sitting on the left hand (0 of 14 pixels on the right); it is replaced by `rot_l_hand` north mirrored (10 of 14). Shown
+while the part is necrotic or any wound on it is at `WolfmedInfectionStage.Septic`; cleared when antibiotics pull the
+infection under the stage, when the part comes off, or with the body.
+
+**One system, one path.** `WolfmedWoundOverlaySystem` (server) writes `Wounds`, `Rot` and `WoundColor` beside
+`Degradation` and `Treatments`, for organic parts only (`IsOrganic`: a chassis keeps its struts and wiring). It
+refreshes a body on the wound lifecycle broadcast and on `WoundBleedingChangedEvent` (held on
+`WoundBleedingComponent`, a free pair; the treatment overlay holds it on `WoundComponent`), and sweeps every wound host
+each `wolfmed.overlay_refresh_seconds` (1) for what raises nothing: an infection reaching Septic, a wound closing, a
+drug removing a bleed. Unchanged bodies send nothing. The client draws both in `DamageVisualsSystem.Wolfmed.cs`.
+
+**Draw order.** On each limb: the limb, its degradation, its rot, its wound, then the clothing. The torso, head, arms
+and legs sit under the jumpsuit (a shirt hides a chest wound and its rot); hands and feet, which Wolfgate draws over
+the jumpsuit, sit under the gloves and shoes. The dressing overlay stays where G3 put it, over the jumpsuit and under a
+coat. Whichever overlay is created first, the next inserts above the ones below it and an insert under it pushes it
+up, so the order holds.
+
+**Species.** Nothing per species offsets humanoid layers today; species height is the mob's sprite scale (dwarf
+1 x 0.8, goblin 0.8 x 0.7, rodentia, tajaran and felionoid 0.8, harpy 0.9, avali 0.91, thaven 1 x 1.05, oni 1.2), and
+the per-character height and width sliders scale the same sprite. Overlays are layers of that sprite, so they scale
+with it and need nothing. What does differ is where a species' own part art sits in the frame, so
+`WFWolfmedOverlayOffsets` (`Resources/Prototypes/_WF/Wolfmed/Damage/overlay_offsets.yml`) holds a per-species,
+per-part pixel shift, generated by `Tools/_WF/Wolfmed/gen_overlay_offsets.py`: the median vertical difference between
+the centre of the species' part sprite and the human one over the four directions, left and right measured together.
+Only y is measured, because a layer offset applies in every direction and a sideways shift flips between south and
+north. All 41 round-start species are listed; 16 are zero, among them human, dwarf, goblin, oni, IPC, Rodentia,
+Vulpkanin and WFCanine. The largest shifts: Resomi (and ProtoResomi) head, chest and arms down 3, hands
+down 2; Diona arms down 3; Hydrakin arms and hands down 2, legs up 2; Thaven head up 2.

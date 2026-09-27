@@ -1,0 +1,234 @@
+#nullable enable
+using System.Collections.Generic;
+using System.Linq;
+using Content.IntegrationTests.Fixtures;
+using Content.Server._WF.Wolfmed.Damage;
+using Content.Server._WF.Wolfmed.Wounds;
+using Content.Shared._Onyx.Wounds;
+using Content.Shared._WF.Wolfmed.Damage;
+using Content.Shared._WF.Wolfmed.Wounds;
+using Content.Shared.Body.Part;
+using Content.Shared.Body.Systems;
+using Content.Shared.FixedPoint;
+using Content.Shared.Humanoid;
+using Robust.Client.GameObjects;
+using Robust.Client.ResourceManagement;
+using Robust.Shared.GameObjects;
+using Robust.Shared.Maths;
+using Robust.Shared.Prototypes;
+using Robust.Shared.Utility;
+
+namespace Content.IntegrationTests.Tests._WF.Wolfmed;
+
+/// <summary>
+/// Playtest 4, VISUALS: the open-wound and rot overlays. The server data, the client layer it draws and where that
+/// layer sits in the stack.
+/// </summary>
+[TestFixture]
+[TestOf(typeof(WolfmedWoundOverlaySystem))]
+public sealed class WolfmedWoundOverlayTest : GameTest
+{
+    /// <summary>
+    /// A bleeding slash drips; dressed it stops and shows the still wound; a heavy bleed trickles; an unhurt limb and a
+    /// machine's limb draw nothing.
+    /// </summary>
+    [Test]
+    public async Task BleedingWoundOverlayTest()
+    {
+        var map = await Pair.CreateTestMap();
+        EntityUid body = default;
+
+        await Server.WaitAssertion(() =>
+        {
+            var wounds = SEntMan.System<WoundSystem>();
+            body = SEntMan.SpawnEntity("MobHuman", map.GridCoords);
+            var arm = Part(body, BodyPartType.Arm, BodyPartSymmetry.Left);
+            var torso = Part(body, BodyPartType.Torso);
+
+            // 20 severity bleeds 0.6 a second: a drip. 60 bleeds 3.6: a trickle.
+            Assert.That(wounds.CreateOrMergeWound(arm, "SlashWound", FixedPoint2.New(20)), Is.Not.Null);
+            Assert.That(wounds.CreateOrMergeWound(torso, "SlashWound", FixedPoint2.New(60)), Is.Not.Null);
+            Assert.That(SEntMan.System<WoundBleedingSystem>().GetPartRate(arm), Is.GreaterThan(0f), "the slash does not bleed.");
+
+            var visual = Refresh(body);
+            Assert.Multiple(() =>
+            {
+                Assert.That(visual.Wounds.GetValueOrDefault(HumanoidVisualLayers.LArm), Is.EqualTo(WolfmedWoundOverlay.Drip));
+                Assert.That(visual.Wounds.GetValueOrDefault(HumanoidVisualLayers.Chest), Is.EqualTo(WolfmedWoundOverlay.Stream));
+                Assert.That(visual.Wounds.ContainsKey(HumanoidVisualLayers.RArm), Is.False, "an unhurt arm has a wound overlay.");
+                Assert.That(visual.WoundColor, Is.Not.EqualTo(Color.White), "the wound is not tinted with the blood colour.");
+            });
+        });
+
+        await Pair.RunTicksSync(10);
+        await Client.WaitAssertion(() =>
+        {
+            var (clientBody, sprite) = ClientSprite(body);
+            var sprites = CEntMan.System<SpriteSystem>();
+            Assert.That(sprites.LayerMapTryGet((clientBody, sprite), "WolfmedWoundLArm", out var overlay, false), Is.True,
+                "the client never added the wound layer.");
+            Assert.Multiple(() =>
+            {
+                Assert.That(sprites.LayerGetRsiState((clientBody, sprite), overlay).Name, Is.EqualTo("LArm_drip"));
+                Assert.That(sprites.TryGetLayer((clientBody, sprite), overlay, out var layer, false) && layer.Visible, Is.True);
+                Assert.That(layer!.Color, Is.EqualTo(CEntMan.GetComponent<PartDamageVisualsComponent>(clientBody).WoundColor));
+                Assert.That(sprites.LayerMapTryGet((clientBody, sprite), HumanoidVisualLayers.LArm, out var limb, false), Is.True);
+                Assert.That(overlay, Is.GreaterThan(limb), "the wound must draw over its limb.");
+                Assert.That(sprites.LayerMapTryGet((clientBody, sprite), "jumpsuit", out var jumpsuit, false), Is.True);
+                Assert.That(overlay, Is.LessThan(jumpsuit), "a sleeve must still cover the wound.");
+                Assert.That(sprites.LayerMapTryGet((clientBody, sprite), "WolfmedWoundChest", out var chest, false), Is.True);
+                Assert.That(sprites.LayerGetRsiState((clientBody, sprite), chest).Name, Is.EqualTo("Chest_stream"));
+                Assert.That(chest, Is.LessThan(jumpsuit), "a shirt must still cover a chest wound.");
+                Assert.That(sprites.LayerMapTryGet((clientBody, sprite), "WolfmedWoundRArm", out _, false), Is.False,
+                    "a limb with no wound has a wound layer.");
+            });
+        });
+
+        await Server.WaitAssertion(() =>
+        {
+            var arm = Part(body, BodyPartType.Arm, BodyPartSymmetry.Left);
+            Assert.That(SEntMan.System<WoundBleedingSystem>().ReducePartBleeding(arm, 1000, dressing: true));
+            Assert.That(Refresh(body).Wounds.GetValueOrDefault(HumanoidVisualLayers.LArm), Is.EqualTo(WolfmedWoundOverlay.Old),
+                "a dressed wound does not stop dripping.");
+
+            // Machines keep their chassis visuals.
+            var machine = SEntMan.SpawnEntity("MobIPC", map.GridCoords);
+            var frame = Part(machine, BodyPartType.Arm, BodyPartSymmetry.Left);
+            Assert.That(SEntMan.System<WoundSystem>().CreateOrMergeWound(frame, "IpcMechanicalDamageWound", FixedPoint2.New(40)),
+                Is.Not.Null);
+            Assert.That(Refresh(machine).Wounds, Is.Empty, "a mechanical part shows a wound overlay.");
+        });
+
+        await Pair.RunTicksSync(10);
+        await Client.WaitAssertion(() =>
+        {
+            var (clientBody, sprite) = ClientSprite(body);
+            Assert.That(CEntMan.System<SpriteSystem>().LayerGetRsiState((clientBody, sprite), "WolfmedWoundLArm", default).Name,
+                Is.EqualTo("LArm_old"), "the client still draws the drip.");
+        });
+    }
+
+    /// <summary>
+    /// Dead tissue rots each arm under its own side's state; a septic torso rots the chest with the groin folded in;
+    /// antibiotics under the stage clear it; an amputated limb takes its rot with it.
+    /// </summary>
+    [Test]
+    public async Task RotOverlayTest()
+    {
+        var map = await Pair.CreateTestMap();
+        EntityUid body = default;
+        EntityUid wound = default;
+
+        await Server.WaitAssertion(() =>
+        {
+            var necrosis = SEntMan.System<WolfmedNecrosisSystem>();
+            body = SEntMan.SpawnEntity("MobHuman", map.GridCoords);
+            var left = Part(body, BodyPartType.Arm, BodyPartSymmetry.Left);
+            var right = Part(body, BodyPartType.Arm, BodyPartSymmetry.Right);
+            var torso = Part(body, BodyPartType.Torso);
+
+            necrosis.MakeNecrotic(left);
+            Assert.That(Refresh(body).Rot, Is.EquivalentTo(new[] { HumanoidVisualLayers.LArm }));
+            necrosis.MakeNecrotic(right);
+            Assert.That(Refresh(body).Rot, Is.EquivalentTo(new[] { HumanoidVisualLayers.LArm, HumanoidVisualLayers.RArm }));
+
+            // An infection at the top stage on the torso.
+            wound = SEntMan.System<WoundSystem>().CreateOrMergeWound(torso, "SlashWound", FixedPoint2.New(20))!.Value;
+            var infection = SEntMan.EnsureComponent<WolfmedInfectionComponent>(wound);
+            infection.Progress = SEntMan.System<WolfmedInfectionSystem>().Profile.SepsisAt;
+            infection.Stage = WolfmedInfectionStage.Septic;
+            Assert.That(Refresh(body).Rot, Does.Contain(HumanoidVisualLayers.Chest), "a septic torso does not rot.");
+        });
+
+        await Pair.RunTicksSync(10);
+        await Client.WaitAssertion(() =>
+        {
+            var (clientBody, sprite) = ClientSprite(body);
+            var sprites = CEntMan.System<SpriteSystem>();
+            Assert.Multiple(() =>
+            {
+                Assert.That(sprites.LayerGetRsiState((clientBody, sprite), "WolfmedRotLArm", default).Name, Is.EqualTo("LArm_rot"));
+                Assert.That(sprites.LayerGetRsiState((clientBody, sprite), "WolfmedRotRArm", default).Name, Is.EqualTo("RArm_rot"));
+                Assert.That(sprites.LayerGetRsiState((clientBody, sprite), "WolfmedRotChest", default).Name, Is.EqualTo("Chest_rot"),
+                    "the chest's rot (chest and groin) is not drawn.");
+                Assert.That(sprites.LayerMapTryGet((clientBody, sprite), "WolfmedRotChest", out var rot, false), Is.True);
+                Assert.That(sprites.LayerMapTryGet((clientBody, sprite), "WolfmedWoundChest", out var cut, false), Is.True);
+                Assert.That(cut, Is.GreaterThan(rot), "the wound must draw over the rot.");
+                Assert.That(sprites.LayerMapTryGet((clientBody, sprite), "jumpsuit", out var jumpsuit, false), Is.True);
+                Assert.That(rot, Is.LessThan(jumpsuit), "a shirt must still cover the rot.");
+            });
+        });
+
+        await Server.WaitAssertion(() =>
+        {
+            // Antibiotics under the stage clear it; the arms stay dead.
+            Assert.That(SEntMan.System<WolfmedInfectionSystem>().Treat(body, 1000f), Is.True);
+            Assert.That(SEntMan.GetComponent<WolfmedInfectionComponent>(wound).Stage, Is.LessThan(WolfmedInfectionStage.Septic));
+            Assert.That(Refresh(body).Rot, Is.EquivalentTo(new[] { HumanoidVisualLayers.LArm, HumanoidVisualLayers.RArm }),
+                "treating the infection did not clear the torso's rot.");
+
+            // An amputated arm takes its rot with it.
+            var left = Part(body, BodyPartType.Arm, BodyPartSymmetry.Left);
+            Assert.That(SEntMan.System<Content.Shared._WF.Wolfmed.Compat.WolfmedBodySystem>().TryDetachPart(left), Is.True);
+            Assert.That(Refresh(body).Rot, Is.EquivalentTo(new[] { HumanoidVisualLayers.RArm }));
+        });
+
+        await Pair.RunTicksSync(10);
+        await Client.WaitAssertion(() =>
+        {
+            var (clientBody, sprite) = ClientSprite(body);
+            var sprites = CEntMan.System<SpriteSystem>();
+            Assert.That(sprites.TryGetLayer((clientBody, sprite), "WolfmedRotChest", out var layer, false) && layer.Visible,
+                Is.False, "the torso still rots on the client.");
+        });
+    }
+
+    /// <summary>Every state the overlays can select exists in its RSI, and the offset table names only real species.</summary>
+    [Test]
+    public async Task OverlayArtCoversEveryLayerTest()
+    {
+        var cache = Client.ResolveDependency<IResourceCache>();
+        await Client.WaitAssertion(() =>
+        {
+            Assert.That(cache.TryGetResource<RSIResource>(new ResPath("/Textures") / WolfmedWoundOverlays.WoundRsi, out var wounds), Is.True);
+            Assert.That(cache.TryGetResource<RSIResource>(new ResPath("/Textures") / WolfmedWoundOverlays.RotRsi, out var rot), Is.True);
+            Assert.That(CProtoMan.HasIndex<WolfmedOverlayOffsetsPrototype>(WolfmedOverlayOffsetsPrototype.Default), Is.True);
+            Assert.Multiple(() =>
+            {
+                foreach (var layer in WolfmedDegradationLayers.All)
+                {
+                    foreach (var look in Enum.GetValues<WolfmedWoundOverlay>())
+                    {
+                        if (look == WolfmedWoundOverlay.None)
+                            continue;
+
+                        var state = WolfmedWoundOverlays.GetWoundState(layer, look);
+                        Assert.That(state != null && wounds!.RSI.TryGetState(state, out _), Is.True, $"no wound state {state}.");
+                    }
+
+                    var rotState = WolfmedWoundOverlays.GetRotState(layer);
+                    Assert.That(rotState != null && rot!.RSI.TryGetState(rotState, out _), Is.True, $"no rot state {rotState}.");
+                }
+            });
+        });
+    }
+
+    private PartDamageVisualsComponent Refresh(EntityUid body)
+    {
+        SEntMan.System<WolfmedWoundOverlaySystem>().Refresh(body);
+        return SEntMan.GetComponent<PartDamageVisualsComponent>(body);
+    }
+
+    private (EntityUid, SpriteComponent) ClientSprite(EntityUid serverBody)
+    {
+        var clientBody = ToClientUid(serverBody);
+        return (clientBody, CEntMan.GetComponent<SpriteComponent>(clientBody));
+    }
+
+    private EntityUid Part(EntityUid body, BodyPartType type, BodyPartSymmetry symmetry = BodyPartSymmetry.None)
+    {
+        return SEntMan.System<SharedBodySystem>().GetBodyChildren(body)
+            .Single(part => part.Component.PartType == type && part.Component.Symmetry == symmetry)
+            .Id;
+    }
+}

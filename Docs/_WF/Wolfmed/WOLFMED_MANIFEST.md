@@ -5139,5 +5139,30 @@ retch and shiver by their condition (DECISIONS "Playtest 4, SEPSIS").
 | `Resources/Locale/en-US/_WF/Wolfmed/condition-emotes.ftl` | new | Their names and chat lines. |
 | `Content.IntegrationTests/Tests/_WF/Wolfmed/Scenarios/WolfmedSepsisTest.cs` | new | `SepsisKillsTest` (real time: arrest 511 s, death 625 s), `SepsisOrganDamageTest` (kidneys and liver 665 s, lungs and stomach 1000 s, heart last; the analyzer lines; antibiotics stop it). |
 | `Content.IntegrationTests/Tests/_WF/Wolfmed/Scenarios/WolfmedConditionEmoteTest.cs` | new | Failed lungs cough up blood; sepsis 95 retches and vomits once in 64 s; healthy, dead and IPC never emote. |
+## Playtest 4, VISUALS: the pain HUD, wound and rot overlays (2026-09-27)
+
+Two marked upstream edits, one marked Onyx edit, the rest `_WF` (DECISIONS "Playtest 4, VISUALS").
+
+| File | Kind | Change |
+| --- | --- | --- |
+| `Tools/_WF/Wolfmed/gen_wolfmed_overlays.py` | new | Builds `pain.rsi`, `wounds.rsi` and `rot.rsi` from the Bob icons: backing composite, grey recolour and per-part placement, the chest and groin composite, the mirrored right-hand north frame. |
+| `Tools/_WF/Wolfmed/gen_overlay_offsets.py` | new | Measures each round-start species' part sprites against the human ones and writes the offset table. |
+| `Resources/Textures/_WF/Wolfmed/Interface/Alerts/pain.rsi/` | new, generated | `pain0`..`pain7`, `paindd` on the health alerts' backing. |
+| `Resources/Textures/_WF/Wolfmed/Damage/wounds.rsi/` | new, generated | `<Part>_drip`, `<Part>_stream`, `<Part>_old` for the ten part layers, 4 directions, grey. |
+| `Resources/Textures/_WF/Wolfmed/Damage/rot.rsi/` | new, generated | `<Part>_rot` for the ten part layers, 4 directions x 10 frames. |
+| `Resources/Prototypes/_WF/Wolfmed/Damage/overlay_offsets.yml` | new, generated | `WFWolfmedOverlayOffsets`: per-species, per-part pixel shifts. |
+| `Resources/Prototypes/_WF/Wolfmed/Alerts/alerts.yml` | modified | The `WFWolfmedPain` category and the `WFWolfmedPain` and `WFWolfmedPainMechanical` alerts, severities 0-8. |
+| `Resources/Prototypes/Alerts/alerts.yml` | modified, `# WOLFGATE` | The pain category is ordered under Health. |
+| `Resources/Locale/en-US/_WF/Wolfmed/consciousness.ftl` | modified | The two alerts' names and severity-banded descriptions. |
+| `Content.Client/UserInterface/Systems/Alerts/Controls/AlertControl.cs` | modified, `// WOLFGATE` | The tooltip passes the alert's severity to its description. |
+| `Content.Shared/_WF/Wolfmed/Damage/WolfmedWoundOverlay.cs` | new | `WolfmedWoundOverlay` (none, old, drip, stream), the state names, `WolfmedOverlayOffsetsPrototype`. |
+| `Content.Shared/_Onyx/Wounds/WoundDamageComponents.cs` | modified, `// WOLFGATE` | `PartDamageVisualsComponent.Wounds`, `Rot`, `WoundColor`, networked. |
+| `Content.Shared/_WF/Wolfmed/CCVar/WolfmedCVars.cs` | modified | `wolfmed.pain_hud_from` (5), `wolfmed.wound_overlay_stream_rate` (2), `wolfmed.overlay_refresh_seconds` (1). |
+| `Content.Server/_WF/Wolfmed/Consciousness/WolfmedPainAlertSystem.cs` | new | The pain HUD's severity, the mechanical variant, hide and clear. |
+| `Content.Server/_WF/Wolfmed/Consciousness/WolfmedConsciousnessSystem.cs` | modified | `Apply` refreshes the pain HUD. |
+| `Content.Server/_WF/Wolfmed/Damage/WolfmedWoundOverlaySystem.cs` | new | Wound look and rot per organic part, the blood colour, the event refresh and the sweep. |
+| `Content.Client/_WF/Wolfmed/Damage/DamageVisualsSystem.Wolfmed.cs` | modified | The rot and wound layers: order, tint, species shift. |
+| `Content.IntegrationTests/Tests/_WF/Wolfmed/Scenarios/WolfmedPainHudTest.cs` | new | Hidden under 5; severity 0, 3, 7; cleared at 0; paindd in a faint; a machine gets the mechanical alert. |
+| `Content.IntegrationTests/Tests/_WF/Wolfmed/WolfmedWoundOverlayTest.cs` | new | Drip, stream, old on dressing, no layer on an unhurt limb, none on a machine, the layer order under the jumpsuit; rot on each arm, the septic chest, cleared by antibiotics and amputation; every state exists. |
 | `Content.Server/_WF/Wolfmed/README.md` | regenerated | `modules.py --write`. |
 | `Docs/_WF/Wolfmed/DECISIONS.md`, this file | modified | This section. |

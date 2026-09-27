@@ -109,6 +109,18 @@ public sealed partial class PartDamageVisualsComponent : Component
     // WolfmedTreatmentVisualsSystem. Rides here for the same reason the degradation stage does.
     [AutoNetworkedField]
     public Dictionary<HumanoidVisualLayers, WolfmedPartTreatment> Treatments = new();
+
+    // WOLFGATE(Wolfmed) START: VISUALS: open wounds, rot and the blood colour, written by WolfmedWoundOverlaySystem
+    // They ride here for the same reason the degradation stage does: one client hook draws every Wolfmed layer.
+    [AutoNetworkedField]
+    public Dictionary<HumanoidVisualLayers, WolfmedWoundOverlay> Wounds = new();
+
+    [AutoNetworkedField]
+    public HashSet<HumanoidVisualLayers> Rot = new();
+
+    [AutoNetworkedField]
+    public Color WoundColor = Color.White;
+    // WOLFGATE END
 }
 
 [RegisterComponent, NetworkedComponent, AutoGenerateComponentState(raiseAfterAutoHandleState: true)]
