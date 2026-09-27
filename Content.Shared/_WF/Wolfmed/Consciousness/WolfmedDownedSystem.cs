@@ -42,6 +42,9 @@ public sealed class WolfmedDownedSystem : EntitySystem
     [Dependency] private INetManager _net = default!;
     [Dependency] private StandingStateSystem _standing = default!;
     [Dependency] private SharedTransformSystem _transform = default!;
+
+    /// <summary>Guns a Downed body may still fire (playtest 4): the pistols, revolvers and small energy guns.</summary>
+    private static readonly ProtoId<TagPrototype> SidearmTag = "Sidearm";
     [Dependency] private TagSystem _tags = default!; // M2
 
     public override void Initialize()
@@ -195,7 +198,11 @@ public sealed class WolfmedDownedSystem : EntitySystem
 
     private void OnShotAttempt(Entity<WolfmedDownedComponent> ent, ref ShotAttemptedEvent args)
     {
-        // No one-handed pistol fire from the floor: a gun is out entirely while Downed.
+        // Playtest 4: a sidearm (the Sidearm tag: pistols, revolvers, the small energy guns) fires from the floor;
+        // anything bigger needs a stance, so it stays out while Downed.
+        if (_tags.HasTag(args.Used, SidearmTag))
+            return;
+
         args.Cancel();
     }
 

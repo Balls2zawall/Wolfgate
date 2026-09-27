@@ -413,7 +413,7 @@ public sealed class WolfmedCVars
 
     /// <summary>
     /// Metres a Downed body can reach for an item on the floor: its own tile and the ones next to it (M1a,
-    /// plan §5.3, OD7 (b)). Guns still cannot be fired.
+    /// plan §5.3, OD7 (b)). Sidearms fire from the floor (playtest 4); longer guns do not.
     /// </summary>
     public static readonly CVarDef<float> DownedReach =
         CVarDef.Create("wolfmed.downed_reach", 1.5f, CVar.SERVER | CVar.REPLICATED);

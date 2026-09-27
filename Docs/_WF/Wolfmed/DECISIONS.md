@@ -3429,3 +3429,12 @@ table guard, instead of the pod's own "The pod is for lying in, not on" (every c
 Entering the pod was never a climb (the verb and the drag both insert, and Downed is allowed), so only the popup was
 wrong. `WolfmedDownedClimbSystem` now subscribes after `SharedAutodocSystem`, so the pod's refusal comes first and
 the table guard sees the attempt already cancelled.
+
+## Sidearms from the floor (playtest 4, 2026-09-26)
+
+"When in crawl mode, you should be able to fire sidearms." OD7 (b) had every gun out while Downed.
+`WolfmedDownedSystem.OnShotAttempt` now lets a shot through when the gun carries the `Sidearm` tag, which
+`BaseWeaponPistol` and `BaseWeaponRevolver` give every pistol and revolver, and the small energy guns (taser,
+disabler, laser and energy revolvers, the pulse and antique lasers) carry themselves; rifles, shotguns, SMGs and the
+rest stay cancelled. Melee, throwing and pulling while Downed are unchanged. `WolfmedDownedSidearmTest` fires the
+attempt for a pistol, a revolver, a rifle and a shotgun.

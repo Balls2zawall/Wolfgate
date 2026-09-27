@@ -5107,3 +5107,12 @@ One marked Onyx edit and `_WF` (DECISIONS "Treated pain fades", "The pod is for 
 | `Content.Shared/_WF/Wolfmed/Consciousness/WolfmedDownedClimbSystem.cs` | modified | The table guard runs after the pod's climb refusal. |
 | `Content.IntegrationTests/Tests/_WF/Wolfmed/Scenarios/WolfmedLoosePainTest.cs` | new | 100 pain over a 60 floor settles to 60 in 20 s; with the floor gone it is under 1 in 25 s. |
 | `Docs/_WF/Wolfmed/DECISIONS.md`, this file | modified | The two sections. |
+
+## Playtest 4, sidearms from the floor (2026-09-26)
+
+| File | Kind | Change |
+| --- | --- | --- |
+| `Content.Shared/_WF/Wolfmed/Consciousness/WolfmedDownedSystem.cs` | modified | `OnShotAttempt` passes guns with the `Sidearm` tag. |
+| `Content.Shared/_WF/Wolfmed/CCVar/WolfmedCVars.cs` | modified | The reach line's comment. |
+| `Content.IntegrationTests/Tests/_WF/Wolfmed/Scenarios/WolfmedDownedSidearmTest.cs` | new | Pistol and revolver fire, rifle and shotgun do not. |
+| `Docs/_WF/Wolfmed/DECISIONS.md`, this file | modified | This section. |
