@@ -3914,7 +3914,8 @@ sounds and overlays organic-only, the pain HUD for machines too) are in the spec
 - **"The flatline tone very quiet too."** `WolfmedCritHeartbeatSystem` plays it at -18 dB (was -6).
 - **Second round of Bob sounds (same morning).** Fists: the `Punch` collection now lists the owner's `punch1-3`
   (marked; it replaces the Skyrat punches WOLFGATE(Weapons) had put there). The chop is not a weapon's sound but
-  a hit's: "for super heavy hits that things like the axe would inflict, a meaty chop", so
+  a hit's: "for super heavy hits that things like the axe would inflict, a meaty chop" (encoded at 0.6 gain, "same
+  for the heavy hit SFX"), so
   `WolfmedOrganicSoundSystem.PlayHitOverlays` plays `WFWolfmedChop` (`chop2`, `chop4`, `chop5`; the owner dropped 3
   and 6) as a second sound over the weapon's own whenever a Blunt plus Slash hit on flesh reaches
   `wolfmed.chop_sound_damage` (40: a wielded fire axe at 45 chops, a machete at 32 does not, a stab never). Every
