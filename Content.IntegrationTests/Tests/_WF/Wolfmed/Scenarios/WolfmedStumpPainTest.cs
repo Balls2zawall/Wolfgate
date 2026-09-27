@@ -2,7 +2,9 @@
 using System.Linq;
 using System.Threading.Tasks;
 using Content.IntegrationTests.Fixtures;
+using Content.IntegrationTests.Fixtures.Attributes;
 using Content.Shared._Onyx.Wounds;
+using Content.Shared._WF.Wolfmed.CCVar;
 using Content.Shared.Body.Part;
 using Content.Shared.Body.Systems;
 using NUnit.Framework;
@@ -20,6 +22,9 @@ public sealed class WolfmedStumpPainTest : GameTest
     [Test]
     public async Task LosingAnArmHurtsTest()
     {
+        await OverrideCVar(Side.Server, WolfmedCVars.PainScale, 1f); // playtest 5: this test pins Onyx's figures
+        await OverrideCVar(Side.Server, WolfmedCVars.PainFloorRest, 1f); // playtest 5: and the floor holding whole
+
         var map = await Pair.CreateTestMap();
         var s = new WolfmedScenario(SEntMan);
         EntityUid a = default;

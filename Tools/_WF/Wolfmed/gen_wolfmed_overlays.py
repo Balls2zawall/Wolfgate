@@ -26,7 +26,9 @@ stumps.rsi  Escape From Nevado's stump.dmi (its modular_septic copy), one stump 
 sepsis.rsi  septicshock, the sepsis alert's severity 1: the hand-made sepsis state with paindowned's red border,
             flashing at the same rate. The sepsis state is the source and is left as it is.
 
-Deterministic; rerunning rewrites the six RSIs byte for byte. --sepsis-only builds the last alone, which needs no
+downed.rsi  the Downed alert: two arrows pointing down, lit on top and shaded below, on the same backing as pain.rsi.
+
+Deterministic; rerunning rewrites the seven RSIs byte for byte. --hud-only builds the last two alone, which need no
 Bobstation checkout.
 """
 import json
@@ -523,9 +525,40 @@ def build_sepsis():
               keep=("sepsis",))
 
 
+DOWNED_COLOURS = {
+    "light": (246, 246, 246, 255),
+    "main": (214, 214, 214, 255),
+    "shade": (138, 138, 138, 255),
+    "edge": (58, 58, 58, 255),
+}
+
+
+def chevron(image, top, colours):
+    """One downward chevron, three pixels thick with a lit top row, a shaded bottom row and a dark edge under it."""
+    for dx in range(9):
+        y = top + round(dx * 0.75)
+        for x in (7 + dx, 25 - dx):
+            image.putpixel((x, y), colours["light"])
+            image.putpixel((x, y + 1), colours["main"])
+            image.putpixel((x, y + 2), colours["shade"])
+            image.putpixel((x, y + 3), colours["edge"])
+
+
+def build_downed():
+    """Playtest 5: the Downed alert, two arrows pointing down on the health alerts' backing."""
+    tile = backing()
+    chevron(tile, 5, DOWNED_COLOURS)
+    chevron(tile, 15, DOWNED_COLOURS)
+    write_rsi(os.path.join(OUT, "Interface", "Alerts", "downed.rsi"),
+              "Made for Wolfgate (Wolfmed) by Tools/_WF/Wolfmed/gen_wolfmed_overlays.py: two arrows down on the "
+              "Crescent health alerts' backing",
+              [("downed", 1, [[tile]], None)])
+
+
 def main():
-    if "--sepsis-only" in sys.argv:
+    if "--sepsis-only" in sys.argv or "--hud-only" in sys.argv:
         build_sepsis()
+        build_downed()
         return
     bob = DEFAULT_BOB
     if "--bob" in sys.argv:
@@ -539,6 +572,7 @@ def main():
     build_artery(bob)
     build_stumps(nevado, bob)
     build_sepsis()
+    build_downed()
 
 
 if __name__ == "__main__":

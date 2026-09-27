@@ -5154,6 +5154,9 @@ Two marked upstream edits, one marked Onyx edit, the rest `_WF` (DECISIONS "Play
 | `Content.Shared/_WF/Wolfmed/Wounds/WolfmedStumpComponent.cs` | new | Playtest 4: which part a dismemberment wound is the stump of. |
 | `Resources/Textures/_WF/Wolfmed/Damage/stumps.rsi/` | new, generated | Playtest 4: `<site>_stump` (blood mask), `_stump_bone`, `_stump_drip`, `_stump_stream` for the neck and eight limbs, from Nevado's stump.dmi and Bob's bulletwound glyph. |
 | `Content.Server/_WF/Wolfmed/Wounds/WolfmedStumpTagSystem.cs` | new | Playtest 4: tags each new stump wound off the amputation event. |
+| `Content.Shared/_WF/Wolfmed/Consciousness/WolfmedPainSettleComponent.cs` | new | Playtest 5: when a part's wound pain floor last rose, for the settle. |
+| `Content.IntegrationTests/Tests/_WF/Wolfmed/Scenarios/WolfmedPainSettleTest.cs` | new | Playtest 5: the settling floor and wolfmed.pain_scale. |
+| `Resources/Textures/_WF/Wolfmed/Interface/Alerts/downed.rsi/` | generated | Playtest 5: two arrows down on the health alerts' backing. |
 | `Resources/Prototypes/_WF/Wolfmed/Damage/overlay_offsets.yml` | new, generated | `WFWolfmedOverlayOffsets`: per-species, per-part pixel shifts. |
 | `Resources/Prototypes/_WF/Wolfmed/Alerts/alerts.yml` | modified | The `WFWolfmedPain` category and the `WFWolfmedPain` and `WFWolfmedPainMechanical` alerts, severities 0-8. |
 | `Resources/Prototypes/Alerts/alerts.yml` | modified, `# WOLFGATE` | The pain category is ordered under Health. |

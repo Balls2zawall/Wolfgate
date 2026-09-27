@@ -1,6 +1,8 @@
 using System.Linq;
 using Content.IntegrationTests.Fixtures;
+using Content.IntegrationTests.Fixtures.Attributes;
 using Content.Shared._Onyx.Wounds;
+using Content.Shared._WF.Wolfmed.CCVar;
 using Content.Shared.Body.Part;
 using Content.Shared.Body.Systems;
 using Content.Shared.Damage;
@@ -173,6 +175,8 @@ public sealed class WolfmedPainTest : GameTest
     [Test]
     public async Task PainShockStunsAtThresholdTest()
     {
+        await OverrideCVar(Side.Server, WolfmedCVars.PainScale, 1f); // playtest 5: this test pins Onyx's figures
+
         var server = Pair.Server;
         await server.WaitIdleAsync();
         var entities = server.ResolveDependency<IEntityManager>();
@@ -236,6 +240,8 @@ public sealed class WolfmedPainTest : GameTest
     [Test]
     public async Task HighPainThresholdReducesWoundPainGainTest()
     {
+        await OverrideCVar(Side.Server, WolfmedCVars.PainScale, 1f); // playtest 5: this test pins Onyx's figures
+
         var server = Pair.Server;
         await server.WaitIdleAsync();
         var entities = server.ResolveDependency<IEntityManager>();

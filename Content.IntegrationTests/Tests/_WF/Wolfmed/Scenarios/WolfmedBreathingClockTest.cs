@@ -451,16 +451,16 @@ public sealed class WolfmedBreathingClockTest : GameTest
             Assert.That(cutStayedUp, Is.True, "a plain cut put the patient down.");
 
             // Playtest 1: at least four minutes from Up to arrest. Measured 186 / 253 / 274 s (100 s at 0.6).
-            Assert.That(arrestAt, Is.GreaterThanOrEqualTo(240), "an arterial arm cut kills in under four minutes.");
-            Assert.That(arrestAt, Is.LessThanOrEqualTo(274f * (1f + Band)));
-            Assert.That(downedAt, Is.InRange(186f * (1f - Band), 186f * (1f + Band)));
+            Assert.That(arrestAt, Is.GreaterThanOrEqualTo(300), "an arterial arm cut kills in under five minutes.");
+            Assert.That(arrestAt, Is.LessThanOrEqualTo(372f * (1f + Band)));
+            Assert.That(downedAt, Is.InRange(256f * (1f - Band), 256f * (1f + Band)));
             Assert.That(clottedAt, Is.LessThanOrEqualTo(60), "a plain cut is still bleeding after a minute.");
             Assert.That(cutLowest, Is.GreaterThan(0.95f), "a plain cut lost more than 5% of the blood.");
         });
     }
 
     /// <summary>The wolfmed.bleed_rate default; the timing test pins it so the numbers it reports are the shipped ones.</summary>
-    private const float ShippedBleedRate = 0.3f;
+    private const float ShippedBleedRate = 0.25f;
 
     /// <summary>
     /// Once per arrest episode (plan §7.1 item 6). A second shock inside the repeat window restarts the heart

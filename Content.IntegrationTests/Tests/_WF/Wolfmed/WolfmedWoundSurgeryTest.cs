@@ -1,10 +1,12 @@
 using System.Collections.Generic;
 using System.Linq;
 using Content.IntegrationTests.Fixtures;
+using Content.IntegrationTests.Fixtures.Attributes;
 using Content.Server._Shitmed.Medical.Surgery; // WOLFGATE: GetSingleton lives on the concrete server system.
 using Content.Server._WF.Wolfmed.Surgery;
 using Content.Shared._Onyx.Body.Systems;
 using Content.Shared._Onyx.Wounds;
+using Content.Shared._WF.Wolfmed.CCVar;
 using Content.Shared._Shitmed.Medical.Surgery;
 using Content.Shared._Shitmed.Medical.Surgery.Conditions;
 using Content.Shared._Shitmed.Medical.Surgery.Steps;
@@ -663,6 +665,8 @@ public sealed class WolfmedWoundSurgeryTest : GameTest
     [Test]
     public async Task SurgeryStepInflictsPainTest()
     {
+        await OverrideCVar(Side.Server, WolfmedCVars.PainScale, 1f); // playtest 5: this test pins Onyx's figures
+
         var server = Pair.Server;
         await server.WaitIdleAsync();
         var entities = server.ResolveDependency<IEntityManager>();

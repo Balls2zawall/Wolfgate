@@ -119,6 +119,7 @@ public sealed partial class PainSystem : EntitySystem
         if (pain.WoundPain == floor)
             return;
 
+        _wolfmedPain.FloorChanged(part.Owner, pain.WoundPain, floor); // WOLFGATE(Wolfmed): playtest 5, the floor settles
         pain.WoundPain = floor;
         Dirty(part, pain);
     }
@@ -248,7 +249,8 @@ public sealed partial class PainSystem : EntitySystem
             entity.Comp.Value <= FixedPoint2.Zero || entity.Comp.RecoveryPerSecond <= FixedPoint2.Zero)
             return false;
 
-        var minimum = FixedPoint2.Max(entity.Comp.WoundPain, FixedPoint2.Zero);
+        // WOLFGATE(Wolfmed): playtest 5, a floor that has not risen for a while settles toward wolfmed.pain_floor_rest
+        var minimum = _wolfmedPain.SettledFloor(entity.Owner, FixedPoint2.Max(entity.Comp.WoundPain, FixedPoint2.Zero));
 
         var recovery = entity.Comp.RecoveryPerSecond;
         if (Resolve(entity, ref part, false) && part.Body is { } body &&

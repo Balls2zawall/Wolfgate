@@ -31,10 +31,11 @@ public sealed class WolfmedCVars
     /// <summary>
     /// Multiplier on every wound's bleed rate. Applied where the rate is computed, so the analyzer, the spurts
     /// and the bloodstream all see the same slowed figure. 0.3 since playtest 1: one untreated arterial arm cut
-    /// takes about five minutes from Up to arrest.
+    /// took about five minutes from Up to arrest. 0.25 since playtest 5, "nerf bloodloss just a bit, you should last
+    /// longer in fights": about six minutes.
     /// </summary>
     public static readonly CVarDef<float> BleedRate =
-        CVarDef.Create("wolfmed.bleed_rate", 0.3f, CVar.SERVERONLY);
+        CVarDef.Create("wolfmed.bleed_rate", 0.25f, CVar.SERVERONLY);
 
     /// <summary>
     /// Corpse ceiling (M1b): a DEAD wound host's total damage from damage nobody dealt (fire, atmosphere) stops
@@ -451,6 +452,25 @@ public sealed class WolfmedCVars
     /// </summary>
     public static readonly CVarDef<float> PainLooseRecovery =
         CVarDef.Create("wolfmed.pain_loose_recovery", 3f, CVar.SERVERONLY);
+
+    /// <summary>
+    /// Playtest 5: multiplier on every pain gain and every wound's pain floor. 0.85, "same with pain amounts, adjust it
+    /// slightly at first". 1 is Onyx's figures.
+    /// </summary>
+    public static readonly CVarDef<float> PainScale =
+        CVarDef.Create("wolfmed.pain_scale", 0.85f, CVar.SERVERONLY);
+
+    /// <summary>
+    /// Playtest 5: "pain should rapidly fall if the wound isn't getting worse". The share of a part's wound floor that
+    /// still holds once the wound has not worsened for wolfmed.pain_floor_settle_seconds; the loose recovery takes the
+    /// pain down to it. A wound getting worse puts the whole floor back. 1 keeps the floor whole.
+    /// </summary>
+    public static readonly CVarDef<float> PainFloorRest =
+        CVarDef.Create("wolfmed.pain_floor_rest", 0.6f, CVar.SERVERONLY);
+
+    /// <summary>Seconds after a wound last got worse for its floor to settle to wolfmed.pain_floor_rest.</summary>
+    public static readonly CVarDef<float> PainFloorSettleSeconds =
+        CVarDef.Create("wolfmed.pain_floor_settle_seconds", 20f, CVar.SERVERONLY);
 
     /// <summary>
     /// Blunt plus Slash a single melee hit on flesh must deal for the meaty chop (Bob's chop2/4/5) to play over the

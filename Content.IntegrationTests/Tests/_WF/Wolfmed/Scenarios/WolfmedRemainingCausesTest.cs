@@ -222,8 +222,16 @@ public sealed class WolfmedRemainingCausesTest : GameTest
             });
         }
 
+        var endLoad = 0f;
+        var endState = WolfmedConsciousness.Up;
+        await Server.WaitPost(() =>
+        {
+            endLoad = Toxin.GetLoad(treated);
+            endState = s.State(treated);
+        });
         Note($"ToxinScenarioTest: 15 u dylovene at Poison 130: wakes at {woke} s (load {wokeLoad:0.0}), " +
-                                  $"stands at {stood} s (load {stoodLoad:0.0}).");
+                                  $"stands at {stood} s (load {stoodLoad:0.0}); at the end load {endLoad:0.0}, {endState}, " +
+                                  $"vitals {s.Vitals(treated).Cause}.");
         Assert.Multiple(() =>
         {
             Assert.That(woke, Is.Not.Null, "dylovene never woke a toxic coma.");

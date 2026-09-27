@@ -4121,3 +4121,23 @@ by the dose), `TourniquetLeftOnKillsTheLimbTest` (no sepsis at 7 minutes, sepsis
 (the shock aids); `WolfmedConditionEmoteTest.InfectedLimbShiversTest` (new: a spreading arm, no wound, shivers);
 `WolfmedLocaleCoverageTest` and `WolfmedVisualInspectionTest` (the new keys). `WolfmedRejuvenateSystem` clears
 `WolfmedPartInfectionComponent`.
+
+## Playtest 5: the Downed icon, a lighter hand on blood and pain (2026-09-28)
+
+"Change the crawling/downed HUD icon to two arrows pointing downwards with shading and the same background as the
+rest of the HUD icons. Nerf bloodloss just a bit, you should last longer in fights, same with pain amounts; pain should
+rapidly fall if the wound isn't getting worse. Adjust it slightly at first."
+
+- **The icon.** `downed.rsi` is generated now (`gen_wolfmed_overlays.py build_downed`, `--hud-only`): two chevrons
+  pointing down, lit on the top row and shaded on the bottom with a dark edge under each, on the Crescent health
+  alerts' backing the pain icons use.
+- **Blood.** `wolfmed.bleed_rate` 0.3 to 0.25: every bleed a sixth slower, an untreated arterial arm cut about six
+  minutes to arrest instead of five. The breathing-clock timing test pins the new figures.
+- **Pain amounts.** `wolfmed.pain_scale` (0.85) on every gain and every wound floor, through the
+  `ModifyPainGainEvent` Onyx already raises; a high pain threshold trait multiplies on top.
+- **Pain falls when the wound is not getting worse.** A part's wound floor used to hold all its pain for as long as
+  the wound was open. Now `WolfmedPainSettleComponent` records when the floor last rose (a new wound, a wound
+  getting worse), and `RecoverPain` recovers toward the floor scaled from whole to `wolfmed.pain_floor_rest` (0.6)
+  over `wolfmed.pain_floor_settle_seconds` (20): a hit hurts in full, then settles to three fifths within twenty
+  seconds unless it gets hit again, which puts the whole floor back. A floor set by hand (a test) holds whole.
+  `WolfmedPainSettleTest` pins both.

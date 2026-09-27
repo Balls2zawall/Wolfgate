@@ -170,6 +170,7 @@ Skipped ("dirty-disposed").
 - [`Content.Shared/_WF/Wolfmed/Consciousness/WolfmedDownedSystem.cs`](../../../Content.Shared/_WF/Wolfmed/Consciousness/WolfmedDownedSystem.cs)
 - [`Content.Shared/_WF/Wolfmed/Consciousness/WolfmedDyingDepth.cs`](../../../Content.Shared/_WF/Wolfmed/Consciousness/WolfmedDyingDepth.cs)
 - [`Content.Shared/_WF/Wolfmed/Consciousness/WolfmedExplanationCard.cs`](../../../Content.Shared/_WF/Wolfmed/Consciousness/WolfmedExplanationCard.cs)
+- [`Content.Shared/_WF/Wolfmed/Consciousness/WolfmedPainSettleComponent.cs`](../../../Content.Shared/_WF/Wolfmed/Consciousness/WolfmedPainSettleComponent.cs)
 - [`Content.Shared/_WF/Wolfmed/Damage/WolfmedDegradation.cs`](../../../Content.Shared/_WF/Wolfmed/Damage/WolfmedDegradation.cs)
 - [`Content.Shared/_WF/Wolfmed/Damage/WolfmedTreatmentOverlay.cs`](../../../Content.Shared/_WF/Wolfmed/Damage/WolfmedTreatmentOverlay.cs)
 - [`Content.Shared/_WF/Wolfmed/Damage/WolfmedWoundOverlay.cs`](../../../Content.Shared/_WF/Wolfmed/Damage/WolfmedWoundOverlay.cs)
@@ -319,6 +320,7 @@ Skipped ("dirty-disposed").
 - [`Content.IntegrationTests/Tests/_WF/Wolfmed/Scenarios/WolfmedMedicLinesTest.cs`](../../../Content.IntegrationTests/Tests/_WF/Wolfmed/Scenarios/WolfmedMedicLinesTest.cs)
 - [`Content.IntegrationTests/Tests/_WF/Wolfmed/Scenarios/WolfmedPainHudTest.cs`](../../../Content.IntegrationTests/Tests/_WF/Wolfmed/Scenarios/WolfmedPainHudTest.cs)
 - [`Content.IntegrationTests/Tests/_WF/Wolfmed/Scenarios/WolfmedPainkillerTest.cs`](../../../Content.IntegrationTests/Tests/_WF/Wolfmed/Scenarios/WolfmedPainkillerTest.cs)
+- [`Content.IntegrationTests/Tests/_WF/Wolfmed/Scenarios/WolfmedPainSettleTest.cs`](../../../Content.IntegrationTests/Tests/_WF/Wolfmed/Scenarios/WolfmedPainSettleTest.cs)
 - [`Content.IntegrationTests/Tests/_WF/Wolfmed/Scenarios/WolfmedPartPainCapTest.cs`](../../../Content.IntegrationTests/Tests/_WF/Wolfmed/Scenarios/WolfmedPartPainCapTest.cs)
 - [`Content.IntegrationTests/Tests/_WF/Wolfmed/Scenarios/WolfmedPlaytestOneTest.cs`](../../../Content.IntegrationTests/Tests/_WF/Wolfmed/Scenarios/WolfmedPlaytestOneTest.cs)
 - [`Content.IntegrationTests/Tests/_WF/Wolfmed/Scenarios/WolfmedPlaytestThreeSamTest.cs`](../../../Content.IntegrationTests/Tests/_WF/Wolfmed/Scenarios/WolfmedPlaytestThreeSamTest.cs)
@@ -1207,6 +1209,7 @@ Skipped ("dirty-disposed").
   - M1a: OD5, adrenaline no longer takes 30% off every reading; it no longer stands anyone up.
   - M1a: P13, the share is of the sum of the parts, not of the capped body value, so the
   - M1a: P13, a body's pain is min(soft cap, sum of its parts) after every change, direct
+  - playtest 5, a floor that has not risen for a while settles toward wolfmed.pain_floor_rest
   - playtest 4, the share of the pain no open wound backs (Value over WoundPain) fades at
   - M1a: CVar
   - BRAIN: a shock on a body that has already bled out stops the heart.

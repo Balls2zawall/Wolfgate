@@ -30,10 +30,56 @@ public sealed class WolfmedBodyPainSystem : EntitySystem
     /// <summary>Pain a second a part sheds from the share no open wound backs (playtest 4).</summary>
     public FixedPoint2 LooseRecovery => FixedPoint2.New(MathF.Max(0f, _cfg.GetCVar(WolfmedCVars.PainLooseRecovery)));
 
+    /// <summary>Playtest 5: wolfmed.pain_scale, on every gain and every floor.</summary>
+    public float PainScale => MathF.Max(0f, _cfg.GetCVar(WolfmedCVars.PainScale));
+
     public override void Initialize()
     {
         base.Initialize();
         SubscribeLocalEvent<PainComponent, ComponentInit>(OnPainInit);
+        SubscribeLocalEvent<WoundHostComponent, ModifyPainGainEvent>(OnModifyPainGain);
+    }
+
+    /// <summary>Playtest 5: every pain gain and every wound floor on a wound host is scaled by wolfmed.pain_scale.</summary>
+    private void OnModifyPainGain(Entity<WoundHostComponent> body, ref ModifyPainGainEvent args)
+    {
+        args.Multiplier *= PainScale;
+    }
+
+    /// <summary>
+    /// Playtest 5: the part's wound floor moved. A rise (a new wound, one getting worse) restarts the settle clock;
+    /// a fall leaves it, so a wound closing does not put pain back.
+    /// </summary>
+    public void FloorChanged(EntityUid part, FixedPoint2 oldFloor, FixedPoint2 newFloor)
+    {
+        if (newFloor <= oldFloor)
+            return;
+
+        EnsureComp<WolfmedPainSettleComponent>(part).FloorRaisedAt = _timing.CurTime;
+    }
+
+    /// <summary>
+    /// The share of the part's wound floor that still holds: all of it right after the floor rose, sliding to
+    /// wolfmed.pain_floor_rest over wolfmed.pain_floor_settle_seconds, so the loose recovery can take a wound that is
+    /// not getting worse below the pain it made.
+    /// </summary>
+    public FixedPoint2 SettledFloor(EntityUid part, FixedPoint2 floor)
+    {
+        if (floor <= FixedPoint2.Zero)
+            return floor;
+
+        var rest = Math.Clamp(_cfg.GetCVar(WolfmedCVars.PainFloorRest), 0f, 1f);
+        var settle = _cfg.GetCVar(WolfmedCVars.PainFloorSettleSeconds);
+        if (rest >= 1f)
+            return floor;
+
+        // A floor nobody raised through the wounds (set by hand, a test) holds whole.
+        if (!TryComp(part, out WolfmedPainSettleComponent? settled))
+            return floor;
+
+        var since = (float) (_timing.CurTime - settled.FloorRaisedAt).TotalSeconds;
+        var progress = settle <= 0f ? 1f : Math.Clamp(since / settle, 0f, 1f);
+        return floor * (1f - (1f - rest) * progress);
     }
 
     /// <summary>
