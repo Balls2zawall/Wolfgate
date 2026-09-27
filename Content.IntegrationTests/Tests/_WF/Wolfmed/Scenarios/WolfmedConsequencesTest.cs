@@ -30,6 +30,7 @@ using Content.Shared.FixedPoint;
 using Content.Shared.Mobs.Systems;
 using NUnit.Framework;
 using Robust.Shared.GameObjects;
+using Robust.Shared.Random;
 using Robust.Shared.Localization;
 using Robust.Shared.Prototypes;
 
@@ -662,6 +663,9 @@ public sealed class WolfmedConsequencesTest : GameTest
             {
                 var barotrauma = SEntMan.System<BarotraumaSystem>();
                 hits.Clear();
+                // Pinned: the 84 hits are rolled by weight, and the 4:2 torso-to-arm split came out 10:10 one run in
+                // four on the pool's own seed. The count does not grow with more ticks (the harm is capped).
+                Server.ResolveDependency<IRobustRandom>().SetSeed(20260927);
                 for (var tick = 0; tick < 100; tick++)
                     barotrauma.Update(1f);
 
