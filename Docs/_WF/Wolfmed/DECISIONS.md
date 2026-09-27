@@ -3920,4 +3920,5 @@ sounds and overlays organic-only, the pain HUD for machines too) are in the spec
   other piercing weapons. Arterial sprays: `artery3` joins the splatter (the owner dropped `artery1`) in `WFWolfmedBleedSpurt` and
   `WFWolfmedBleedStump`. `WolfmedBobMeleeSoundsTest` pins the prototypes and the precedence.
 - **Bullet impacts on flesh.** The Skyrat flesh impacts WOLFGATE(Weapons) ported (`MeatBulletImpact`, nine files)
-  are the owner's `ric_flesh1-4` now, under `Resources/Audio/_WF/Wolfmed/Impacts` (marked in `gun_impacts.yml`).
+  are the owner's `ric_flesh1-4` now, under `Resources/Audio/_WF/Wolfmed/Impacts` (marked in `gun_impacts.yml`),
+  encoded at 0.7 gain: "quieten the bullet hit sounds by maybe 30 %".
