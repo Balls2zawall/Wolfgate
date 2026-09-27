@@ -978,6 +978,21 @@ public sealed class WolfmedCVars
     /// <summary>Blood fraction the pod's blood reservoir transfuses up to once started.</summary>
     public static readonly CVarDef<float> PodTransfuseTo =
         CVarDef.Create("wolfmed.pod_transfuse_to", 0.95f, CVar.SERVERONLY);
+
+    /// <summary>
+    /// Playtest 5: units of antibiotic the pod's course pushes at a time into an infected occupant. Spaceacillin
+    /// metabolises 0.2 u a tick and every tick treats a full unit's worth, so 5 u is 25 ticks: 300 wound progress.
+    /// </summary>
+    public static readonly CVarDef<float> PodAntibioticDose =
+        CVarDef.Create("wolfmed.pod_antibiotic_dose", 5f, CVar.SERVERONLY);
+
+    /// <summary>Seconds between the course's doses, about what one dose takes to metabolise.</summary>
+    public static readonly CVarDef<float> PodAntibioticInterval =
+        CVarDef.Create("wolfmed.pod_antibiotic_interval", 30f, CVar.SERVERONLY);
+
+    /// <summary>Units the course gives one occupant at most, so an infection the reservoir cannot beat does not drain it.</summary>
+    public static readonly CVarDef<float> PodAntibioticCourse =
+        CVarDef.Create("wolfmed.pod_antibiotic_course", 40f, CVar.SERVERONLY);
     // Playtest 4, SOUNDS: the Bobmed sound pack.
 
     /// <summary>

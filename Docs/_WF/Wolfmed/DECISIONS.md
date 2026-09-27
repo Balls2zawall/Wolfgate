@@ -4315,3 +4315,17 @@ the owner's call; left as it plays.
   step asks for, and that the pod puts what it takes off the patient into. Renamed the parts tray on the terminal, the
   slot, the examine line, the guidebook and the three voice lines that ask for something, with a tooltip on the terminal
   row that says what goes in and what comes out.
+- **"'That is not medicine, I will not use it' never uses any of the meds; won't fix infections even with antibiotics."**
+  Two things. The pod only ever pushed an antibiotic as the dose after a surgery that opens the body, so an infected
+  patient with Spaceacillin in the reservoir and nothing to cut got none: there was no infection step at all. There is
+  now an antibiotic course beside the queue, the way the blood reservoir runs (`AutodocSystem.Antibiotics.cs`,
+  `WolfmedAutodocAntibioticComponent`): the triage's `antibiotics` step and the autofix module start it on an occupant
+  infected past contamination or septic (`WolfmedInfectionSystem.HasInfection`), it pushes `wolfmed.pod_antibiotic_dose`
+  (5 u) every `wolfmed.pod_antibiotic_interval` (30 s) until nothing is infected or `wolfmed.pod_antibiotic_course`
+  (40 u) is spent, and with nothing usable loaded it says NO ANTIBIOTIC LOADED once and shows it on the readout, the
+  fault clearing when a beaker goes in. A unit of Spaceacillin is 5 metabolism ticks and every tick treats a unit's
+  worth, so one 5 u dose is 300 wound progress: a spreading wound clears in seconds. And the reservoir row's tooltip
+  for a beaker of anything else now names what the pod does use (`ReservoirAccepted`), so "NOT MEDICINE" reads as "not
+  medicine I use: opiate, analgesic, Spaceacillin..." rather than a refusal of medicine in general. The pod still pushes
+  nothing it has no role for; bicaridine in a beaker stays there. `PodAntibioticsTest` pins the course, the fault and
+  the cure.

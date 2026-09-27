@@ -124,3 +124,5 @@ wolfmed-autodoc-status-no-blood = NO BLOOD LOADED
 wolfmed-autodoc-reservoir-blood = blood: { $name } x{ $count }
 wolfmed-autodoc-reservoir-blood-empty = blood: empty
 wolfmed-autodoc-reservoir-blood-opened = blood: opened pack
+wolfmed-autodoc-status-antibiotics = ANTIBIOTICS
+wolfmed-autodoc-status-no-antibiotic = NO ANTIBIOTIC LOADED

@@ -23,6 +23,8 @@ public sealed class AutodocBuiState : BoundUserInterfaceState
     public List<AutodocProcedureEntry> Available = new();
     public List<AutodocQueueEntry> Queue = new();
     public List<AutodocReservoirEntry> Reservoir = new();
+    /// <summary>Playtest 5: the reagents the pod uses, named, so a beaker it refuses says what it would take instead.</summary>
+    public string ReservoirAccepted = string.Empty;
     public AutodocState State;
     public string Status = string.Empty;
     public string? CurrentStep;

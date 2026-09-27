@@ -64,6 +64,7 @@
   - type: WolfmedDownedReachable
   # Playtest 4, IV: the blood reservoir. A Bloodpack stack in autodoc_blood is transfused as the occupant's own blood.
   - type: WolfmedAutodocBlood
+  - type: WolfmedAutodocAntibiotic # Playtest 5: the antibiotic course
   - type: ContainerContainer
     containers:
       # The occupant stays drawn: with the lid open they lie on the bed, with it closed the lid covers them.

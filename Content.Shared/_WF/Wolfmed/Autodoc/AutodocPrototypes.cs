@@ -211,6 +211,10 @@ public sealed partial class AutodocTriageStep
     [DataField]
     public bool Transfuse;
 
+    /// <summary>Playtest 5: the antibiotic course out of the reservoir rather than a surgery. It runs beside the queue.</summary>
+    [DataField]
+    public bool Antibiotics;
+
     /// <summary>
     /// Only queue these when the body is already past the procedure's own requirements. Closing an incision
     /// is valid on anybody, because the pod would open one first; this is what stops it doing that.

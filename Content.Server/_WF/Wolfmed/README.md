@@ -37,6 +37,7 @@ Skipped ("dirty-disposed").
 
 ### Server
 
+- [`Content.Server/_WF/Wolfmed/Autodoc/AutodocSystem.Antibiotics.cs`](Autodoc/AutodocSystem.Antibiotics.cs)
 - [`Content.Server/_WF/Wolfmed/Autodoc/AutodocSystem.Atmosphere.cs`](Autodoc/AutodocSystem.Atmosphere.cs)
 - [`Content.Server/_WF/Wolfmed/Autodoc/AutodocSystem.Blood.cs`](Autodoc/AutodocSystem.Blood.cs)
 - [`Content.Server/_WF/Wolfmed/Autodoc/AutodocSystem.cs`](Autodoc/AutodocSystem.cs)
@@ -137,6 +138,7 @@ Skipped ("dirty-disposed").
 - [`Content.Shared/_WF/Wolfmed/Autodoc/AutodocUi.cs`](../../../Content.Shared/_WF/Wolfmed/Autodoc/AutodocUi.cs)
 - [`Content.Shared/_WF/Wolfmed/Autodoc/AutodocWoundComponents.cs`](../../../Content.Shared/_WF/Wolfmed/Autodoc/AutodocWoundComponents.cs)
 - [`Content.Shared/_WF/Wolfmed/Autodoc/SharedAutodocSystem.cs`](../../../Content.Shared/_WF/Wolfmed/Autodoc/SharedAutodocSystem.cs)
+- [`Content.Shared/_WF/Wolfmed/Autodoc/WolfmedAutodocAntibioticComponent.cs`](../../../Content.Shared/_WF/Wolfmed/Autodoc/WolfmedAutodocAntibioticComponent.cs)
 - [`Content.Shared/_WF/Wolfmed/Autodoc/WolfmedAutodocAtmosphereComponent.cs`](../../../Content.Shared/_WF/Wolfmed/Autodoc/WolfmedAutodocAtmosphereComponent.cs)
 - [`Content.Shared/_WF/Wolfmed/Autodoc/WolfmedAutodocBloodComponent.cs`](../../../Content.Shared/_WF/Wolfmed/Autodoc/WolfmedAutodocBloodComponent.cs)
 - [`Content.Shared/_WF/Wolfmed/Autodoc/WolfmedAutodocOccupantComponent.cs`](../../../Content.Shared/_WF/Wolfmed/Autodoc/WolfmedAutodocOccupantComponent.cs)
@@ -296,6 +298,7 @@ Skipped ("dirty-disposed").
 
 ### Integration tests
 
+- [`Content.IntegrationTests/Tests/_WF/Wolfmed/PodAntibioticsTest.cs`](../../../Content.IntegrationTests/Tests/_WF/Wolfmed/PodAntibioticsTest.cs)
 - [`Content.IntegrationTests/Tests/_WF/Wolfmed/PodAtmosphereTest.cs`](../../../Content.IntegrationTests/Tests/_WF/Wolfmed/PodAtmosphereTest.cs)
 - [`Content.IntegrationTests/Tests/_WF/Wolfmed/PodBloodTest.cs`](../../../Content.IntegrationTests/Tests/_WF/Wolfmed/PodBloodTest.cs)
 - [`Content.IntegrationTests/Tests/_WF/Wolfmed/Range/WolfmedRangeMapGenerator.cs`](../../../Content.IntegrationTests/Tests/_WF/Wolfmed/Range/WolfmedRangeMapGenerator.cs)

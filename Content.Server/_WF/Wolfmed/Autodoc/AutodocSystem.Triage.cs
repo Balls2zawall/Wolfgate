@@ -77,6 +77,13 @@ public sealed partial class AutodocSystem
                 continue;
             }
 
+            // Playtest 5: the antibiotic course runs beside the queue too.
+            if (step.Antibiotics)
+            {
+                ScheduleAntibiotics(ent, body);
+                continue;
+            }
+
             foreach (var surgery in StepSurgeries(step))
             {
                 foreach (var entry in available)
@@ -276,7 +283,8 @@ public sealed partial class AutodocSystem
         if (AutoPlan(ent, body) == 0)
         {
             // Playtest 4, IV: a transfusion running or waiting on blood is something to do, so not "NOTHING MORE".
-            if (BloodRunning(ent) || BloodFault(ent))
+            // Playtest 5: the antibiotic course likewise.
+            if (BloodRunning(ent) || BloodFault(ent) || AntibioticsRunning(ent) || AntibioticFault(ent))
             {
                 UpdateUi(ent);
                 return;

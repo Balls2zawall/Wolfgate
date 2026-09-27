@@ -75,6 +75,7 @@ public sealed partial class AutodocSystem
             TickAlarm(ent);
             TickIdleChatter(ent);
             TickBlood(ent); // Playtest 4, IV: the blood reservoir's steady transfusion
+            TickAntibiotics(ent); // Playtest 5: the antibiotic course
 
             switch (comp.State)
             {

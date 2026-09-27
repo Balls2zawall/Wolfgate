@@ -9,6 +9,10 @@
   # nothing; with no blood loaded for a patient who needs it the pod says NO BLOOD LOADED.
   - transfuse: true
 
+  # Playtest 5: the antibiotic course out of the reservoir, beside everything below. Nothing queued; an infected patient
+  # with no antibiotic loaded gets NO ANTIBIOTIC LOADED.
+  - antibiotics: true
+
   # 1. A heart that is not beating comes before every surgery, and the module is the only thing that helps.
   - defibrillate: true
     condition: Arrest

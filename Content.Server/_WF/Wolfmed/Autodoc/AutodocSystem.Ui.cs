@@ -193,7 +193,7 @@ public sealed partial class AutodocSystem
                     if (ent.Comp.SelfService)
                         TryStart(ent, actor);
                 }
-                else if (!BloodRunning(ent) && !BloodFault(ent)) // Playtest 4, IV: transfusing is something to do
+                else if (!BloodRunning(ent) && !BloodFault(ent) && !AntibioticsRunning(ent) && !AntibioticFault(ent)) // Playtest 4, IV / 5: transfusing or dosing is something to do
                 {
                     Speak(ent, AutodocVoiceEvent.AutoNothing);
                 }
@@ -232,7 +232,7 @@ public sealed partial class AutodocSystem
         var state = new AutodocBuiState
         {
             State = ent.Comp.State,
-            Status = StatusLine(ent) + BloodStatus(ent) + AnaesthesiaStatus(occupant), // Playtest 4, IV: NO BLOOD LOADED
+            Status = StatusLine(ent) + BloodStatus(ent) + AntibioticStatus(ent) + AnaesthesiaStatus(occupant), // Playtest 4, IV: NO BLOOD LOADED; playtest 5: the course
             ClothingBlocked = ent.Comp.BlockedReason == StepInvalidReason.Armor,
             Transfusing = ent.Comp.Transfusing,
             CurrentStep = ent.Comp.CurrentStep?.Id,
@@ -252,6 +252,7 @@ public sealed partial class AutodocSystem
                 : null,
             TrayItem = _slots.GetItemOrNull(ent.Owner, AutodocComponent.TraySlotId) is { } tray ? Name(tray) : null,
             Reservoir = BuildReservoir(ent),
+            ReservoirAccepted = ReservoirAccepted(ent), // Playtest 5: what NOT MEDICINE means
             LastLine = ent.Comp.LastLine,
             Seal = GetSeal(ent), // Playtest 3: the pod's own air
         };
@@ -311,6 +312,18 @@ public sealed partial class AutodocSystem
         return "  " + Loc.GetString("wolfmed-autodoc-status-anaesthesia",
             ("seconds", MathF.Round(seconds)),
             ("percent", MathF.Round(relief.Sedation * 100f)));
+    }
+
+    /// <summary>Playtest 5: the reagents the pod draws on, by name, for the row a beaker of anything else gets.</summary>
+    private string ReservoirAccepted(Entity<AutodocComponent> ent)
+    {
+        if (!_protos.TryIndex(ent.Comp.Reagents, out var list))
+            return string.Empty;
+
+        return string.Join(", ", list.Reagents
+            .Where(entry => entry.AutodocAdministrable)
+            .Select(entry => _protos.TryIndex(entry.Reagent, out var reagent) ? reagent.LocalizedName : entry.Reagent.Id)
+            .Distinct());
     }
 
     private List<AutodocReservoirEntry> BuildReservoir(Entity<AutodocComponent> ent)

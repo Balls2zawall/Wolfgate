@@ -563,7 +563,7 @@ public sealed class AutodocWindow : DefaultWindow
             var name = Text(entry.Name, 11, colour);
             name.HorizontalExpand = true;
             name.ClipText = true;
-            name.ToolTip = entry.Usable ? null : Loc.GetString("wolfmed-autodoc-ui-reservoir-unusable");
+            name.ToolTip = entry.Usable ? null : Loc.GetString("wolfmed-autodoc-ui-reservoir-unusable", ("list", state.ReservoirAccepted));
             row.AddChild(name);
             _reservoirBox.AddChild(row);
         }

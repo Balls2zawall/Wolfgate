@@ -688,6 +688,25 @@ public sealed class WolfmedInfectionSystem : EntitySystem
         return true;
     }
 
+    /// <summary>
+    /// Playtest 5: whether anything on this body is infected past contamination, or the body is septic. What the pod's
+    /// antibiotic course reads.
+    /// </summary>
+    public bool HasInfection(EntityUid body)
+    {
+        if (GetSepsis(body) > 0f)
+            return true;
+
+        foreach (var part in Parts(body))
+        {
+            if (GetPartStage(part) >= WolfmedInfectionStage.Local ||
+                GetWorstWoundStage(part) >= WolfmedInfectionStage.Local)
+                return true;
+        }
+
+        return false;
+    }
+
     /// <summary>The infection on one wound, for the analyzer and for tests.</summary>
     public WolfmedInfectionStage GetStage(EntityUid wound) =>
         CompOrNull<WolfmedInfectionComponent>(wound)?.Stage ?? WolfmedInfectionStage.None;

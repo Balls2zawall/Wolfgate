@@ -122,6 +122,7 @@ public sealed partial class AutodocSystem : EntitySystem
         InitializeTriage();
         InitializeAtmosphere(); // Playtest 3: the pod's own air
         InitializeBlood(); // Playtest 4, IV: the blood reservoir
+        InitializeAntibiotics(); // Playtest 5: the antibiotic course
     }
 
     private void OnMapInit(Entity<AutodocComponent> ent, ref MapInitEvent args)
