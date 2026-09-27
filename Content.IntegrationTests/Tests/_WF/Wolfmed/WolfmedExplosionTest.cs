@@ -15,6 +15,7 @@ using Content.Shared.Damage.Systems;
 using Content.Shared.FixedPoint;
 using Content.Shared.Inventory;
 using Robust.Shared.GameObjects;
+using Robust.Shared.Random;
 using Robust.Shared.Prototypes;
 
 namespace Content.IntegrationTests.Tests._WF.Wolfmed;
@@ -183,6 +184,9 @@ public sealed class WolfmedExplosionTest : GameTest
         {
             var graph = entities.System<SharedBodySystem>();
             int Limbs(EntityUid body) => graph.GetBodyChildren(body).Count();
+            // Pinned: the blast's damage is spread over the parts by a weighted roll, and a rare split puts enough on
+            // one limb for the ordinary damage-driven amputation to take it, which the forced roll cannot stop.
+            server.ResolveDependency<IRobustRandom>().SetSeed(20260927);
 
             explosion.ForcedRoll = 0f;
             var small = entities.SpawnEntity("MobHuman", map.GridCoords);
