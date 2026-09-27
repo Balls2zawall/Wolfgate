@@ -301,10 +301,10 @@ wolfmed-treatment-step-wolfmed-internal-burn-wound-3 = Check the heart on the or
 
 # W5 time ---------------------------------------------------------------------
 
-wolfmed-treatment-short-wolfmed-necrosis-wound = Dead tissue. It is permanent, the limb works badly, and it keeps the patient septic while it is attached.
+wolfmed-treatment-short-wolfmed-necrosis-wound = Dead tissue. It is permanent, the limb works badly, and it keeps infecting the body toward the chest while it is attached.
 wolfmed-treatment-step-wolfmed-necrosis-wound-1 = Nothing treats it. No reagent, no topical and no surgery brings dead tissue back.
 wolfmed-treatment-step-wolfmed-necrosis-wound-2 = Amputate the part and fit a replacement.
-wolfmed-treatment-step-wolfmed-necrosis-wound-3 = Give spaceacillin for the sepsis it has already caused.
+wolfmed-treatment-step-wolfmed-necrosis-wound-3 = Give spaceacillin for the infection it spreads. Sepsis follows once that reaches the chest or the head.
 wolfmed-treatment-avoid-wolfmed-necrosis-wound-1 = Leaving it attached keeps the infection running. It is the source.
 
 # W6 mechanical ---------------------------------------------------------------
@@ -398,15 +398,15 @@ wolfmed-treatment-step-cond-infection-spreading-2 = Bottles come from the medica
 wolfmed-treatment-step-cond-infection-spreading-3 = Close or clean the wound underneath, or it will simply infect again.
 wolfmed-treatment-avoid-cond-infection-spreading-1 = More than about 25 units of spaceacillin is poisonous in its own right. Treat and stop.
 
-wolfmed-treatment-short-cond-infection-septic = The infection is in the blood. Sepsis kills if nobody acts.
-wolfmed-treatment-step-cond-infection-septic-1 = Give spaceacillin now. It clears every wound and every infected part at once and pulls the sepsis back.
+wolfmed-treatment-short-cond-infection-septic = The infection has the tissue here and travels toward the chest. Sepsis follows once it reaches the chest or the head, and kills if nobody acts.
+wolfmed-treatment-step-cond-infection-septic-1 = Give spaceacillin now. It clears every wound and every infected part at once, and pulls back any sepsis.
 wolfmed-treatment-step-cond-infection-septic-2 = Find the source. Sepsis keeps growing while the torso or head is infected, and an infected limb keeps feeding them.
 wolfmed-treatment-step-cond-infection-septic-3 = A necrotic limb has to come off. Nothing else stops it feeding the sepsis.
 wolfmed-treatment-avoid-cond-infection-septic-1 = More than about 25 units of spaceacillin is poisonous in its own right. Treat and stop.
 
-wolfmed-treatment-short-cond-necrosis = The tissue here is dead. It is permanent and it keeps the patient septic.
+wolfmed-treatment-short-cond-necrosis = The tissue here is dead. It is permanent and it keeps infecting the body toward the chest.
 wolfmed-treatment-step-cond-necrosis-1 = Amputate the part and fit a replacement.
-wolfmed-treatment-step-cond-necrosis-2 = Give spaceacillin for the sepsis it has caused.
+wolfmed-treatment-step-cond-necrosis-2 = Give spaceacillin for the infection it spreads, and for the sepsis once that reaches the chest.
 wolfmed-treatment-avoid-cond-necrosis-1 = No reagent, topical or surgery brings dead tissue back.
 
 wolfmed-treatment-short-cond-necrosis-risk = Circulation here is failing. The part dies if nothing changes.

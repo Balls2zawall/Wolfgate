@@ -238,6 +238,11 @@ public sealed class WolfmedInfectionSpreadTest : GameTest
                 infection.Update(Tick);
 
             Assert.That(SEntMan.HasComponent<WolfmedSepsisComponent>(body), Is.True, "the hand never reached sepsis.");
+            // Review: two more minutes so the sepsis is well off zero and the dose has something to pull back.
+            for (var t = Tick; t <= 120f; t += Tick)
+                infection.Update(Tick);
+            var sepsisBefore = infection.GetSepsis(body);
+            Assert.That(sepsisBefore, Is.GreaterThan(5f), "sepsis barely started in two minutes.");
             var torsoBefore = infection.GetPartProgress(torso);
             infection.Clean(body);
             Assert.That(infection.GetPartProgress(torso), Is.EqualTo(torsoBefore), "antiseptic reached a part.");
@@ -251,7 +256,7 @@ public sealed class WolfmedInfectionSpreadTest : GameTest
             {
                 Assert.That(infected, Is.Empty, "13 units left a part infected.");
                 Assert.That(infection.GetStage(wound), Is.EqualTo(WolfmedInfectionStage.None));
-                Assert.That(infection.GetSepsis(body), Is.LessThan(100f));
+                Assert.That(infection.GetSepsis(body), Is.LessThan(sepsisBefore), "the dose did not pull the sepsis back.");
             });
         });
     }

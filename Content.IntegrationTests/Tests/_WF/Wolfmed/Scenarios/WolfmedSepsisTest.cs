@@ -151,7 +151,8 @@ public sealed class WolfmedSepsisTest : GameTest
                     Assert.That(report.SepticShock, Is.True, "sepsis at 100 does not read as septic shock.");
                     Assert.That(line, Does.Contain(WolfmedVitalsText.Aid(WolfmedRoutes.SepsisOrgans, false, shock: true)),
                         "\"Do first\" does not mention the organ damage.");
-                    Assert.That(line, Does.Not.Contain("; " + WolfmedVitalsText.Aid(WolfmedRoutes.Sepsis, false) + ";"),
+                    // Review: in shock the plain sepsis aid is the shock one, so that is the duplicate to look for.
+                    Assert.That(line, Does.Not.Contain(WolfmedVitalsText.Aid(WolfmedRoutes.Sepsis, false, shock: true) + ";"),
                         "\"Do first\" says antibiotics twice.");
                 }
             }
