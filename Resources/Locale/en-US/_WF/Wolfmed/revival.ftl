@@ -65,3 +65,7 @@ wolfmed-dormant-route-circulation = too little blood for your brain
 wolfmed-dormant-route-sepsis = sepsis
 wolfmed-dormant-route-sedation = an overdose is slowing your breathing
 wolfmed-dormant-route-tissueloss = your brain is starving of oxygen
+
+## Playtest 4, SEPSIS
+
+wolfmed-dormant-route-sepsisorgans = sepsis is damaging your organs

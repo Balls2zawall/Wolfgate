@@ -1,7 +1,9 @@
 using System.Linq;
 using Content.Server.Temperature.Components;
 using Content.Server.Temperature.Systems;
+using Content.Shared._Onyx.Body.Systems;
 using Content.Shared._Onyx.Wounds;
+using Content.Shared._WF.Wolfmed.Body;
 using Content.Shared._WF.Wolfmed.CCVar;
 using Content.Shared._WF.Wolfmed.Compat;
 using Content.Shared._WF.Wolfmed.Wounds;
@@ -51,6 +53,7 @@ public sealed class WolfmedInfectionSystem : EntitySystem
     [Dependency] private WolfmedWoundTraitSystem _traits = default!;
     [Dependency] private WoundSystem _wounds = default!;
     [Dependency] private Life.WolfmedBodyTemperatureSystem _bodyTemperature = default!; // M5
+    [Dependency] private OrganHealthSystem _organs = default!; // Playtest 4 (SEPSIS)
 
     private float _accumulator;
 
@@ -291,6 +294,80 @@ public sealed class WolfmedInfectionSystem : EntitySystem
 
         // M5 (OD13): sepsis deals no Poison. It kills through its own brain drain past wolfmed.arrest_sepsis.
         Fever(body, profile, minutes);
+
+        // Playtest 4 (SEPSIS): past wolfmed.sepsis_organ_damage_from it eats the torso organs as well, the route for a
+        // body whose brain is kept topped up while nobody treats the infection.
+        if (DamagingOrgans(body))
+            DamageOrgans(body, profile, minutes);
+        else
+            body.Comp.OrganDamageOwed.Clear();
+    }
+
+    /// <summary>
+    /// Playtest 4 (SEPSIS): the body's sepsis is past wolfmed.sepsis_organ_damage_from and the damage is on. The
+    /// analyzer's sepsis line and "Do first" read it. Never for the dead.
+    /// </summary>
+    public bool DamagingOrgans(EntityUid body) =>
+        _config.GetCVar(WolfmedCVars.SepsisOrganDamagePerMinute) > 0f &&
+        GetSepsis(body) >= _config.GetCVar(WolfmedCVars.SepsisOrganDamageFrom) &&
+        !_mobState.IsDead(body);
+
+    /// <summary>
+    /// Takes the per-minute rate, times the profile's weight for each organ's slot, off every Wolfmed organ in the
+    /// organic torso, through <see cref="OrganHealthSystem"/> so the bands and the analyzer's organ rows follow.
+    /// </summary>
+    private void DamageOrgans(Entity<WolfmedSepsisComponent> body, WolfmedInfectionProfilePrototype profile, float minutes)
+    {
+        var perMinute = _config.GetCVar(WolfmedCVars.SepsisOrganDamagePerMinute);
+
+        // Buffered: an organ reaching zero raises its function change, which can move organs.
+        var due = new List<(Entity<WolfmedOrganComponent> Organ, float Weight)>();
+        foreach (var (part, bodyPart) in _body.GetBodyChildren(body))
+        {
+            if (bodyPart.PartType != BodyPartType.Torso || !_traits.IsOrganic(part))
+                continue;
+
+            foreach (var (organ, slotted) in _body.GetPartOrgans(part, bodyPart))
+            {
+                if (TryComp(organ, out WolfmedOrganComponent? health) && health.Health > FixedPoint2.Zero)
+                    due.Add(((organ, health), profile.SepsisOrganWeights.GetValueOrDefault(slotted.SlotId, 1f)));
+            }
+        }
+
+        var owed = body.Comp.OrganDamageOwed;
+        foreach (var (organ, weight) in due)
+        {
+            if (weight <= 0f || TerminatingOrDeleted(organ))
+                continue;
+
+            var amount = owed.GetValueOrDefault(organ.Owner) + perMinute * weight * minutes;
+            var taken = FixedPoint2.New(amount);
+            owed[organ.Owner] = amount - taken.Float();
+            if (taken > FixedPoint2.Zero)
+                _organs.ChangeHealth(organ, -taken);
+        }
+
+        // A failed or removed organ owes nothing any more.
+        foreach (var gone in owed.Keys.Where(uid => !due.Any(d => d.Organ.Owner == uid)).ToList())
+            owed.Remove(gone);
+    }
+
+    /// <summary>
+    /// Playtest 4 (SEPSIS): a fever is running, the state <see cref="Fever"/> keeps: the body is septic, or an
+    /// infection on it has spread.
+    /// </summary>
+    public bool HasFever(EntityUid body)
+    {
+        if (GetSepsis(body) > 0f)
+            return true;
+
+        foreach (var part in Parts(body))
+        {
+            if (GetPartStage(part) >= WolfmedInfectionStage.Spreading)
+                return true;
+        }
+
+        return false;
     }
 
     /// <summary>Spreading wounds and dead limbs, both of which keep a systemic infection fed.</summary>

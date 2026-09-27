@@ -841,6 +841,10 @@ public sealed class WolfmedLifeSystem : EntitySystem
         if (_temperature.StillCooling(body))
             routes |= WolfmedRoutes.Hypothermia;
 
+        // Playtest 4 (SEPSIS): sepsis eating the organs, brain or no brain.
+        if (_infection.DamagingOrgans(body))
+            routes |= WolfmedRoutes.SepsisOrgans;
+
         if (GetBrain(body) is not { } brain)
             return routes;
 

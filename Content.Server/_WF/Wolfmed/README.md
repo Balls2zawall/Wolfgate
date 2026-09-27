@@ -69,6 +69,8 @@ Skipped ("dirty-disposed").
 - [`Content.Server/_WF/Wolfmed/Life/WolfmedBreathingSystem.cs`](Life/WolfmedBreathingSystem.cs)
 - [`Content.Server/_WF/Wolfmed/Life/WolfmedCardSystem.cs`](Life/WolfmedCardSystem.cs)
 - [`Content.Server/_WF/Wolfmed/Life/WolfmedChoiceEui.cs`](Life/WolfmedChoiceEui.cs)
+- [`Content.Server/_WF/Wolfmed/Life/WolfmedConditionEmoteComponent.cs`](Life/WolfmedConditionEmoteComponent.cs)
+- [`Content.Server/_WF/Wolfmed/Life/WolfmedConditionEmoteSystem.cs`](Life/WolfmedConditionEmoteSystem.cs)
 - [`Content.Server/_WF/Wolfmed/Life/WolfmedDormantSystem.cs`](Life/WolfmedDormantSystem.cs)
 - [`Content.Server/_WF/Wolfmed/Life/WolfmedDyingActionsSystem.cs`](Life/WolfmedDyingActionsSystem.cs)
 - [`Content.Server/_WF/Wolfmed/Life/WolfmedLifeSystem.cs`](Life/WolfmedLifeSystem.cs)
@@ -281,6 +283,7 @@ Skipped ("dirty-disposed").
 - [`Content.IntegrationTests/Tests/_WF/Wolfmed/Scenarios/WolfmedBreathingClockTest.cs`](../../../Content.IntegrationTests/Tests/_WF/Wolfmed/Scenarios/WolfmedBreathingClockTest.cs)
 - [`Content.IntegrationTests/Tests/_WF/Wolfmed/Scenarios/WolfmedBurnScenarioTest.cs`](../../../Content.IntegrationTests/Tests/_WF/Wolfmed/Scenarios/WolfmedBurnScenarioTest.cs)
 - [`Content.IntegrationTests/Tests/_WF/Wolfmed/Scenarios/WolfmedCauseScenarioTest.cs`](../../../Content.IntegrationTests/Tests/_WF/Wolfmed/Scenarios/WolfmedCauseScenarioTest.cs)
+- [`Content.IntegrationTests/Tests/_WF/Wolfmed/Scenarios/WolfmedConditionEmoteTest.cs`](../../../Content.IntegrationTests/Tests/_WF/Wolfmed/Scenarios/WolfmedConditionEmoteTest.cs)
 - [`Content.IntegrationTests/Tests/_WF/Wolfmed/Scenarios/WolfmedConsequencesTest.cs`](../../../Content.IntegrationTests/Tests/_WF/Wolfmed/Scenarios/WolfmedConsequencesTest.cs)
 - [`Content.IntegrationTests/Tests/_WF/Wolfmed/Scenarios/WolfmedCrawlingActionsTest.cs`](../../../Content.IntegrationTests/Tests/_WF/Wolfmed/Scenarios/WolfmedCrawlingActionsTest.cs)
 - [`Content.IntegrationTests/Tests/_WF/Wolfmed/Scenarios/WolfmedDownedSidearmTest.cs`](../../../Content.IntegrationTests/Tests/_WF/Wolfmed/Scenarios/WolfmedDownedSidearmTest.cs)
@@ -304,6 +307,7 @@ Skipped ("dirty-disposed").
 - [`Content.IntegrationTests/Tests/_WF/Wolfmed/Scenarios/WolfmedRemainingCausesTest.cs`](../../../Content.IntegrationTests/Tests/_WF/Wolfmed/Scenarios/WolfmedRemainingCausesTest.cs)
 - [`Content.IntegrationTests/Tests/_WF/Wolfmed/Scenarios/WolfmedRevivalTest.cs`](../../../Content.IntegrationTests/Tests/_WF/Wolfmed/Scenarios/WolfmedRevivalTest.cs)
 - [`Content.IntegrationTests/Tests/_WF/Wolfmed/Scenarios/WolfmedScenario.cs`](../../../Content.IntegrationTests/Tests/_WF/Wolfmed/Scenarios/WolfmedScenario.cs)
+- [`Content.IntegrationTests/Tests/_WF/Wolfmed/Scenarios/WolfmedSepsisTest.cs`](../../../Content.IntegrationTests/Tests/_WF/Wolfmed/Scenarios/WolfmedSepsisTest.cs)
 - [`Content.IntegrationTests/Tests/_WF/Wolfmed/Scenarios/WolfmedSpeciesTest.cs`](../../../Content.IntegrationTests/Tests/_WF/Wolfmed/Scenarios/WolfmedSpeciesTest.cs)
 - [`Content.IntegrationTests/Tests/_WF/Wolfmed/Scenarios/WolfmedTemperatureTest.cs`](../../../Content.IntegrationTests/Tests/_WF/Wolfmed/Scenarios/WolfmedTemperatureTest.cs)
 - [`Content.IntegrationTests/Tests/_WF/Wolfmed/WolfmedAimScatterTest.cs`](../../../Content.IntegrationTests/Tests/_WF/Wolfmed/WolfmedAimScatterTest.cs)
@@ -420,6 +424,7 @@ Skipped ("dirty-disposed").
 - [`Resources/Prototypes/_WF/Wolfmed/Surgery/surgeries.yml`](../../../Resources/Prototypes/_WF/Wolfmed/Surgery/surgeries.yml)
 - [`Resources/Prototypes/_WF/Wolfmed/Surgery/surgery_steps.yml`](../../../Resources/Prototypes/_WF/Wolfmed/Surgery/surgery_steps.yml)
 - [`Resources/Prototypes/_WF/Wolfmed/Surgery/synth_core.yml`](../../../Resources/Prototypes/_WF/Wolfmed/Surgery/synth_core.yml)
+- [`Resources/Prototypes/_WF/Wolfmed/Voice/condition_emotes.yml`](../../../Resources/Prototypes/_WF/Wolfmed/Voice/condition_emotes.yml)
 - [`Resources/Prototypes/_WF/Wolfmed/Wounds/ballistic.yml`](../../../Resources/Prototypes/_WF/Wolfmed/Wounds/ballistic.yml)
 - [`Resources/Prototypes/_WF/Wolfmed/Wounds/blunt.yml`](../../../Resources/Prototypes/_WF/Wolfmed/Wounds/blunt.yml)
 - [`Resources/Prototypes/_WF/Wolfmed/Wounds/burns.yml`](../../../Resources/Prototypes/_WF/Wolfmed/Wounds/burns.yml)
@@ -442,6 +447,7 @@ Skipped ("dirty-disposed").
 - [`Resources/Locale/en-US/_WF/Wolfmed/autodoc-voice.ftl`](../../../Resources/Locale/en-US/_WF/Wolfmed/autodoc-voice.ftl)
 - [`Resources/Locale/en-US/_WF/Wolfmed/autodoc.ftl`](../../../Resources/Locale/en-US/_WF/Wolfmed/autodoc.ftl)
 - [`Resources/Locale/en-US/_WF/Wolfmed/burns.ftl`](../../../Resources/Locale/en-US/_WF/Wolfmed/burns.ftl)
+- [`Resources/Locale/en-US/_WF/Wolfmed/condition-emotes.ftl`](../../../Resources/Locale/en-US/_WF/Wolfmed/condition-emotes.ftl)
 - [`Resources/Locale/en-US/_WF/Wolfmed/consciousness.ftl`](../../../Resources/Locale/en-US/_WF/Wolfmed/consciousness.ftl)
 - [`Resources/Locale/en-US/_WF/Wolfmed/damage-command.ftl`](../../../Resources/Locale/en-US/_WF/Wolfmed/damage-command.ftl)
 - [`Resources/Locale/en-US/_WF/Wolfmed/death.ftl`](../../../Resources/Locale/en-US/_WF/Wolfmed/death.ftl)
@@ -590,6 +596,7 @@ Skipped ("dirty-disposed").
 
 ### Tools
 
+- [`Tools/_WF/Wolfmed/dmi_extract.py`](../../../Tools/_WF/Wolfmed/dmi_extract.py)
 - [`Tools/_WF/Wolfmed/gen_analyzer_icons.py`](../../../Tools/_WF/Wolfmed/gen_analyzer_icons.py)
 - [`Tools/_WF/Wolfmed/gen_arrest_icon.py`](../../../Tools/_WF/Wolfmed/gen_arrest_icon.py)
 - [`Tools/_WF/Wolfmed/gen_autodoc_voice.py`](../../../Tools/_WF/Wolfmed/gen_autodoc_voice.py)

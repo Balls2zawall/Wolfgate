@@ -102,7 +102,10 @@ public enum WolfmedRoutes : ushort
     /// </summary>
     CoreHeat = 1 << 15,
 
-    // M5: bit 10 is left for M4's core heat.
+    // M5: bit 10 is left for M4's core heat. Playtest 4 took it, since core heat went to bit 15.
+
+    /// <summary>Playtest 4 (SEPSIS): sepsis past the line where it damages the torso organs.</summary>
+    SepsisOrgans = 1 << 10,
 
     /// <summary>A toxic coma draining the brain.</summary>
     Toxin = 1 << 11,

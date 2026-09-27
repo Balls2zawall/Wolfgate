@@ -773,4 +773,62 @@ public sealed class WolfmedCVars
     /// </summary>
     public static readonly CVarDef<float> DoAfterInterruptDamage =
         CVarDef.Create("wolfmed.doafter_interrupt_damage", 10f, CVar.SERVERONLY);
+
+    // Playtest 4, SEPSIS: sepsis damages the torso organs, and a sick body shows what is wrong with it.
+
+    /// <summary>
+    /// Sepsis progress from which it damages every torso organ. 90, over wolfmed.arrest_sepsis (80), so the brain
+    /// drain still kills first when it runs; this is the route for a body whose brain is kept topped up (a pod,
+    /// oxygen) while nobody treats the infection.
+    /// </summary>
+    public static readonly CVarDef<float> SepsisOrganDamageFrom =
+        CVarDef.Create("wolfmed.sepsis_organ_damage_from", 90f, CVar.SERVERONLY);
+
+    /// <summary>
+    /// Organ health sepsis past wolfmed.sepsis_organ_damage_from takes a minute from each torso organ, times that
+    /// organ's weight in the infection profile's sepsisOrganWeights. 1.5: with the torso organs at 25, the kidneys and
+    /// liver (1.5) fail in about 11 minutes, the lungs and stomach in 17 and the heart (0.75) in 22. 0 turns it off.
+    /// </summary>
+    public static readonly CVarDef<float> SepsisOrganDamagePerMinute =
+        CVarDef.Create("wolfmed.sepsis_organ_damage_per_minute", 1.5f, CVar.SERVERONLY);
+
+    /// <summary>
+    /// Seconds between checks of every wound host for a condition emote (a cough, a retch). 8: often enough that a sick
+    /// patient shows it within half a minute at the default chance, rarely enough not to fill the chat.
+    /// </summary>
+    public static readonly CVarDef<float> ConditionEmoteInterval =
+        CVarDef.Create("wolfmed.condition_emote_interval", 8f, CVar.SERVERONLY);
+
+    /// <summary>
+    /// Chance each holding condition plays its emote on a check. 0.35: about one emote every 20 seconds for a
+    /// patient with one condition. 0 turns the condition emotes off.
+    /// </summary>
+    public static readonly CVarDef<float> ConditionEmoteChance =
+        CVarDef.Create("wolfmed.condition_emote_chance", 0.35f, CVar.SERVERONLY);
+
+    /// <summary>
+    /// Fewest seconds between two real vomits from a retch (sepsis past wolfmed.condition_vomit_sepsis, or a toxic
+    /// coma). 60: each one costs upstream's 40 hunger and thirst and leaves a puddle.
+    /// </summary>
+    public static readonly CVarDef<float> ConditionVomitInterval =
+        CVarDef.Create("wolfmed.condition_vomit_interval", 60f, CVar.SERVERONLY);
+
+    /// <summary>Sepsis progress from which the patient coughs. 40, where the flush shows on examine.</summary>
+    public static readonly CVarDef<float> ConditionCoughSepsis =
+        CVarDef.Create("wolfmed.condition_cough_sepsis", 40f, CVar.SERVERONLY);
+
+    /// <summary>Sepsis progress from which the patient retches. 60, a stage before the brain drain (80).</summary>
+    public static readonly CVarDef<float> ConditionRetchSepsis =
+        CVarDef.Create("wolfmed.condition_retch_sepsis", 60f, CVar.SERVERONLY);
+
+    /// <summary>Sepsis progress from which a retch brings something up. 90, with the organ damage.</summary>
+    public static readonly CVarDef<float> ConditionVomitSepsis =
+        CVarDef.Create("wolfmed.condition_vomit_sepsis", 90f, CVar.SERVERONLY);
+
+    /// <summary>
+    /// Brain oxygenation under which a patient whose largest drain is the lungs wheezes. 0.6, halfway down the hypoxia
+    /// pressure's ramp (0.75 to 0.45) and before the lips go blue (0.54).
+    /// </summary>
+    public static readonly CVarDef<float> ConditionWheezeOxygenation =
+        CVarDef.Create("wolfmed.condition_wheeze_oxygenation", 0.6f, CVar.SERVERONLY);
 }

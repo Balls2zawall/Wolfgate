@@ -3444,3 +3444,102 @@ attempt for a pistol, a revolver, a rifle and a shotgun.
 `AttackAttemptEvent`. That gate now passes when the attempt names no target and no weapon (the gun system's shape)
 and the active hand holds a `Sidearm`; melee attempts carry both and stay cancelled. The test now picks the gun up
 and asks `CanAttack` as well as raising the shot attempt.]*
+
+## Playtest 4, SEPSIS (2026-09-27)
+
+"Sepsis should have more effects such as vomiting, coughing, and so on. Also not sure if sepsis actually kills any
+more, I was playing with systemic infection 100%. I think it should slowly damage organs at 100?", and "we need more
+emotes with sound and such, like coughing, choking, etc depending on the wound." Branch `Wolfmed-p8-sepsis` from
+`ca7d821e2e`.
+
+**Does it kill: measured first.** `WolfmedSepsisTest.SepsisKillsTest`, real game time with every system running and
+the shipped CVars: a human in station air, warm, no wounds, sepsis pinned at 100 every second. On the base, before
+any change: Up at 240 s (oxygenation 0.6), Downed by 300 s (0.5), Unconscious by 360 s (0.4, where brain tissue
+starts to go), cardiac arrest named "sepsis" at 511 s, dead at 625 s. The M2 clock holds (derived 510 s). Nothing in
+the drain was broken: no CVar sits at 0, the M5 refill runs only while no drain does, and the oxygen trigger fires.
+After this package: arrest at 511 s and death at 625 s again, the kidneys and liver at 0.85 of 25 when the body died,
+the lungs and stomach at 8.9, the heart at 12.9. How a body at 100% lives anyway: sepsis holds only while a source is
+alive (a wound at the spreading stage or past it, or a necrotic limb). Once the last source closes or is treated it
+falls 8 a minute, is under the 80 line two and a half minutes later, and the brain refills from then; a 100% set by
+hand (VV) with no source does the same. And the clock is long: eight and a half minutes to the arrest from 100, more
+than ten to death. The drain is left as it is; the organ damage below is the second route the owner asked for.
+
+**Organ damage.** `WolfmedInfectionSystem.TickSepsis`: from `wolfmed.sepsis_organ_damage_from` (90) sepsis takes
+`wolfmed.sepsis_organ_damage_per_minute` (1.5) a minute, times the infection profile's new `sepsisOrganWeights` (by
+organ slot: kidneys 1.5, liver 1.5, lungs 1, stomach 1, heart 0.75; an unlisted slot 1), off every
+`WolfmedOrganComponent` organ in an organic torso, through `OrganHealthSystem.ChangeHealth`. The bands, the analyzer's
+organ items and each organ's own effects follow: a failed organ is destroyed and leaves its internal bleed, as when a
+hit fails it. Never on the dead; under the line it stops at once, so antibiotics that pull the sepsis under 90 stop
+it. The share each 5 s tick owes is carried per organ (`WolfmedSepsisComponent.OrganDamageOwed`): organ health is in
+hundredths, and the heart's 0.094 a tick would truncate to 0.09 and add 4% to its clock.
+- Measured (`SepsisOrganDamageTest`, brain drain off by `wolfmed.brain_sepsis_seconds` 0, the infection tick
+  fast-forwarded 5 s at a time): kidneys and liver fail at 665 s (derived 667), lungs and stomach at 1000 s (1000),
+  and the heart has 6.19 of 25 left then (derived failure at 1333 s), the last torso organ standing. After two minutes
+  at 100, three units of spaceacillin (sepsis 82) and the kidneys lose nothing more over three minutes.
+- With the brain drain on (the default) the brain gets there first, as the spec wanted: death at 625 s with no organ
+  failed yet.
+
+**The analyzer.** A new route, `WolfmedRoutes.SepsisOrgans` (bit 10, free since M4 put core heat on bit 15), runs while
+the damage does, brain or no brain. "Do first" shows "antibiotics now, sepsis is damaging the organs" in place of the
+plain "antibiotics" (that aid gives way, so the line never says antibiotics twice); a waiting ghost is told "sepsis is
+damaging your organs"; the sepsis banner reads "SEPSIS - systemic infection at 100%, damaging the organs" (the client
+reads the route off the vitals report, so the vendored diagnostics type is untouched). The organ items ("Kidneys
+impaired", "Liver failed") were already on the vitals line.
+
+**Condition emotes.** `WolfmedConditionEmoteSystem` (server, no subscriptions). Every `wolfmed.condition_emote_interval`
+(8 s) each wound host is checked; the conditions, in priority order:
+- **Choke** (`WFWolfmedChoke`, "chokes!"): the brain's largest drain is the airway (suffocating with lungs in place),
+  or blood in the airway: an open internal bleed on the torso while a lung in place is impaired or failed.
+- **Cough**: `WFWolfmedCoughBlood` ("coughs up blood!") when the lungs are the reason (a lung impaired or failed, or
+  none left: the analyzer's "no lungs"); otherwise `WFWolfmedCough` ("coughs.") for an open internal bleed on the torso
+  or sepsis at `wolfmed.condition_cough_sepsis` (40).
+- **Wheeze** (`WFWolfmedWheeze`): the lungs are the largest drain and oxygenation is under
+  `wolfmed.condition_wheeze_oxygenation` (0.6).
+- **Retch** (`WFWolfmedRetch`): sepsis at `wolfmed.condition_retch_sepsis` (60), or the toxin load past the Downed line
+  (the analyzer's "high"). At sepsis `wolfmed.condition_vomit_sepsis` (90) or in the toxin coma band the retch also
+  vomits through `VomitSystem.Vomit` (upstream's 40 hunger and 40 thirst, a puddle, the sound), at most once per
+  `wolfmed.condition_vomit_interval` (60 s), and only with a stomach.
+- **Shiver** (`WFWolfmedShiver`): a fever running (sepsis, or an infection at the spreading stage) or the core under the
+  hypothermia Downed line.
+
+Each condition that holds rolls `wolfmed.condition_emote_chance` (0.35) in that order and the first success plays, one
+emote a check; the emote played last check is passed over while another condition holds. Nothing for the dead, a body
+in cardiac arrest (it has to look dead), a body in a pod mid-procedure (`AutodocSystem.IsRunning`), sedation at
+`wolfmed.sedation_warn_heavy` (0.8), or a body whose torso is not organic (`WolfmedWoundTraitSystem.IsOrganic`, the
+infection system's gate; owner, 2026-09-27: a chassis has its own fault lines). The emote goes through
+`ChatSystem.TryEmoteWithChat` at `ChatTransmitRange.Normal` with `ignoreActionBlocker` and `forceEmote`: an
+unconscious body still chokes and coughs, and the menu whitelist does not decide. The six emotes are ordinary Vocal
+emotes in `Resources/Prototypes/_WF/Wolfmed/Voice/condition_emotes.yml` (whitelist `Respirator`, in the emote menu), with
+no sounds and no chat triggers, so typing "coughs" still plays upstream's Cough alone.
+- Measured (chance 1, real game time): failed lungs cough up blood on every check (three in 24 s); sepsis 95
+  alternates cough and retch (eight emotes in 64 s) and vomits once; a healthy human, a dead one with sepsis 95 and
+  failed lungs, and an IPC with sepsis 95 play nothing in 60 s.
+
+**Numbers.** `wolfmed.sepsis_organ_damage_from` 90, `sepsis_organ_damage_per_minute` 1.5,
+`condition_emote_interval` 8, `condition_emote_chance` 0.35, `condition_vomit_interval` 60, `condition_cough_sepsis`
+40, `condition_retch_sepsis` 60, `condition_vomit_sepsis` 90, `condition_wheeze_oxygenation` 0.6;
+`sepsisOrganWeights` kidneys 1.5, liver 1.5, lungs 1, stomach 1, heart 0.75.
+
+**Differs from the spec, and why.**
+1. **A sixth emote id,** `WFWolfmedCoughBlood`, for "coughs up blood!": an emote's chat line is picked at random from
+   its own list, so the bloody cough needs its own id. It should get the cough's sounds.
+2. **Lower conditions still show.** Every condition that holds rolls, in order, and last check's emote is passed over
+   while another holds. Read strictly (the top condition only), a septic patient past 40 would cough and never retch,
+   and the spec's own retch-and-vomit test at chance 1 could not pass.
+3. **The airway is read fresh** from `WolfmedLifeSystem.DrainRate`, not from `WolfmedConsciousnessComponent.HypoxiaSource`,
+   which keeps the last drain's source while the brain refills, so a cleared airway would go on choking.
+4. **"A lung internal bleed"** has no model of its own; it is read as an open internal bleed on the torso while a lung
+   in place is impaired or failed. A failed lung is destroyed on the next organ tick, so a body whose lungs failed
+   coughs up blood (the spec's test) rather than choking.
+5. **Unconscious bodies emote; a body in arrest does not.** The spec's exclusions are dead, a working pod and strong
+   sedation; arrest is added because the arrest must look like death (AUTODOC3). "Strong sedation" is the existing
+   `wolfmed.sedation_warn_heavy` line ("You can barely stay awake"), not a new CVar.
+6. **`SepsisOrganDamageTest` fast-forwards the infection tick** (as `WolfmedInfectionTest` does) rather than waiting
+   seventeen game minutes; `SepsisKillsTest` runs in real game time (one to six minutes of wall time depending on the
+   machine's load).
+
+**Tests.** New `Scenarios/WolfmedSepsisTest.cs` (`SepsisKillsTest`, `SepsisOrganDamageTest`) and
+`Scenarios/WolfmedConditionEmoteTest.cs` (`FailedLungsCoughTest`, `SepsisRetchesAndVomitsOnceTest`,
+`NoEmoteWithoutACauseTest`: healthy, dead and IPC). Run with the nearby fixtures (`WolfmedLocaleCoverageTest`,
+`WolfmedInfectionTest`, `WolfmedMedicInfoTest`, `WolfmedRevivalTest`, `SepsisNotToxinTest`): 37 total, 37 passed,
+0 failed, 0 skipped.

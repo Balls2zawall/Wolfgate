@@ -251,7 +251,7 @@ public sealed partial class WolfmedDiagnosticPanel
             WoundAlertsContainer.AddChild(CreateAlertRow(
                 "sepsis",
                 WolfmedWoundStyle.Necrosis,
-                SepsisText(msg.WoundDiagnostics.Sepsis),
+                SepsisText(msg.WoundDiagnostics),
                 "sepsis",
                 out var sepsis));
             _sepsisLabel = sepsis;
@@ -385,7 +385,7 @@ public sealed partial class WolfmedDiagnosticPanel
             return;
 
         if (_sepsisLabel is { } sepsis && diagnostics.Sepsis > 0f)
-            sepsis.SetMessage(FormattedMessage.FromMarkupPermissive(SepsisText(diagnostics.Sepsis)));
+            sepsis.SetMessage(FormattedMessage.FromMarkupPermissive(SepsisText(diagnostics)));
 
         // BRAIN: the countdown and the activity percentage both move every tick.
         if (_arrestLabel is { } arrest && diagnostics.CardiacArrest)
@@ -482,8 +482,13 @@ public sealed partial class WolfmedDiagnosticPanel
             ("oxygen", (int) MathF.Round(MathF.Max(0f, diagnostics.Oxygenation) * 100f)));
     }
 
-    private static string SepsisText(float sepsis) =>
-        Loc.GetString("health-analyzer-wound-sepsis", ("percent", (int) MathF.Round(sepsis)));
+    // Playtest 4 (SEPSIS): the banner says so once the sepsis is damaging the organs, which the vitals routes carry.
+    private static string SepsisText(HealthAnalyzerWoundDiagnostics diagnostics) =>
+        Loc.GetString(
+            diagnostics.Vitals is { } vitals && (vitals.Routes & WolfmedRoutes.SepsisOrgans) != 0
+                ? "health-analyzer-wound-sepsis-organs"
+                : "health-analyzer-wound-sepsis",
+            ("percent", (int) MathF.Round(diagnostics.Sepsis)));
 
     /// <summary>CONSC: the tier, the time left, and the reminder that none of it treats anything.</summary>
     private static string PainReliefText(HealthAnalyzerWoundDiagnostics diagnostics) =>

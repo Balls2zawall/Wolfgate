@@ -60,6 +60,13 @@ public sealed partial class WolfmedSepsisComponent : Component
     /// <summary>0 to 100. The toxin rate scales with it and it only falls while every source is gone.</summary>
     [DataField, AutoNetworkedField]
     public float Progress;
+
+    /// <summary>
+    /// Playtest 4 (SEPSIS), server: organ damage owed but not yet taken, per organ. Organ health is in hundredths, and
+    /// a 5 s tick's 0.094 on the heart would truncate to 0.09 and add 4% to its clock; the remainder carries instead.
+    /// </summary>
+    [ViewVariables]
+    public Dictionary<EntityUid, float> OrganDamageOwed = new();
 }
 
 /// <summary>What killed the tissue. Only decides the wording and the analyzer flag.</summary>

@@ -108,6 +108,21 @@ public sealed partial class WolfmedInfectionProfilePrototype : IPrototype
     [DataField]
     public float SepsisAntibioticPerUnit = 6f;
 
+    /// <summary>
+    /// Playtest 4 (SEPSIS): multiplier on wolfmed.sepsis_organ_damage_per_minute per torso organ, keyed by the organ's
+    /// slot. The filters go first: sepsis is a blood infection and the kidneys and liver clear it; the heart lasts
+    /// longest. An organ whose slot is not listed takes the plain rate.
+    /// </summary>
+    [DataField]
+    public Dictionary<string, float> SepsisOrganWeights = new()
+    {
+        ["kidneys"] = 1.5f,
+        ["liver"] = 1.5f,
+        ["lungs"] = 1f,
+        ["stomach"] = 1f,
+        ["heart"] = 0.75f,
+    };
+
     // Necrosis.
 
     /// <summary>How long a tourniquet may stay on a limb before the limb under it dies.</summary>

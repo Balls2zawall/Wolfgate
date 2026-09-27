@@ -30,6 +30,15 @@
   sepsisPerMinute: 12
   sepsisRecoveryPerMinute: 8
   sepsisAntibioticPerUnit: 6
+  # Playtest 4 (SEPSIS): past wolfmed.sepsis_organ_damage_from sepsis takes wolfmed.sepsis_organ_damage_per_minute
+  # (1.5) a minute from every torso organ, times its weight here, keyed by organ slot. With the organs at 25: kidneys
+  # and liver fail in about 11 minutes, lungs and stomach in 17, the heart in 22. Unlisted slots take the plain rate.
+  sepsisOrganWeights:
+    kidneys: 1.5
+    liver: 1.5
+    lungs: 1
+    stomach: 1
+    heart: 0.75
   tourniquetOnset: 600
   warnFraction: 0.6
   reattachGrace: 300

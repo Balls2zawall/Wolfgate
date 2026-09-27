@@ -120,3 +120,7 @@ wolfmed-vitals-aid-toxin = antitoxin
 wolfmed-vitals-aid-heatstroke = cool them, now
 wolfmed-vitals-aid-marrow = anti-radiation drugs and blood
 wolfmed-vitals-aid-hypothermia = warm them
+
+## Playtest 4, SEPSIS: sepsis past the organ-damage line. Replaces the plain sepsis aid while it runs.
+
+wolfmed-vitals-aid-sepsisorgans = antibiotics now, sepsis is damaging the organs

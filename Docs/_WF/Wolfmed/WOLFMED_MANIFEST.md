@@ -5116,3 +5116,28 @@ One marked Onyx edit and `_WF` (DECISIONS "Treated pain fades", "The pod is for 
 | `Content.Shared/_WF/Wolfmed/CCVar/WolfmedCVars.cs` | modified | The reach line's comment. |
 | `Content.IntegrationTests/Tests/_WF/Wolfmed/Scenarios/WolfmedDownedSidearmTest.cs` | new | Pistol and revolver fire, rifle and shotgun do not. |
 | `Docs/_WF/Wolfmed/DECISIONS.md`, this file | modified | This section. |
+
+## Playtest 4, SEPSIS (2026-09-27)
+
+All `_WF`: sepsis damages the torso organs past 90, the analyzer says so, and organic bodies cough, choke, wheeze,
+retch and shiver by their condition (DECISIONS "Playtest 4, SEPSIS").
+
+| File | Kind | Change |
+| --- | --- | --- |
+| `Content.Server/_WF/Wolfmed/Wounds/WolfmedInfectionSystem.cs` | modified | `TickSepsis` damages the organic torso's organs past `wolfmed.sepsis_organ_damage_from` through `OrganHealthSystem`, by slot weight, carrying the hundredths per organ; `DamagingOrgans` and `HasFever` queries. |
+| `Content.Shared/_WF/Wolfmed/Wounds/WolfmedInfectionProfilePrototype.cs`, `Resources/Prototypes/_WF/Wolfmed/Wounds/infection.yml` | modified | `sepsisOrganWeights`: kidneys 1.5, liver 1.5, lungs 1, stomach 1, heart 0.75. |
+| `Content.Shared/_WF/Wolfmed/Wounds/WolfmedInfectionComponents.cs` | modified | `WolfmedSepsisComponent.OrganDamageOwed`, the per-organ remainder (server, not networked). |
+| `Content.Shared/_WF/Wolfmed/CCVar/WolfmedCVars.cs` | modified | `wolfmed.sepsis_organ_damage_from`, `sepsis_organ_damage_per_minute`, `condition_emote_interval`, `condition_emote_chance`, `condition_vomit_interval`, `condition_cough_sepsis`, `condition_retch_sepsis`, `condition_vomit_sepsis`, `condition_wheeze_oxygenation`. |
+| `Content.Shared/_WF/Wolfmed/Life/WolfmedRevivalComponents.cs` | modified | `WolfmedRoutes.SepsisOrgans` (bit 10). |
+| `Content.Server/_WF/Wolfmed/Life/WolfmedLifeSystem.cs` | modified | `GetActiveRoutes` adds `SepsisOrgans` while the damage runs. |
+| `Content.Shared/_WF/Wolfmed/Life/WolfmedVitalsReport.cs` | modified | "Do first" drops the plain sepsis aid while the organ-damage aid shows. |
+| `Content.Client/_WF/Wolfmed/Medical/WolfmedDiagnosticPanel.Wounds.cs` | modified | The sepsis banner reads "damaging the organs" off the vitals routes. |
+| `Resources/Locale/en-US/_WF/Wolfmed/analyzer-vitals.ftl`, `revival.ftl`, `wounds.ftl` | modified | `wolfmed-vitals-aid-sepsisorgans`, `wolfmed-dormant-route-sepsisorgans`, `health-analyzer-wound-sepsis-organs`. |
+| `Content.Server/_WF/Wolfmed/Life/WolfmedConditionEmoteSystem.cs` | new | Every 8 s, each organic wound host's conditions in priority order, one emote a check through `TryEmoteWithChat`; the retch vomits once a vomit interval. |
+| `Content.Server/_WF/Wolfmed/Life/WolfmedConditionEmoteComponent.cs` | new | Last emote, counts and the vomit clock (server). |
+| `Resources/Prototypes/_WF/Wolfmed/Voice/condition_emotes.yml` | new | `WFWolfmedChoke`, `Cough`, `CoughBlood`, `Wheeze`, `Retch`, `Shiver`: Vocal, in the emote menu, no sounds, no chat triggers. |
+| `Resources/Locale/en-US/_WF/Wolfmed/condition-emotes.ftl` | new | Their names and chat lines. |
+| `Content.IntegrationTests/Tests/_WF/Wolfmed/Scenarios/WolfmedSepsisTest.cs` | new | `SepsisKillsTest` (real time: arrest 511 s, death 625 s), `SepsisOrganDamageTest` (kidneys and liver 665 s, lungs and stomach 1000 s, heart last; the analyzer lines; antibiotics stop it). |
+| `Content.IntegrationTests/Tests/_WF/Wolfmed/Scenarios/WolfmedConditionEmoteTest.cs` | new | Failed lungs cough up blood; sepsis 95 retches and vomits once in 64 s; healthy, dead and IPC never emote. |
+| `Content.Server/_WF/Wolfmed/README.md` | regenerated | `modules.py --write`. |
+| `Docs/_WF/Wolfmed/DECISIONS.md`, this file | modified | This section. |

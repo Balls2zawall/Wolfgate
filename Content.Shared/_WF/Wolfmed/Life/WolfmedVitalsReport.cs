@@ -407,6 +407,10 @@ public static class WolfmedVitalsText
         for (var bit = 0; bit < 16; bit++)
         {
             var route = (WolfmedRoutes) (1 << bit);
+            // Playtest 4 (SEPSIS): the organ-damage aid says antibiotics too, so the plain sepsis aid gives way to it.
+            if (route == WolfmedRoutes.Sepsis && (report.Routes & WolfmedRoutes.SepsisOrgans) != 0)
+                continue;
+
             var circulation = route == WolfmedRoutes.Circulation;
             if ((report.Routes & route) == 0 && !(circulation && refill))
                 continue;

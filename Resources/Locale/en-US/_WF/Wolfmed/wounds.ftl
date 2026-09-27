@@ -165,3 +165,6 @@ health-analyzer-wound-shutdown = [color=#d63c2c]SHUTDOWN[/color] - no power or n
 
 # Overheating on a wound host burns the chassis instead of killing it outright.
 wolfmed-overheat-popup = {$name}'s circuits are overheating!
+
+# Playtest 4, SEPSIS: the sepsis banner once it damages the torso organs.
+health-analyzer-wound-sepsis-organs = [color=#d63c2c]SEPSIS[/color] - systemic infection at { $percent }%, damaging the organs
