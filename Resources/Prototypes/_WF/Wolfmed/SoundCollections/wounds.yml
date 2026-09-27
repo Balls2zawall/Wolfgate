@@ -12,9 +12,8 @@
   - /Audio/Weapons/Xeno/alien_claw_flesh1.ogg
   - /Audio/Weapons/Xeno/alien_claw_flesh2.ogg
   - /Audio/Weapons/Xeno/alien_claw_flesh3.ogg
-  - /Audio/_WF/Wolfmed/Bleeding/blood1.ogg
-  - /Audio/_WF/Wolfmed/Bleeding/blood2.ogg
-  - /Audio/_WF/Wolfmed/Bleeding/blood3.ogg
+  # Playtest 4: Bleeding/blood1-3 were NovaSector's slash-wound sounds. The owner's Bobstation drips replaced them
+  # under the same names (WFWolfmedBloodDrip), and a drip is not a cut, so they left this collection.
 
 # Something punches through it: gunshots, shrapnel, stabs.
 - type: soundCollection
@@ -135,8 +134,7 @@
 - type: soundCollection
   id: WFWolfmedBleedSpurt
   files:
-  # Wet sounds only. NovaSector's blood1-3 are its slash-wound sounds and read as a blade, so they moved to
-  # WFWolfmedWoundFlesh.
+  # Wet sounds only. Bleeding/blood1-6 are the light-bleed drips (WFWolfmedBloodDrip).
   - /Audio/_WF/Wolfmed/Bleeding/splatter.ogg
 
 # An open stump, which is wetter and comes with the bone.

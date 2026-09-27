@@ -920,4 +920,22 @@ public sealed class WolfmedCVars
     /// <summary>Blood fraction the pod's blood reservoir transfuses up to once started.</summary>
     public static readonly CVarDef<float> PodTransfuseTo =
         CVarDef.Create("wolfmed.pod_transfuse_to", 0.95f, CVar.SERVERONLY);
+    // Playtest 4, SOUNDS: the Bobmed sound pack.
+
+    /// <summary>
+    /// Summed external bleed rate (every open wound's rate, the unit the inspection reads) under which a bleeding
+    /// body drips. 0.5 is the inspection's line between "oozing blood" and "bleeding freely" (look.yml
+    /// bleedFlowing): the analyzer has no rate words of its own, only "falling" and "falling fast" for the net blood
+    /// flow. A body with a spurt source never drips whatever its rate.
+    /// </summary>
+    public static readonly CVarDef<float> DripSoundBelow =
+        CVarDef.Create("wolfmed.drip_sound_below", 0.5f, CVar.SERVERONLY);
+
+    /// <summary>Seconds between two drips from a lightly bleeding body. 4 is the owner's figure.</summary>
+    public static readonly CVarDef<float> DripSoundInterval =
+        CVarDef.Create("wolfmed.drip_sound_interval", 4f, CVar.SERVERONLY);
+
+    /// <summary>Volume of a drip in decibels. Low, because it repeats for as long as the bleed lasts.</summary>
+    public static readonly CVarDef<float> DripSoundVolume =
+        CVarDef.Create("wolfmed.drip_sound_volume", -6f, CVar.SERVERONLY);
 }

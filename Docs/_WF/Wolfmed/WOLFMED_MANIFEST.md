@@ -5190,4 +5190,33 @@ All `_WF` (DECISIONS "Playtest 4, IV"). The pod's existing files carry one-line 
 | `Content.IntegrationTests/Tests/_WF/Wolfmed/WolfmedIvDripTest.cs` | new | Pack refill at the flow rate, take mode fills and pings, the rip and the clean detach into a pod, Slime blood for a Slime person. |
 | `Content.IntegrationTests/Tests/_WF/Wolfmed/PodBloodTest.cs` | new | The pod transfuses to 0.95 from its packs; an empty reservoir says NO BLOOD LOADED and starts when a stack goes in. |
 | `Content.Server/_WF/Wolfmed/README.md` | generated | The file list. |
+## Playtest 4, SOUNDS (2026-09-27)
+
+Three marked upstream edits and `_WF` (DECISIONS "Playtest 4, SOUNDS").
+
+| File | Kind | Change |
+| --- | --- | --- |
+| `Resources/Audio/_WF/Wolfmed/Gasp/` (20 `.ogg`, `attributions.yml`) | new | The owner's Bob gasps, 7 male and 13 female, mono. |
+| `Resources/Audio/_WF/Wolfmed/Emotes/` (51 `.ogg`, `attributions.yml`) | new | Bob sneezes, snores, sniffs, coughs and chokes; Nova gulps; tg gags. |
+| `Resources/Audio/_WF/Wolfmed/Bleeding/blood1-6.ogg`, `attributions.yml` | modified / new | Bob's drips replace NovaSector's `blood1-3` under the same names; 4-6 added. |
+| `Resources/Audio/_WF/Wolfmed/Bone/` (5 `.ogg`, `attributions.yml`) | new | `crack1-3`, `tendon_snap1-2`. |
+| `Resources/Audio/_WF/Wolfmed/Melee/` (6 `.ogg`, `attributions.yml`) | new | `melee1-3`, `stab1-3`. |
+| `Resources/Audio/_WF/Wolfmed/Pill/` (`pill_swallow.ogg`, `attributions.yml`) | new | From Bob's WAV. |
+| `Resources/Prototypes/_WF/Wolfmed/SoundCollections/bobmed.yml` | new | Every Bobmed collection, SEPSIS's cough, choke and retch included. |
+| `Resources/Prototypes/_WF/Wolfmed/SoundCollections/wounds.yml` | modified | `blood1-3` out of `WFWolfmedWoundFlesh`; the spurt comment. |
+| `Resources/Prototypes/_WF/Wolfmed/Voice/bobmed_emotes.yml` | new | `WFWolfmedSneeze`, `WFWolfmedSnore`, `WFWolfmedSniff`, `WFWolfmedGulp`. |
+| `Resources/Prototypes/_WF/Wolfmed/Voice/bobmed_emote_sounds.yml` | new | `WFWolfmedMaleEmotes` / `WFWolfmedFemaleEmotes`. |
+| `Resources/Prototypes/_WF/Wolfmed/Wounds/sfx.yml` | modified | The `BoneFractureWound` entry claims the wound silently. |
+| `Resources/Locale/en-US/_WF/Wolfmed/bob-sounds.ftl` | new | The four emotes' names and messages. |
+| `Resources/Prototypes/SoundCollections/gasp.yml` | modified, `# WOLFGATE` | `MaleGasp` / `FemaleGasp` hold the Bob files. |
+| `Resources/Prototypes/Entities/Objects/Specific/chemistry.yml` | modified, `# WOLFGATE` | `Pill` swallows with `WFWolfmedPillSwallow`. |
+| `Content.Shared/Weapons/Melee/SharedMeleeWeaponSystem.cs` | modified, `// WOLFGATE` | Both `PlayHitSound` calls take `WolfmedOrganicSoundSystem.GetHitSound` when the hit has no override. |
+| `Content.Shared/_WF/Wolfmed/Sounds/WolfmedOrganicSoundSystem.cs` | new | `IsOrganicBody`; the stab / melee pick. |
+| `Content.Server/_WF/Wolfmed/Sounds/WolfmedBodySoundSystem.cs` | new | Emote voices and the flesh-only guard, the crack, the snap. |
+| `Content.Server/_WF/Wolfmed/Sounds/WolfmedBleedDripSystem.cs`, `WolfmedBleedDripComponent.cs` | new | The drip clock. |
+| `Content.Shared/_WF/Wolfmed/Wounds/WolfmedSfxProfilePrototype.cs` | modified | `WolfmedWoundSoundEntry.Sound` is optional. |
+| `Content.Shared/_WF/Wolfmed/CCVar/WolfmedCVars.cs` | modified | `wolfmed.drip_sound_below` (0.5), `_interval` (4), `_volume` (-6). |
+| `Content.IntegrationTests/Tests/_WF/Wolfmed/WolfmedBobSoundsTest.cs` | new | Files, gasp, pill, emote voices, melee pick, crack, snap, drips, each against an IPC. |
+| `Content.IntegrationTests/Tests/_WF/Wolfmed/WolfmedWoundSfxTest.cs` | modified | The fracture entry is silent; a soundless entry is skipped. |
+| `Content.Server/_WF/Wolfmed/README.md` | regenerated | `modules.py --write`. |
 | `Docs/_WF/Wolfmed/DECISIONS.md`, this file | modified | This section. |

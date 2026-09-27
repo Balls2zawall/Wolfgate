@@ -1,6 +1,7 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Numerics;
+using Content.Shared._WF.Wolfmed.Sounds; // WOLFGATE(Wolfmed)
 using Content.Shared.ActionBlocker;
 using Content.Shared.Administration.Logs;
 using Content.Shared.CombatMode;
@@ -48,6 +49,7 @@ public abstract partial class SharedMeleeWeaponSystem : EntitySystem
     [Dependency] private   SharedPhysicsSystem     _physics         = default!;
     [Dependency] private   IPrototypeManager       _protoManager    = default!;
     [Dependency] private   StaminaSystem           _stamina         = default!;
+    [Dependency] private   WolfmedOrganicSoundSystem _wolfmedSounds = default!; // WOLFGATE(Wolfmed): Bob's stab and melee hit sounds on flesh
 
     private const int AttackMask = (int) (CollisionGroup.MobMask | CollisionGroup.Opaque);
 
@@ -605,7 +607,7 @@ public abstract partial class SharedMeleeWeaponSystem : EntitySystem
 
         }
 
-        _meleeSound.PlayHitSound(target.Value, playerUid, GetHighestDamageSound(modifiedDamage, _protoManager), hitEvent.HitSoundOverride, component);
+        _meleeSound.PlayHitSound(target.Value, playerUid, GetHighestDamageSound(modifiedDamage, _protoManager), hitEvent.HitSoundOverride ?? _wolfmedSounds.GetHitSound(target.Value, modifiedDamage, meleeUid, user, component), component); // WOLFGATE(Wolfmed): flesh takes Bob's stab or melee sound
 
         if (damageResult?.GetTotal() > FixedPoint2.Zero)
         {
@@ -775,7 +777,7 @@ public abstract partial class SharedMeleeWeaponSystem : EntitySystem
         if (entities.Count != 0)
         {
             var target = entities.First();
-            _meleeSound.PlayHitSound(target, playerUid, GetHighestDamageSound(appliedDamage, _protoManager), hitEvent.HitSoundOverride, component);
+            _meleeSound.PlayHitSound(target, playerUid, GetHighestDamageSound(appliedDamage, _protoManager), hitEvent.HitSoundOverride ?? _wolfmedSounds.GetHitSound(target, appliedDamage, meleeUid, user, component), component); // WOLFGATE(Wolfmed): flesh takes Bob's stab or melee sound
         }
 
         if (appliedDamage.GetTotal() > FixedPoint2.Zero)

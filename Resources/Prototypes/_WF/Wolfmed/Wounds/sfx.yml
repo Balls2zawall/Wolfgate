@@ -16,13 +16,9 @@
   debrisInterval: 0.25
 
   woundSounds:
-  # Bone. The one wound whose sound is the whole point of it.
+  # Bone. Claimed with no sound: WolfmedBodySoundSystem plays WFWolfmedBoneCrack whenever a fracture appears or its
+  # grade rises (playtest 4), hit or not, and a second bone sound here would double it.
   - wounds: [ BoneFractureWound ]
-    sound:
-      collection: WFWolfmedWoundBone
-      params:
-        volume: 1
-        variation: 0.12
 
   - wounds: [ WFWolfmedDislocationWound ]
     sound:

@@ -112,8 +112,12 @@ public enum WolfmedSfxTissue : byte
 [DataDefinition]
 public sealed partial class WolfmedWoundSoundEntry
 {
-    [DataField(required: true)]
-    public SoundSpecifier Sound = default!;
+    /// <summary>
+    /// The sound, or none: an entry without one claims its wounds and keeps them silent, for a wound another system
+    /// voices (a fracture's crack comes from <c>WolfmedBodySoundSystem</c>).
+    /// </summary>
+    [DataField]
+    public SoundSpecifier? Sound;
 
     /// <summary>Wound prototypes this entry answers for.</summary>
     [DataField]

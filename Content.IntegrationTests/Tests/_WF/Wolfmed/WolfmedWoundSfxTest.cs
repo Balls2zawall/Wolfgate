@@ -52,9 +52,11 @@ public sealed class WolfmedWoundSfxTest : GameTest
 
             Assert.Multiple(() =>
             {
-                // Bone first: a fracture is a Blunt wound and must not answer with the bruise sound.
-                Assert.That(Collection(profile, prototypes, "BoneFractureWound", organic: true, 40),
-                    Is.EqualTo("WFWolfmedWoundBone"));
+                // Bone first: a fracture is a Blunt wound and must not answer with the bruise sound. Playtest 4: its
+                // entry is silent, because the crack comes from WolfmedBodySoundSystem.
+                Assert.That(profile.GetWoundSound("BoneFractureWound",
+                    prototypes.Index<WoundPrototype>("BoneFractureWound"), true, FixedPoint2.New(40)), Is.Null,
+                    "the fracture entry claims the wound silently.");
                 Assert.That(Collection(profile, prototypes, "WFWolfmedDislocationWound", organic: true, 40),
                     Is.EqualTo("WFWolfmedWoundBone"));
                 Assert.That(Collection(profile, prototypes, "CyberneticFrameFractureWound", organic: false, 40),
@@ -88,6 +90,9 @@ public sealed class WolfmedWoundSfxTest : GameTest
             {
                 foreach (var entry in profile.WoundSounds)
                 {
+                    if (entry.Sound == null)
+                        continue;
+
                     Assert.That(entry.Sound, Is.InstanceOf<SoundCollectionSpecifier>(),
                         "every wound sound is a collection, so it can be swapped in one file.");
                     Assert.That(prototypes.HasIndex<SoundCollectionPrototype>(Id(entry.Sound)), Is.True,

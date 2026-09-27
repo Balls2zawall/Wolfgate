@@ -3686,3 +3686,201 @@ to 0.95 in 21 s (21 predicted), 105 u from three and a half packs, stopping at 0
 6. **Nothing is spent into a full bloodstream**, where tg keeps pushing blood past normal.
 7. **The torn wound is raised to severity 10** so it bleeds, as the spec's "opens a real wound and bleeds" asks; 3
    Piercing on its own opens one that does not.
+## Playtest 4, SOUNDS: the Bobmed sound pack and the emote audit (2026-09-27)
+
+The owner handed over 43 sounds from Bobstation reignited (`modular_septic/sound/{emotes,gore,effects}`, matched by
+hash at commit `7850ebd9f8`) and asked for each one in a place. They live under `Resources/Audio/_WF/Wolfmed/`
+(`Gasp`, `Emotes`, `Bleeding`, `Bone`, `Melee`, `Pill`), each with an `attributions.yml`; 31 of them were stereo and
+were downmixed to mono so they attenuate like every other positional sound, the two WAVs became Ogg, and
+`tendon_snap2` (96 kHz) was resampled to 44.1 kHz. Every sound a system plays is a `WFWolfmed` collection in
+`SoundCollections/bobmed.yml`.
+
+**Flesh only.** Every body noise here plays only for flesh. `WolfmedOrganicSoundSystem.IsOrganicBody` (shared) lets the
+torso decide, as the synthetic HUD does, through `WolfmedWoundTraitSystem.IsOrganic`: a human with a cybernetic arm is
+flesh and an IPC is not. Anything without a `Body` (a wall, an item) and a borg chassis are not flesh; a body with no
+wound-tracked torso is flesh unless it carries `Silicon`. The drips and the emote voices use it on the body, the crack
+and the snap use `IsOrganic` on the part itself.
+
+1. **Dying gasp.** `MaleGasp` / `FemaleGasp` (`SoundCollections/gasp.yml`, marked) now hold the owner's 7 and 13 files;
+   the ids stay, so all 18 `MaleGasp` and 14 `FemaleGasp` references in the species sets follow. `DefaultDeathgasp` is
+   untouched. `gasp_female2` is 7.5 s long, the rest 0.2-3.8 s. A mechanical `WoundHost` body's `Gasp` emote is
+   swallowed before any voice is asked (item 2's handler), so any mechanical body whose set maps `Gasp` stays quiet.
+2. **Sneeze, and how the new emotes get a voice.** Upstream already has `Sneeze` and `Snore` (`disease_emotes.yml`),
+   with sounds in the human sets, but no trigger words, no whitelist and no icon, so no player can use them. The owner's
+   sneeze is the new `WFWolfmedSneeze` ("sneezes!", Vocal, in the menu with the cough icon, `*sneeze`). The emote sound
+   sets cannot be extended without editing each one (a prototype id lives in one file, and there are 87 sets in 13
+   files), so the voices sit in two `_WF` sets, `WFWolfmedMaleEmotes` / `WFWolfmedFemaleEmotes`
+   (`Voice/bobmed_emote_sounds.yml`), and `WolfmedBodySoundSystem` plays from them: it subscribes
+   `<WoundHostComponent, EmoteEvent>` after `MutingSystem` and before `VocalSystem` / `MumbleAccentSystem`. For an
+   emote in those sets, or `Gasp`, a mechanical body is swallowed (Handled, no sound); a flesh body whose own species
+   set maps the emote keeps its own sound; otherwise the Wolfmed set for its sex plays. Sex is read the way
+   `VocalSystem.LoadSounds` reads it (`HumanoidAppearanceComponent.Sex`); Female picks the female set and everything
+   else the male one, as an unsexed human uses `MaleHuman`. The ported emotes blacklist `BorgChassis` and `Silicon`,
+   so an IPC cannot type them at all. A muzzled body sneezes unmuffled: `MumbleAccentSystem` only muffles what the
+   species set voices.
+3. **Pill swallow.** `Pill` (`chemistry.yml`, marked) swallows with `WFWolfmedPillSwallow`. Its 19 direct children (15 in
+   `healing.yml`, `randompill.yml`, the `_Mono`, `_NF` and Wolfmed painkiller pills) inherit it and none sets its own;
+   `PillCanister` is not a `Pill`. `eatMessage: food-swallow` is unchanged.
+4. **Drips.** The analyzer has no rate words for bleeding: its chip is on or off, and its vitals line words the net
+   blood flow, "falling" against "falling fast" at `wolfmed.analyzer_blood_fast` 1 u/s (a summed wound rate of about 3
+   per 3 s bloodstream tick, past an arterial cut). The one place Wolfmed words a bleed by rate is the inspection
+   (`look.yml`): "oozing blood" under 0.5, "bleeding freely" from 0.5, "spurting" from 2.5. So `wolfmed.drip_sound_below`
+   is 0.5, read against every open wound's `CurrentRate` summed over the body. `WolfmedBleedDripSystem` keeps a
+   `WolfmedBleedDripComponent` clock on bodies that qualify, built like the spurt system (re-evaluated off
+   `PartBleedingChangedEvent`, whose `WoundableComponent` pair the spurt system holds, so this one takes the
+   `BodyPartComponent` pair, and again at every drip). A drip is one of `blood1-6` every `wolfmed.drip_sound_interval`
+   (4 s) at `wolfmed.drip_sound_volume` (-6 dB), PVS. Never while dead, never from a chassis, and never while G2 has a
+   spurt source (an arterial bleed, an open stump, any wound at 0.45 or more), so the drip is the tier under the spurt.
+   Measured: a fresh severity-12 slash runs 12 x 0.1 x `wolfmed.bleed_rate` 0.3 = 0.36 and drips; a severity-15 slash
+   is about 0.45 and spurts. A body summing 0.5 or more from wounds that each stay under 0.45 does neither; lowering the
+   CVar narrows the drip band, raising it closes that gap. The owner's `blood1-6` replaced NovaSector's `blood1-3`
+   under the same names, and those three were NovaSector's slash sounds, so they left `WFWolfmedWoundFlesh`.
+5. **Bone crack.** `WolfmedBodySoundSystem` subscribes `<WoundableComponent, FractureGradeChangedEvent>` (Onyx's
+   `FractureEffectsSystem` holds the `WoundFractureComponent` pair) and plays `WFWolfmedBoneCrack` when the grade rises;
+   a new fracture comes in from `None`, so creation and a worsening break are one test. Hit or no hit (a fall, a blast).
+   The SFX profile used to voice a hit fracture with `WFWolfmedWoundBone` through its hit gate, which would have
+   doubled the crack, so its `BoneFractureWound` entry is now claimed with no sound (`WolfmedWoundSoundEntry.Sound` is
+   optional); dislocations keep the old bone snap. One crack per body per tick, so a blast breaking four bones is one
+   crack. Plays at the body: a part lives in the body's container.
+6. **Stab.** The hand-off is a marked edit at both `PlayHitSound` calls in `SharedMeleeWeaponSystem`: when the hit
+   event carries no `HitSoundOverride`, `WolfmedOrganicSoundSystem.GetHitSound` supplies one, which
+   `MeleeSoundSystem.PlayHitSound` plays predicted exactly as it plays an override today (a target's own
+   `MeleeSound` still comes first). A held weapon (`meleeUid != user`) whose hit's largest damage type is Piercing plays
+   `WFWolfmedStab`, whatever its own sound. Natural attacks keep theirs, or every cat, bat and spider bite (62 prototypes)
+   would have become a stab. Wolfgate's knives are Slash (kitchen 16, combat 22, machete 32), so they keep
+   `bladeslice`; the stabs are the 45 item weapons whose hit is mostly Piercing: the spear, scissors, crossbow bolts, darts, the fork,
+   needle, heels and haycutters, the drills, the wirecutter and the energy cautery. (Upstream's
+   `GetHighestDamageSound` never updates its running maximum and returns the last positive type; the helper takes the
+   true largest.)
+7. **Melee.** A weapon with no `soundHit` plays its `soundNoDamage` on every hit, the `WeakHit` collection unless the
+   weapon names another (`MeleeSoundSystem`'s damage-type switch, welder / `WeakHit` / `MetalThud`, is unreachable
+   because that branch always plays first). On flesh, a mostly Blunt or Slash hit from such a weapon now plays
+   `WFWolfmedMelee`: 615 Blunt prototypes (gas tanks, instruments, improvised objects) and 25 Slash ones (the
+   retractor, arm blade, hatchet, bladed caps). Everything that names a hit sound keeps it: `Punch` (221 prototypes: the species'
+   fists, books), `MetalThud` (337: bats, clubs, chairs), `smash.ogg` (155: toolboxes, extinguishers),
+   `bladeslice` (36 Slash blades), `genhit2`, bites and claws, and the toys.
+8. **Tendon snap.** Onyx has no tendon wound; the tendon cut is Wolfmed's `WFWolfmedTendonCutWound` (W2). Its opening
+   is the `Created` kind of the broadcast `WolfmedWoundLifecycleEvent`, which plays `WFWolfmedTendonSnap` at the body
+   when the part is flesh. The chassis's cut actuator is a different wound and stays silent.
+9. **Sounds for SEPSIS's emotes.** Shipped: `WFWolfmedCoughMale` (Bob's 16) / `WFWolfmedCoughFemale` (Bob's 12),
+   `WFWolfmedChokeMale` / `WFWolfmedChokeFemale` (Bob's one each; split by sex rather than one `WFWolfmedChoke`, because
+   they are a man's and a woman's voice), and `WFWolfmedRetch` (tgstation's `gag1-5`, via NovaSector). No wheeze and no
+   shiver sound exists in tgstation, NovaSector or Bobstation (tg's wheeze and shiver emotes are silent), so
+   `WFWolfmedWheeze` is not shipped. The mapping belongs in the two `_WF` sets, which also makes the emotes flesh
+   only: male `WFWolfmedCough: WFWolfmedCoughMale`, `WFWolfmedChoke: WFWolfmedChokeMale`,
+   `WFWolfmedRetch: WFWolfmedRetch`; female the same with the `Female` collections; `WFWolfmedWheeze` and
+   `WFWolfmedShiver` unmapped. The emotes need `category: Vocal` (or the default General) for the handler to voice them.
+10. **The emote audit.** Every emote prototype in Wolfgate, and whether a human hears it (`MaleHuman` / `FemaleHuman`,
+    the Wolfmed sets, and `GeneralBodyEmotes` for hand emotes). "Typeable" means it has trigger words, which is also
+    what the emote menu requires.
+
+| Emote | Name | Layer | Typeable | Human sound |
+|---|---|---|---|---|
+| `Awoo` | Awoo | _DV | yes | no |
+| `Bagawk` | Bagawk | _Goobstation | yes | no |
+| `Bark` | Bark | _DV | yes | no |
+| `Beep` | Beep | Voice | yes | no |
+| `Belch` | Belch | _NF | yes | yes: Belch |
+| `Boop` | chat-emote-name-boop | _EinsteinEngines | yes | no |
+| `Bubble` | Bubble | _Impstation | yes | no |
+| `Buzz` | Buzz | Voice | yes | no |
+| `Buzz-Two` | Buzz Two | Voice | yes | no |
+| `Call` | Call | _Moffstation | yes | no |
+| `CatHisses` | Cat Hisses | Voice | no | yes: CatHisses |
+| `CatMeow` | Cat Meow | Voice | no | yes: CatMeows |
+| `Chime` | Chime | Voice | yes | no |
+| `Chirp` | Chirp | Voice | yes | no |
+| `Chitter` | Chitter | Voice | yes | no |
+| `Clap` | Clap | Voice | yes | yes: Claps |
+| `ClapSingle` | Single Clap | Voice | yes | yes: ClapSingle |
+| `Click` | Click | Voice | yes | no |
+| `Cough` | Cough | Voice | yes | yes: MaleCoughs / FemaleCoughs |
+| `Crack` | Crack Knuckles | _Impstation | yes | yes: Cracks |
+| `Crying` | Crying | Voice | yes | yes: MaleCry / FemaleCry |
+| `DefaultDeathgasp` | Deathgasp | Voice | yes | yes: MaleDeathGasp / FemaleDeathGasp |
+| `Flip` | Do a flip | _Goobstation | yes | no |
+| `Gasp` | Gasp | Voice | yes | yes: MaleGasp / FemaleGasp |
+| `Gnash` | Gnash | _DV | yes | no |
+| `GoblinMutter` | Mutter | _NF | yes | no |
+| `GoblinThroatSinging` | Sing | _NF | yes | no |
+| `Growl` | Growl | Nyanotrasen | yes | no |
+| `HarpyBang` | Bang | _DV | yes | no |
+| `HarpyBeep` | Beep | _DV | yes | no |
+| `HarpyCaw` | Caw | _DV | yes | no |
+| `HarpyHonk` | Honk | _DV | yes | no |
+| `HarpyPew` | Pew | _DV | yes | no |
+| `HarpyRev` | Rev | _DV | yes | no |
+| `HarpyRing` | Ring | _DV | yes | no |
+| `Hew` | Hew | Voice | no | yes: Hew |
+| `Hiss` | Hiss | Nyanotrasen | yes | no |
+| `Honk` | Honk | Voice | yes | yes: BikeHorn / CluwneHorn |
+| `Howl` | Howl | _DV | yes | no |
+| `Jump` | Jump | _Goobstation | yes | no |
+| `Laugh` | Laugh | Voice | yes | yes: MaleLaugh / FemaleLaugh |
+| `Marr` | Marr | _HL | yes | no |
+| `Meow` | Meow | Nyanotrasen | yes | no |
+| `Mew` | Mew | Nyanotrasen | yes | no |
+| `MonkeyDeathgasp` | Deathgasp | Voice | no | no |
+| `MonkeyScreeches` | Monkey Screeches | Voice | no | yes: MonkeyScreeches |
+| `Ping` | Ping | Voice | yes | no |
+| `Pop` | Pop | _Impstation | yes | no |
+| `Purr` | Purr | Nyanotrasen | yes | no |
+| `ReptilianHiss` | Hiss | _Impstation | yes | no |
+| `ReptilianSnicker` | Snicker | _Mono | yes | no |
+| `RMCSkrellAnger` | Trill angrily | _RMC14 | yes | no |
+| `RMCSkrellPeep` | Peep | _RMC14 | yes | no |
+| `RobotBeep` | Robot | Voice | no | yes: RobotBeeps |
+| `Salute` | Salute | Voice | yes | yes: Salutes |
+| `Scream` | Scream | Voice | yes | yes: MaleScreams / FemaleScreams |
+| `Scree` | Scree | _Moffstation | yes | no |
+| `Sigh` | Sigh | Voice | yes | yes: MaleSigh / FemaleSigh |
+| `SiliconDeathgasp` | Deathgasp | _EinsteinEngines | yes | no |
+| `Snap` | Snap | Voice | yes | yes: Snaps |
+| `Snarl` | Snarl | _DV | yes | no |
+| `Sneeze` | Sneeze | Voice | no | yes: MaleSneezes / FemaleSneezes |
+| `Snore` | Snore | Voice | no | yes: Snores |
+| `Spin` | Spin | _Goobstation | yes | no |
+| `Squawk` | Squawk | _Moffstation | yes | no |
+| `Squeak` | Squeak | Voice | yes | no |
+| `Squish` | Squish | Voice | yes | no |
+| `Thump` | Thump Tail | Voice | yes | no |
+| `Trill` | Trill | _Goobstation | yes | no |
+| `Warble` | Warble | _Goobstation | yes | no |
+| `Weh` | Weh | Voice | no | yes: Weh |
+| `WFWolfmedGulp` | Gulp | _WF | yes | yes: WFWolfmedGulp |
+| `WFWolfmedSneeze` | Sneeze | _WF | yes | yes: WFWolfmedSneezeMale / WFWolfmedSneezeFemale |
+| `WFWolfmedSniff` | Sniff | _WF | yes | yes: WFWolfmedSniffMale / WFWolfmedSniffFemale |
+| `WFWolfmedSnore` | Snore | _WF | yes | yes: WFWolfmedSnore |
+| `Whimper` | Whimper | _DV | yes | no |
+| `Whine` | Whine | _StarLight | yes | no |
+| `Whirr` | chat-emote-name-whirr | _EinsteinEngines | yes | no |
+| `Whistle` | Whistle | Voice | yes | yes: Whistles |
+| `Wurble` | Wurble | _Goobstation | yes | no |
+| `Yawn` | Yawn | Voice | yes | yes: MaleYawn / FemaleYawn |
+| `Yip` | Yip | _StarLight | yes | no |
+
+82 emotes, 28 of them with a human sound (24 before this package). The "no" rows are the species and animal noises
+(each species' own set voices them), the silicon noises (the silicon sets) and the goob animations.
+
+NovaSector's emotes that carry a sound, against that table. `code/modules/mob/living/emote.dm` (tgstation core):
+gasp, laugh, scream, sigh, cough, whistle and deathgasp already have a human sound here; **sneeze** and **snore** had a
+sound but could not be typed; **sniff** did not exist. Its choke, wheeze, gag, burp, shiver and gurgle are silent in tg
+too. `modular_nova/modules/emotes/code/emotes.dm`: burp (Wolfgate's `Belch`), clap and clap-once (`Clap`,
+`ClapSingle`) and snap already exist with sounds; **gulp** did not exist; esigh is a second sigh, and blush, wink and
+blink are comic stings, not body noises, so they were left; beep is a synthetic noise; the rest (peep, awoo, nya,
+weh, squeak, yip, gecker, fwhine, merp, bark, squish, bubble, pop, meow, hiss, mchitter, bawk, caw, bork, hoot, growl,
+woof, baa, wurble, rattle, cackle, warble, trills, rpurr, purr, moo, honk, mggaow, mrrp, prbt, gnash, thump, flutter,
+awuff, arf, coyhowl, wolfhowl, dwhine, dgrowl, aggrobark, dcomplain, meowdeep, the three tesh chirps, mar, quill) are
+species or animal noises.
+
+**Ported: four emotes**, `WFWolfmedSneeze` (the owner's Bob sneezes), `WFWolfmedSnore` (Bob's snore1-7),
+`WFWolfmedSniff` (Bob's one sniff per sex) and `WFWolfmedGulp` (Nova's gulp1-2, CC-BY-4.0 from freesound), plus the
+sounds for three of SEPSIS's five (cough, choke, retch). Whistle and clap already had sounds; cough has its upstream
+sound and gets Bob's through SEPSIS's `WFWolfmedCough`.
+
+Tests: `WolfmedBobSoundsTest` (5): every `WFWolfmed` collection's files exist and the gasp pair is exactly the owner's
+7 and 13, `Pill` and `PillDexalin` swallow with the new file; the sneeze resolves to the male and female Bob sets as
+`Gasp` resolves to `MaleGasp` / `FemaleGasp`, plays for both, and is silent from an IPC; the melee pick (10 cases) and
+the flesh-only guard against an IPC and a wall; 75 Blunt cracks a human arm once and an IPC arm never, a tendon cut
+snaps once on a human and never on an IPC; a 0.36 slash drips within two 1 s intervals, an arterial cut and an IPC
+with the same slash never do. `WolfmedWoundSfxTest` now expects the fracture entry to be silent.
