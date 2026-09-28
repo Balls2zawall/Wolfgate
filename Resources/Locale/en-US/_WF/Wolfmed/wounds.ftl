@@ -82,9 +82,21 @@ alerts-wolfmed-sepsis-name = { $severity ->
        *[other] Sepsis
     }
 alerts-wolfmed-sepsis-desc = { $severity ->
-        [1] Septic shock. The infection is shutting your body down; without antibiotics now it stops your heart.
+        [1] Septic shock. The infection is shutting your body down; without antibiotics now it eats your organs.
        *[other] The infection is in your blood. You need antibiotics, and you needed them a while ago.
     }
+
+# Playtest 5: septic shock as a consciousness cause (Resources/Prototypes/_WF/Wolfmed/Consciousness/remaining_causes.yml).
+wolfmed-cause-septicshock = septic shock
+wolfmed-cause-septicshock-title-out = Unconscious: septic shock
+wolfmed-cause-septicshock-symptom = Grey, clammy and burning up. The infection is in your blood.
+wolfmed-cause-septicshock-help-out = You wake once antibiotics (spaceacillin) pull the sepsis back. Left alone it eats your organs.
+wolfmed-cause-septicshock-help-out-blocked = Antibiotics, and the rest treated, wake you.
+wolfmed-cause-septicshock-out = A wave of cold sweat, and the room goes.
+wolfmed-cause-septicshock-wake = You come round shivering and soaked.
+wolfmed-vitals-cause-septicshock = septic shock
+alerts-wolfmed-out-septicshock-name = Unconscious: septic shock
+alerts-wolfmed-out-septicshock-desc = The infection is in your blood. You wake once antibiotics pull it back; left alone it eats your organs.
 
 reagent-name-spaceacillin = spaceacillin
 reagent-desc-spaceacillin = A broad-spectrum antibiotic. Clears an infected wound and pulls a septic patient back; a heavy dose is poisonous in its own right.

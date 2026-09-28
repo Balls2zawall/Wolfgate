@@ -7,6 +7,7 @@ using Content.IntegrationTests.Fixtures.Attributes;
 using Content.Server._WF.Wolfmed.Wounds;
 using Content.Shared._WF.Wolfmed.Body;
 using Content.Shared._WF.Wolfmed.CCVar;
+using Content.Shared._WF.Wolfmed.Consciousness;
 using Content.Shared._WF.Wolfmed.Life;
 using Content.Shared._WF.Wolfmed.Wounds;
 using Content.Shared.Body.Organ;
@@ -19,8 +20,9 @@ using Robust.Shared.GameObjects;
 namespace Content.IntegrationTests.Tests._WF.Wolfmed.Scenarios;
 
 /// <summary>
-/// Playtest 4, SEPSIS: sepsis left alone kills. It stops the heart on the M2 brain clock, and past
-/// wolfmed.sepsis_organ_damage_from it eats the torso organs, kidneys and liver first and the heart last.
+/// Playtest 4, SEPSIS: sepsis left alone kills, through the organs. Past wolfmed.sepsis_organ_damage_from it eats the
+/// torso organs, kidneys and liver first and the heart last; playtest 5 made septic shock a state the patient is out
+/// in rather than a brain drain, so the heart's failure is the only arrest in it.
 /// </summary>
 [TestFixture]
 public sealed class WolfmedSepsisTest : GameTest
@@ -35,8 +37,12 @@ public sealed class WolfmedSepsisTest : GameTest
     }
 
     /// <summary>
-    /// <c>SepsisKillsTest</c>: real game time, the shipped CVars, air, warm and nothing else wrong. Sepsis pinned at
-    /// 100 stops the heart on the M2 clock (derived 510 s, ±20%) and the body dies after it.
+    /// <c>SepsisKillsTest</c> (playtest 5): the shipped CVars, air, warm and nothing else wrong. Sepsis pinned at 100 is
+    /// septic shock: the patient is out at once (cause SepticShock, Critical), the heart beats on and nothing drains
+    /// the brain. It kills only through the organs: the lungs are impaired under half (500 s) and their drain grows
+    /// with the damage, so the brain is at the arrest line about 890 s in (±10%), the arrest is by oxygen with the
+    /// lungs behind it, and brain death follows on the arrest clock. Antibiotics that pull the sepsis under the line
+    /// wake the patient on the spot.
     /// </summary>
     [Test]
     public async Task SepsisKillsTest()
@@ -44,48 +50,103 @@ public sealed class WolfmedSepsisTest : GameTest
         var map = await Pair.CreateTestMap();
         var s = new WolfmedScenario(SEntMan);
         var mobState = SEntMan.System<MobStateSystem>();
-        EntityUid body = default;
+        var infection = SEntMan.System<WolfmedInfectionSystem>();
+        EntityUid body = default, treated = default;
 
         await Server.WaitPost(() =>
         {
             s.SetAir(map.MapUid, true);
             s.KeepGrid(map.Grid);
             body = SEntMan.SpawnEntity("MobHuman", map.GridCoords);
+            treated = SEntMan.SpawnEntity("MobHuman", map.GridCoords);
         });
         await RunSeconds(2);
 
-        int? arrest = null, dead = null;
-        for (var second = 1; second <= 1200 && dead == null; second++)
+        await Server.WaitAssertion(() =>
         {
-            await Server.WaitPost(() => SEntMan.EnsureComponent<WolfmedSepsisComponent>(body).Progress = 100f);
-            await RunSeconds(1);
-            var now = second;
-            await Server.WaitAssertion(() =>
+            foreach (var patient in new[] { body, treated })
             {
-                if (arrest == null && s.Life.InArrest(body))
-                    arrest = now;
+                SEntMan.EnsureComponent<WolfmedSepsisComponent>(patient).Progress = 100f;
+                infection.Update(5f);
+                s.Advance(patient, 1);
+            }
 
-                if (dead == null && mobState.IsDead(body))
-                    dead = now;
-
-                if (now % 60 == 0 || now == arrest || now == dead)
-                {
-                    var brain = s.Life.GetBrain(body);
-                    var rate = brain is { } b ? s.Life.DrainRate(body, b, out _) : 0f;
-                    var organs = string.Join(", ", TorsoOrgans(s, body).Select(o => $"{o.Key} {o.Value.Health.Health}"));
-                    TestContext.Out.WriteLine($"SepsisKillsTest {now} s: oxygenation {s.Life.GetOxygenation(body):0.000}, " +
-                        $"brain {s.Life.GetBrainActivity(body):0.000}, drain {rate * 600f:0.00}/600, state {s.State(body)}, " +
-                        $"arrest {s.Life.InArrest(body)}, dead {mobState.IsDead(body)}; {organs}");
-                }
+            var brain = s.Life.GetBrain(body);
+            Assert.Multiple(() =>
+            {
+                Assert.That(s.State(body), Is.EqualTo(WolfmedConsciousness.Unconscious), "septic shock did not put the patient out.");
+                Assert.That(mobState.IsCritical(body), Is.True, "septic shock is not Critical.");
+                Assert.That(SEntMan.GetComponent<WolfmedConsciousnessComponent>(body).Cause, Is.EqualTo(WolfmedCause.SepticShock),
+                    "the state is not named for the shock.");
+                Assert.That(s.Life.InArrest(body), Is.False, "septic shock stopped the heart.");
+                Assert.That(brain, Is.Not.Null);
+                Assert.That(s.Life.DrainRate(body, brain!.Value), Is.EqualTo(0f), "sepsis is draining the brain.");
             });
-        }
 
-        TestContext.Out.WriteLine($"SepsisKillsTest: arrest at {arrest?.ToString() ?? "never"} s, death at {dead?.ToString() ?? "never"} s.");
-        Assert.Multiple(() =>
+            // Four units take 24 off: 76, under the line. The pressure lifts with it.
+            Assert.That(infection.Treat(treated, 4f), Is.True);
+            s.Advance(treated, 1);
+            Assert.Multiple(() =>
+            {
+                Assert.That(infection.InSepticShock(treated), Is.False);
+                Assert.That(s.State(treated), Is.Not.EqualTo(WolfmedConsciousness.Unconscious), "antibiotics under the line did not wake the patient.");
+                Assert.That(mobState.IsCritical(treated), Is.False);
+            });
+        });
+
+        // The organ clock, five seconds at a time with the sepsis pinned. The lungs' failure is the arrest. Brain death
+        // is read off the organ here: only the organ system's own frame turns it into MobState.Dead, and no frame runs
+        // inside this loop.
+        int? arrest = null, brainDead = null;
+        var hypoxia = WolfmedCauseSource.None;
+        var log = new List<string>();
+        await Server.WaitAssertion(() =>
         {
-            Assert.That(arrest, Is.Not.Null, "sepsis at 100 never stopped the heart in 20 minutes.");
-            Assert.That(arrest, Is.InRange(408, 612), "the sepsis arrest is off the M2 clock (510 s) by more than 20%.");
-            Assert.That(dead, Is.Not.Null, "sepsis at 100 never killed in 20 minutes.");
+            for (var t = 5; t <= 40 * 60 && brainDead == null; t += 5)
+            {
+                SEntMan.EnsureComponent<WolfmedSepsisComponent>(body).Progress = 100f;
+                infection.Update(5f);
+                s.Advance(body, 5);
+
+                if (arrest == null && s.Life.InArrest(body))
+                {
+                    // Read here: death clears the consciousness component's hypoxia source.
+                    arrest = t;
+                    hypoxia = SEntMan.GetComponent<WolfmedConsciousnessComponent>(body).HypoxiaSource;
+                }
+
+                if (brainDead == null && s.Life.IsBrainDead(body))
+                    brainDead = t;
+
+                if (t % 300 == 0 || t == arrest || t == brainDead)
+                {
+                    var organs = string.Join(", ", TorsoOrgans(s, body).Select(o => $"{o.Key} {o.Value.Health.Health}"));
+                    log.Add($"SepsisKillsTest {t} s: oxygenation {s.Life.GetOxygenation(body):0.000}, brain {s.Life.GetBrainActivity(body):0.000}, " +
+                            $"state {s.State(body)}, arrest {s.Life.InArrest(body)}; {organs}");
+                }
+            }
+        });
+
+        // One real frame for the organ system to see the brain at zero.
+        await RunSeconds(1);
+
+        await Server.WaitAssertion(() =>
+        {
+            foreach (var line in log)
+                TestContext.Out.WriteLine(line);
+            TestContext.Out.WriteLine($"SepsisKillsTest: arrest at {arrest?.ToString() ?? "never"} s, brain death at {brainDead?.ToString() ?? "never"} s.");
+
+            Assert.Multiple(() =>
+            {
+                Assert.That(arrest, Is.Not.Null, "sepsis at 100 never stopped the heart in 40 minutes.");
+                Assert.That(arrest, Is.InRange(800, 980), "the lungs did not stop the heart about 890 s in (±10%).");
+                Assert.That(SEntMan.GetComponent<WolfmedCardiacArrestComponent>(body).Cause, Is.EqualTo("oxygen"),
+                    "the arrest is not the brain running out of oxygen.");
+                Assert.That(hypoxia, Is.EqualTo(WolfmedCauseSource.Lungs), "the hypoxia behind the arrest is not named for the lungs.");
+                Assert.That(brainDead, Is.Not.Null, "the arrest never killed the brain in 40 minutes.");
+                Assert.That(brainDead - arrest, Is.InRange(120, 600), "brain death is off the arrest clock.");
+                Assert.That(mobState.IsDead(body), Is.True, "a dead brain did not read as MobState.Dead after a frame.");
+            });
         });
     }
 

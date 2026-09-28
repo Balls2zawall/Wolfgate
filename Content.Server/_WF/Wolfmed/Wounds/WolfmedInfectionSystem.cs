@@ -33,7 +33,9 @@ namespace Content.Server._WF.Wolfmed.Wounds;
 // the profile's thresholds it goes local (hurts and widens), then spreading (feverish). INFECTION: a spreading wound
 // infects its part (WolfmedPartInfectionComponent), a spreading part infects its parent, towards the torso, and only
 // an infected torso or head feeds WolfmedSepsisComponent on the body, the stage that kills. Neither stage deals
-// Poison; the toxin load is its own route.
+// Poison; the toxin load is its own route. Playtest 5: septic shock is a consciousness pressure (the patient is out,
+// not dying) and the organ damage past wolfmed.sepsis_organ_damage_from is the only death in it: the lungs fail and
+// the brain starves.
 public sealed class WolfmedInfectionSystem : EntitySystem
 {
     /// <summary>The shipped profile. A downstream server retunes the prototype, not this file.</summary>
@@ -41,6 +43,9 @@ public sealed class WolfmedInfectionSystem : EntitySystem
 
     /// <summary>Alert shown while the patient is septic. Severity 0 is sepsis, 1 septic shock.</summary>
     public static readonly ProtoId<AlertPrototype> SepsisAlert = "WFWolfmedSepsis";
+
+    /// <summary>Playtest 5: the consciousness pressure septic shock holds at full. Unconscious, never merely Downed.</summary>
+    public const string ShockPressure = "septic-shock";
 
     /// <summary>INFECTION: a part's infection runs 0 to this; at it the part is Septic.</summary>
     public const float PartSepticAt = 100f;
@@ -60,6 +65,7 @@ public sealed class WolfmedInfectionSystem : EntitySystem
     [Dependency] private WoundSystem _wounds = default!;
     [Dependency] private Life.WolfmedBodyTemperatureSystem _bodyTemperature = default!; // M5
     [Dependency] private OrganHealthSystem _organs = default!; // Playtest 4 (SEPSIS)
+    [Dependency] private Consciousness.WolfmedConsciousnessSystem _consciousness = default!; // Playtest 5
 
     private float _accumulator;
 
@@ -148,8 +154,11 @@ public sealed class WolfmedInfectionSystem : EntitySystem
 
     private void OnSepsisShutdown(Entity<WolfmedSepsisComponent> body, ref ComponentShutdown args)
     {
-        if (!TerminatingOrDeleted(body))
-            _alerts.ClearAlert(body, SepsisAlert);
+        if (TerminatingOrDeleted(body))
+            return;
+
+        _alerts.ClearAlert(body, SepsisAlert);
+        _consciousness.SetExternalPressure(body, ShockPressure, 0f); // Playtest 5
     }
 
     /// <inheritdoc/>
@@ -402,10 +411,16 @@ public sealed class WolfmedInfectionSystem : EntitySystem
 
         // INFECTION: severity 1 is septic shock.
         _alerts.ShowAlert(body, SepsisAlert, (short) (shock ? 1 : 0));
-        if (_mobState.IsDead(body))
+        var dead = _mobState.IsDead(body);
+
+        // Playtest 5: septic shock puts the patient out and holds them there, the way arrest does; nothing about it
+        // drains the brain (wolfmed.brain_sepsis_seconds is 0). The organ damage below is what kills: the lungs fail
+        // and the brain starves, about 15 minutes after the damage starts.
+        _consciousness.SetExternalPressure(body, ShockPressure, shock && !dead ? 1f : 0f);
+        if (dead)
             return;
 
-        // M5 (OD13): sepsis deals no Poison. It kills through its own brain drain past wolfmed.arrest_sepsis.
+        // M5 (OD13): sepsis deals no Poison.
         fevered.Add(body);
 
         // Playtest 4 (SEPSIS): past wolfmed.sepsis_organ_damage_from it eats the torso organs as well, the route for a
@@ -426,8 +441,9 @@ public sealed class WolfmedInfectionSystem : EntitySystem
         !_mobState.IsDead(body);
 
     /// <summary>
-    /// INFECTION: the body's sepsis is at or past wolfmed.septic_shock_at, the late stage whose effects are the brain
-    /// drain and the organ damage. The alert, the analyzer and the examine text name it.
+    /// INFECTION: the body's sepsis is at or past wolfmed.septic_shock_at, the late stage. Playtest 5: its effects are
+    /// <see cref="ShockPressure"/> (the patient is out) and the organ damage (wolfmed.sepsis_organ_damage_from); the
+    /// brain drain behind wolfmed.arrest_sepsis is off unless a server sets wolfmed.brain_sepsis_seconds.
     /// </summary>
     public bool InSepticShock(EntityUid body) =>
         TryComp(body, out WolfmedSepsisComponent? sepsis) &&
@@ -683,6 +699,7 @@ public sealed class WolfmedInfectionSystem : EntitySystem
         {
             sepsis.Shock = sepsis.Progress >= _config.GetCVar(WolfmedCVars.SepticShockAt);
             Dirty(body, sepsis);
+            _consciousness.SetExternalPressure(body, ShockPressure, sepsis.Shock ? 1f : 0f); // Playtest 5
         }
 
         return true;

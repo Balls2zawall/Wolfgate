@@ -266,3 +266,16 @@
   maxSeverity: 9
   name: alerts-wolfmed-pain-mechanical-name
   description: alerts-wolfmed-pain-mechanical-desc
+
+
+# Playtest 5: the condition alert while septic shock holds the patient out (Health category, like every condition
+# alert). The sepsis alert above keeps its own slot beside it.
+- type: alert
+  id: WFWolfmedOutSepticShock
+  category: Health
+  clickEvent: !type:WolfmedConditionAlertEvent
+  icons:
+  - sprite: /Textures/_WF/Wolfmed/Interface/Alerts/sepsis.rsi
+    state: septicshock
+  name: alerts-wolfmed-out-septicshock-name
+  description: alerts-wolfmed-out-septicshock-desc

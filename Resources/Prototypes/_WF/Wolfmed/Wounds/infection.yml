@@ -42,9 +42,11 @@
   partTransferStage: Septic
   partRecoveryPerMinute: 4
   partAntibioticPerUnit: 8
-  # Per source: a torso or head that is spreading or septic, so 0 to 2 sources. Playtest 5 (was 12): septic shock
-  # (wolfmed.septic_shock_at, 80) twenty minutes after sepsis starts with one source, ten with two.
-  sepsisPerMinute: 4
+  # Per source: a torso or head that is spreading or septic, so 0 to 2 sources. Playtest 5 (was 12, then 4): septic
+  # shock (wolfmed.septic_shock_at, 80) forty minutes after sepsis starts with one source, twenty with two. Shock puts
+  # the patient out; only the organ damage past 90 kills: the lungs fail, the brain starves and the heart stops about
+  # 15 minutes after the damage starts.
+  sepsisPerMinute: 2
   sepsisRecoveryPerMinute: 8
   sepsisAntibioticPerUnit: 6
   # Playtest 4 (SEPSIS): past wolfmed.sepsis_organ_damage_from sepsis takes wolfmed.sepsis_organ_damage_per_minute

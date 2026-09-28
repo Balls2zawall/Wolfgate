@@ -9,6 +9,7 @@ using Content.Shared._Onyx.Wounds;
 using Content.Shared._Shitmed.Targeting;
 using Content.Shared._WF.Wolfmed.CCVar;
 using Content.Shared._WF.Wolfmed.Compat;
+using Content.Shared._WF.Wolfmed.Consciousness;
 using Content.Shared._WF.Wolfmed.Examine;
 using Content.Shared._WF.Wolfmed.Life;
 using Content.Shared._WF.Wolfmed.Wounds;
@@ -239,11 +240,12 @@ public sealed class WolfmedInfectionSpreadTest : GameTest
                 infection.Update(Tick);
 
             Assert.That(SEntMan.HasComponent<WolfmedSepsisComponent>(body), Is.True, "the hand never reached sepsis.");
-            // Review: two more minutes so the sepsis is well off zero and the dose has something to pull back.
-            for (var t = Tick; t <= 120f; t += Tick)
+            // Review: three more minutes (playtest 5: 2 a minute) so the sepsis is well off zero and the dose has
+            // something to pull back.
+            for (var t = Tick; t <= 180f; t += Tick)
                 infection.Update(Tick);
             var sepsisBefore = infection.GetSepsis(body);
-            Assert.That(sepsisBefore, Is.GreaterThan(5f), "sepsis barely started in two minutes.");
+            Assert.That(sepsisBefore, Is.GreaterThan(5f), "sepsis barely started in three minutes.");
             var torsoBefore = infection.GetPartProgress(torso);
             infection.Clean(body);
             Assert.That(infection.GetPartProgress(torso), Is.EqualTo(torsoBefore), "antiseptic reached a part.");
@@ -304,6 +306,8 @@ public sealed class WolfmedInfectionSpreadTest : GameTest
             {
                 Assert.That(infection.InSepticShock(body), Is.True);
                 Assert.That(sepsis.Shock, Is.True);
+                Assert.That(SEntMan.GetComponent<WolfmedConsciousnessComponent>(body).State, Is.EqualTo(WolfmedConsciousness.Unconscious),
+                    "septic shock did not put the patient out (playtest 5).");
                 Assert.That(Severity(body), Is.EqualTo((short) 1), "septic shock is not severity 1.");
                 Assert.That(report, Is.Not.Null);
                 Assert.That(report!.SepticShock, Is.True, "the analyzer does not know it is shock.");
@@ -323,6 +327,8 @@ public sealed class WolfmedInfectionSpreadTest : GameTest
             {
                 Assert.That(infection.InSepticShock(body), Is.False);
                 Assert.That(SEntMan.GetComponent<WolfmedSepsisComponent>(body).Shock, Is.False);
+                Assert.That(SEntMan.GetComponent<WolfmedConsciousnessComponent>(body).State, Is.Not.EqualTo(WolfmedConsciousness.Unconscious),
+                    "the patient stayed out once the line moved past them.");
                 Assert.That(Severity(body), Is.EqualTo((short) 0));
             });
         });

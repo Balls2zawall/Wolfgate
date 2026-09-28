@@ -173,7 +173,10 @@ public sealed class WolfmedCVars
     public static readonly CVarDef<float> ArrestShockBlood =
         CVarDef.Create("wolfmed.arrest_shock_blood", 0f, CVar.SERVERONLY);
 
-    /// <summary>Sepsis progress at or past which the heart can stop on its own.</summary>
+    /// <summary>
+    /// Sepsis progress at or past which sepsis is a route on the analyzer and, with wolfmed.brain_sepsis_seconds or
+    /// wolfmed.arrest_sepsis_chance set, the heart can stop on its own. Playtest 5 ships both of those at 0.
+    /// </summary>
     public static readonly CVarDef<float> ArrestSepsis =
         CVarDef.Create("wolfmed.arrest_sepsis", 80f, CVar.SERVERONLY);
 
@@ -208,9 +211,14 @@ public sealed class WolfmedCVars
     public static readonly CVarDef<float> BrainBloodFull =
         CVarDef.Create("wolfmed.brain_blood_full", 0.3f, CVar.SERVERONLY);
 
-    /// <summary>Seconds of late sepsis that drain brain oxygenation from full to nothing.</summary>
+    /// <summary>
+    /// Seconds of late sepsis that drain brain oxygenation from full to nothing. 0 since playtest 5: septic shock
+    /// puts the patient out instead (WolfmedInfectionSystem.ShockPressure) and sepsis kills only through the organs
+    /// (wolfmed.sepsis_organ_damage_from), so a patient found in shock is down, not dying. A server that wants the
+    /// old clock sets it back to 600.
+    /// </summary>
     public static readonly CVarDef<float> BrainSepsisSeconds =
-        CVarDef.Create("wolfmed.brain_sepsis_seconds", 600f, CVar.SERVERONLY);
+        CVarDef.Create("wolfmed.brain_sepsis_seconds", 0f, CVar.SERVERONLY);
 
     /// <summary>Refill rate while perfused and breathing, as a share of the arrest drain rate.</summary>
     public static readonly CVarDef<float> BrainRefillFactor =
@@ -843,9 +851,9 @@ public sealed class WolfmedCVars
         CVarDef.Create("wolfmed.sepsis_organ_damage_per_minute", 1.5f, CVar.SERVERONLY);
 
     /// <summary>
-    /// INFECTION: sepsis progress from which the patient is in septic shock: the brain drain (wolfmed.arrest_sepsis)
-    /// and the organ damage (wolfmed.sepsis_organ_damage_from) are its effects. 80, the drain's line. It names the
-    /// stage on the alert, the analyzer and the examine text; it adds nothing lethal of its own.
+    /// INFECTION: sepsis progress from which the patient is in septic shock. Playtest 5: it holds the patient out
+    /// (WolfmedInfectionSystem.ShockPressure, cause SepticShock) and names the stage on the alert, the analyzer and
+    /// the examine text; the organ damage (wolfmed.sepsis_organ_damage_from) is what kills. 80, the old drain's line.
     /// </summary>
     public static readonly CVarDef<float> SepticShockAt =
         CVarDef.Create("wolfmed.septic_shock_at", 80f, CVar.SERVERONLY);

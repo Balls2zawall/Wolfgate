@@ -68,3 +68,17 @@
   out: wolfmed-cause-heat-out
   wake: wolfmed-cause-heat-wake
   stand: wolfmed-cause-heat-stand
+
+
+# Playtest 5: septic shock (sepsis past wolfmed.septic_shock_at). Unconscious, never Downed, until antibiotics pull the
+# sepsis under the line. Not Dying: only the organ damage that follows kills, through the failing lungs.
+- type: wolfmedConsciousnessCause
+  id: SepticShock
+  alertOut: WFWolfmedOutSepticShock
+  blockerName: wolfmed-cause-septicshock
+  titleOut: wolfmed-cause-septicshock-title-out
+  symptom: wolfmed-cause-septicshock-symptom
+  helpOut: wolfmed-cause-septicshock-help-out
+  helpOutBlocked: wolfmed-cause-septicshock-help-out-blocked
+  out: wolfmed-cause-septicshock-out
+  wake: wolfmed-cause-septicshock-wake

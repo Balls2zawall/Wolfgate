@@ -435,7 +435,7 @@ wolfmed-treatment-step-cond-unavailable-1 = Stop the bleeding from the stump: a 
 wolfmed-treatment-step-cond-unavailable-2 = Run Repair Amputation Damage on the stump before you attach anything.
 wolfmed-treatment-step-cond-unavailable-3 = A severed limb keeps for five minutes. Put it back inside that, or fit a replacement part.
 
-wolfmed-treatment-short-cond-sepsis = Systemic infection. It grows while the torso or head is infected, and it kills if it is left alone: its late stage, septic shock, starves the brain and eats the organs.
+wolfmed-treatment-short-cond-sepsis = Systemic infection. It grows while the torso or head is infected, and it kills if it is left alone: its late stage, septic shock, puts the patient out and eats the organs.
 wolfmed-treatment-step-cond-sepsis-1 = Give spaceacillin now. It clears every wound and every infected part at once and pulls the sepsis back.
 wolfmed-treatment-step-cond-sepsis-2 = Find the source: an infected torso or head, fed by a wound there or by an infection that travelled up a limb from a wound or dead tissue.
 wolfmed-treatment-step-cond-sepsis-3 = Amputate a necrotic limb. While it is attached the sepsis keeps climbing.

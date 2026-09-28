@@ -4347,3 +4347,16 @@ the owner's call; left as it plays.
   makes a septic limb the amputation decision: an untreated hand cut now spreads to the arm at 52 minutes and to the
   torso at 86 (was 47 and 67). A torso or head still starts sepsis at spreading, since that is the bloodstream, and a
   dead limb is pinned at 100 and transfers at once. `WolfmedInfectionSpreadTest` walks the new clock.
+
+- **Septic shock puts the patient out; only the organs kill (owner, 2026-09-28).** "Chests that get wounds and then
+  infections cause sepsis fast: a quick death, against our wounding-over-death mindset." The chest clock stays (an
+  untreated chest gunshot starts sepsis at about 20 minutes; the trunk is the bloodstream), the end changes. Past
+  `wolfmed.septic_shock_at` sepsis holds a consciousness pressure (`WolfmedInfectionSystem.ShockPressure`, cause
+  `SepticShock`, Unconscious the way arrest is) instead of draining the brain (`wolfmed.brain_sepsis_seconds` 600 to
+  0, kept as an opt-in), and `sepsisPerMinute` 4 to 2 (shock 40 minutes after onset with one source). The only death
+  left in sepsis is the organ damage past 90: kidneys and liver fail at 11 minutes, the lungs are impaired from 8 and
+  their hypoxia drain grows with the damage, so the brain hits the arrest line about 15 minutes after the damage
+  starts and brain death follows 4 minutes after that, on the analyzer the whole time (organ damage, "lungs failing");
+  antibiotics under the line wake the patient at once. Same gunshot: sepsis at 20 minutes, out at 60, organ damage
+  from 65, arrest about 80, brain death 84. `WolfmedSepsisTest.SepsisKillsTest` walks it; `SepsisDeterministicTest`
+  pins the old drain back on.

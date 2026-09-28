@@ -60,6 +60,12 @@ public enum WolfmedCause : byte
 
     /// <summary>M5: a core temperature over the heat lines: heat exhaustion (Downed), then heat stroke (Unconscious).</summary>
     Heat = 19,
+
+    /// <summary>
+    /// Playtest 5: septic shock, sepsis past wolfmed.septic_shock_at. Unconscious until antibiotics pull the sepsis
+    /// under the line. Not Dying: only the organ damage that follows kills, through the failing lungs.
+    /// </summary>
+    SepticShock = 21,
 }
 
 /// <summary>One bit per <see cref="WolfmedCause"/>: 1 shifted by the cause's value.</summary>
@@ -87,6 +93,7 @@ public enum WolfmedCauseFlags : uint
     Radiation = 1u << (int) WolfmedCause.Radiation,
     Cold = 1u << (int) WolfmedCause.Cold,
     Heat = 1u << (int) WolfmedCause.Heat,
+    SepticShock = 1u << (int) WolfmedCause.SepticShock, // Playtest 5
 }
 
 /// <summary>
@@ -144,6 +151,7 @@ public static class WolfmedCauses
         WolfmedCause.Hypoxia,
         WolfmedCause.Sedation,
         WolfmedCause.Toxin, // M5
+        WolfmedCause.SepticShock, // Playtest 5
         WolfmedCause.Cold,
         WolfmedCause.Heat,
         WolfmedCause.Radiation,

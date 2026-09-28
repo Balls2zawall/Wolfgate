@@ -144,13 +144,13 @@ Two things happen to a wound that nobody treats, and neither of them needs anoth
 
 ## Infection
 
-Any open wound can go bad, and some go bad far faster: a bite, a bullet hole, an open surgical site, or anything a knife has been dug around in. An infected wound hurts and keeps reopening faster than a dressing closes it. Left alone it spreads into the part itself and the patient runs a fever. From there it travels towards the chest, no wound needed: a hand infects the arm, the arm the chest; a foot the leg, then the chest; the head the chest. Once it reaches the chest or the head it gets into the blood (sepsis), and late sepsis starves the brain.
+Any open wound can go bad, and some go bad far faster: a bite, a bullet hole, an open surgical site, or anything a knife has been dug around in. An infected wound hurts and keeps reopening faster than a dressing closes it. Left alone it spreads into the part itself and the patient runs a fever. From there it travels towards the chest, no wound needed: a hand infects the arm, the arm the chest; a foot the leg, then the chest; the head the chest. Once it reaches the chest or the head it gets into the blood (sepsis), and septic shock puts the patient out.
 
 Dressing a wound early cuts the rate to a seventh of itself; suturing or cauterising it stops the clock outright. Antiseptic on the skin - ethanol, bleach or spaceacillin - drains an infection that is still local. Once it has spread, spaceacillin in the bloodstream is the only answer; it clears the wounds and the infected parts together. Taking off an infected limb takes its infection with it.
 
 ## Sepsis
 
-The systemic stage. It shows on the patient's own alert bar rather than on any one part, grows while the chest or the head is infected, and kills if it is left alone. Its late stage is [bold]septic shock[/bold]: the alert gains a flashing red border, the patient goes grey and clammy, the brain starves and the organs start to fail. Spaceacillin pulls it back; the source has to go too, or it simply climbs again.
+The systemic stage. It shows on the patient's own alert bar rather than on any one part, grows while the chest or the head is infected, and kills if it is left alone. Its late stage is [bold]septic shock[/bold]: the alert gains a flashing red border, the patient goes grey and clammy and drops unconscious, and the organs start to fail. Nothing else about it kills: a patient found in shock is down, not dying, until the lungs go and the brain starves. Spaceacillin pulls it back; the source has to go too, or it simply climbs again.
 
 ## Necrosis
 

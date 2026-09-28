@@ -342,7 +342,8 @@ public sealed class WolfmedRevivalTest : GameTest
     }
 
     /// <summary>
-    /// <c>SepsisDeterministicTest</c> (OD15): late sepsis drains the brain at 1/600 per second and the heart stops
+    /// <c>SepsisDeterministicTest</c> (OD15): with wolfmed.brain_sepsis_seconds set (Pin puts back the 600 that
+    /// playtest 5 ships as 0), late sepsis drains the brain at 1/600 per second and the heart stops
     /// through the oxygen trigger at the derived time, 510 s from full, ±20%, the same second on every run, and the
     /// arrest is named for the sepsis.
     /// </summary>
