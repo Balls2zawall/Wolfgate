@@ -4427,3 +4427,8 @@ the owner's call; left as it plays.
   outer slot, or no such helmet for the head). Under a hardsuit a clean cut holds where it is; nothing recedes for
   being covered, and a dressing or antiseptic works as before. `wolfmed.infection_needs_reason` turns the old model
   back on. `InfectionNeedsAReasonTest` walks the four cases.
+- **Nothing systemic before the chest (owner, 2026-09-28).** "The effects of sepsis shouldn't start before it's hit
+  the chest either." A spreading limb wound or limb used to run the fever (the temperature climb, the shivers and
+  sneezes of `WolfmedConditionEmoteSystem`), which read as sepsis from a hand cut. `fevered` is now fed only by a
+  spreading wound or part on the torso or head, and by sepsis itself; `HasFever` reads the same. A limb's infection is
+  pain and the analyzer's tissue line until it gets there. `InfectedChestShiversTest` and the hand-travel test pin it.

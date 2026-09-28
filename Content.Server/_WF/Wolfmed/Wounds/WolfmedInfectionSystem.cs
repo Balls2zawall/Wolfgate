@@ -282,8 +282,10 @@ public sealed class WolfmedInfectionSystem : EntitySystem
 
         // A corpse does not run a fever. M5 (OD13): a spreading infection no longer deals Poison; toxins are their own
         // route, and sepsis has its own brain drain. INFECTION: a septic wound no longer starts sepsis; it infects its
-        // part (TickParts), and only the torso and head feed sepsis.
-        if (infection.Stage >= WolfmedInfectionStage.Spreading && body is { } host && !_mobState.IsDead(host))
+        // part (TickParts), and only the torso and head feed sepsis. Playtest 5: nothing the body feels starts before
+        // the infection has reached the chest or the head, so a limb's wound runs no fever either.
+        if (infection.Stage >= WolfmedInfectionStage.Spreading && body is { } host && !_mobState.IsDead(host) &&
+            TryComp(part, out BodyPartComponent? holder) && IsCore(holder))
             fevered.Add(host);
     }
 
@@ -377,14 +379,15 @@ public sealed class WolfmedInfectionSystem : EntitySystem
                 : current - profile.PartRecoveryPerMinute * minutes;
 
             if (SetPartProgress(part, progress, profile) is not { } stage ||
-                CompOrNull<BodyPartComponent>(part)?.Body is not { } body)
+                !TryComp(part, out BodyPartComponent? bodyPart) || bodyPart.Body is not { } body)
                 continue;
 
-            // The part's own effects: it hurts from Local, as a local wound does, and runs a fever from Spreading.
+            // The part's own effects: it hurts from Local, as a local wound does. Playtest 5: the fever, like every
+            // other thing the body feels, waits until the infection has reached the chest or the head.
             if (stage >= WolfmedInfectionStage.Local)
                 _pain.ChangePain(part, profile.LocalPainPerMinute * minutes);
 
-            if (stage >= WolfmedInfectionStage.Spreading && !_mobState.IsDead(body))
+            if (stage >= WolfmedInfectionStage.Spreading && IsCore(bodyPart) && !_mobState.IsDead(body))
                 fevered.Add(body);
         }
     }
@@ -522,8 +525,9 @@ public sealed class WolfmedInfectionSystem : EntitySystem
     }
 
     /// <summary>
-    /// Playtest 4 (SEPSIS): a fever is running, the state <see cref="Fever"/> keeps: the body is septic, or a wound
-    /// or (INFECTION) a part on it is spreading.
+    /// Playtest 4 (SEPSIS): a fever is running, the state <see cref="Fever"/> keeps: the body is septic, or (playtest
+    /// 5: on the torso or the head only) a wound or a part is spreading. An infected limb is a local matter until it
+    /// gets there.
     /// </summary>
     public bool HasFever(EntityUid body)
     {
@@ -532,6 +536,9 @@ public sealed class WolfmedInfectionSystem : EntitySystem
 
         foreach (var part in Parts(body))
         {
+            if (!TryComp(part, out BodyPartComponent? bodyPart) || !IsCore(bodyPart))
+                continue;
+
             if (GetPartStage(part) >= WolfmedInfectionStage.Spreading ||
                 GetWorstWoundStage(part) >= WolfmedInfectionStage.Spreading)
                 return true;

@@ -179,11 +179,12 @@ public sealed class WolfmedConditionEmoteTest : GameTest
     }
 
     /// <summary>
-    /// <c>InfectedLimbShiversTest</c> (INFECTION): a fever counts the parts' own infections, so a body whose arm is
-    /// spreading, with no wound and no sepsis, shivers.
+    /// <c>InfectedChestShiversTest</c> (INFECTION, playtest 5): a fever counts the parts' own infections, but only
+    /// from the chest or the head: a spreading arm is a local matter and runs none, a spreading torso, with no wound
+    /// and no sepsis, shivers.
     /// </summary>
     [Test]
-    public async Task InfectedLimbShiversTest()
+    public async Task InfectedChestShiversTest()
     {
         await Pin();
         var map = await Pair.CreateTestMap();
@@ -200,16 +201,22 @@ public sealed class WolfmedConditionEmoteTest : GameTest
         await Server.WaitAssertion(() =>
         {
             // 70 falls 4 a minute with nothing feeding it: spreading for the whole watch.
+            var infectionSystem = SEntMan.System<Content.Server._WF.Wolfmed.Wounds.WolfmedInfectionSystem>();
             var arm = s.Part(body, BodyPartType.Arm, BodyPartSymmetry.Left);
-            var infection = SEntMan.EnsureComponent<WolfmedPartInfectionComponent>(arm);
+            var armInfection = SEntMan.EnsureComponent<WolfmedPartInfectionComponent>(arm);
+            armInfection.Progress = 70f;
+            armInfection.Stage = WolfmedInfectionStage.Spreading;
+            Assert.That(infectionSystem.HasFever(body), Is.False, "a spreading arm runs a fever (playtest 5: not until the chest).");
+
+            var torso = s.Part(body, BodyPartType.Torso);
+            var infection = SEntMan.EnsureComponent<WolfmedPartInfectionComponent>(torso);
             infection.Progress = 70f;
             infection.Stage = WolfmedInfectionStage.Spreading;
-            Assert.That(SEntMan.System<Content.Server._WF.Wolfmed.Wounds.WolfmedInfectionSystem>().HasFever(body),
-                Is.True, "a spreading arm runs no fever.");
+            Assert.That(infectionSystem.HasFever(body), Is.True, "a spreading torso runs no fever.");
         });
 
         var seen = (await Watch(24, new[] { body }))[body];
-        TestContext.Out.WriteLine($"InfectedLimbShiversTest: {string.Join(", ", seen)}");
-        Assert.That(seen, Does.Contain(WolfmedConditionEmoteSystem.Shiver.Id), "a spreading arm never shivered.");
+        TestContext.Out.WriteLine($"InfectedChestShiversTest: {string.Join(", ", seen)}");
+        Assert.That(seen, Does.Contain(WolfmedConditionEmoteSystem.Shiver.Id), "a spreading torso never shivered.");
     }
 }

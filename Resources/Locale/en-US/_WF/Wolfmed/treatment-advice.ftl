@@ -392,7 +392,7 @@ wolfmed-treatment-step-cond-infection-local-2 = Close the wound. Sutures or caut
 wolfmed-treatment-step-cond-infection-local-3 = Gauze alone cuts the rate to about a seventh, and a tourniquet halves it.
 wolfmed-treatment-avoid-cond-infection-local-1 = Antiseptic does nothing once the infection has spread past the wound.
 
-wolfmed-treatment-short-cond-infection-spreading = The infection has left the wound and is in the tissue, travelling towards the torso. The patient runs a fever, and sepsis starts once it reaches the torso or head.
+wolfmed-treatment-short-cond-infection-spreading = The infection has left the wound and is in the tissue, travelling towards the torso. Nothing systemic yet: the fever and the sepsis start once it reaches the torso or head.
 wolfmed-treatment-step-cond-infection-spreading-1 = Give spaceacillin in the bloodstream. Antiseptic on the skin no longer helps.
 wolfmed-treatment-step-cond-infection-spreading-2 = Bottles come from the medical vendor and the medical supplies crate. Chemistry makes it from cryptobiolin and inaprovaline in equal parts.
 wolfmed-treatment-step-cond-infection-spreading-3 = Close or clean the wound underneath, or it will simply infect again.

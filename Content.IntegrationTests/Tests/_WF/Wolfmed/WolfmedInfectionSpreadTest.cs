@@ -74,6 +74,7 @@ public sealed class WolfmedInfectionSpreadTest : GameTest
 
             float? handAt = null, armAt = null, torsoAt = null, sepsisAt = null;
             var sepsisEarly = false;
+            var feverEarly = false;
             var cardChecked = false;
             for (var t = Tick; t <= 120 * 60f && sepsisAt == null; t += Tick)
             {
@@ -87,6 +88,9 @@ public sealed class WolfmedInfectionSpreadTest : GameTest
                     sepsisAt = minute;
                     sepsisEarly |= torsoAt == null;
                 }
+
+                // Playtest 5: nothing the body feels, the fever included, starts before the chest.
+                feverEarly |= torsoAt == null && infection.HasFever(body);
 
                 // The analyzer's card for an arm that is spreading with no wound on it.
                 if (armAt != null && torsoAt == null && !cardChecked)
@@ -109,6 +113,8 @@ public sealed class WolfmedInfectionSpreadTest : GameTest
                 Assert.That(torsoAt - armAt, Is.InRange(32f, 35f), "the torso did not follow the arm once the arm was septic.");
                 Assert.That(sepsisAt, Is.EqualTo(torsoAt), "sepsis did not start on the tick the torso spread.");
                 Assert.That(sepsisEarly, Is.False, "sepsis started while only the hand and arm were infected.");
+                Assert.That(feverEarly, Is.False, "a fever ran while only the hand and arm were infected.");
+                Assert.That(infection.HasFever(body), Is.True, "no fever once the infection reached the torso.");
                 Assert.That(cardChecked, Is.True, "the torso spread on the same tick as the arm.");
                 Assert.That(Wounds(arm).Concat(Wounds(torso)).Any(wound => SEntMan.HasComponent<WolfmedInfectionComponent>(wound)),
                     Is.False, "the arm or torso carried an infectable wound.");
