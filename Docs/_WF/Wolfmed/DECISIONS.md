@@ -4397,3 +4397,18 @@ the owner's call; left as it plays.
   WILL CUT IT."), the helpless one hears the old "I WILL CUT", and the CUT button still cuts at once. A locked
   garment is given up after the same delay on every run. `PodCutsClothingOffAnAwakePatientAfterItsDelayTest`;
   the CUT-button test holds the delay long so the button is what unblocks it.
+- **Spurts are for arteries (owner, 2026-09-28).** "Lower the blood spurts to be for arterial bleeds only. Otherwise the
+  smaller ones are just the drips." `WolfmedBleedSpurtSystem.HasSpurtSource` no longer counts a wound past
+  `bleedSpurt.majorRate` as a source; a cut artery or an untreated stump is one, nothing else, and the drip tier takes
+  the rest. `majorRate` stays in the spec for the evisceration profile check. `WolfmedGoreTest` pins a heavy slash
+  against a cut artery.
+- **No brain-death gate on the paddles (owner, 2026-09-28).** "Brain death (needing brain surgery to be revived)
+  should be removed. It should allow you to be revived with major brain damage, never preventing revival; brain damage
+  should make you dumb, speak dumb and clumsy." Supersedes the "Brain death" section's repair-first rule for organic
+  brains. Death at brain zero stays (the body, the ghost, the screen), but `WolfmedRevivalSystem.GetRefusal` no longer
+  refuses a destroyed brain and `GetChance` no longer zeroes on it; `Revive` sets the organ to
+  `wolfmed.revive_brain_floor` (0.1 of its maximum) before the mob state moves, so the patient comes back under the
+  brain's `SevereAt` line: blurred, stuttering, dropping things, and (new) slurring, for as long as the brain stays
+  damaged. `WFSurgeryRepairBrain` is the cure, not the ticket. A destroyed positronic core still needs core repair: a
+  chassis has no damaged-but-running state to come back in, and `wolfmed-defib-brain-dead` now says so. Succumb and
+  the analyzer's brain-death advice say what actually happens. `WolfmedBrainTest` and `WolfmedPlaytestOneTest` walk it.

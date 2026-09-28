@@ -43,7 +43,7 @@ alerts-wolfmed-out-collapse-name = Circulatory collapse
 alerts-wolfmed-out-collapse-desc = Circulation stopped. Defibrillator needed. Brain injury in about a minute without CPR. You may let go.
 wolfmed-collapse-banner = YOUR CIRCULATION HAS COLLAPSED
 
-wolfmed-succumb-dialog-text-collapse = Your circulation has collapsed ({ $cause }). Let go and you die now: catastrophic brain injury. Your brain stays; a medic can bring you back with brain repair and a defibrillator for about { $minutes } minutes. You will be asked to return.
-wolfmed-succumb-dialog-text-collapse-no-decay = Your circulation has collapsed ({ $cause }). Let go and you die now: catastrophic brain injury. Your brain stays; a medic can bring you back with brain repair and a defibrillator. You will be asked to return.
+wolfmed-succumb-dialog-text-collapse = Your circulation has collapsed ({ $cause }). Let go and you die now: catastrophic brain injury. Your brain stays; a defibrillator brings you back with major brain damage, until the brain is repaired, for about { $minutes } minutes. You will be asked to return.
+wolfmed-succumb-dialog-text-collapse-no-decay = Your circulation has collapsed ({ $cause }). Let go and you die now: catastrophic brain injury. Your brain stays; a defibrillator brings you back with major brain damage, until the brain is repaired. You will be asked to return.
 
 wolfmed-vitals-state-collapse = CIRCULATORY COLLAPSE: { $cause }

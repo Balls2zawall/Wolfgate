@@ -83,8 +83,8 @@ public sealed class WolfmedCVars
         CVarDef.Create("wolfmed.hit_debris", true, CVar.SERVERONLY);
 
     /// <summary>
-    /// Whether a major bleed or an open stump throws blood around every few seconds (G2). False leaves the
-    /// bleeding model alone and only stops the spectacle.
+    /// Whether a cut artery or an open stump throws blood around every few seconds (G2; playtest 5: only those,
+    /// an ordinary bleed drips). False leaves the bleeding model alone and only stops the spectacle.
     /// </summary>
     public static readonly CVarDef<bool> BleedSpurts =
         CVarDef.Create("wolfmed.bleed_spurts", true, CVar.SERVERONLY);
@@ -292,6 +292,15 @@ public sealed class WolfmedCVars
     /// <summary>Best chance a defibrillator has, at full brain oxygenation.</summary>
     public static readonly CVarDef<float> DefibChance =
         CVarDef.Create("wolfmed.defib_chance", 0.85f, CVar.SERVERONLY);
+
+    /// <summary>
+    /// Playtest 5, "brain death should be removed": the share of its health a destroyed brain comes back with when
+    /// the paddles restart the heart. 0.1: under the brain's SevereAt (half), so the patient is back blurred,
+    /// slurring, stuttering and dropping things until the brain is repaired. Never a refusal; a destroyed positronic
+    /// core still needs core repair, since a chassis has no damaged-but-running state to come back in.
+    /// </summary>
+    public static readonly CVarDef<float> ReviveBrainFloor =
+        CVarDef.Create("wolfmed.revive_brain_floor", 0.1f, CVar.SERVERONLY);
 
     /// <summary>What the defibrillator's chance is multiplied by at zero brain oxygenation.</summary>
     public static readonly CVarDef<float> DefibOxygenationFloor =

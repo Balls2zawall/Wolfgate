@@ -134,8 +134,9 @@ public sealed class WolfmedPlaytestOneTest : GameTest
             Assert.That(stockLine, Is.EqualTo(WolfmedRevivalSystem.NotMonitored));
         });
 
-        // Meanwhile dead of the brain: repair first, and the analyzer says the same. The organ system applies
-        // the death on its own tick, so real time has to pass after the clock.
+        // Meanwhile dead of the brain. Playtest 5: the paddles take it anyway, and the patient comes back with the
+        // brain at the revive floor. The organ system applies the death on its own tick, so real time has to pass
+        // after the clock.
         EntityUid dead = default;
         await Server.WaitAssertion(() =>
         {
@@ -149,9 +150,10 @@ public sealed class WolfmedPlaytestOneTest : GameTest
         {
             Assert.That(SEntMan.System<MobStateSystem>().IsDead(dead), Is.True, "fifteen minutes of arrest did not kill.");
             s.SetBlood(dead, 0.6f);
-            Assert.That(s.Revival.TryDefibrillate(dead, out var deadLine), Is.False);
-            Assert.That(deadLine, Is.EqualTo(WolfmedRevivalSystem.BrainDead));
-            Assert.That(s.Analyzer(dead), Does.Contain("brain repair surgery first"));
+            Assert.That(s.Analyzer(dead), Does.Not.Contain("repair surgery first"), "the analyzer still asks for brain repair before a shock.");
+            Assert.That(s.Shock(dead, out var deadLine), Is.True, $"the paddles refused a destroyed brain: {deadLine}");
+            Assert.That(SEntMan.System<MobStateSystem>().IsDead(dead), Is.False, "the shock did not bring the brain-dead body back.");
+            Assert.That(s.Life.GetBrainActivity(dead), Is.GreaterThan(0f).And.LessThan(0.5f), "the revived brain is not at the damage floor.");
         });
     }
 

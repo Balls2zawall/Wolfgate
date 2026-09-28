@@ -221,20 +221,27 @@ public sealed class WolfmedBrainTest : GameTest
             var mobState = entities.System<MobStateSystem>();
             Assert.That(mobState.IsDead(body), Is.True, "a destroyed brain did not kill the patient.");
 
+            // Playtest 5: the paddles no longer wait for a surgeon. The brain comes back at the revive floor and the
+            // patient with it: blurred, slurring, stuttering and dropping things until the brain is repaired.
             revival.ForcedRoll = 0f;
-            Assert.That(revival.TryDefibrillate(body, out var refused), Is.False,
-                "the paddles restarted a body with no brain activity.");
-            Assert.That(refused, Is.EqualTo("wolfmed-defib-brain-dead"));
+            Assert.That(revival.TryDefibrillate(body, out var line), Is.True, $"the paddles refused a destroyed brain: {line}");
+            Assert.That(line, Is.EqualTo("wolfmed-defib-success"));
+            revival.ForcedRoll = null;
 
-            // The surgery is the only thing that raises organ health.
+            var floor = server.ResolveDependency<IConfigurationManager>().GetCVar(WolfmedCVars.ReviveBrainFloor);
+            Assert.Multiple(() =>
+            {
+                Assert.That(life.GetBrainActivity(body), Is.EqualTo(floor).Within(0.01f), "the brain did not come back at the revive floor.");
+                Assert.That(entities.TryGetComponent(body, out Content.Shared._WF.Wolfmed.Wounds.WolfmedConcussionComponent? concussion) &&
+                            concussion.Stutter && concussion.Drop && concussion.Blur > 0f, Is.True,
+                    "a revived destroyed brain did not leave the patient blurred, stuttering and clumsy.");
+            });
+
+            // The surgery is still the only thing that raises organ health, and it clears the damage.
             life.RepairBrain(body);
             Assert.That(life.GetBrainActivity(body), Is.EqualTo(1f));
             Assert.That(entities.HasComponent<WolfmedBrainTraumaComponent>(body), Is.True,
                 "a repaired brain came back with no trauma.");
-
-            Assert.That(revival.TryDefibrillate(body, out var line), Is.True);
-            Assert.That(line, Is.EqualTo("wolfmed-defib-success"));
-            revival.ForcedRoll = null;
 
             var restored = server.ResolveDependency<IConfigurationManager>().GetCVar(WolfmedCVars.PostShockOxygenation);
             Assert.Multiple(() =>

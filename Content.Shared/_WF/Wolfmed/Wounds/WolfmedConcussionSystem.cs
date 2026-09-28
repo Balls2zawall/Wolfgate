@@ -37,6 +37,7 @@ public sealed class WolfmedConcussionSystem : EntitySystem
     [Dependency] private SharedBodySystem _body = default!;
     [Dependency] private SharedStunSystem _stun = default!;
     [Dependency] private SharedStutteringSystem _stutter = default!;
+    [Dependency] private SharedSlurredSystem _slur = default!; // Playtest 5
     [Dependency] private WoundSystem _wounds = default!;
 
     /// <inheritdoc/>
@@ -92,10 +93,14 @@ public sealed class WolfmedConcussionSystem : EntitySystem
             if (!Deleted(body) && body.Comp.Stutter)
                 _stutter.DoStutter(body, TimeSpan.FromSeconds(elapsed * 2f + 2f), refresh: true);
 
-            // A concussed or brain-damaged patient loses their grip now and then.
-            if (!Deleted(body) && body.Comp.Drop &&
-                _random.Prob(Math.Clamp(body.Comp.DropChance * elapsed, 0f, 1f)))
-                _hands.TryDrop(body.Owner, checkActionBlocker: false);
+            // A concussed or brain-damaged patient loses their grip now and then. Playtest 5: a brain that far gone
+            // (under SevereAt, which is what a destroyed brain comes back as) slurs on top of the stutter.
+            if (!Deleted(body) && body.Comp.Drop)
+            {
+                _slur.DoSlur(body, TimeSpan.FromSeconds(elapsed * 2f + 2f));
+                if (_random.Prob(Math.Clamp(body.Comp.DropChance * elapsed, 0f, 1f)))
+                    _hands.TryDrop(body.Owner, checkActionBlocker: false);
+            }
 
             Recover(body.Owner, elapsed);
         }

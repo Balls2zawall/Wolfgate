@@ -8,6 +8,7 @@ using Content.Shared.Body.Systems;
 using Content.Shared.IdentityManagement;
 using Robust.Shared.Audio;
 using Robust.Shared.Audio.Systems;
+using Content.Shared._Onyx.Body.Systems; // Playtest 5: the revived brain's floor
 using Content.Shared._Shitmed.Body.Organ;
 using Content.Shared._WF.Wolfmed.Body;
 using Content.Shared._WF.Wolfmed.CCVar;
@@ -53,6 +54,7 @@ public sealed class WolfmedRevivalSystem : EntitySystem
     [Dependency] private SharedBodySystem _body = default!; // M2
     [Dependency] private WolfmedShutdownSystem _shutdown = default!; // M2
     [Dependency] private WolfmedBodyTemperatureSystem _temperature = default!; // M5
+    [Dependency] private OrganHealthSystem _organs = default!; // Playtest 5
 
     /// <summary>Test seam, mirroring <c>WolfmedEviscerationSystem.ForcedRoll</c>: a forced chance roll.</summary>
     public float? ForcedRoll;
@@ -68,6 +70,7 @@ public sealed class WolfmedRevivalSystem : EntitySystem
 
     public const string Success = "wolfmed-defib-success";
     public const string NoBrain = "wolfmed-defib-no-brain";
+    /// <summary>Playtest 5: only a destroyed positronic core. A destroyed brain comes back damaged instead.</summary>
     public const string BrainDead = "wolfmed-defib-brain-dead";
     public const string NoHeart = "wolfmed-defib-no-heart";
     public const string PulsePresent = "wolfmed-defib-pulse-present";
@@ -107,7 +110,7 @@ public sealed class WolfmedRevivalSystem : EntitySystem
 
     /// <summary>The locale key for why the paddles will not charge, or null when they will.</summary>
     // Shared by the hand defibrillator and the pod. Checked in order: rot, UnrevivableComponent, no brain, a destroyed
-    // brain, no heart, a pulse, then the blood gate. LocalizeLine fills in the numbers.
+    // positronic core, no heart, a pulse, then the blood gate. LocalizeLine fills in the numbers.
     public string? GetRefusal(EntityUid body)
     {
         if (TerminatingOrDeleted(body) || !OwnsRevival(body))
@@ -122,8 +125,11 @@ public sealed class WolfmedRevivalSystem : EntitySystem
         if (!_life.HasBrain(body))
             return NoBrain;
 
-        // A destroyed brain has to be put back together first; see WFSurgeryRepairBrain.
-        if (_life.GetBrainOrgan(body) is not { } organ || organ.Comp.Health <= FixedPoint2.Zero)
+        // Playtest 5: a destroyed brain no longer refuses the paddles; Revive brings it back at wolfmed.revive_brain_floor
+        // and the patient lives with the damage until it is repaired. A destroyed positronic core still needs core
+        // repair first (WFSurgeryRepairCore): a chassis has no damaged-but-running state to come back in.
+        if (_life.GetBrainOrgan(body) is not { } organ ||
+            organ.Comp.Health <= FixedPoint2.Zero && _shutdown.IsMechanical(body))
             return BrainDead;
 
         if (_life.GetHeartHealth(body) == null && ExpectsHeart(body))
@@ -192,11 +198,12 @@ public sealed class WolfmedRevivalSystem : EntitySystem
 
     /// <summary>The paddles' chance to restart the heart.</summary>
     // On the arrest clock it scales with the oxygen left in the brain, which is what makes speed matter. A corpse has
-    // no circulation to raise that number, so once its brain is repaired and its blood put back it gets the flat base
-    // chance: the surgery was the work.
+    // no circulation to raise that number, so once its blood is put back it gets the flat base chance (playtest 5: a
+    // destroyed brain no longer zeroes it; the patient pays in brain damage instead).
     public float GetChance(EntityUid body)
     {
-        if (_life.GetBrainOrgan(body) is not { } organ || organ.Comp.Health <= FixedPoint2.Zero)
+        if (_life.GetBrainOrgan(body) is not { } organ ||
+            organ.Comp.Health <= FixedPoint2.Zero && _shutdown.IsMechanical(body))
             return 0f;
 
         var chance = _cfg.GetCVar(WolfmedCVars.DefibChance);
@@ -218,6 +225,14 @@ public sealed class WolfmedRevivalSystem : EntitySystem
         var wasDead = _mobState.IsDead(body);
         var cause = CompOrNull<WolfmedCardiacArrestComponent>(body)?.Cause ?? string.Empty;
         _life.EndArrest(body);
+
+        // Playtest 5: a destroyed brain comes back as major brain damage rather than staying dead for a surgeon. The
+        // organ is set before the mob state moves, or the organ system would kill the body again on its next look.
+        if (!_shutdown.IsMechanical(body) && _life.GetBrainOrgan(body) is { } brain && brain.Comp.Health <= FixedPoint2.Zero)
+        {
+            var floor = Math.Clamp(_cfg.GetCVar(WolfmedCVars.ReviveBrainFloor), 0.01f, 1f);
+            _organs.SetHealth(brain, FixedPoint2.Max(FixedPoint2.New(0.01), FixedPoint2.New(brain.Comp.MaxHealth.Float() * floor)));
+        }
 
         var repeat = TryComp(body, out WolfmedPostShockComponent? previous) &&
                      previous.SinceRestore < _life.PostShockRepeatSeconds;

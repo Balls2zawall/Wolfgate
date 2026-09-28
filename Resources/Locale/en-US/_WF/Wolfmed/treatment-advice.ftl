@@ -472,9 +472,9 @@ wolfmed-treatment-step-cond-cardiac-arrest-3 = Then shock them. Every failed sho
 wolfmed-treatment-avoid-cond-cardiac-arrest-1 = Do not stop CPR to fetch things. Every second without it is oxygen the brain will not get back.
 wolfmed-treatment-avoid-cond-cardiac-arrest-2 = Cold slows the clock right down. A body on the way to cryo has far longer than one on a warm floor.
 
-wolfmed-treatment-short-cond-brain-death = The brain organ is destroyed. The patient is dead, and they stay dead until somebody rebuilds it.
+wolfmed-treatment-short-cond-brain-death = The brain organ is destroyed and the patient is dead. A shock brings them back, with major brain damage until the brain is repaired.
 wolfmed-treatment-step-cond-brain-death-1 = Get the blood above 40% first. A defibrillator below that does nothing at all.
-wolfmed-treatment-step-cond-brain-death-2 = Open the head and repair the brain. It is the only thing that raises brain activity.
-wolfmed-treatment-step-cond-brain-death-3 = Then shock them. With activity back the paddles have something to restart.
+wolfmed-treatment-step-cond-brain-death-2 = Shock them. They come back with major brain damage: blurred sight, slurred and stuttering speech, a grip that lets go.
+wolfmed-treatment-step-cond-brain-death-3 = Then open the head and repair the brain. Nothing else raises brain activity.
 wolfmed-treatment-avoid-cond-brain-death-1 = Rot is the one thing that cannot be undone. Get the body cold before you go looking for a surgeon.
 wolfmed-treatment-avoid-cond-brain-death-2 = A repaired brain keeps the trauma for half an hour. Blurred sight and a shaky grip are expected.

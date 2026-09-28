@@ -11,7 +11,8 @@ wolfmed-defib-no-response = No response. Charge again.
 wolfmed-defib-not-monitored = Shock refused: no vital signs this device can read.
 wolfmed-defib-no-brain = No neural activity. Nothing to restart.
 wolfmed-defib-no-blood = Shock refused: blood {$percent}%. Transfuse ≈ {$units} u first; ≈ {$safe} u to {$line}%.
-wolfmed-defib-brain-dead = Brain flatlined. Repair the brain first.
+# Playtest 5: only a destroyed positronic core hears this; a destroyed brain comes back damaged.
+wolfmed-defib-brain-dead = Core destroyed. Repair the core first.
 
 # M1a: the shared refusals. A shock succeeds on a roll, so nothing here promises it will work.
 wolfmed-defib-no-heart = Shock refused: no heart.
@@ -23,8 +24,8 @@ wolfmed-analyzer-post-shock-late = Revived: blood {$percent}%. Transfuse ≈ {$s
 
 # M1a: Succumb, Last Words and the ghost command (plan §5.4). Exact consequences, [OD1 wording].
 wolfmed-succumb-dialog-title = Let go?
-wolfmed-succumb-dialog-text = Your heart has stopped ({ $cause }). Let go and you die now: catastrophic brain injury. Your brain stays; a medic can bring you back with brain repair and a defibrillator for about { $minutes } minutes. You will be asked to return.
-wolfmed-succumb-dialog-text-no-decay = Your heart has stopped ({ $cause }). Let go and you die now: catastrophic brain injury. Your brain stays; a medic can bring you back with brain repair and a defibrillator. You will be asked to return.
+wolfmed-succumb-dialog-text = Your heart has stopped ({ $cause }). Let go and you die now: catastrophic brain injury. Your brain stays; a defibrillator brings you back with major brain damage, until the brain is repaired, for about { $minutes } minutes. You will be asked to return.
+wolfmed-succumb-dialog-text-no-decay = Your heart has stopped ({ $cause }). Let go and you die now: catastrophic brain injury. Your brain stays; a defibrillator brings you back with major brain damage, until the brain is repaired. You will be asked to return.
 wolfmed-succumb-dialog-accept = Let go
 wolfmed-succumb-dialog-deny = Keep fighting
 wolfmed-leave-dialog-title = Leave your body?

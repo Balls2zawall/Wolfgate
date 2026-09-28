@@ -15,8 +15,9 @@ using Robust.Shared.Timing;
 namespace Content.Server._WF.Wolfmed.Gore;
 
 /// <summary>
-/// G2: a body losing blood fast enough throws some of it around every few seconds. An arterial bleed or
-/// an untreated amputation stump always qualifies; anything else has to clear a rate threshold first.
+/// G2: a body losing blood from a cut artery throws some of it around every few seconds. An arterial bleed or
+/// an untreated amputation stump qualifies and nothing else does (playtest 5: a heavy ordinary bleed used to
+/// spurt past a rate line; now it drips, the tier under this one).
 /// </summary>
 /// <remarks>
 /// Nothing here scans wounds per frame. <see cref="WolfmedBleedSpurtComponent"/> is put on a body only
@@ -155,8 +156,8 @@ public sealed class WolfmedBleedSpurtSystem : EntitySystem
                     return true;
                 }
 
-                if (bleeding.CurrentRate >= spec.MajorRate ||
-                    _traits.TryGetBehavior(wound.Owner, out WolfmedArterialBleedBehavior _))
+                // Playtest 5: arteries only. The rate line (spec.MajorRate) no longer makes an ordinary bleed spurt.
+                if (_traits.TryGetBehavior(wound.Owner, out WolfmedArterialBleedBehavior _))
                 {
                     major = true;
                     mechanical |= !_traits.IsOrganic((part, woundable));

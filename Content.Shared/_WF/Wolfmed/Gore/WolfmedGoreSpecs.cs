@@ -98,8 +98,8 @@ public sealed partial class WolfmedSplatterRange
 }
 
 /// <summary>
-/// What a body that is bleeding hard does about it (G2). Arterial bleeds and open stumps throw blood;
-/// everything else has to clear <see cref="MajorRate"/> first.
+/// What a body with a cut artery does about it (G2). Arterial bleeds and open stumps throw blood; nothing else
+/// does (playtest 5: the <see cref="MajorRate"/> line used to make a heavy ordinary bleed spurt too; it drips now).
 /// </summary>
 [DataDefinition]
 public sealed partial class WolfmedBleedSpurtSpec
@@ -107,7 +107,10 @@ public sealed partial class WolfmedBleedSpurtSpec
     [DataField]
     public bool Enabled = true;
 
-    /// <summary>Bleed rate on one wound that counts as major on its own.</summary>
+    /// <summary>
+    /// Bleed rate on one wound that counts as major. Playtest 5: no longer a spurt source on its own; the
+    /// evisceration profile is still checked against it.
+    /// </summary>
     [DataField]
     public float MajorRate = 1.5f;
 

@@ -511,6 +511,21 @@ public sealed class WolfmedGoreTest : GameTest
             });
 
             // An untreated stump: the one source that qualifies whatever its rate is.
+            // Playtest 5: a heavy ordinary bleed drips, it does not spurt; a cut artery does whatever its rate.
+            var slash = wounds.CreateOrMergeWound(arm, "SlashWound", FixedPoint2.New(60));
+            Assert.That(slash, Is.Not.Null);
+            var slashRate = entities.GetComponent<WoundBleedingComponent>(slash!.Value).CurrentRate;
+            Assert.That(slashRate, Is.GreaterThan(0f), "the fixture's slash does not bleed.");
+            Assert.That(spurts.HasSpurtSource(body, spec, out _, out _), Is.False,
+                $"an ordinary bleed at {slashRate:0.00} spurted.");
+            var artery = wounds.CreateOrMergeWound(arm, "WFWolfmedArterialBleedWound", FixedPoint2.New(10));
+            Assert.That(artery, Is.Not.Null);
+            Assert.That(spurts.HasSpurtSource(body, spec, out var arteryStump, out _), Is.True, "a cut artery is not a spurt source.");
+            Assert.That(arteryStump, Is.False);
+            wounds.RemoveWound(artery!.Value);
+            wounds.RemoveWound(slash.Value);
+            Assert.That(spurts.HasSpurtSource(body, spec, out _, out _), Is.False);
+
             var stump = wounds.CreateOrMergeWound(arm, "DismembermentWound", FixedPoint2.New(40));
             Assert.That(stump, Is.Not.Null);
 
