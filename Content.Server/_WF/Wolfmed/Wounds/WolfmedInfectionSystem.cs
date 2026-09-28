@@ -13,6 +13,7 @@ using Content.Shared.Body.Systems;
 using Content.Shared.Damage;
 using Content.Shared.Damage.Prototypes;
 using Content.Shared.FixedPoint;
+using Content.Shared.Inventory; // Playtest 5
 using Content.Shared.Popups;
 using Robust.Shared.Configuration;
 using Robust.Shared.Prototypes;
@@ -66,6 +67,7 @@ public sealed class WolfmedInfectionSystem : EntitySystem
     [Dependency] private Life.WolfmedBodyTemperatureSystem _bodyTemperature = default!; // M5
     [Dependency] private OrganHealthSystem _organs = default!; // Playtest 4 (SEPSIS)
     [Dependency] private Consciousness.WolfmedConsciousnessSystem _consciousness = default!; // Playtest 5
+    [Dependency] private InventorySystem _inventory = default!; // Playtest 5
 
     private float _accumulator;
 
@@ -243,7 +245,7 @@ public sealed class WolfmedInfectionSystem : EntitySystem
 
         if (infection.Cleaned && infection.Stage < WolfmedInfectionStage.Spreading)
             SetProgress(wound, infection.Progress - profile.CleanDecayPerMinute * minutes, profile);
-        else
+        else if (HasReason(wound, part)) // Playtest 5: a wound with nothing to go bad from holds where it is
             SetProgress(wound,
                 infection.Progress +
                 profile.ProgressPerMinute * minutes * openness * infection.Contamination *
@@ -283,6 +285,36 @@ public sealed class WolfmedInfectionSystem : EntitySystem
         // part (TickParts), and only the torso and head feed sepsis.
         if (infection.Stage >= WolfmedInfectionStage.Spreading && body is { } host && !_mobState.IsDead(host))
             fevered.Add(host);
+    }
+
+    /// <summary>
+    /// Playtest 5, "an infection has to have an actual reason to start": whether this wound has one. Something dirty
+    /// went into it, or it is dirty by nature (<see cref="WolfmedInfectionRiskBehavior.Dirty"/>), or it is open to the
+    /// air: not under a sealed suit. Off with wolfmed.infection_needs_reason, every open wound is a reason.
+    /// </summary>
+    public bool HasReason(Entity<WolfmedInfectionComponent, WoundComponent> wound, EntityUid part)
+    {
+        if (!_config.GetCVar(WolfmedCVars.InfectionNeedsReason) || wound.Comp1.Contamination > 1f)
+            return true;
+
+        if (_traits.TryGetBehavior(wound.Owner, out WolfmedInfectionRiskBehavior behavior) && behavior.Dirty)
+            return true;
+
+        return IsExposed(part);
+    }
+
+    /// <summary>
+    /// Playtest 5: whether the part is open to the air. A pressure-tight suit over it (a hardsuit or EVA suit in the
+    /// outer slot; for the head, its helmet) seals it; a jumpsuit or a vest does not. A part off the body is not.
+    /// </summary>
+    public bool IsExposed(EntityUid part)
+    {
+        if (CompOrNull<BodyPartComponent>(part)?.Body is not { } body)
+            return false;
+
+        var slot = CompOrNull<BodyPartComponent>(part)?.PartType == BodyPartType.Head ? "head" : "outerClothing";
+        return !_inventory.TryGetSlotEntity(body, slot, out var worn) ||
+               !HasComp<Content.Server.Atmos.Components.PressureProtectionComponent>(worn);
     }
 
     /// <summary>

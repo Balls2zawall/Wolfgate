@@ -1053,6 +1053,15 @@ public sealed class WolfmedCVars
     public static readonly CVarDef<float> DripSoundInterval =
         CVarDef.Create("wolfmed.drip_sound_interval", 4f, CVar.SERVERONLY);
 
+    /// <summary>
+    /// Playtest 5, "an infection has to have an actual reason to start": an open wound only goes bad while it is
+    /// exposed to the air outside a sealed suit, or something dirty went into it, or the wound is dirty by nature
+    /// (a bite, an open abdomen, a lodged round or shrapnel, dead tissue). False is the old model, where every open
+    /// wound went bad on its own.
+    /// </summary>
+    public static readonly CVarDef<bool> InfectionNeedsReason =
+        CVarDef.Create("wolfmed.infection_needs_reason", true, CVar.SERVERONLY);
+
     /// <summary>Volume of a drip in decibels. Low, because it repeats for as long as the bleed lasts.</summary>
     public static readonly CVarDef<float> DripSoundVolume =
         CVarDef.Create("wolfmed.drip_sound_volume", -6f, CVar.SERVERONLY);

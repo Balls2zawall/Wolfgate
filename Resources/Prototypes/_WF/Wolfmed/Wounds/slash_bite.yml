@@ -86,6 +86,7 @@
   behaviors:
   - !type:WolfmedInfectionRiskBehavior
     riskMultiplier: 2.5
+    dirty: true # playtest 5: a bite goes bad whatever covers it
   - !type:WoundPainBehavior
     painPerSeverity: 0.9
     minSeverity: 3

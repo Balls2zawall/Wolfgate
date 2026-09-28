@@ -107,6 +107,7 @@
   # W5: infection risk. A round still in the wound is a source of contamination, not just an object.
   - !type:WolfmedInfectionRiskBehavior
     riskMultiplier: 2.2
+    dirty: true # playtest 5: a round left in the wound goes bad whatever covers it
   - !type:WoundPainBehavior
     painPerSeverity: 1.1
     minSeverity: 4
@@ -159,6 +160,7 @@
   # W5: infection risk. Fragments carry whatever they came off.
   - !type:WolfmedInfectionRiskBehavior
     riskMultiplier: 2.0
+    dirty: true # playtest 5: shrapnel left in the wound goes bad whatever covers it
   - !type:WoundPainBehavior
     painPerSeverity: 0.9
     minSeverity: 3

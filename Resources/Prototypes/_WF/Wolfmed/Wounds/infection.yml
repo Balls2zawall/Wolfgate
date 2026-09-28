@@ -83,6 +83,7 @@
   # part itself is pinned at 100 and feeds its parent (INFECTION); sepsis follows once that reaches the torso.
   - !type:WolfmedInfectionRiskBehavior
     riskMultiplier: 6
+    dirty: true # playtest 5: dead tissue is its own reason
   - !type:WolfmedLimbPenaltyBehavior
     movementModifier: 0.55
     manipulationModifier: 2

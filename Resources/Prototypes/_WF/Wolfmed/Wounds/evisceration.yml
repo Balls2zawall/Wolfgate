@@ -84,6 +84,7 @@
   # W5: the single dirtiest wound in the model. Open viscera in a corridor.
   - !type:WolfmedInfectionRiskBehavior
     riskMultiplier: 3.5
+    dirty: true # playtest 5: an open abdomen goes bad whatever covers it
   - !type:WoundPainBehavior
     painPerSeverity: 1.5
     minSeverity: 1

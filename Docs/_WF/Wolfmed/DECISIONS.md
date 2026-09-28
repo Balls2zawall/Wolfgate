@@ -4419,3 +4419,11 @@ the owner's call; left as it plays.
   diagnostics); the patient is told when it starts and when it lifts; and `WolfmedConcussionSystem` recomputes every
   concussion from its sources on its own tick, so one whose sources went without an edge clears itself within a
   second. `StaleConcussionClearsItselfTest` and the brain test's trauma tail pin it.
+- **An infection needs a reason (owner, 2026-09-28).** "Sepsis seems to happen too often, on wounds that don't make
+  much sense. An infection has to have an actual reason to start, like being exposed to the air outside a suit."
+  `WolfmedInfectionSystem.HasReason`: a wound's infection only grows while something dirty went into it
+  (`Contamination`), or the wound is dirty by nature (`WolfmedInfectionRiskBehavior.dirty`: the bite, the open
+  abdomen, a lodged round, shrapnel, dead tissue), or its part is exposed (`IsExposed`: no pressure-tight suit in the
+  outer slot, or no such helmet for the head). Under a hardsuit a clean cut holds where it is; nothing recedes for
+  being covered, and a dressing or antiseptic works as before. `wolfmed.infection_needs_reason` turns the old model
+  back on. `InfectionNeedsAReasonTest` walks the four cases.

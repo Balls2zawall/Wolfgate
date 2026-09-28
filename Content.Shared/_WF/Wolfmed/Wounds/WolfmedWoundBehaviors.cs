@@ -88,6 +88,13 @@ public sealed partial class WolfmedInfectionRiskBehavior : WoundBehavior
 {
     [DataField]
     public float RiskMultiplier = 1f;
+
+    /// <summary>
+    /// Playtest 5: the wound carries its own contamination and goes bad whatever covers it: a bite, an open abdomen,
+    /// a lodged round or shrapnel, dead tissue. Every other open wound needs a reason (WolfmedInfectionSystem.HasReason).
+    /// </summary>
+    [DataField]
+    public bool Dirty;
 }
 
 /// <summary>

@@ -19,6 +19,7 @@ using Content.Shared.Body.Systems;
 using Content.Shared.Damage;
 using Content.Shared.Damage.Prototypes;
 using Content.Shared.FixedPoint;
+using Content.Shared.Inventory;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Utility;
@@ -263,6 +264,60 @@ public sealed class WolfmedInfectionSpreadTest : GameTest
             });
         });
     }
+
+    /// <summary>
+    /// Playtest 5, "an infection has to have an actual reason to start, like being exposed to the air outside a suit":
+    /// a clean cut under a sealed hardsuit holds at zero; a bite goes bad under it; a dirty tool in the cut is a
+    /// reason; and with the suit off a fresh cut goes bad on its own.
+    /// </summary>
+    [Test]
+    public async Task InfectionNeedsAReasonTest()
+    {
+        await Pin();
+        var map = await Pair.CreateTestMap();
+
+        await Server.WaitAssertion(() =>
+        {
+            var infection = SEntMan.System<WolfmedInfectionSystem>();
+            var inventory = SEntMan.System<InventorySystem>();
+            var wounds = SEntMan.System<WoundSystem>();
+            var body = SEntMan.SpawnEntity("MobHuman", map.GridCoords);
+            var suit = SEntMan.SpawnEntity("ClothingOuterHardsuitEngineering", map.GridCoords);
+            Assert.That(inventory.TryEquip(body, suit, "outerClothing", force: true), Is.True, "the fixture could not suit the patient.");
+
+            var arm = Part(body, BodyPartType.Arm, BodyPartSymmetry.Left);
+            var cut = Cut(arm);
+            Assert.That(infection.IsExposed(arm), Is.False, "an arm under a hardsuit reads as exposed.");
+            for (var t = Tick; t <= 10 * 60f; t += Tick)
+                infection.Update(Tick);
+            Assert.That(Progress(cut), Is.Zero, "a clean cut under a sealed suit went bad.");
+
+            // A bite is dirty by nature.
+            var bite = wounds.CreateOrMergeWound(arm, "WFWolfmedAvulsionWound", FixedPoint2.New(20));
+            Assert.That(bite, Is.Not.Null);
+            for (var t = Tick; t <= 5 * 60f; t += Tick)
+                infection.Update(Tick);
+            Assert.That(Progress(bite!.Value), Is.GreaterThan(0f), "a bite under a suit did not go bad.");
+            Assert.That(Progress(cut), Is.Zero, "the clean cut caught the bite's reason.");
+
+            // A dirty tool in the cut is a reason too.
+            infection.Contaminate(cut);
+            for (var t = Tick; t <= 5 * 60f; t += Tick)
+                infection.Update(Tick);
+            Assert.That(Progress(cut), Is.GreaterThan(0f), "a contaminated cut under a suit did not go bad.");
+
+            // Suit off: a fresh cut on the other arm is open to the air.
+            Assert.That(inventory.TryUnequip(body, "outerClothing", force: true), Is.True);
+            var other = Part(body, BodyPartType.Arm, BodyPartSymmetry.Right);
+            var open = Cut(other);
+            Assert.That(infection.IsExposed(other), Is.True);
+            for (var t = Tick; t <= 5 * 60f; t += Tick)
+                infection.Update(Tick);
+            Assert.That(Progress(open), Is.GreaterThan(0f), "an exposed cut did not go bad.");
+        });
+    }
+
+    private float Progress(EntityUid wound) => SEntMan.GetComponent<WolfmedInfectionComponent>(wound).Progress;
 
     /// <summary>
     /// <c>SepticShockTest</c>: <see cref="WolfmedInfectionSystem.InSepticShock"/> and the alert's severity flip at
