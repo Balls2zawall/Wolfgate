@@ -135,19 +135,19 @@ public sealed class WolfmedBrainTest : GameTest
             untreated = entities.SpawnEntity("MobHuman", map.GridCoords);
             Assert.That(life.StartArrest(untreated, "test"), Is.True);
 
-            // 120 s of a stopped heart is the whole tank.
-            Run(life, untreated, 120);
+            // 180 s of a stopped heart is the whole tank (playtest 5; was 120).
+            Run(life, untreated, 180);
             Assert.That(life.GetOxygenation(untreated), Is.EqualTo(0f).Within(0.01f));
             Assert.That(life.GetBrainActivity(untreated), Is.LessThan(1f),
                 "an unoxygenated brain took no damage.");
             Assert.That(entities.System<MobStateSystem>().IsDead(untreated), Is.False,
-                "the brain was destroyed inside the first two minutes.");
+                "the brain was destroyed inside the first three minutes.");
 
             // Under CPR the same wall time barely moves it.
             var cpr = entities.SpawnEntity("MobHuman", map.GridCoords);
             Assert.That(life.StartArrest(cpr, "test"), Is.True);
             Assert.That(entities.System<WolfmedRevivalSystem>().StartCpr(cpr, TimeSpan.FromMinutes(30)), Is.True);
-            Run(life, cpr, 120);
+            Run(life, cpr, 180);
             Assert.Multiple(() =>
             {
                 Assert.That(life.GetOxygenation(cpr), Is.GreaterThan(0.6f), "CPR stopped buying time.");
@@ -158,7 +158,7 @@ public sealed class WolfmedBrainTest : GameTest
             var cold = entities.SpawnEntity("MobHuman", map.GridCoords);
             entities.GetComponent<TemperatureComponent>(cold).CurrentTemperature = 280f;
             Assert.That(life.StartArrest(cold, "test"), Is.True);
-            Run(life, cold, 120);
+            Run(life, cold, 180);
             Assert.That(life.GetOxygenation(cold), Is.GreaterThan(life.GetOxygenation(cpr)),
                 "a cold body did not keep its brain longer than a warm one under CPR.");
 
@@ -169,9 +169,9 @@ public sealed class WolfmedBrainTest : GameTest
 
         await server.WaitAssertion(() =>
         {
-            // The rest of the way: the organ reaches zero and the brain is dead.
+            // The rest of the way: the organ reaches zero and the brain is dead (about 450 s in, playtest 5).
             var life = entities.System<WolfmedLifeSystem>();
-            Run(life, untreated, 200);
+            Run(life, untreated, 300);
         });
 
         // OrganHealthSystem turns a destroyed brain into MobState.Dead on its own tick.

@@ -191,17 +191,25 @@ public sealed class WolfmedCVars
     public static readonly CVarDef<float> ArrestShockDamage =
         CVarDef.Create("wolfmed.arrest_shock_damage", 60f, CVar.SERVERONLY);
 
-    /// <summary>Seconds of a stopped heart that drain brain oxygenation from full to nothing.</summary>
+    /// <summary>
+    /// Seconds of a stopped heart that drain brain oxygenation from full to nothing. 180 since playtest 5 ("cardiac
+    /// arrest onsets too fast, people dying is way more work to fix"; was 120): with wolfmed.brain_damage_rate 0.05,
+    /// brain death is about 7.5 minutes after an arrest from a full brain, was 4.
+    /// </summary>
     public static readonly CVarDef<float> BrainArrestSeconds =
-        CVarDef.Create("wolfmed.brain_arrest_seconds", 120f, CVar.SERVERONLY);
+        CVarDef.Create("wolfmed.brain_arrest_seconds", 180f, CVar.SERVERONLY);
 
     /// <summary>Seconds of not breathing at all that drain brain oxygenation from full to nothing.</summary>
     public static readonly CVarDef<float> BrainAirlossSeconds =
         CVarDef.Create("wolfmed.brain_airloss_seconds", 180f, CVar.SERVERONLY);
 
-    /// <summary>Seconds at <see cref="BrainBloodFull"/> blood that drain oxygenation from full to nothing.</summary>
+    /// <summary>
+    /// Seconds at <see cref="BrainBloodFull"/> blood that drain oxygenation from full to nothing. 600 since playtest 5
+    /// (was 300): a patient bled to the arrest line with the bleeding stopped has about 9 minutes for a transfusion
+    /// before the oxygen trigger, was 4.5.
+    /// </summary>
     public static readonly CVarDef<float> BrainBloodSeconds =
-        CVarDef.Create("wolfmed.brain_blood_seconds", 300f, CVar.SERVERONLY);
+        CVarDef.Create("wolfmed.brain_blood_seconds", 600f, CVar.SERVERONLY);
 
     /// <summary>Blood volume fraction under which perfusion starts costing the brain oxygen.</summary>
     public static readonly CVarDef<float> BrainBloodStart =
@@ -220,9 +228,12 @@ public sealed class WolfmedCVars
     public static readonly CVarDef<float> BrainSepsisSeconds =
         CVarDef.Create("wolfmed.brain_sepsis_seconds", 0f, CVar.SERVERONLY);
 
-    /// <summary>Refill rate while perfused and breathing, as a share of the arrest drain rate.</summary>
+    /// <summary>
+    /// Refill rate while perfused and breathing, as a share of the arrest drain rate. 0.75 since playtest 5 (was 0.5)
+    /// so the slower arrest drain leaves the refill after a shock at the rate it was: full from empty in four minutes.
+    /// </summary>
     public static readonly CVarDef<float> BrainRefillFactor =
-        CVarDef.Create("wolfmed.brain_refill_factor", 0.5f, CVar.SERVERONLY);
+        CVarDef.Create("wolfmed.brain_refill_factor", 0.75f, CVar.SERVERONLY);
 
     /// <summary>
     /// Multiplier on the cold protection a brain gets from a low body temperature. The curve itself is data
@@ -231,9 +242,18 @@ public sealed class WolfmedCVars
     public static readonly CVarDef<float> BrainColdFactor =
         CVarDef.Create("wolfmed.brain_cold_factor", 1f, CVar.SERVERONLY);
 
-    /// <summary>Drain multiplier while somebody is doing CPR.</summary>
+    /// <summary>Drain multiplier while somebody is doing CPR, above <see cref="BrainCprFloor"/>.</summary>
     public static readonly CVarDef<float> BrainCprFactor =
         CVarDef.Create("wolfmed.brain_cpr_factor", 0.25f, CVar.SERVERONLY);
+
+    /// <summary>
+    /// Playtest 5: brain oxygenation chest compressions hold a living arrested body at. Above it the drain (times
+    /// wolfmed.brain_cpr_factor) stops there; under it CPR refills at the corpse rate up to it. 0.4, the damage line,
+    /// so a rescuer who keeps going keeps the brain alive for as long as they keep going. 0 turns the hold off and
+    /// CPR only slows the drain, as before.
+    /// </summary>
+    public static readonly CVarDef<float> BrainCprFloor =
+        CVarDef.Create("wolfmed.brain_cpr_floor", 0.4f, CVar.SERVERONLY);
 
     /// <summary>Drain multiplier while an epinephrine-class stimulant is metabolising.</summary>
     public static readonly CVarDef<float> BrainStimulantFactor =
@@ -243,9 +263,12 @@ public sealed class WolfmedCVars
     public static readonly CVarDef<float> BrainDamageOxygenation =
         CVarDef.Create("wolfmed.brain_damage_oxygenation", 0.4f, CVar.SERVERONLY);
 
-    /// <summary>Brain organ health lost per second at zero oxygenation, falling linearly to the threshold.</summary>
+    /// <summary>
+    /// Brain organ health lost per second at zero oxygenation, falling linearly to the threshold. 0.05 since
+    /// playtest 5 (was 0.1): an empty brain (15 health) lasts five minutes, not two and a half.
+    /// </summary>
     public static readonly CVarDef<float> BrainDamageRate =
-        CVarDef.Create("wolfmed.brain_damage_rate", 0.1f, CVar.SERVERONLY);
+        CVarDef.Create("wolfmed.brain_damage_rate", 0.05f, CVar.SERVERONLY);
 
     /// <summary>Oxygenation under which hypoxia starts pushing consciousness down.</summary>
     public static readonly CVarDef<float> BrainPressureStart =

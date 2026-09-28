@@ -53,6 +53,8 @@ public sealed class WolfmedBreathingClockTest : GameTest
         await OverrideCVar(Side.Server, WolfmedCVars.ConsciousnessHysteresis, 0.1f);
         await OverrideCVar(Side.Server, WolfmedCVars.ArrestBlood, 0.30f);
         await OverrideCVar(Side.Server, WolfmedCVars.ArrestOxygenation, 0.15f);
+        // The M2 figures every derivation below uses. Playtest 5 ships 180 / 600 / 0.75 / 0.05 and no CPR drain past
+        // wolfmed.brain_cpr_floor; WolfmedArrestClockTest walks those.
         await OverrideCVar(Side.Server, WolfmedCVars.BrainArrestSeconds, 120f);
         await OverrideCVar(Side.Server, WolfmedCVars.BrainAirlossSeconds, 180f);
         await OverrideCVar(Side.Server, WolfmedCVars.BrainBloodSeconds, 300f);

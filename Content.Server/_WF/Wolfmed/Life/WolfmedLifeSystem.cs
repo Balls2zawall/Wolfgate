@@ -398,6 +398,19 @@ public sealed class WolfmedLifeSystem : EntitySystem
             return;
         }
 
+        // Playtest 5: compressions on a living arrested body hold the brain at wolfmed.brain_cpr_floor, the damage
+        // line: the drain stops there, and a brain already under it comes back up at the corpse rate. A rescuer who
+        // keeps going keeps the brain alive for as long as they keep going.
+        var floor = _cfg.GetCVar(WolfmedCVars.BrainCprFloor);
+        if (floor > 0f && InCpr(body) && InArrest(body))
+        {
+            var held = brain.Comp.Oxygenation < floor
+                ? MathF.Min(floor, brain.Comp.Oxygenation + CprDeadRefill * seconds)
+                : MathF.Max(floor, brain.Comp.Oxygenation - rate * seconds);
+            SetOxygenation(brain, held);
+            return;
+        }
+
         var value = rate > 0f
             ? brain.Comp.Oxygenation - rate * seconds
             : brain.Comp.Oxygenation + RefillRate() * seconds;
@@ -1242,11 +1255,17 @@ public sealed class WolfmedLifeSystem : EntitySystem
         if (rate <= 0f || threshold <= 0f || damageRate <= 0f)
             return null;
 
+        // Playtest 5: under compressions the brain holds at wolfmed.brain_cpr_floor; at or over the damage line there
+        // is no death coming, and the analyzer's estimate says so by saying nothing.
+        var floor = InCpr(body) && InArrest(body) ? MathF.Max(0f, _cfg.GetCVar(WolfmedCVars.BrainCprFloor)) : 0f;
+        if (floor >= threshold)
+            return null;
+
         var oxygen = brain.Comp.Oxygenation;
         var health = organ.Health.Float();
         for (var second = 0; second < 3600; second++)
         {
-            oxygen = MathF.Max(0f, oxygen - rate);
+            oxygen = MathF.Max(floor, oxygen - rate);
             if (oxygen < threshold)
                 health -= damageRate * Math.Clamp((threshold - oxygen) / threshold, 0f, 1f);
 

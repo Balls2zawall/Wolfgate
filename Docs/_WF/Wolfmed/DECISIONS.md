@@ -4360,3 +4360,13 @@ the owner's call; left as it plays.
   antibiotics under the line wake the patient at once. Same gunshot: sepsis at 20 minutes, out at 60, organ damage
   from 65, arrest about 80, brain death 84. `WolfmedSepsisTest.SepsisKillsTest` walks it; `SepsisDeterministicTest`
   pins the old drain back on.
+- **Push death back (owner, 2026-09-28).** "Cardiac arrest onsets too fast still. People dying is now way more work
+  to fix than before." Arrest itself stays where it was (30% blood, 15% oxygen, bleed rates untouched); the windows
+  around it doubled. `wolfmed.brain_arrest_seconds` 120 to 180 and `wolfmed.brain_damage_rate` 0.1 to 0.05: brain
+  death about 7.5 minutes after an arrest from a full brain, was 4. `wolfmed.brain_blood_seconds` 300 to 600: a
+  patient held at the blood arrest line with the bleeding stopped arrests at about 9 minutes, was 4.5.
+  `wolfmed.brain_refill_factor` 0.5 to 0.75 so the refill after a shock stays what it was. And CPR holds:
+  `wolfmed.brain_cpr_floor` (0.4, the damage line) is where compressions hold a living arrested brain, refilling to it
+  at the corpse rate if it had already dropped under, so a rescuer who keeps going keeps the brain alive for as long
+  as they keep going and the analyzer's countdown goes while they do. `WolfmedArrestClockTest` walks the shipped
+  clocks; the older fixtures pin the M2 figures and still derive from them.

@@ -60,6 +60,7 @@ public sealed class WolfmedRevivalTest : GameTest
         await OverrideCVar(Side.Server, WolfmedCVars.ArrestSepsisChance, 0f);
         await OverrideCVar(Side.Server, WolfmedCVars.ArrestShockDamage, 60f);
         await OverrideCVar(Side.Server, WolfmedCVars.BrainSepsisSeconds, 600f);
+        // The M2 figures the derivations use; playtest 5 ships 180 and 0.05 (WolfmedArrestClockTest walks those).
         await OverrideCVar(Side.Server, WolfmedCVars.BrainArrestSeconds, 120f);
         await OverrideCVar(Side.Server, WolfmedCVars.BrainDamageOxygenation, 0.4f);
         await OverrideCVar(Side.Server, WolfmedCVars.BrainDamageRate, 0.1f);
