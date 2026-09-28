@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using Content.IntegrationTests.Fixtures;
+using Content.IntegrationTests.Fixtures.Attributes; // WOLFGATE(Wolfmed): Side, for the pain scale pin.
 // WOLFGATE(Wolfmed): D13 moves the healing/bleeding systems to Content.Server but keeps their Onyx namespace.
 using Content.Server.Medical.Components; // WOLFGATE(Wolfmed): D14, HealingComponent stays server-only.
 using Content.Shared._Onyx.Targeting;
@@ -80,6 +81,8 @@ public sealed class WoundHealingTest : GameTest
     [Test]
     public async Task HealsSelectedPartDamageWithoutWoundTest()
     {
+        // WOLFGATE(Wolfmed): playtest 5 ships wolfmed.pain_scale 0.85; Onyx's pain figures below are at 1.
+        await OverrideCVar(Side.Server, Content.Shared._WF.Wolfmed.CCVar.WolfmedCVars.PainScale, 1f);
         var server = Pair.Server;
         await server.WaitIdleAsync();
         var entityManager = server.ResolveDependency<IEntityManager>();

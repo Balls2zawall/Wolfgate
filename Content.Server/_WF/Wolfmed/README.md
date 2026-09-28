@@ -898,6 +898,7 @@ Discord) saying what broke and what state they were in; misuse is a ban. Remove 
   - D23: derivation — the head is armoured by the partModifiers Blunt 0.25 entry, and that
   - P3-D5: the coverage gate returns before any modifier maths, so an uncovered part takes
   - playtest 4, the loose rate would change Onyx's recovery arithmetic asserted below.
+  - playtest 5 ships wolfmed.pain_scale 0.85; Onyx's figures below are at 1.
   - canary for the language trap that made the whole pain system inert. On a record struct
   - pinpoint diagnostics — pain reaching zero here has three distinct causes (no routed
   - D16: Onyx's SuppressPain entity effect is phase 4; PainSystem.SuppressPain is the same
@@ -926,12 +927,14 @@ Discord) saying what broke and what state they were in; misuse is a ban. Remove 
   - P2-D23, W0: 60 clears WFWolfmedFractureProfile's Comminuted threshold (45), whose
   - P2-D23, W0: WoundFractureSystem.OnWoundChanged re-grades with no random roll, so
 - [`Content.IntegrationTests/Tests/_Onyx/Wounds/WoundHealingTest.cs`](../../../Content.IntegrationTests/Tests/_Onyx/Wounds/WoundHealingTest.cs)
+  - Side, for the pain scale pin.
   - D13 moves the healing/bleeding systems to Content.Server but keeps their Onyx namespace.
   - D14, HealingComponent stays server-only.
   - D10.
   - D12 damage facade.
   - D10 resolver.
   - Shitmed body graph instead of Onyx's Nubody `InitialBody`; `Injurable` (D19), `Repairable` and
+  - playtest 5 ships wolfmed.pain_scale 0.85; Onyx's pain figures below are at 1.
   - W0: 11 rather than Onyx's 15. WFWolfmedFractureProfile's Hairline threshold is 12 at
   - W0: BluntWound now carries Onyx's intended `healingMultiplier: 0.15`, so removing the
   - D9

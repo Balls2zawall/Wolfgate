@@ -767,6 +767,8 @@ public sealed class WoundDamageFoundationTest : GameTest
     {
         // WOLFGATE(Wolfmed): playtest 4, the loose rate would change Onyx's recovery arithmetic asserted below.
         await OverrideCVar(Side.Server, Content.Shared._WF.Wolfmed.CCVar.WolfmedCVars.PainLooseRecovery, 0f);
+        // WOLFGATE(Wolfmed): playtest 5 ships wolfmed.pain_scale 0.85; Onyx's figures below are at 1.
+        await OverrideCVar(Side.Server, Content.Shared._WF.Wolfmed.CCVar.WolfmedCVars.PainScale, 1f);
         // WOLFGATE(Wolfmed): canary for the language trap that made the whole pain system inert. On a record struct
         // with a primary constructor, `new T()` binds to the implicit parameterless struct constructor and
         // zeroes the field rather than taking the primary constructor's `= 1f` default, so Onyx's
