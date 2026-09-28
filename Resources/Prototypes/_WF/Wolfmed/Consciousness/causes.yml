@@ -136,6 +136,7 @@
 
 - type: wolfmedConsciousnessCause
   id: Shutdown
+  dying: true # Playtest 5: a shut-down chassis may let go; nothing runs out, but nobody may come
   alertOut: WFWolfmedOutShutdown
   blockerName: wolfmed-cause-shutdown
   titleOut: wolfmed-cause-shutdown-title

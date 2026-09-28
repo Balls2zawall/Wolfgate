@@ -1529,7 +1529,9 @@ Discord) saying what broke and what state they were in; misuse is a ban. Remove 
 - [`Resources/Prototypes/_HL/Body/Organs/synth.yml`](../../../Resources/Prototypes/_HL/Body/Organs/synth.yml)
   - M4: OD16 Synth is mechanical, the ccu is its positronic core
   - M4: OD16 Synth is mechanical, the heart is its coolant pump
-- [`Resources/Prototypes/_HL/Body/Parts/synth.yml`](../../../Resources/Prototypes/_HL/Body/Parts/synth.yml): M4: OD16 Synth is mechanical, chassis wound profile; WFWolfmedPartIpc must stay FIRST (RT first-parent-wins)
+- [`Resources/Prototypes/_HL/Body/Parts/synth.yml`](../../../Resources/Prototypes/_HL/Body/Parts/synth.yml)
+  - M4: OD16 Synth is mechanical, chassis wound profile; WFWolfmedPartIpc must stay FIRST (RT first-parent-wins)
+  - playtest 5, the IPC part container (as PartIPCBase), so the welder and the applicator repair a synth
 - [`Resources/Prototypes/_HL/Damage/modifier_sets.yml`](../../../Resources/Prototypes/_HL/Damage/modifier_sets.yml): Wolfmed: OD16, a Synth is mechanical and takes no poison, like the IPC set
 - [`Resources/Prototypes/_HL/Entities/Mobs/Species/protogen_subspecies.yml`](../../../Resources/Prototypes/_HL/Entities/Mobs/Species/protogen_subspecies.yml)
   - M4, OD16: a wound host, so Wolfmed decides its state (plan 9.2 group D). Not reparented to

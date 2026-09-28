@@ -116,13 +116,16 @@ public sealed class WolfmedWeldingRepairTest : GameTest
     /// Playtest 5: "welding a chassis breach doesn't seem to fix it" and "an IPC used to heal with the nanite
     /// applicator". The analyzer says weld the fluid leak without saying where, so the tool finds the breach with the
     /// aiming doll left on the chest; the applicator lists the IPC part container again; and a chassis repairs itself
-    /// with either, at the self-repair delay.
+    /// with either, at the self-repair delay. A synth's parts sit in the same container (playtest 5: they were in
+    /// BasePart's Inorganic, which no repair tool lists, so a synth heard "nothing needs the welder").
     /// </summary>
-    [TestCase("Welder", false, TargetBodyPart.Torso)]
-    [TestCase("Welder", true, TargetBodyPart.Torso)]
-    [TestCase("NaniteApplicator", false, TargetBodyPart.RightLeg)]
-    [TestCase("NaniteApplicator", true, TargetBodyPart.Torso)]
-    public async Task ToolFindsTheBreachWhereverTheDollAimsTest(string toolId, bool self, TargetBodyPart aim)
+    [TestCase("Welder", false, TargetBodyPart.Torso, "MobIPC")]
+    [TestCase("Welder", true, TargetBodyPart.Torso, "MobIPC")]
+    [TestCase("NaniteApplicator", false, TargetBodyPart.RightLeg, "MobIPC")]
+    [TestCase("NaniteApplicator", true, TargetBodyPart.Torso, "MobIPC")]
+    [TestCase("Welder", true, TargetBodyPart.Torso, "MobSynth")]
+    [TestCase("NaniteApplicator", false, TargetBodyPart.RightLeg, "MobSynth")]
+    public async Task ToolFindsTheBreachWhereverTheDollAimsTest(string toolId, bool self, TargetBodyPart aim, string mobId)
     {
         var server = Pair.Server;
         await server.WaitIdleAsync();
@@ -133,7 +136,7 @@ public sealed class WolfmedWeldingRepairTest : GameTest
 
         await server.WaitAssertion(() =>
         {
-            body = entities.SpawnEntity("MobIPC", map.GridCoords);
+            body = entities.SpawnEntity(mobId, map.GridCoords);
             var user = self ? body : entities.SpawnEntity("MobHuman", map.GridCoords);
             entities.RemoveComponent<BarotraumaComponent>(body);
             entities.RemoveComponent<TemperatureComponent>(body);

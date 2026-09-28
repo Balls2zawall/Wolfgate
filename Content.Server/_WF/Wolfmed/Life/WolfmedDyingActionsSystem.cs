@@ -57,6 +57,7 @@ public sealed class WolfmedDyingActionsSystem : EntitySystem
     [Dependency] private ChatSystem _chat = default!;
     [Dependency] private EuiManager _eui = default!;
     [Dependency] private GhostSystem _ghost = default!;
+    [Dependency] private WolfmedShutdownSystem _shutdown = default!; // Playtest 5
     [Dependency] private MobStateSystem _mobState = default!;
     [Dependency] private OrganHealthSystem _organs = default!;
     [Dependency] private QuickDialogSystem _quickDialog = default!;
@@ -109,12 +110,14 @@ public sealed class WolfmedDyingActionsSystem : EntitySystem
     #region Queries
 
     /// <summary>
-    /// Dying on a wound host: the heart has stopped, or (M4, OD3 (b)) a machine is in thermal shutdown, and the body
-    /// is not dead yet.
+    /// Dying on a wound host: the heart has stopped, or (M4, OD3 (b)) a machine is in thermal shutdown, or (playtest 5)
+    /// a machine is shut down for want of power or a pump, and the body is not dead yet. The shutdown runs nothing
+    /// out, but a chassis nobody comes for has to be able to let go too.
     /// </summary>
     public bool IsDying(EntityUid body) =>
         !TerminatingOrDeleted(body) && _life.OwnsDeath(body) &&
-        (_life.InArrest(body) || _overheat.InThermalShutdown(body)) && !_mobState.IsDead(body);
+        (_life.InArrest(body) || _overheat.InThermalShutdown(body) || _shutdown.IsShutDown(body)) &&
+        !_mobState.IsDead(body);
 
     /// <summary>Wolfmed, not upstream's kill-crit branch, decides how this body is left.</summary>
     public bool OwnsEnding(EntityUid? body) => body is { } uid && _life.OwnsDeath(uid);
@@ -127,7 +130,7 @@ public sealed class WolfmedDyingActionsSystem : EntitySystem
 
     #region Grant and revoke
 
-    /// <summary>Gives a Dying body Succumb and Last Words. Called when the heart stops or thermal shutdown starts.</summary>
+    /// <summary>Gives a Dying body Succumb and Last Words. Called when the heart stops or a shutdown starts.</summary>
     public void Grant(EntityUid body)
     {
         if (!IsDying(body))
@@ -270,6 +273,16 @@ public sealed class WolfmedDyingActionsSystem : EntitySystem
             text = minutes is { } rot
                 ? Loc.GetString("wolfmed-succumb-dialog-text-core", ("minutes", rot))
                 : Loc.GetString("wolfmed-succumb-dialog-text-core-no-decay");
+        }
+        else if (_shutdown.IsShutDown(body))
+        {
+            // Playtest 5: a chassis with no power or no pump. Core failure, like thermal shutdown, and the same way back.
+            var reason = Loc.GetString(CompOrNull<WolfmedShutdownComponent>(body)?.Reason == WolfmedCauseSource.Pump
+                ? "wolfmed-cause-shutdown-source-pump"
+                : "wolfmed-cause-shutdown-source-power");
+            text = minutes is { } rot
+                ? Loc.GetString("wolfmed-succumb-dialog-text-shutdown", ("reason", reason), ("minutes", rot))
+                : Loc.GetString("wolfmed-succumb-dialog-text-shutdown-no-decay", ("reason", reason));
         }
         else if (CompOrNull<WolfmedConsciousnessComponent>(body)?.Heartless == true)
         {

@@ -225,6 +225,63 @@ public sealed class WolfmedIpcDeathTest : GameTest
     }
 
     /// <summary>
+    /// Playtest 5, "no ghost button when COOLANT PUMP OFFLINE: SHUTDOWN": a chassis shut down for want of power or a
+    /// pump runs nothing out, but nobody may come. It gets Succumb and Last Words like an arrest, the dialog names the
+    /// reason, a yes is core failure with the core left in place, and power back takes the actions away again.
+    /// </summary>
+    [Test]
+    public async Task PowerShutdownSuccumbTest()
+    {
+        await Pin();
+        var map = await Pair.CreateTestMap();
+        var s = new WolfmedScenario(SEntMan);
+        EntityUid ipc = default, restored = default;
+
+        await Server.WaitPost(() =>
+        {
+            s.SetAir(map.MapUid, true);
+            ipc = SEntMan.SpawnEntity("MobIPC", map.GridCoords);
+            restored = SEntMan.SpawnEntity("MobIPC", map.GridCoords);
+            var minds = SEntMan.System<SharedMindSystem>();
+            minds.TransferTo(minds.CreateMind(null).Owner, ipc);
+        });
+        await RunSeconds(2);
+
+        await Server.WaitAssertion(() =>
+        {
+            var shutdown = SEntMan.System<WolfmedShutdownSystem>();
+            var dying = SEntMan.System<WolfmedDyingActionsSystem>();
+            foreach (var chassis in new[] { ipc, restored })
+            {
+                shutdown.Refresh(chassis, powered: false);
+                Assert.That(shutdown.IsShutDown(chassis), Is.True, "the chassis did not shut down without power.");
+                Assert.That(dying.IsDying(chassis), Is.True, "a shut-down chassis is not Dying.");
+                Assert.That(HasDyingActions(chassis), Is.True, "a shut-down chassis has no Succumb and Last Words.");
+            }
+
+            // Power back: the way out goes with it.
+            shutdown.Refresh(restored, powered: true);
+            Assert.That(shutdown.IsShutDown(restored), Is.False);
+            Assert.That(HasDyingActions(restored), Is.False, "a chassis back on power kept Succumb.");
+
+            dying.OpenSuccumbDialog(ipc);
+            Assert.That(dying.GetPendingChoice(ipc), Is.EqualTo(WolfmedEndingChoice.Succumb));
+            Assert.That(Loc.GetString("wolfmed-succumb-dialog-text-shutdown-no-decay", ("reason", "no power")),
+                Does.Contain("no power").And.Contain("core failure"));
+            Assert.That(dying.Confirm(ipc), Is.True);
+
+            var core = s.Life.GetBrainOrgan(ipc);
+            Assert.Multiple(() =>
+            {
+                Assert.That(SEntMan.System<MobStateSystem>().IsDead(ipc), Is.True, "Succumb did not kill the chassis.");
+                Assert.That(core, Is.Not.Null, "the core left the chassis.");
+                Assert.That(core!.Value.Comp.Health, Is.EqualTo(FixedPoint2.Zero), "Succumb left the core standing.");
+                Assert.That(SEntMan.HasComponent<WolfmedDyingActionsComponent>(ipc), Is.False);
+            });
+        });
+    }
+
+    /// <summary>
     /// OD3 (b), plan §5.4: Succumb in thermal shutdown is core failure with the core left in place at 0, the shutdown
     /// ended on the corpse, and a returnable ghost; the dialog says core failure and core repair. The overheat pulse
     /// that burns the parts never reaches the core: heat reaches it only by the core-heat route.

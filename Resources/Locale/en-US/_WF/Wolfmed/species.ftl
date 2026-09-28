@@ -17,6 +17,9 @@ alerts-wolfmed-out-core-heat-desc = Core overheating and losing integrity. Cooli
 
 wolfmed-succumb-dialog-text-core = Your core is overheating. Let go and your chassis dies now: core failure. Your core stays in your chassis, and you stay you; a technician can bring you back with core repair and the restart button for about { $minutes } minutes. You will be asked to return.
 wolfmed-succumb-dialog-text-core-no-decay = Your core is overheating. Let go and your chassis dies now: core failure. Your core stays in your chassis, and you stay you; a technician can bring you back with core repair and the restart button. You will be asked to return.
+# Playtest 5: a chassis shut down for want of power or a pump can let go too. Nothing in it runs out, but nobody may come.
+wolfmed-succumb-dialog-text-shutdown = Your chassis is shut down ({ $reason }). Nothing in it is running out, and nothing comes back on its own. Let go and your chassis dies now: core failure. Your core stays in your chassis, and you stay you; a technician can bring you back with core repair and the restart button for about { $minutes } minutes. You will be asked to return.
+wolfmed-succumb-dialog-text-shutdown-no-decay = Your chassis is shut down ({ $reason }). Nothing in it is running out, and nothing comes back on its own. Let go and your chassis dies now: core failure. Your core stays in your chassis, and you stay you; a technician can bring you back with core repair and the restart button. You will be asked to return.
 
 wolfmed-vitals-state-thermalshutdown = THERMAL SHUTDOWN: { $cause }
 wolfmed-vitals-cause-coreheat = core overheating

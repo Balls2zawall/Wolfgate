@@ -197,7 +197,11 @@ public sealed class WolfmedHonestEndingTest : GameTest
 
                 AssertNoWayOut(fainted, "a fainted patient");
                 AssertNoWayOut(bled, "a patient out from blood loss");
-                AssertNoWayOut(ipc, "a shut-down chassis");
+
+                // Playtest 5: a shut-down chassis may let go after all. Nothing in it runs out, but nobody may come.
+                var shutIds = ActionIds(ipc);
+                Assert.That(shutIds, Does.Contain(WolfmedDyingActionsSystem.SuccumbAction.Id), "a shut-down chassis has no Succumb.");
+                Assert.That(shutIds, Does.Contain(WolfmedDyingActionsSystem.LastWordsAction.Id));
 
                 var ids = ActionIds(arrested);
                 Assert.That(ids, Does.Contain(WolfmedDyingActionsSystem.SuccumbAction.Id), "an arrested patient has no Succumb.");

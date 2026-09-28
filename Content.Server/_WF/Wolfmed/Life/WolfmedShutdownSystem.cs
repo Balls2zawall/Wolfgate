@@ -34,6 +34,7 @@ public sealed class WolfmedShutdownSystem : EntitySystem
     [Dependency] private ItemSlotsSystem _itemSlots = default!;
     [Dependency] private SharedContainerSystem _container = default!;
     [Dependency] private SiliconChargeSystem _siliconCharge = default!;
+    [Dependency] private WolfmedDyingActionsSystem _dyingActions = default!; // Playtest 5
 
     private TimeSpan _nextReconcile;
 
@@ -158,6 +159,7 @@ public sealed class WolfmedShutdownSystem : EntitySystem
         if (down)
         {
             // M1a: the reason the HUD and the alerts name. An empty cell is the one the player can fix.
+            var fresh = !HasComp<WolfmedShutdownComponent>(body);
             var shutdown = EnsureComp<WolfmedShutdownComponent>(body);
             var reason = power ? WolfmedCauseSource.Pump : WolfmedCauseSource.Power;
             if (shutdown.Reason != reason)
@@ -166,10 +168,15 @@ public sealed class WolfmedShutdownSystem : EntitySystem
                 Dirty(body, shutdown);
                 _consciousness.Refresh(body);
             }
+
+            // Playtest 5, "no ghost button when COOLANT PUMP OFFLINE": a shut-down chassis is not running out of
+            // anything, but nobody may come. Succumb and Last Words, as in arrest; power or a pump back takes them away.
+            if (fresh)
+                _dyingActions.Grant(body);
         }
-        else
+        else if (RemComp<WolfmedShutdownComponent>(body))
         {
-            RemComp<WolfmedShutdownComponent>(body);
+            _dyingActions.Revoke(body); // Playtest 5
         }
 
         _consciousness.SetExternalPressure(body, ShutdownPressure, down ? 1f : 0f);

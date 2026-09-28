@@ -4378,3 +4378,15 @@ the owner's call; left as it plays.
   to switch it off or retune. Every text says it is temporary and that misuse is a ban. **Remove after the playtest:**
   `Content.Server/_WF/Wolfmed/Commands/` (`HealMeImBrokenCommand`, `WolfmedBugRescueSystem`, `BwoinkSystem.Wolfmed.cs`),
   `healmeimbroken.ftl`, the two cvars, `WolfmedBugRescueTest` and this bullet.
+- **A synth's parts sit in the IPC part container (2026-09-28).** "Why can't I weld myself as a synth? It says nothing
+  needs fixing." `PartSynth` chains `WFWolfmedPartIpc` for the chassis wound profile but took its `Damageable` from
+  `BasePart`, whose Inorganic container is on no repair tool's list, so `CanRepairPart` refused every part and the
+  welder said "nothing needs the welder" over three chassis breaches. `PartSynth` now carries `WFInorganicWolfmed`
+  like `PartIPCBase`; the welding fixture runs a synth through the welder and the applicator.
+- **A shut-down chassis may let go (owner, 2026-09-28).** "I don't have a ghost button when COOLANT PUMP OFFLINE:
+  SHUTDOWN." The honest ending gave Succumb only to the Dying, and a power or pump shutdown runs nothing out, so it
+  had no way out at all; but nobody may come. `WolfmedShutdownSystem.Refresh` grants Succumb and Last Words when a
+  shutdown starts and revokes them when power or a pump comes back, `IsDying` counts the shutdown, the dialog names
+  the reason (no power, coolant pump offline) and says core failure, and a yes is the same core-at-zero, revivable
+  death as thermal shutdown. `WolfmedHonestEndingTest` flips its shut-down assertion; `PowerShutdownSuccumbTest`
+  walks the grant, the dialog, the death and the revoke.
