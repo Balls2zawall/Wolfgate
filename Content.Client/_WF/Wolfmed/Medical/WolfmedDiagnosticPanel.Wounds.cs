@@ -481,9 +481,17 @@ public sealed partial class WolfmedDiagnosticPanel
         if (diagnostics.Oxygenation < 0f)
             line += "-core";
 
-        return Loc.GetString(line,
+        var text = Loc.GetString(line,
             ("activity", (int) MathF.Round(diagnostics.BrainActivity * 100f)),
             ("oxygen", (int) MathF.Round(MathF.Max(0f, diagnostics.Oxygenation) * 100f)));
+
+        // Playtest 5: the trauma a repaired brain carries used to be invisible here, so its stutter and blur on a
+        // patient whose organs all read fine looked like a permanent bug.
+        if (diagnostics.BrainTraumaSeconds > 0f)
+            text += " " + Loc.GetString("health-analyzer-wound-brain-trauma",
+                ("minutes", (int) MathF.Ceiling(diagnostics.BrainTraumaSeconds / 60f)));
+
+        return text;
     }
 
     // Playtest 4 (SEPSIS): the banner says so once the sepsis is damaging the organs, which the vitals routes carry.

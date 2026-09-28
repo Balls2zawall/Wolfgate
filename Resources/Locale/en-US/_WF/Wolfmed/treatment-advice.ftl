@@ -477,4 +477,4 @@ wolfmed-treatment-step-cond-brain-death-1 = Get the blood above 40% first. A def
 wolfmed-treatment-step-cond-brain-death-2 = Shock them. They come back with major brain damage: blurred sight, slurred and stuttering speech, a grip that lets go.
 wolfmed-treatment-step-cond-brain-death-3 = Then open the head and repair the brain. Nothing else raises brain activity.
 wolfmed-treatment-avoid-cond-brain-death-1 = Rot is the one thing that cannot be undone. Get the body cold before you go looking for a surgeon.
-wolfmed-treatment-avoid-cond-brain-death-2 = A repaired brain keeps the trauma for half an hour. Blurred sight and a shaky grip are expected.
+wolfmed-treatment-avoid-cond-brain-death-2 = A repaired brain keeps the trauma for about ten minutes. Blurred sight and a shaky grip are expected.

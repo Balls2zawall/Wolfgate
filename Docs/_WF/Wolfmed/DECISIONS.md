@@ -4412,3 +4412,10 @@ the owner's call; left as it plays.
   damaged. `WFSurgeryRepairBrain` is the cure, not the ticket. A destroyed positronic core still needs core repair: a
   chassis has no damaged-but-running state to come back in, and `wolfmed-defib-brain-dead` now says so. Succumb and
   the analyzer's brain-death advice say what actually happens. `WolfmedBrainTest` and `WolfmedPlaytestOneTest` walk it.
+- **Brain trauma is shorter, visible and self-clearing (2026-09-28).** "I had died for quite a while and was brought
+  back; I stutter and have bad eyesight, all organs are fine." The half-hour trauma a repaired brain carried showed
+  nowhere: the analyzer read every organ whole, so it looked permanent. `wolfmed.brain_trauma_minutes` 30 to 10; the
+  analyzer's brain line appends "brain trauma from the repair, about N min left" (`BrainTraumaSeconds` on the wound
+  diagnostics); the patient is told when it starts and when it lifts; and `WolfmedConcussionSystem` recomputes every
+  concussion from its sources on its own tick, so one whose sources went without an edge clears itself within a
+  second. `StaleConcussionClearsItselfTest` and the brain test's trauma tail pin it.

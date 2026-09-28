@@ -278,9 +278,14 @@ public sealed class WolfmedCVars
     public static readonly CVarDef<float> BrainPressureOut =
         CVarDef.Create("wolfmed.brain_pressure_out", 0.45f, CVar.SERVERONLY);
 
-    /// <summary>Minutes a repaired brain carries its trauma, with the concussion effects.</summary>
+    /// <summary>
+    /// Minutes a repaired brain carries its trauma, with the concussion effects. 10 since playtest 5 (was 30): a
+    /// player took half an hour of stutter and blur with every organ reading fine for a permanent bug, and the
+    /// analyzer now names it. A revived destroyed brain is damaged rather than traumatised; the trauma is the price
+    /// of the repair.
+    /// </summary>
     public static readonly CVarDef<float> BrainTraumaMinutes =
-        CVarDef.Create("wolfmed.brain_trauma_minutes", 30f, CVar.SERVERONLY);
+        CVarDef.Create("wolfmed.brain_trauma_minutes", 10f, CVar.SERVERONLY);
 
     /// <summary>
     /// Blood volume fraction under which a defibrillator refuses to shock. Under the 0.30 blood arrest, so the

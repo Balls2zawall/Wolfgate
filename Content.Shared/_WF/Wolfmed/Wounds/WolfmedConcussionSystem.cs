@@ -103,6 +103,10 @@ public sealed class WolfmedConcussionSystem : EntitySystem
             }
 
             Recover(body.Owner, elapsed);
+
+            // Playtest 5: recomputed from its sources every tick, so a concussion whose sources went without an edge
+            // (a trauma that expired, a brain healed by hand) clears itself within a second instead of never.
+            Refresh(body.Owner);
         }
     }
 

@@ -85,6 +85,7 @@ public sealed class WolfmedLifeSystem : EntitySystem
     [Dependency] private WolfmedToxinSystem _toxin = default!; // M5
     [Dependency] private WolfmedRadiationSystem _radiation = default!;
     [Dependency] private WolfmedBodyTemperatureSystem _temperature = default!;
+    [Dependency] private Content.Shared.Popups.SharedPopupSystem _popup = default!; // Playtest 5
 
     private readonly List<EntityUid> _due = new();
     private TimeSpan _nextTick;
@@ -595,6 +596,8 @@ public sealed class WolfmedLifeSystem : EntitySystem
 
         RemComp<WolfmedBrainTraumaComponent>(body);
         _concussion.Refresh(body);
+        if (!_mobState.IsDead(body))
+            _popup.PopupEntity(Loc.GetString("wolfmed-brain-trauma-end"), body, body); // Playtest 5
     }
 
     private void UpdateArrest(EntityUid body, Entity<WolfmedBrainComponent> brain, float seconds)
@@ -1055,9 +1058,14 @@ public sealed class WolfmedLifeSystem : EntitySystem
             return;
         }
 
+        var minutes = _cfg.GetCVar(WolfmedCVars.BrainTraumaMinutes);
         var trauma = EnsureComp<WolfmedBrainTraumaComponent>(body);
-        trauma.Ends = _timing.CurTime + TimeSpan.FromMinutes(_cfg.GetCVar(WolfmedCVars.BrainTraumaMinutes));
+        trauma.Ends = _timing.CurTime + TimeSpan.FromMinutes(minutes);
         Dirty(body, trauma);
+
+        // Playtest 5: the patient is told what the stutter and the blur are, and for how long.
+        if (!_mobState.IsDead(body))
+            _popup.PopupEntity(Loc.GetString("wolfmed-brain-trauma-start", ("minutes", (int) MathF.Ceiling(minutes))), body, body);
 
         if (GetBrain(body) is { } brain)
             brain.Comp.Concussed = false;

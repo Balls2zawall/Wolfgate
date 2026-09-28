@@ -27,6 +27,7 @@ using Content.Shared.Traits.Assorted;
 using NUnit.Framework;
 using Robust.Shared.Configuration;
 using Robust.Shared.GameObjects;
+using Robust.Shared.Timing;
 using Robust.Shared.Prototypes;
 
 namespace Content.IntegrationTests.Tests._WF.Wolfmed;
@@ -254,7 +255,44 @@ public sealed class WolfmedBrainTest : GameTest
                 Assert.That(mobState.IsCritical(body), Is.False);
                 Assert.That(life.InArrest(body), Is.False);
             });
+
+            // Playtest 5 (after the oxygenation read, since a tick refills it): the trauma stutters and blurs, and nothing of it lingers once it ends.
+            Assert.That(entities.TryGetComponent(body, out Content.Shared._WF.Wolfmed.Wounds.WolfmedConcussionComponent? trauma) && trauma.Stutter,
+                Is.True, "brain trauma did not stutter the patient.");
+            entities.GetComponent<WolfmedBrainTraumaComponent>(body).Ends = server.ResolveDependency<IGameTiming>().CurTime;
+            life.Tick(body, 1f);
+            Assert.That(entities.HasComponent<WolfmedBrainTraumaComponent>(body), Is.False, "the trauma did not end on time.");
+            Assert.That(entities.HasComponent<Content.Shared._WF.Wolfmed.Wounds.WolfmedConcussionComponent>(body), Is.False,
+                "the stutter and blur outlived the trauma.");
         });
+    }
+
+    /// <summary>
+    /// Playtest 5, "I have been fully healed and I stutter and have bad eyesight": a concussion whose sources are gone
+    /// clears itself on the concussion system's own tick, whatever path forgot to recompute it.
+    /// </summary>
+    [Test]
+    public async Task StaleConcussionClearsItselfTest()
+    {
+        var server = Pair.Server;
+        await server.WaitIdleAsync();
+        var entities = server.ResolveDependency<IEntityManager>();
+        var map = await Pair.CreateTestMap();
+        EntityUid body = default;
+
+        await server.WaitAssertion(() =>
+        {
+            body = entities.SpawnEntity("MobHuman", map.GridCoords);
+            var stale = entities.EnsureComponent<Content.Shared._WF.Wolfmed.Wounds.WolfmedConcussionComponent>(body);
+            stale.Stutter = true;
+            stale.Blur = 2f;
+        });
+
+        await Pair.RunSeconds(3);
+
+        await server.WaitAssertion(() =>
+            Assert.That(entities.HasComponent<Content.Shared._WF.Wolfmed.Wounds.WolfmedConcussionComponent>(body), Is.False,
+                "a concussion with no source behind it never cleared."));
     }
 
     /// <summary>

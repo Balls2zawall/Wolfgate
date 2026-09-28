@@ -175,6 +175,8 @@ health-analyzer-wound-cardiac-arrest = [color=#d63c2c]CARDIAC ARREST[/color] - p
 health-analyzer-wound-cardiac-arrest-timed = [color=#d63c2c]CARDIAC ARREST[/color] - pulse: none, est. brain death in { $minutes }:{ $seconds }
 health-analyzer-wound-brain-dead = [color=#d63c2c]BRAIN DESTROYED[/color] - no brain activity, no pulse. A shock brings them back with major brain damage; repair the brain after.
 health-analyzer-wound-brain-activity = brain activity { $activity }%, oxygenation { $oxygen }%
+# Playtest 5: appended to the brain line while a repaired brain carries its trauma.
+health-analyzer-wound-brain-trauma = Brain trauma from the repair, about { $minutes } min left: blurred sight and a stammer. Nothing shortens it.
 health-analyzer-wound-brain-damage = brain damage, { $activity }% tissue left, oxygenation { $oxygen }%. Brain repair surgery once the patient is breathing.
 health-analyzer-wound-brain-damage-critical = CRITICAL brain damage, { $activity }% tissue left, oxygenation { $oxygen }%. Brain repair surgery now.
 health-analyzer-wound-brain-activity-core = core integrity { $activity }%

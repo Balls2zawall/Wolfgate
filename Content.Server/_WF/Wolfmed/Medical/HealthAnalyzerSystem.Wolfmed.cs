@@ -200,8 +200,15 @@ public sealed partial class HealthAnalyzerSystem
             postShock?.SafeUnits ?? 0f, // WOLFGATE (M1a)
             postShock?.GraceSeconds ?? 0f, // WOLFGATE (M1a)
             postShock?.SafeLine ?? 0f, // WOLFGATE (M1a)
-            BuildVitals(body)); // WOLFGATE (M1a): the vitals block, HealthAnalyzerSystem.Vitals.cs
+            BuildVitals(body), // WOLFGATE (M1a): the vitals block, HealthAnalyzerSystem.Vitals.cs
+            BrainTraumaSeconds(body)); // Playtest 5: the repaired brain's trauma, so its stutter and blur are named
     }
+
+    /// <summary>Playtest 5: seconds left on a repaired brain's trauma, or -1 when the patient carries none.</summary>
+    private float BrainTraumaSeconds(EntityUid body) =>
+        TryComp(body, out Content.Shared._WF.Wolfmed.Life.WolfmedBrainTraumaComponent? trauma) && trauma.Ends > _timing.CurTime
+            ? (float) (trauma.Ends - _timing.CurTime).TotalSeconds
+            : -1f;
 
     /// <summary>
     /// WOLFGATE (EVISC): organ slots on this part with nothing in them. The slots are the ones the body

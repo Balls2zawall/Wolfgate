@@ -11,6 +11,10 @@ wolfmed-defib-no-response = No response. Charge again.
 wolfmed-defib-not-monitored = Shock refused: no vital signs this device can read.
 wolfmed-defib-no-brain = No neural activity. Nothing to restart.
 wolfmed-defib-no-blood = Shock refused: blood {$percent}%. Transfuse ≈ {$units} u first; ≈ {$safe} u to {$line}%.
+# Playtest 5: a repaired brain's trauma, told to the patient when it starts and when it lifts.
+wolfmed-brain-trauma-start = Your thoughts drag and the room swims: brain trauma from the repair, about { $minutes } minutes.
+wolfmed-brain-trauma-end = Your head clears.
+
 # Playtest 5: only a destroyed positronic core hears this; a destroyed brain comes back damaged.
 wolfmed-defib-brain-dead = Core destroyed. Repair the core first.
 

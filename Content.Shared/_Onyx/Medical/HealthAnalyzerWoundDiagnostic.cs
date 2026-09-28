@@ -124,6 +124,9 @@ public sealed class HealthAnalyzerWoundDiagnostics
 
     /// <summary>WOLFGATE (M1a): the vitals block: state and cause, breathing, circulation, defib verdict (plan §5.5).</summary>
     public readonly WolfmedVitalsReport? Vitals;
+
+    /// <summary>WOLFGATE(Wolfmed): playtest 5: seconds left on a repaired brain's trauma, or -1 when there is none.</summary>
+    public readonly float BrainTraumaSeconds;
     // WOLFGATE END
 
     // WOLFGATE(Wolfmed) START: W5, CONSC, BRAIN and M1a append optional parameters to the Onyx constructor.
@@ -145,7 +148,8 @@ public sealed class HealthAnalyzerWoundDiagnostics
         float postShockSafeUnits = 0f, // WOLFGATE(Wolfmed): M1a
         float postShockGraceSeconds = 0f, // WOLFGATE(Wolfmed): M1a
         float postShockSafeLine = 0f, // WOLFGATE(Wolfmed): M1a
-        WolfmedVitalsReport? vitals = null) // WOLFGATE(Wolfmed): M1a: package D's vitals block
+        WolfmedVitalsReport? vitals = null, // WOLFGATE(Wolfmed): M1a: package D's vitals block
+        float brainTraumaSeconds = -1f) // WOLFGATE(Wolfmed): playtest 5, the repaired brain's trauma
     {
         Parts = parts;
         Sepsis = sepsis; // WOLFGATE(Wolfmed): W5
@@ -163,5 +167,6 @@ public sealed class HealthAnalyzerWoundDiagnostics
         PostShockGraceSeconds = postShockGraceSeconds; // WOLFGATE(Wolfmed): M1a
         PostShockSafeLine = postShockSafeLine; // WOLFGATE(Wolfmed): M1a
         Vitals = vitals; // WOLFGATE(Wolfmed): M1a
+        BrainTraumaSeconds = brainTraumaSeconds; // WOLFGATE(Wolfmed): playtest 5
     }
 }

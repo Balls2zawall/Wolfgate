@@ -1181,10 +1181,13 @@ Discord) saying what broke and what state they were in; misuse is a ban. Remove 
   - UI2 and UI3 add the category and the prototype id to Onyx's visible wound.
   - W5, CONSC, BRAIN and M1a body-level readouts beside the parts.
   - M1a: units to transfuse after a successful shock.
+  - playtest 5: seconds left on a repaired brain's trauma, or -1 when there is none.\</summary>
   - W5, CONSC, BRAIN and M1a append optional parameters to the Onyx constructor.
   - BRAIN
   - M1a
   - M1a: package D's vitals block
+  - playtest 5, the repaired brain's trauma
+  - playtest 5
 - [`Content.Shared/_Onyx/Medical/Tourniquet/TourniquetComponent.cs`](../../../Content.Shared/_Onyx/Medical/Tourniquet/TourniquetComponent.cs): ported from Onyx for Wolfmed.
 - [`Content.Shared/_Onyx/Mobs/Systems/MobThresholdSystem.cs`](../../../Content.Shared/_Onyx/Mobs/Systems/MobThresholdSystem.cs)
   - Wolfgate keeps BodyComponent in Content.Shared.Body.Components.
