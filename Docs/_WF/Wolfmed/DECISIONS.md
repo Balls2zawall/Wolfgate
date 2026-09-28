@@ -4390,3 +4390,10 @@ the owner's call; left as it plays.
   the reason (no power, coolant pump offline) and says core failure, and a yes is the same core-at-zero, revivable
   death as thermal shutdown. `WolfmedHonestEndingTest` flips its shut-down assertion; `PowerShutdownSuccumbTest`
   walks the grant, the dialog, the death and the revoke.
+- **The pod cuts clothing on every run (owner, 2026-09-28).** "Autodoc should cut clothing automatically." AUTODOC5
+  had it cut only under AUTO and only for a patient who could not undress; an awake patient, or any manual run, sat on
+  WAITING: CLOTHING until somebody pressed CUT. `TickClothing` now cuts once `clothingCutDelay` (5 s) is out whoever
+  the patient is and however the run started. The awake patient is still told first ("REMOVE YOUR CLOTHING NOW, OR I
+  WILL CUT IT."), the helpless one hears the old "I WILL CUT", and the CUT button still cuts at once. A locked
+  garment is given up after the same delay on every run. `PodCutsClothingOffAnAwakePatientAfterItsDelayTest`;
+  the CUT-button test holds the delay long so the button is what unblocks it.

@@ -23,7 +23,7 @@ wolfmed-autodoc-status-complete = PROCEDURE COMPLETE
 wolfmed-autodoc-status-faulted = FAULT
 wolfmed-autodoc-status-anaesthesia = ANAESTHESIA { $seconds }s, SEDATION { $percent }%
 
-wolfmed-autodoc-popup-clothing = S.A.M. cannot reach your skin. Take the clothing off, or press CUT CLOTHING.
+wolfmed-autodoc-popup-clothing = S.A.M. cannot reach your skin. Take the clothing off now, or it gets cut.
 
 wolfmed-autodoc-radio-critical = AUTODOC { $location }: PATIENT VITALS CRITICAL. OPERATOR REQUESTED.
 

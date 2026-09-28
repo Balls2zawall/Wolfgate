@@ -99,7 +99,7 @@ LINES = [
     ("hull-breach", "HULL BREACH. OUTSIDE ATMOSPHERE.", None, "Urgent"),
 
     ("stall", "THIS IS NOT WORKING.", None, "Urgent"),
-    ("clothing", "REMOVE YOUR CLOTHING OR PRESS CUT.", None, "Urgent"),
+    ("clothing", "REMOVE YOUR CLOTHING NOW, OR I WILL CUT IT.", None, "Urgent"),
     ("clothing-auto", "NOBODY IS UNDRESSING YOU. I WILL CUT.", None, "Urgent"),
     ("cutting", "CUTTING.", None, "Info"),
     # Playtest 3 SAM: gloves, boots and helmets come off whole; the transcript names them.

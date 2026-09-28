@@ -1193,7 +1193,8 @@ public sealed partial class AutodocSystem
     /// <summary>
     /// Waiting on the patient rather than on the tray: clothing over the part. The pod says so once and
     /// looks again every tick, so it picks the procedure straight back up once the way is clear. Somebody
-    /// awake is asked to undress or press CUT; somebody who cannot is warned that AUTO will do it for them.
+    /// awake is told to undress now or lose the clothing; somebody who cannot is told it will be cut. Either
+    /// way the pod cuts once <see cref="AutodocComponent.ClothingCutDelay"/> is out (playtest 5).
     /// </summary>
     private void EnterBlocked(Entity<AutodocComponent> ent, StepInvalidReason reason)
     {
@@ -1233,7 +1234,7 @@ public sealed partial class AutodocSystem
             }
 
             var helpless = body is { } patient && !CanUndress(patient);
-            Speak(ent, ent.Comp.Auto && helpless ? AutodocVoiceEvent.ClothingAuto : AutodocVoiceEvent.Clothing);
+            Speak(ent, helpless ? AutodocVoiceEvent.ClothingAuto : AutodocVoiceEvent.Clothing);
 
             if (body is { } awake && !helpless)
                 _popup.PopupEntity(Loc.GetString("wolfmed-autodoc-popup-clothing"), ent.Owner, awake,
@@ -1251,8 +1252,9 @@ public sealed partial class AutodocSystem
     private const SlotFlags CutSlots = SlotFlags.OUTERCLOTHING | SlotFlags.INNERCLOTHING;
 
     /// <summary>
-    /// Acts on a clothing block. A pressed CUT button cuts now; an AUTO pod whose patient is in no state to
-    /// undress themselves cuts once it has waited its delay out. Anything else waits for a person.
+    /// Acts on a clothing block. A pressed CUT button cuts now; otherwise the pod cuts once it has waited its delay
+    /// out, whoever the patient is and however the run was started. Playtest 5, "the autodoc should cut clothing
+    /// automatically": it used to wait on an awake patient, and on any manual run, for ever.
     /// </summary>
     private void TickClothing(Entity<AutodocComponent> ent)
     {
@@ -1265,8 +1267,7 @@ public sealed partial class AutodocSystem
             return;
         }
 
-        if (!ent.Comp.Auto || CanUndress(body) ||
-            _timing.CurTime - ent.Comp.ClothingSince < TimeSpan.FromSeconds(MathF.Max(0f, ent.Comp.ClothingCutDelay)))
+        if (_timing.CurTime - ent.Comp.ClothingSince < TimeSpan.FromSeconds(MathF.Max(0f, ent.Comp.ClothingCutDelay)))
             return;
 
         // Playtest 3 SAM: waited the whole delay on something it cannot take off. The rest of the queue goes on.

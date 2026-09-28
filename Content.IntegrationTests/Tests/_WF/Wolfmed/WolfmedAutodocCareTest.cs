@@ -1,4 +1,5 @@
 #nullable enable
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Content.IntegrationTests.Fixtures;
@@ -152,7 +153,7 @@ public sealed class WolfmedAutodocCareTest : GameTest
 
     /// <summary>
     /// A dressed patient used to sit at WAITING FOR MATERIAL for ever. CUT CLOTHING destroys the jumpsuit
-    /// and the procedure carries on.
+    /// and the procedure carries on. The pod's own cut is held off (a long delay) so the button is what unblocks it.
     /// </summary>
     [Test]
     public async Task CutClothingUnblocksTheProcedureTest()
@@ -176,6 +177,7 @@ public sealed class WolfmedAutodocCareTest : GameTest
                 "the fixture could not dress the patient.");
 
             pod = Pod(entities, map, "WolfmedCareTestAutodoc");
+            pod.Comp.ClothingCutDelay = 600f;
             Assert.That(autodoc.TryInsert(pod, body), Is.True);
         });
 
@@ -194,6 +196,7 @@ public sealed class WolfmedAutodocCareTest : GameTest
         {
             Assert.That(pod.Comp!.BlockedReason, Is.Not.Null,
                 $"the clothing never blocked the pod (state {pod.Comp.State}).");
+            Assert.That(entities.Deleted(suit), Is.False, "the pod cut without waiting its delay out.");
             entities.System<AutodocSystem>().Control(pod, AutodocControl.CutClothing, null);
         });
 
@@ -205,6 +208,57 @@ public sealed class WolfmedAutodocCareTest : GameTest
             {
                 Assert.That(entities.Deleted(suit), Is.True, "the jumpsuit survived being cut off.");
                 Assert.That(pod.Comp!.BlockedReason, Is.Null, "the pod is still blocked on clothing.");
+            });
+        });
+    }
+
+    /// <summary>
+    /// Playtest 5, "the autodoc should cut clothing automatically": a manual run on a patient who is awake and could
+    /// undress is told to, and cut anyway once the delay is out. It used to wait on them for ever.
+    /// </summary>
+    [Test]
+    public async Task PodCutsClothingOffAnAwakePatientAfterItsDelayTest()
+    {
+        var server = Pair.Server;
+        await server.WaitIdleAsync();
+        var entities = server.ResolveDependency<IEntityManager>();
+        var map = await Pair.CreateTestMap();
+        Entity<AutodocComponent> pod = default;
+        EntityUid suit = default;
+
+        await server.WaitAssertion(() =>
+        {
+            var autodoc = entities.System<AutodocSystem>();
+            var body = entities.SpawnEntity("MobHuman", map.GridCoords);
+            Blunt(entities, body, TargetBodyPart.LeftArm, 25);
+
+            suit = entities.SpawnEntity("ClothingUniformJumpsuitColorGrey", map.GridCoords);
+            Assert.That(entities.System<InventorySystem>().TryEquip(body, suit, "jumpsuit", force: true), Is.True);
+
+            pod = Pod(entities, map, "WolfmedCareTestAutodoc");
+            Assert.That(autodoc.TryInsert(pod, body), Is.True);
+        });
+
+        await Pair.RunTicksSync(10);
+
+        await server.WaitAssertion(() =>
+        {
+            var autodoc = entities.System<AutodocSystem>();
+            Assert.That(autodoc.TryQueue(pod, "SurgeryTendWoundsBrute", TargetBodyPart.LeftArm), Is.True);
+            Assert.That(autodoc.TryStart(pod, null), Is.True);
+        });
+
+        await Pair.RunTicksSync(120);
+
+        await server.WaitAssertion(() =>
+        {
+            Assert.Multiple(() =>
+            {
+                Assert.That(entities.Deleted(suit), Is.True,
+                    $"the pod never cut the jumpsuit off an awake patient (state {pod.Comp!.State}, blocked {pod.Comp.BlockedReason}).");
+                Assert.That(pod.Comp!.VoiceEvents.GetValueOrDefault(AutodocVoiceEvent.Clothing), Is.EqualTo(1), "the patient was not told to undress first.");
+                Assert.That(pod.Comp.VoiceEvents.GetValueOrDefault(AutodocVoiceEvent.ClothingAuto), Is.Zero, "an awake patient heard the helpless line.");
+                Assert.That(pod.Comp.BlockedReason, Is.Null, "the pod is still blocked on clothing.");
             });
         });
     }

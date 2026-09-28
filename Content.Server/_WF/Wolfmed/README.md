@@ -784,6 +784,8 @@ Discord) saying what broke and what state they were in; misuse is a ban. Remove 
 - [`Tools/_WF/Wolfmed/gen_wolfmed_overlays.py`](../../../Tools/_WF/Wolfmed/gen_wolfmed_overlays.py)
 - [`Tools/_WF/Wolfmed/import_cm_autodoc.py`](../../../Tools/_WF/Wolfmed/import_cm_autodoc.py)
 - [`Tools/_WF/Wolfmed/import_nova_blood.py`](../../../Tools/_WF/Wolfmed/import_nova_blood.py)
+- [`Tools/_WF/Wolfmed/Resources/Audio/_WF/Wolfmed/Autodoc/voice/attributions.yml`](../../../Tools/_WF/Wolfmed/Resources/Audio/_WF/Wolfmed/Autodoc/voice/attributions.yml)
+- [`Tools/_WF/Wolfmed/Resources/Audio/_WF/Wolfmed/Autodoc/voice/clothing.ogg`](../../../Tools/_WF/Wolfmed/Resources/Audio/_WF/Wolfmed/Autodoc/voice/clothing.ogg)
 
 ### Docs
 

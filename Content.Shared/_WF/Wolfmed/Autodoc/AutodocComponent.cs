@@ -163,7 +163,7 @@ public sealed partial class AutodocComponent : Component
     /// <summary>Blood volume fraction the pod transfuses up to.</summary>
     [DataField] public float TransfuseTarget = 0.9f;
 
-    /// <summary>Seconds the pod gives a patient to undress before AUTO cuts the clothing off them.</summary>
+    /// <summary>Seconds the pod gives a patient to undress before it cuts the clothing off them (playtest 5: any run).</summary>
     [DataField] public float ClothingCutDelay = 5f;
 
     /// <summary>Seconds between one shock and the next.</summary>
@@ -470,7 +470,7 @@ public sealed partial class AutodocComponent : Component
     public string? BlockingSlot;
 
     /// <summary>
-    /// <see cref="BlockingGarment"/> is something the pod cannot take off (locked, unremovable). An AUTO pod gives the
+    /// <see cref="BlockingGarment"/> is something the pod cannot take off (locked, unremovable). The pod gives the
     /// procedure up once it has waited <see cref="ClothingCutDelay"/> on it.
     /// </summary>
     [ViewVariables]
