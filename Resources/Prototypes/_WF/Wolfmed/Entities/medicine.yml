@@ -26,6 +26,8 @@
   description: Medical alcohol in a spray bottle. Spray it on an open wound to clean it before it festers.
   suffix: Filled
   components:
+  # Playtest 5: a click on a person, yourself included, sprays them rather than making them drink from the bottle.
+  - type: WolfmedAntisepticSpray
   - type: Tag
     tags:
     - Spray

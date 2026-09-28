@@ -4432,3 +4432,9 @@ the owner's call; left as it plays.
   sneezes of `WolfmedConditionEmoteSystem`), which read as sepsis from a hand cut. `fevered` is now fed only by a
   spreading wound or part on the torso or head, and by sepsis itself; `HasFever` reads the same. A limb's infection is
   pain and the analyzer's tissue line until it gets there. `InfectedChestShiversTest` and the hand-travel test pin it.
+- **The antiseptic spray sprays people (2026-09-28).** "Targeting yourself with antiseptic spray makes you drink it."
+  The spray bottle base is also a `Drink`, and on a click on a person the drink handler ran before the spray's.
+  `WolfmedAntisepticSpraySystem` (on `WolfmedAntisepticSprayComponent`) takes the click on any wound host, and the
+  use in hand, ahead of both: one press's worth goes onto the target by the same touch reaction the vapor uses, with
+  the spray sound and a popup, and nothing is swallowed. A click on the world still sprays a cloud, and the Drink
+  verb is still there for anyone who insists. `WolfmedAntisepticSprayTest` covers self, use in hand and another patient.
