@@ -21,7 +21,6 @@ public sealed partial class WeldingHealableSystem
     [Dependency] private WoundDamageRoutingSystem _woundRouting = default!;
     [Dependency] private ItemToggleSystem _repairToggle = default!;
     [Dependency] private AudioSystem _repairAudio = default!;
-    [Dependency] private SharedBodySystem _repairBody = default!;
 
     private void InitializeWoundRepair()
     {
@@ -75,7 +74,7 @@ public sealed partial class WeldingHealableSystem
     /// <summary>Whether any part of this body is one a repair tool works on at all.</summary>
     private bool HasRepairableParts(EntityUid body)
     {
-        foreach (var (part, _) in _repairBody.GetBodyChildren(body))
+        foreach (var (part, _) in _bodySystem.GetBodyChildren(body))
         {
             if (_woundHealing.IsCompatiblePart(body, part, null, RepairCapabilities))
                 return true;
