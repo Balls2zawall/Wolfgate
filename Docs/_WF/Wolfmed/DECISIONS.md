@@ -4370,3 +4370,11 @@ the owner's call; left as it plays.
   at the corpse rate if it had already dropped under, so a rescuer who keeps going keeps the brain alive for as long
   as they keep going and the analyzer's countdown goes while they do. `WolfmedArrestClockTest` walks the shipped
   clocks; the older fixtures pin the M2 figures and still derive from them.
+- **TEMPORARY: `healmeimbroken` (owner, 2026-09-28).** "I don't want to be a dick by leaving a possibly game-breaking
+  bug over night." Any player can run `healmeimbroken`; a window asks what broke, the answer rejuvenates their body
+  (`RejuvenateSystem`, so the Wolfmed rejuvenate hooks run) and files an ahelp in their own channel through the
+  ordinary path, Discord relay included, carrying the reason, the analyzer's state and vitals lines, its "Do first"
+  advice and every open wound by part, plus an admin log at High impact. Five-minute cooldown, `wolfmed.bug_rescue_*`
+  to switch it off or retune. Every text says it is temporary and that misuse is a ban. **Remove after the playtest:**
+  `Content.Server/_WF/Wolfmed/Commands/` (`HealMeImBrokenCommand`, `WolfmedBugRescueSystem`, `BwoinkSystem.Wolfmed.cs`),
+  `healmeimbroken.ftl`, the two cvars, `WolfmedBugRescueTest` and this bullet.
