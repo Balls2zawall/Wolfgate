@@ -50,6 +50,8 @@ public sealed class WolfmedBugRescueSystem : EntitySystem
         if (!Allowed(session, out refusal))
             return false;
 
+        // The dialog is one label beside one line edit: the explanation goes to chat, the window asks one question.
+        _chat.DispatchServerMessage(session, Loc.GetString("healmeimbroken-brief"));
         _dialog.OpenDialog(session, Loc.GetString("healmeimbroken-title"), Loc.GetString("healmeimbroken-prompt"),
             (LongString reason) => Rescue(session, reason.String));
         return true;
