@@ -65,7 +65,7 @@
     - suture_2
     - suture_3
   - type: StackPrice
-    price: 15 # a bruise pack's, printed from about the same materials
+    price: 5 # a little over the 4 its print costs; the kits and free loadout belts carry a stack
 
 - type: entity
   parent: WFWolfmedSuture

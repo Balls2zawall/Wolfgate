@@ -125,6 +125,13 @@ public sealed class WolfmedAvailabilityTest : GameTest
         ("MedkitFilled", "WFWolfmedAnalgesicPillCanister"),
         ("MedkitAdvancedFilled", "Tourniquet"),
         ("WFMedkitSyntheticFilled", "WFWolfmedHydraulicFluidPack"),
+        // Playtest 5: more to keep someone alive in every trauma kit and medical belt.
+        ("MedkitFilled", "WFWolfmedSuture"),
+        ("MedkitBruteFilled", "Tourniquet"),
+        ("MedkitAdvancedFilled", "EmergencyMedipen"),
+        ("MedkitCombatFilled", "Tourniquet"),
+        ("ClothingBeltMedicalFilled", "WFWolfmedSuture"),
+        ("ClothingBeltMedicalEMTFilled", "WFWolfmedAnalgesicPen"),
     ];
 
     /// <summary>Reachability: some vending inventory or lathe recipe names every new item.</summary>

@@ -4547,3 +4547,31 @@ the owner's call; left as it plays.
   the do-after the plain suture marks the cut sutured and leaves it clean, the makeshift one leaves it contaminated
   (past 1) and not sutured. The treatment matrix lists both new items against every wound, and
   `WolfmedAvailabilityTest` finds the suture in a vendor or lathe and the makeshift one in a construction recipe.
+- **More to keep someone alive in the kits and belts (owner, 2026-09-29).** "Medkits and EMT belts need to have more
+  lifesaving stuff in them (tourniquets, and whatever else that can temporarily save your life)." What holds a patient
+  for the ten minutes to real care: a tourniquet for a limb bleed, a suture for a cut, a splint so they can move, a
+  painkiller pen that gets a downed patient up at once, and an epinephrine pen (the emergency medipen: 12 epinephrine,
+  which slows the brain clock, and 3 tranexamic acid) where the kit's tier warrants it. The combat and advanced kits stay
+  ahead of the standard one. `Medkit`'s grid goes 6x2 to 7x2 in its marked block (every typed kit inherits it) and
+  `MedkitCombat`'s own 4x2 to the same 7x2 (new marked block): the standard kit was full at 12 and the combat kit at 8,
+  and neither could take what it lacked otherwise. The belts' 8x2 had room.
+  - `MedkitFilled`: bruise pack, ointment, gauze, tourniquet, splint, analgesic canister, tricordrazine canister, and
+    now a suture. 14 of 14.
+  - `MedkitBruteFilled`, the trauma kit: bruise pack, gauze, iron and copper canisters, splint, osteogen canister, and
+    now a tourniquet and a suture. 13 of 14.
+  - `MedkitAdvancedFilled`: medicated suture, regenerative mesh, two blood packs, tourniquet, and now a splint, an
+    emergency medipen and an analgesic pen. 14 of 14.
+  - `MedkitCombatFilled`: medicated suture, regenerative mesh, ephedrine and saline syringes, brute and burn
+    auto-injectors, and now a tourniquet (it had none), a splint and an emergency medipen. 13 of 14.
+  - `ClothingBeltMedicalFilled`: two bruise packs, ointment, blood pack, gauze, emergency medipen, and now a tourniquet
+    and a suture. 15 of 16.
+  - `ClothingBeltMedicalEMTFilled`: bruise pack, ointment, blood pack, gauze, three emergency medipens, and now a
+    tourniquet, a suture and an analgesic pen. 16 of 16.
+  - Left alone: the burn, toxin, oxygen and radiation kits (none of them is for a bleed; the burn kit is 8 of 14 now),
+    the stimkit, and the CMO's webbing, which carries a medicated suture already.
+  Prices: the plain suture's stack price drops from 15 to 5 a unit (75 a full stack), a little over the 4 its print
+  costs, because the kits and the contractor loadout's free filled belts now each carry a stack; a tourniquet
+  appraises at 0 and the pens at their reagents. The medkit crates in `cargo_medical.yml` are Frontier-abstract and
+  cannot be ordered. `NoShipyardShipArbitrage` (every vessel's mapped kits and belts), `NoCargoOrderArbitrage` and the
+  storage fill tests pass; `WolfmedAvailabilityTest.FillsContainWhatTheyDeclareTest` spawns all six fills and finds
+  every certain entry in each, so a fill that stops fitting fails there.
