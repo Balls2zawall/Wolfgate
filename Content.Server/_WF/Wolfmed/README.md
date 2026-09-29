@@ -1504,6 +1504,7 @@ Discord) saying what broke and what state they were in; misuse is a ban. Remove 
   - playtest 1, a spent casing gets its despawn timer on the floor, not in the cylinder.
   - a slot can hold a round that is already gone; treating it as live crashed the server.
   - playtest 1, the casing stays in the cylinder, so Mono's casing despawn waits for the floor.
+- [`Resources/Locale/en-US/_Mono/reagents/medicine.ftl`](../../../Resources/Locale/en-US/_Mono/reagents/medicine.ftl): its cold and shock are toxin load on a wound host, not burns.
 - [`Resources/Locale/en-US/_Onyx/entity-categories.ftl`](../../../Resources/Locale/en-US/_Onyx/entity-categories.ftl)
 - [`Resources/Locale/en-US/_Onyx/guidebook/entity-effects.ftl`](../../../Resources/Locale/en-US/_Onyx/guidebook/entity-effects.ftl): keys renamed from Onyx's `entity-effect-guidebook-*` to Wolfgate's `reagent-effect-guidebook-*`
 - [`Resources/Locale/en-US/_Onyx/medical/fractures.ftl`](../../../Resources/Locale/en-US/_Onyx/medical/fractures.ftl): ported from Onyx for Wolfmed.
@@ -1516,6 +1517,11 @@ Discord) saying what broke and what state they were in; misuse is a ban. Remove 
 - [`Resources/Locale/en-US/_Onyx/targeting/targeting.ftl`](../../../Resources/Locale/en-US/_Onyx/targeting/targeting.ftl): D9: Onyx's `chest` is Wolfgate's `torso`, and `groin` is omitted - GetValidParts() has it
 - [`Resources/Locale/en-US/_Onyx/traits/quirks.ftl`](../../../Resources/Locale/en-US/_Onyx/traits/quirks.ftl): WP10-3: only the HighPainThreshold keys are ported; the rest of Onyx's quirks.ftl belongs to traits not in scope.
 - [`Resources/Locale/en-US/damage/damage-command.ftl`](../../../Resources/Locale/en-US/damage/damage-command.ftl): P6, optional body part.
+- [`Resources/Locale/en-US/Goobstation/reagents/meta/medicine.ftl`](../../../Resources/Locale/en-US/Goobstation/reagents/meta/medicine.ftl): its overdose brute is toxin load on a wound host, a toxic coma within seconds rather than torn limbs.
+- [`Resources/Locale/en-US/reagents/meta/medicine.ftl`](../../../Resources/Locale/en-US/reagents/meta/medicine.ftl)
+  - its bloodloss healing is bookkeeping on a wound host; lost blood is the blood level, which it never raises.
+  - on a wound host it clots down to an artery's floor, and its overdose bloodloss is toxin load.
+  - its overdose brute is toxin load on a wound host, more than the overdose still flushes.
 - [`Resources/Maps/_NF/POI/medical.yml`](../../../Resources/Maps/_NF/POI/medical.yml): An autodoc pod placed in the medical POI.
 - [`Resources/Prototypes/_DV/Body/Organs/feroxi.yml`](../../../Resources/Prototypes/_DV/Body/Organs/feroxi.yml): M4: OD16 parity, Wolfmed lung data (plan 9.2 group A-prime)
 - [`Resources/Prototypes/_DV/Body/Organs/harpy.yml`](../../../Resources/Prototypes/_DV/Body/Organs/harpy.yml): M4: OD16 parity, Wolfmed lung data (plan 9.2 group A-prime)

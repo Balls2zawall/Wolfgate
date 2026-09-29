@@ -4529,3 +4529,12 @@ the owner's call; left as it plays.
   own route and deals no Asphyxiation, so nothing is counted twice. `WolfmedReagentDamageTest.MetabolisedAirlossIsToxinTest`
   pins ten ticks each of the tranexamic acid and dexalin overdoses as 35 toxin and none of either type, and dexalin's
   heal.
+- **Reagent descriptions say what a wound host gets (2026-09-29).** Texts that promised what the model does not do.
+  Dexalin, dexalin plus and cryoxadone "treat bloodloss": their Bloodloss healing is bookkeeping, and lost blood is the
+  blood level, which none of them raises (blood, saline, the IV and amoxla for an Avali do), so they now say they do
+  not replace lost blood. Tranexamic acid "causes heavier bleeding on overdose": it says it slows every bleed, stops the
+  lesser ones, only slows an artery, and is poisonous on overdose. Ultravasculine's overdose "causes extreme pain",
+  rhymatine trades cellular damage "for cold and shock damage" and stasizium's overdose "can tear the body apart", all
+  toxin load since the reagent-damage decision above, and each now says so. Marked lines in the upstream, Mono and
+  Goobstation locale files; no effect changed. Puncturase's "slight amount of tissue damage" (0.04 toxin a tick) was
+  left as it reads.
