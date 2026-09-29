@@ -403,6 +403,7 @@ Discord) saying what broke and what state they were in; misuse is a ban. Remove 
 - [`Content.IntegrationTests/Tests/_WF/Wolfmed/WolfmedPodLeftoversTest.cs`](../../../Content.IntegrationTests/Tests/_WF/Wolfmed/WolfmedPodLeftoversTest.cs)
 - [`Content.IntegrationTests/Tests/_WF/Wolfmed/WolfmedPodReagentSafetyTest.cs`](../../../Content.IntegrationTests/Tests/_WF/Wolfmed/WolfmedPodReagentSafetyTest.cs)
 - [`Content.IntegrationTests/Tests/_WF/Wolfmed/WolfmedPredictionTest.cs`](../../../Content.IntegrationTests/Tests/_WF/Wolfmed/WolfmedPredictionTest.cs)
+- [`Content.IntegrationTests/Tests/_WF/Wolfmed/WolfmedReagentAuditTest.cs`](../../../Content.IntegrationTests/Tests/_WF/Wolfmed/WolfmedReagentAuditTest.cs)
 - [`Content.IntegrationTests/Tests/_WF/Wolfmed/WolfmedReagentBleedingTest.cs`](../../../Content.IntegrationTests/Tests/_WF/Wolfmed/WolfmedReagentBleedingTest.cs)
 - [`Content.IntegrationTests/Tests/_WF/Wolfmed/WolfmedReagentDamageTest.cs`](../../../Content.IntegrationTests/Tests/_WF/Wolfmed/WolfmedReagentDamageTest.cs)
 - [`Content.IntegrationTests/Tests/_WF/Wolfmed/WolfmedReagentTreatmentTest.cs`](../../../Content.IntegrationTests/Tests/_WF/Wolfmed/WolfmedReagentTreatmentTest.cs)

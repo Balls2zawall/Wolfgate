@@ -4538,3 +4538,16 @@ the owner's call; left as it plays.
   toxin load since the reagent-damage decision above, and each now says so. Marked lines in the upstream, Mono and
   Goobstation locale files; no effect changed. Puncturase's "slight amount of tissue damage" (0.04 toxin a tick) was
   left as it reads.
+- **The reagent audit (2026-09-29).** Every medicine with a bleed, blood, airloss or bloodloss effect, and the ones the
+  report named, read against what the model reads. Working, and now driven on a real body from each reagent's own
+  prototype by `WolfmedReagentAuditTest`: saline's blood reaches the blood level the circulation clock reads; dexalin
+  plus's airloss healing lowers a suffocating body's hypoxia input; osteogen knits a simple break and leaves a
+  comminuted one alone; leporazine's heat rewarms the core at once. Read and left: epinephrine is a Stimulant tier, so
+  it slows the brain's drain (`wolfmed.brain_stimulant_factor` 0.6) and lifts Downed, and in Unconscious (Critical) its
+  brute, burn and toxin healing lands; inaprovaline's crit airloss healing counts only while the body suffocates, since
+  an unconscious wound host breathes, and its bleed reduction is the coagulant above; Bloodloss healing anywhere
+  (cryoxadone, necrosol and omnizine through the Airloss group, ichor, nanites) is bookkeeping. The healing reagents
+  (bicaridine, dermaline, lacerinol, puncturase, sigynate, insuzine's shock) heal through HOOK 9 and close wounds at
+  the wound's healing multiplier, and their side damage is toxin load. `AvaliChemistryTest` still expected ammonia to
+  burn a human, which the reagent-damage decision made toxin load; it now reads the Poison. Left open: hemophilia (Mono
+  trait) still adds no bleeding on a wound host (GUARD E4).
