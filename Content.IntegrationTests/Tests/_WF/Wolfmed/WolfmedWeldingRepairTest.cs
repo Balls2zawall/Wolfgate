@@ -17,6 +17,7 @@ using Content.Shared.FixedPoint;
 using Content.Shared.Hands.EntitySystems;
 using Content.Shared.Interaction;
 using Content.Shared.Item.ItemToggle;
+using Content.Shared.Tag;
 using Content.Shared.Tools.Systems;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Prototypes;
@@ -250,6 +251,61 @@ public sealed class WolfmedWeldingRepairTest : GameTest
                 // A lit welder burns fuel on its own, so the pass count is the do-after check above; this is only "the pass was paid".
                 Assert.That(entities.System<SharedToolSystem>().GetWelderFuelAndCapacity(tool).fuel.Float(),
                     Is.LessThanOrEqualTo(fuelBefore - 5), "a successful pass must spend its fuel.");
+            });
+        });
+    }
+
+    /// <summary>
+    /// Playtest 5: "the nanite applicator spams 40 messages in one tick". An admin ghost's do-afters are instant, so a
+    /// repair chain re-entered OnWoundRepairFinished from inside its own StartWoundRepair, one pass, one sound and one
+    /// line at a time, forty deep for a bad torso. The frame that started the chain now applies the instant passes
+    /// itself: the whole chain lands in the click, pays every pass, and leaves no do-after behind.
+    /// </summary>
+    [Test]
+    public async Task InstantRepairChainLandsInOneClickTest()
+    {
+        var server = Pair.Server;
+        await server.WaitIdleAsync();
+        var entities = server.ResolveDependency<IEntityManager>();
+        var map = await Pair.CreateTestMap();
+
+        await server.WaitAssertion(() =>
+        {
+            var body = entities.SpawnEntity("MobIPC", map.GridCoords);
+            var user = entities.SpawnEntity("MobHuman", map.GridCoords);
+            entities.RemoveComponent<BarotraumaComponent>(body);
+            entities.RemoveComponent<TemperatureComponent>(body);
+            entities.RemoveComponent<BarotraumaComponent>(user);
+            entities.RemoveComponent<TemperatureComponent>(user);
+            entities.System<TagSystem>().AddTag(user, "InstantDoAfters");
+            var graph = entities.System<SharedBodySystem>();
+            var leg = graph.GetBodyChildrenOfType(body, BodyPartType.Leg, symmetry: BodyPartSymmetry.Right).Single().Id;
+            var slash = server.ResolveDependency<IPrototypeManager>().Index<DamageTypePrototype>("Slash");
+            Assert.That(entities.System<WoundDamageRoutingSystem>()
+                .TryApplyPartDamage(body, leg, new DamageSpecifier(slash, 100), ignoreResistances: true), Is.True);
+            Assert.That(entities.System<WoundSystem>().GetWounds(leg).Any(), Is.True, "no breach to weld.");
+
+            var tool = entities.SpawnEntity("Welder", map.GridCoords);
+            Assert.That(entities.System<SharedHandsSystem>().TryPickupAnyHand(user, tool), Is.True);
+            Assert.That(entities.System<ItemToggleSystem>().TryActivate(tool, user), Is.True);
+            entities.GetComponent<TargetingComponent>(user).Target = TargetBodyPart.RightLeg;
+            var fuelBefore = entities.System<SharedToolSystem>().GetWelderFuelAndCapacity(tool).fuel.Float();
+
+            var interact = new InteractUsingEvent(user, tool, body, map.GridCoords);
+            entities.EventBus.RaiseLocalEvent(body, interact);
+            Assert.That(interact.Handled, Is.True, "the welder did not start.");
+
+            // 100 damage at 25 a pass: four passes, all inside the click.
+            Assert.Multiple(() =>
+            {
+                // A hit this hard also costs the leg its servos, which is the cable coil's to fix, not the welder's.
+                Assert.That(entities.System<WoundSystem>().GetWounds(leg).Select(wound => wound.Comp.Prototype.Id),
+                    Has.None.EqualTo("WFWolfmedBreachWound"), "the breach is still open after the click.");
+                Assert.That(entities.GetComponent<DamageableComponent>(leg).TotalDamage, Is.EqualTo(FixedPoint2.Zero), "damage is left on the leg.");
+                Assert.That(entities.System<SharedToolSystem>().GetWelderFuelAndCapacity(tool).fuel.Float(),
+                    Is.EqualTo(fuelBefore - 20).Within(0.01f), "the chain did not pay four passes.");
+                Assert.That(entities.GetComponent<DoAfterComponent>(user).DoAfters.Values.All(pass => pass.Completed || pass.Cancelled),
+                    Is.True, "a pass is still queued.");
             });
         });
     }

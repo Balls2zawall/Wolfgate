@@ -4471,3 +4471,13 @@ the owner's call; left as it plays.
   the welder". A pass that changed neither the part's damage nor a wound's severity is the last, costs no fuel and
   says so (`wolfmed-repair-no-progress`). `WelderStopsOnALodgedRoundAndSaysSoTest`: the welder does not start on the
   breach, starts once the round is out, closes it in one pass, stops, and spends one pass of fuel.
+- **A repair chain is one line, and an instant one lands in the click (2026-09-29).** "The nanite applicator spams 40
+  messages in one tick." An admin ghost carries `InstantDoAfters`, so every pass `OnWoundRepairFinished` started
+  finished inside `StartWoundRepair`, re-entering the handler: a pass, a sound and "you repair" per level, forty deep
+  for a torso with three wound types at their caps. A player got the same forty lines three seconds apart. Now the
+  handler notes when a pass it started has already finished (`_repairChains`, `_repairInstant`) and the frame that
+  started the chain applies the rest itself (`ApplyRepairPass`, which also pays the fuel and reports a pass that
+  changed nothing), so the chain is one sound and one line; a timed chain keeps its end sound per pass and speaks
+  once at the end: repaired, `wolfmed-repair-fuel` when the tool ran dry first, or `wolfmed-repair-no-progress`.
+  `InstantRepairChainLandsInOneClickTest`: an instant user's 100-damage breach closes in the click, four passes paid,
+  nothing queued.
