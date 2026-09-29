@@ -4449,3 +4449,13 @@ the owner's call; left as it plays.
   group Bloodloss counts in. AUTODOC5's `wolfmed.airloss_cap` (200) ceiling on Asphyxiation, applied where routed
   systemic damage lands, now covers Bloodloss too; it was left out so a vital loss could kill through it, and BRAIN
   moved that death to the life system. `WolfmedBodyDamageCeilingTest` pins both types at the cap.
+- **What a reagent deals from inside is toxin load (2026-09-29).** "Radiation medicine causes lots of body damage that
+  the new medical system takes to overdrive." Arithrazine deals 1.5 Brute a tick beside its radiation healing, and every
+  `HealthChange` tick went through routing like a hit: a cut, a puncture and a bruise on a random part, 60 times over a
+  30-unit dose, each bleeding and hurting. A wound is an injury with a site; a chemical in the blood has none, and the
+  model's currency for chemical harm is the toxin pool (OD13). `WolfmedReagentDamageSystem.ForWoundHost`, called from
+  HOOK 9 for a metabolism (`EntityEffectReagentArgs.Method == null`) on a wound host, turns every positive localized
+  amount (brute, burn, cold, shock, caustic) into `wolfmed.reagent_toxin_factor` (0.5) systemic Poison and leaves
+  healing and the systemic types alone; a reaction on the skin, an injection or an ingestion keeps its method and still
+  wounds. A full arithrazine bottle is 45 toxin, sick but standing (Downed at 60), which the liver or dylovene clears,
+  where vanilla's 90 Brute stood next to crit. Machines do not metabolise. `WolfmedReagentDamageTest` pins both halves.
