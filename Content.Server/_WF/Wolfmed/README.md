@@ -403,6 +403,7 @@ Discord) saying what broke and what state they were in; misuse is a ban. Remove 
 - [`Content.IntegrationTests/Tests/_WF/Wolfmed/WolfmedPodLeftoversTest.cs`](../../../Content.IntegrationTests/Tests/_WF/Wolfmed/WolfmedPodLeftoversTest.cs)
 - [`Content.IntegrationTests/Tests/_WF/Wolfmed/WolfmedPodReagentSafetyTest.cs`](../../../Content.IntegrationTests/Tests/_WF/Wolfmed/WolfmedPodReagentSafetyTest.cs)
 - [`Content.IntegrationTests/Tests/_WF/Wolfmed/WolfmedPredictionTest.cs`](../../../Content.IntegrationTests/Tests/_WF/Wolfmed/WolfmedPredictionTest.cs)
+- [`Content.IntegrationTests/Tests/_WF/Wolfmed/WolfmedReagentBleedingTest.cs`](../../../Content.IntegrationTests/Tests/_WF/Wolfmed/WolfmedReagentBleedingTest.cs)
 - [`Content.IntegrationTests/Tests/_WF/Wolfmed/WolfmedReagentDamageTest.cs`](../../../Content.IntegrationTests/Tests/_WF/Wolfmed/WolfmedReagentDamageTest.cs)
 - [`Content.IntegrationTests/Tests/_WF/Wolfmed/WolfmedReagentTreatmentTest.cs`](../../../Content.IntegrationTests/Tests/_WF/Wolfmed/WolfmedReagentTreatmentTest.cs)
 - [`Content.IntegrationTests/Tests/_WF/Wolfmed/WolfmedReattachTest.cs`](../../../Content.IntegrationTests/Tests/_WF/Wolfmed/WolfmedReattachTest.cs)
@@ -1125,6 +1126,7 @@ Discord) saying what broke and what state they were in; misuse is a ban. Remove 
   - HOOK 9, the call becomes a delegate so healing can run inside a treatment-capability scope.
   - playtest 5, what a metabolising reagent deals to a wound host is toxin load, not wounds.
   - HOOK 9 - scope only the healing case on a wound host; everything else is unchanged (D2).
+- [`Content.Server/EntityEffects/Effects/ModifyBleedAmount.cs`](../../EntityEffects/Effects/ModifyBleedAmount.cs): a wound host's bleeding is its wounds' (GUARD E3), so a reagent treats the wounds.
 - [`Content.Server/Explosion/EntitySystems/ExplosionSystem.Processing.cs`](../../Explosion/EntitySystems/ExplosionSystem.Processing.cs)
   - HOOK 22
   - HOOK 22 - wound hosts split the blast across their limbs; everyone else falls through unchanged.

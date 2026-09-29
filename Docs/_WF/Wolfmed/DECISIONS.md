@@ -250,6 +250,8 @@ not have to open all 14 reports to find them.
   deriving it would add an upstream hook nothing currently reads, so it was left undone on purpose.
 - Systemic bleeding chemicals (`ModifyBodyBleeding`/`StopBodyBleeding`) still stop an arterial bleed; only
   the part-targeted topical path is gated behind the arterial-bleed treatment ladder (W2, open per W4).
+  *[2026-09-29: no reagent reached either method, so none stopped anything; the reagent path added then clots an
+  artery only down to its `CoagulantFloor`. See "A coagulant reaches the wounds" at the end.]*
 - The analyzer names every wound but has no dedicated arterial / dislocated / concussed / numb / residue /
   mechanical-overheating flag; a medic reads the wound name and the guide's quick reference (W2–W6).
 - Necrosis has no sprite or visual on the limb, only the analyzer flag, the popup and the wound name (W5).
@@ -4497,3 +4499,20 @@ the owner's call; left as it plays.
   `WoundFractureComponent` outright. `WolfmedStasisTest` pins the hold, the half hit against a control, the topical
   close, the stored-damage thinning, the untouched fracture (same wound, grade, severity, no treatment) and the bleed's
   return after exit.
+- **A coagulant reaches the wounds (2026-09-29).** "Medicines don't do what they're advertised to, tranexamic acid in
+  particular." `ModifyBleedAmount` wrote the bloodstream's bleed figure, which on a wound host is only the wounds'
+  projection and refuses every other writer (GUARD E3). Tranexamic acid, bicaridine, inaprovaline, polypyrylium,
+  pulped banana peel, stasizium, vitamins, ichor and space glue did nothing to a bleed, and ketorolac's overdose
+  worsened none. Onyx's own effect called `ModifyBodyBleeding` on a wound host; the port lost that line. A marked block
+  in the effect now calls `WoundBleedingSystem.ApplyReagentBleeding` for a wound host, and the upstream write stays for
+  everything else. A coagulant takes its amount times `wolfmed.bleed_rate` off the body's bleed rate (the knob every
+  wound's rate carries, so a dose clots the severity it clotted in Onyx), worst bleed first, and never touches a
+  treatment: a dressed cut keeps its dressing (`ModifyBodyBleeding` resets it to None, which on a dressed wound
+  quadruples the rate before the cut), and a clamped or tourniqueted wound bleeds nothing, so it is skipped. An artery
+  gets the topicals' stance, slow and never stop: `WolfmedArterialBleedBehavior.CoagulantFloor` (0.5) is the share of
+  the wound's severity no drug clots below, so tranexamic acid halves a pumping artery, which still refuses every
+  treatment and still needs a tourniquet or the table; the evisceration wounds carry the same floor. A dose that
+  worsens bleeding opens or deepens a systemic bleed, as Onyx's did. One tick of tranexamic acid takes 0.375 off the
+  rate; the emergency medipen's 3 u is 15 ticks. `WolfmedReagentBleedingTest` pins the tick, the stopped cut, the
+  artery at its floor with and without gauze, the kept dressing and tourniquet, ketorolac's systemic bleed and a
+  mouse's bloodstream figure taking the upstream write.
