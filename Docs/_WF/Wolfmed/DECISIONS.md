@@ -4459,3 +4459,15 @@ the owner's call; left as it plays.
   healing and the systemic types alone; a reaction on the skin, an injection or an ingestion keeps its method and still
   wounds. A full arithrazine bottle is 45 toxin, sick but standing (Downed at 60), which the liver or dylovene clears,
   where vanilla's 90 Brute stood next to crit. Machines do not metabolise. `WolfmedReagentDamageTest` pins both halves.
+- **A lodged round stops the welder, and says so (2026-09-29).** Peter, playtest 5: "welding will infinitely go on if
+  you don't do it in surgery mode", "you will have to do surgery to stop bleeding", "don't be an IPC or have
+  cybernetics". A round or a fragment in a breach refuses every treatment, damage removal included (W2), but
+  `GetHealingPotential` counted the breach as work, so `CanRepairPart` stayed true, each pass removed nothing and
+  `OnWoundRepairFinished` queued the next until the tank was empty; the leak never closed, and surgery, which pulls
+  the round first, was the only way. Three changes. `GetHealingPotential` asks each wound the refusal `HealWounds`
+  asks (`RefusesTreatment`, one marked line and a helper), so a refused wound is no potential for the welder, the
+  applicator, a topical's repeat or the part scoring. `CanRepairPart` refuses a part with anything lodged, and the
+  welder says "something is still lodged, pull it out first" (`wolfmed-repair-embedded`) instead of "nothing needs
+  the welder". A pass that changed neither the part's damage nor a wound's severity is the last, costs no fuel and
+  says so (`wolfmed-repair-no-progress`). `WelderStopsOnALodgedRoundAndSaysSoTest`: the welder does not start on the
+  breach, starts once the round is out, closes it in one pass, stops, and spends one pass of fuel.

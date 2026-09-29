@@ -1370,6 +1370,8 @@ Discord) saying what broke and what state they were in; misuse is a ban. Remove 
   - a grown wound gets its WoundChangedEvent next, and the bleeding system adds the growth
   - W2: damage removal is a treatment too, so a wound that refuses treatment (an
   - an item working on the wound itself closes it at full strength. HealingMultiplier is how much
+  - playtest 5, a wound that refuses treatment (a lodged round) is no potential to heal
+  - playtest 5, the refusal HealWounds raises, asked without healing anything.
 - [`Content.Shared/_Shitmed/Body/Systems/SharedBodySystem.PartAppearance.cs`](../../../Content.Shared/_Shitmed/Body/Systems/SharedBodySystem.PartAppearance.cs): only this layer's markings go on the part.
 - [`Content.Shared/_Shitmed/Body/Systems/SharedBodySystem.Targeting.cs`](../../../Content.Shared/_Shitmed/Body/Systems/SharedBodySystem.Targeting.cs)
   - Wolfmed owns part damage for wound hosts (D2/D18).

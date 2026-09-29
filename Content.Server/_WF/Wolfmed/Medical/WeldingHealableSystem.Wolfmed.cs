@@ -19,6 +19,8 @@ public sealed partial class WeldingHealableSystem
 
     [Dependency] private WoundHealingSystem _woundHealing = default!;
     [Dependency] private WoundDamageRoutingSystem _woundRouting = default!;
+    [Dependency] private WoundSystem _repairWounds = default!;
+    [Dependency] private WolfmedEmbeddedObjectSystem _repairEmbedded = default!;
     [Dependency] private ItemToggleSystem _repairToggle = default!;
     [Dependency] private AudioSystem _repairAudio = default!;
 
@@ -53,10 +55,22 @@ public sealed partial class WeldingHealableSystem
 
         if (selected is not { } partUid || !CanRepairPart(body, partUid, healing))
         {
-            // A chassis with nothing to repair hears so; flesh is left to the welder's other uses.
-            if (HasRepairableParts(body))
+            // Playtest 5: a round lodged in a breach refuses every repair, and the welder used to burn its tank on it
+            // without a word. Now it names the obstacle.
+            // Either way the click was a repair attempt on a chassis: handled, or FlammableSystem takes the lit welder
+            // next and sets the patient on fire. Flesh is left to the welder's other uses.
+            if (FindEmbeddedPart(body, selected) != null)
+            {
+                _popup.PopupEntity(Loc.GetString("wolfmed-repair-embedded", ("target", body.Owner), ("tool", args.Used)),
+                    body, args.User);
+                args.Handled = true;
+            }
+            else if (HasRepairableParts(body))
+            {
                 _popup.PopupEntity(Loc.GetString("wolfmed-repair-nothing", ("target", body.Owner), ("tool", args.Used)),
                     body, args.User);
+                args.Handled = true;
+            }
             return;
         }
 
@@ -83,11 +97,39 @@ public sealed partial class WeldingHealableSystem
         return false;
     }
 
+    /// <summary>The aimed part if something is lodged in it, else the first repairable part with something lodged.</summary>
+    private EntityUid? FindEmbeddedPart(Entity<WoundHostComponent> body, EntityUid? aimed)
+    {
+        if (aimed is { } part && _repairEmbedded.GetEmbeddedWound(part) != null)
+            return part;
+
+        foreach (var (candidate, _) in _bodySystem.GetBodyChildren(body))
+        {
+            if (_woundHealing.IsCompatiblePart(body, candidate, null, RepairCapabilities) &&
+                _repairEmbedded.GetEmbeddedWound(candidate) != null)
+                return candidate;
+        }
+
+        return null;
+    }
+
+    /// <summary>What a pass can change: the part's damage and the severity of its wounds.</summary>
+    private (FixedPoint2 Damage, FixedPoint2 Severity) RepairSignature(EntityUid part)
+    {
+        var severity = FixedPoint2.Zero;
+        foreach (var wound in _repairWounds.GetWounds(part))
+            severity += wound.Comp.Severity;
+
+        return (CompOrNull<DamageableComponent>(part)?.TotalDamage ?? FixedPoint2.Zero, severity);
+    }
+
     private bool CanRepairPart(EntityUid body, EntityUid part, WeldingHealingComponent healing)
     {
+        // Playtest 5: nothing closes a breach with a round still in it, so a part with one is not repairable.
         if (!_woundHealing.IsCompatiblePart(body, part, null, RepairCapabilities) ||
             !TryComp(part, out DamageableComponent? damageable) ||
-            damageable.DamageContainerID is not { } container || !healing.DamageContainers.Contains(container))
+            damageable.DamageContainerID is not { } container || !healing.DamageContainers.Contains(container) ||
+            _repairEmbedded.GetEmbeddedWound(part) != null)
             return false;
 
         return _woundHealing.HasTreatableWounds(part, healing.Damage, null) ||
@@ -118,9 +160,20 @@ public sealed partial class WeldingHealableSystem
 
         args.Handled = true;
         var user = args.User;
+        var before = RepairSignature(partUid);
         _woundRouting.WithTreatmentCapabilities(body, RepairCapabilities, () =>
             _woundRouting.TryApplyPartDamage(body, partUid, healing.Damage, user,
                 ignoreResistances: true, healWounds: true));
+
+        // Playtest 5: a pass that closed nothing is the last and costs nothing. The welder used to repeat it until the
+        // tank was empty.
+        if (RepairSignature(partUid) == before)
+        {
+            _popup.PopupEntity(Loc.GetString("wolfmed-repair-no-progress", ("target", body.Owner), ("tool", tool)),
+                body, args.User);
+            return;
+        }
+
         if (fuelled && TryComp(tool, out WelderComponent? spender) &&
             _solutionContainer.TryGetSolution(tool, spender.FuelSolutionName, out var solution))
             _solutionContainer.RemoveReagent(solution.Value, spender.FuelReagent, healing.FuelCost);
