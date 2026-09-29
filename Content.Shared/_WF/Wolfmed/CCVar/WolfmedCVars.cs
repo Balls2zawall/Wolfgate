@@ -778,8 +778,9 @@ public sealed class WolfmedCVars
         CVarDef.Create("wolfmed.toxin_clearance", 0.1f, CVar.SERVERONLY);
 
     /// <summary>
-    /// Playtest 5: systemic Poison per unit of brute, burn, cold, shock or caustic a metabolising reagent would deal to
-    /// a wound host, which is toxin load on such a body instead of wounds. 0 makes that damage free.
+    /// Playtest 5: systemic Poison per unit of brute, burn, cold, shock, caustic, asphyxiation or bloodloss a metabolising
+    /// reagent would deal to a wound host, which is toxin load on such a body instead of wounds or bookkeeping. 0 makes
+    /// that damage free.
     /// </summary>
     public static readonly CVarDef<float> ReagentToxinFactor =
         CVarDef.Create("wolfmed.reagent_toxin_factor", 0.5f, CVar.SERVERONLY);

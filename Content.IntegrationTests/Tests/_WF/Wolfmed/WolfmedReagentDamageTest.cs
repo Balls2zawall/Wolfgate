@@ -10,6 +10,7 @@ using Content.Shared._Onyx.Wounds;
 using Content.Shared._WF.Wolfmed.CCVar;
 using Content.Shared.Body.Systems;
 using Content.Shared.Chemistry;
+using Content.Shared.Chemistry.Reagent;
 using Content.Shared.Damage;
 using Content.Shared.EntityEffects;
 using Content.Shared.FixedPoint;
@@ -63,6 +64,54 @@ public sealed class WolfmedReagentDamageTest : GameTest
             });
         });
     }
+
+    /// <summary>
+    /// An overdose written as airloss (tranexamic acid's Bloodloss, dexalin's Asphyxiation) was bookkeeping nothing reads
+    /// on a breathing wound host, so it cost nothing. It is toxin load too; the healing half still heals the airloss.
+    /// </summary>
+    [Test]
+    public async Task MetabolisedAirlossIsToxinTest()
+    {
+        var map = await Pair.CreateTestMap();
+
+        await Server.WaitAssertion(() =>
+        {
+            var toxin = SEntMan.System<WolfmedToxinSystem>();
+            var factor = Server.CfgMan.GetCVar(WolfmedCVars.ReagentToxinFactor);
+            var body = SEntMan.SpawnEntity("MobHuman", map.GridCoords);
+            var damage = SEntMan.GetComponent<DamageableComponent>(body).Damage.DamageDict;
+
+            var txaOverdose = HealthChanges("TranexamicAcid").Single(effect => Deals(effect, "Bloodloss"));
+            var dexalinOverdose = HealthChanges("Dexalin").Single(effect => Deals(effect, "Asphyxiation") && Deals(effect, "Cold"));
+            for (var tick = 0; tick < 10; tick++)
+            {
+                txaOverdose.Effect(Args(body, method: null));
+                dexalinOverdose.Effect(Args(body, method: null));
+            }
+
+            var dealt = 10 * (txaOverdose.Damage.GetTotal() + dexalinOverdose.Damage.GetTotal()).Float();
+            Assert.Multiple(() =>
+            {
+                Assert.That(damage.GetValueOrDefault("Bloodloss"), Is.EqualTo(FixedPoint2.Zero), "the overdose's bloodloss reached the body.");
+                Assert.That(damage.GetValueOrDefault("Asphyxiation"), Is.EqualTo(FixedPoint2.Zero), "the overdose's asphyxiation reached the body.");
+                Assert.That(toxin.GetLoad(body), Is.EqualTo(dealt * factor).Within(0.05f), "the overdose did not become toxin load.");
+            });
+
+            // Dexalin's healing still takes airloss off, which is what a suffocating patient's hypoxia reads.
+            SEntMan.System<DamageableSystem>().TryChangeDamage(body,
+                new DamageSpecifier { DamageDict = { ["Asphyxiation"] = FixedPoint2.New(20) } }, ignoreResistances: true);
+            var heal = HealthChanges("Dexalin").First(effect => effect.Damage.DamageDict.GetValueOrDefault("Asphyxiation") < 0);
+            for (var tick = 0; tick < 5; tick++)
+                heal.Effect(Args(body, method: null));
+            Assert.That(damage.GetValueOrDefault("Asphyxiation").Float(), Is.EqualTo(15f).Within(0.01f));
+        });
+    }
+
+    private List<HealthChange> HealthChanges(string reagent) =>
+        SProtoMan.Index<ReagentPrototype>(reagent).Metabolisms!["Medicine"].Effects.OfType<HealthChange>().ToList();
+
+    private static bool Deals(HealthChange effect, string type) =>
+        effect.Damage.DamageDict.GetValueOrDefault(type) > FixedPoint2.Zero;
 
     private EntityEffectReagentArgs Args(EntityUid body, ReactionMethod? method) =>
         new(body, SEntMan, null, null, FixedPoint2.New(0.5), null, method, FixedPoint2.New(1));

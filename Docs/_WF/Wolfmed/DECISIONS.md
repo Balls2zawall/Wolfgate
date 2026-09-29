@@ -4516,3 +4516,16 @@ the owner's call; left as it plays.
   rate; the emergency medipen's 3 u is 15 ticks. `WolfmedReagentBleedingTest` pins the tick, the stopped cut, the
   artery at its floor with and without gauze, the kept dressing and tourniquet, ketorolac's systemic bleed and a
   mouse's bloodstream figure taking the upstream write.
+- **An overdose written as airloss is toxin load (2026-09-29).** Found auditing the reagents behind the tranexamic
+  acid report. A metabolising reagent's Asphyxiation and Bloodloss are bookkeeping on a wound host: Asphyxiation is
+  read only while the respirator is suffocating, Bloodloss never, both capped at `wolfmed.airloss_cap`. So every
+  overdose the flat model wrote as airloss cost a breathing patient nothing: tranexamic acid's (Bloodloss 3 a tick past
+  15 u), dexalin's, dexalin plus's, epinephrine's, bicaridine's, dermaline's, polypyrylium's, celoxradine's,
+  rhymatine's, fentanyl's respiratory depression, amoxla's in a non-Avali and the dexalin family's Avali poisoning in
+  part, and the poisons that work only through airloss (lexorin, heartbreaker toxin, histamine's share, BZ, nitrium).
+  `WolfmedReagentDamageSystem.ForWoundHost` now converts positive Asphyxiation and Bloodloss the way it converts
+  localized damage, at `wolfmed.reagent_toxin_factor`. Healing is untouched, so dexalin still takes airloss off a
+  suffocating patient, and a reaction on the skin keeps its method as before. Sedation's respiratory depression is its
+  own route and deals no Asphyxiation, so nothing is counted twice. `WolfmedReagentDamageTest.MetabolisedAirlossIsToxinTest`
+  pins ten ticks each of the tranexamic acid and dexalin overdoses as 35 toxin and none of either type, and dexalin's
+  heal.
