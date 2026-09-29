@@ -51,7 +51,11 @@ Every topical treats one kind of injury. Used on a part it cannot help, it refus
 
 [bold]Gauze:[/bold] cuts and punctures, and reduces external bleeding.
 
-[bold]Medicated sutures:[/bold] cuts and punctures, and stop their bleeding.
+[bold]Medicated sutures:[/bold] cuts and punctures, and stop their bleeding. The quickest way to close a cut.
+
+[bold]Sutures:[/bold] the plain kind, in every medical vendor and printed at the medical techfab without research. They close cuts and punctures like the medicated kind, half as much a use and more slowly.
+
+[bold]Makeshift sutures:[/bold] a metal rod and a cloth, crafted anywhere, make five. Slower and weaker again, and dirty: the wound they close is contaminated and keeps going bad under the stitches. Clean it with antiseptic afterwards, or close it again properly.
 
 [bold]Tourniquet:[/bold] stops bleeding on one limb entirely while applied, at the cost of that limb's use.
 
@@ -67,6 +71,8 @@ Removing damage barely closes the wound underneath it, and a bleeding wound neve
     <GuideEntityEmbed Entity="Ointment"/>
     <GuideEntityEmbed Entity="Gauze"/>
     <GuideEntityEmbed Entity="MedicatedSuture"/>
+    <GuideEntityEmbed Entity="WFWolfmedSuture"/>
+    <GuideEntityEmbed Entity="WFWolfmedMakeshiftSuture"/>
     <GuideEntityEmbed Entity="RegenerativeMesh"/>
     <GuideEntityEmbed Entity="Tourniquet"/>
     <GuideEntityEmbed Entity="WFWolfmedMakeshiftTourniquet"/>
@@ -167,7 +173,7 @@ An open wound that nobody treats becomes infected once it has a reason to: it is
 
 [bold]Local[/bold] is the wound itself going bad: it hurts, and it keeps reopening faster than a dressing closes it. [bold]Spreading[/bold] has left the wound: the part itself is infected and the infection travels part by part towards the chest; the fever and everything else systemic wait until it gets there (the analyzer's [bold]tissue[/bold] line on each card). [bold]Sepsis[/bold] starts once it reaches the chest or the head; it is systemic, shows on the patient's own alerts, and kills if it is left alone. Its late stage, [bold]septic shock[/bold], puts the patient out; the organ failure that follows is what does the killing.
 
-Prevention is most of the work, and it is cheap. Dressing a wound early cuts its infection rate to a seventh; suturing or cauterising it stops the clock outright. Antiseptic - ethanol, bleach or spaceacillin applied to the skin, which in practice means sprayed or splashed on the patient; the medical vendor sells an antiseptic spray for it - cleans an open wound and lets a local infection drain away over the next minute. None of that reaches an infection that has already spread.
+Prevention is most of the work, and it is cheap. Dressing a wound early cuts its infection rate to a seventh; suturing or cauterising it stops the clock outright, except with a makeshift suture, which is what dirtied it. Antiseptic - ethanol, bleach or spaceacillin applied to the skin, which in practice means sprayed or splashed on the patient; the medical vendor sells an antiseptic spray for it - cleans an open wound and lets a local infection drain away over the next minute. None of that reaches an infection that has already spread.
 
 Once it has, the answer is [bold]spaceacillin[/bold] in the bloodstream. It clears contamination in every wound and every infected part at once and pulls sepsis back; a large dose is poisonous, so treat and stop.
 

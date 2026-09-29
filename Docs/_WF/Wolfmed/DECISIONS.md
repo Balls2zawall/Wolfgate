@@ -4520,3 +4520,30 @@ the owner's call; left as it plays.
   the makeshift strap. `WolfmedMakeshiftTourniquetTest`: the held jumpsuit is torn, not the worn one, in 3 s; the strap
   is not on after 1 s and is after 4; a 10 hit leaves it on; a 20 Slash slips it and the leg bleeds again while the
   real strap on the other leg holds; `SlippedStrapReleasesTheFootTest` pins the foot.
+- **Sutures anyone can get (owner, 2026-09-29).** "We need more accessible sutures, ones that are found in more places
+  (a downgraded one of the medicated ones, that don't require research, and makeshift variants of them)." Two tiers
+  under `MedicatedSuture`, which stays the top one (`_WF/Wolfmed/Entities/sutures.yml`, sprites from EscapeFromNevado's
+  `stack_medical.dmi` in `Medical/sutures.rsi`, each stack drawn by its count through `layerStates`, the medicated
+  suture's in-hands; stacks of 15 like it). The **suture** (`WFWolfmedSuture`, blue) closes cuts and punctures and
+  counts as sutured for infection (`WolfmedSuture`) exactly as the medicated one does, at half the closing a use
+  (Brute -30, so 10 Slash and 10 Piercing, against -60), bloodloss -6 against -10, and 3 s against 2. It needs no
+  research: a lathe recipe in `TopicalsStatic` (one per print, 25 Steel and 50 Cloth, beside the bruise pack and
+  gauze), the four medical vendors (NanoMed Plus 4, NanoMed 2, CiviMed infinite, the Wolfgate shop 4), and the
+  common and classy medical loot spawners and both dungeon meds spawners (marked lines). Its stack price is the bruise
+  pack's 15, printed from about the same materials. The **makeshift suture** (`WFWolfmedMakeshiftSuture`, tarred) is
+  a metal rod and a cloth, crafted anywhere in 4 s into five (`WFWolfmedMakeshiftSuture5`); -18 (6 and 6), bloodloss
+  -4, 5 s, stack price 1, and dirty. The owner's infection rule (an infection needs a reason) already had "something
+  dirty went into the wound" (`Contaminate`, the knife dig), so a dirty tool is one more caller: the item carries
+  `WolfmedDirtyTreatmentComponent`, and `WoundHealingSystem.TryApplyHealing` (one marked block, the helper in the
+  `_WF` partial) calls `WolfmedInfectionSystem.ContaminateTreated` on the part once the item has done anything, which
+  contaminates every open, infectable wound the item treats (the same choice `MarkSutured` makes). It does not carry
+  `WolfmedSuture`: a sutured wound infects at the profile's Sutured rate, 0, so a dirty stitch that counted as one
+  could never infect at all. A makeshift-closed cut keeps the dressed rate (0.15) times the contamination (2.5), has a
+  reason to infect even under a hardsuit, and clears with antiseptic or a proper suture over it; the analyzer's
+  procedure leaves its Suture and Clean rows open, and the advice says why. The advice names sutures generally
+  instead of "medicated sutures" throughout, the slash, piercing, gunshot and bleeding procedures name the tiers, and
+  the guidebook's Biological tissue section lists both. `WolfmedSutureTiersTest`: one use each on the same 15 Slash
+  cut removes medicated > plain > makeshift, closes the wound in the same order, and the delays climb 2, 3, 5; through
+  the do-after the plain suture marks the cut sutured and leaves it clean, the makeshift one leaves it contaminated
+  (past 1) and not sutured. The treatment matrix lists both new items against every wound, and
+  `WolfmedAvailabilityTest` finds the suture in a vendor or lathe and the makeshift one in a construction recipe.

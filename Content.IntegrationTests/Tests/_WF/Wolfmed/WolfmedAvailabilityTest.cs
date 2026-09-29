@@ -53,6 +53,7 @@ public sealed class WolfmedAvailabilityTest : GameTest
         "WFWolfmedNaloxonePen",
         "WFWolfmedHydraulicFluidPack",
         "Tourniquet",
+        "WFWolfmedSuture", // playtest 5: the plain suture
         "WFWolfmedAnalgesicPillCanister",
         "WFWolfmedIbuprofenPill",
         "WFWolfmedIbuprofenPillCanister",
@@ -100,6 +101,7 @@ public sealed class WolfmedAvailabilityTest : GameTest
     [
         "WFWolfmedSplintImprovised", // V5
         "WFWolfmedMakeshiftTourniquet", // playtest 5: torn from a jumpsuit
+        "WFWolfmedMakeshiftSuture5", // playtest 5: a rod and a cloth make five
     ];
 
     /// <summary>Reagents Wolfmed added. Each needs a reaction chemistry can run.</summary>
