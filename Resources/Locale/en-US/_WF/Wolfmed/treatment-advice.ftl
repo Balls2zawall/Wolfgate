@@ -231,7 +231,7 @@ wolfmed-treatment-avoid-wolfmed-shrapnel-wound-1 = Do not dig with a knife unles
 # W2 slash and bite -----------------------------------------------------------
 
 wolfmed-treatment-short-wolfmed-arterial-bleed-wound = A cut artery. It bleeds several times faster than anything else and it never clots.
-wolfmed-treatment-step-wolfmed-arterial-bleed-wound-1 = On an arm, hand, leg or foot, apply a tourniquet. That stops the flow outright.
+wolfmed-treatment-step-wolfmed-arterial-bleed-wound-1 = On an arm, hand, leg or foot, apply a tourniquet. That stops the flow outright. With none to hand, tear a jumpsuit into a makeshift one; a hard hit knocks it loose.
 wolfmed-treatment-step-wolfmed-arterial-bleed-wound-2 = Only then will medicated sutures close the wound underneath.
 wolfmed-treatment-step-wolfmed-arterial-bleed-wound-3 = In the torso or the head there is nothing to tie around. Run the Repair Severed Artery surgery, which clamps the vessel with a hemostat and then sutures it.
 wolfmed-treatment-step-wolfmed-arterial-bleed-wound-4 = With nothing else to hand, hold something hot and use the Cauterise wound verb. It costs a deep burn and a great deal of pain.
@@ -342,7 +342,7 @@ wolfmed-treatment-step-wolfmed-overheating-wound-3 = Fastest of all, hose the pa
 wolfmed-treatment-short-cond-bleeding = This part is losing blood. Gauze slows it, medicated sutures close it, a tourniquet stops a limb outright.
 wolfmed-treatment-step-cond-bleeding-1 = Press gauze on the part to slow the bleeding.
 wolfmed-treatment-step-cond-bleeding-2 = Apply medicated sutures to close the wound and stop it.
-wolfmed-treatment-step-cond-bleeding-3 = If it will not stop and it is a limb, apply a tourniquet and get the patient to a table.
+wolfmed-treatment-step-cond-bleeding-3 = If it will not stop and it is a limb, apply a tourniquet, or one torn from a jumpsuit, and get the patient to a table.
 wolfmed-treatment-step-cond-bleeding-4 = Take the tourniquet off within ten minutes, or the limb dies under it.
 wolfmed-treatment-avoid-cond-bleeding-1 = A bruise pack does not stop bleeding, and gauze only slows an arterial bleed.
 

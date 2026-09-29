@@ -96,7 +96,11 @@ public sealed class WolfmedAvailabilityTest : GameTest
     ];
 
     /// <summary>Items reached by crafting rather than by a vendor or a lathe.</summary>
-    private static readonly string[] CraftedItems = ["WFWolfmedSplintImprovised"]; // V5
+    private static readonly string[] CraftedItems =
+    [
+        "WFWolfmedSplintImprovised", // V5
+        "WFWolfmedMakeshiftTourniquet", // playtest 5: torn from a jumpsuit
+    ];
 
     /// <summary>Reagents Wolfmed added. Each needs a reaction chemistry can run.</summary>
     private static readonly string[] ObtainableReagents =

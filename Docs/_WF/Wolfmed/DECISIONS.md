@@ -4497,3 +4497,26 @@ the owner's call; left as it plays.
   `WoundFractureComponent` outright. `WolfmedStasisTest` pins the hold, the half hit against a control, the topical
   close, the stored-damage thinning, the untouched fracture (same wound, grade, severity, no treatment) and the bleed's
   return after exit.
+- **A makeshift tourniquet torn from a jumpsuit (owner, 2026-09-29).** "We need a makeshift tourniquet that can be made
+  out of a jumpsuit." `WFWolfmedMakeshiftTourniquet` (`_WF/Wolfmed/Entities/tourniquet.yml`, parented to `Tourniquet`,
+  its sprite recoloured to grey cloth in `Medical/makeshift_tourniquet.rsi`) is crafted by hand from any jumpsuit with
+  suit sensors: construction `WFWolfmedMakeshiftTourniquet`, one `component: SuitSensor` step, 3 s, Tools. It clamps a
+  limb exactly as the real strap does and is worse in two ways the model already had. It takes 3 s to tie against the
+  real one's 0.5, and it slips: the tied part's `WolfmedTourniquetComponent.SlipDamage` takes the item's
+  `WolfmedMakeshiftTourniquetComponent.slipDamage` (15; null for the real strap, which holds through anything since
+  playtest 4), and `WolfmedTourniquetSlipSystem`, called from `WolfmedPartHitSystem.OnHit` before the wounds see the
+  hit, knocks it loose on one hit of 15 or more on the strapped part (after armour, and only a hit that could interrupt
+  a do-after: fire and bleeding ticks never count). The strap's own 5 Blunt and 5 Asphyxiation stay under the line, and
+  so does a punch or a 10-damage knock; a round or a heavy swing does not. A slip is a loosen nobody asked for
+  (`WolfmedNecrosisSystem.Slip`): the bleeding starts again, the necrosis clock stops, and everyone near sees "The
+  makeshift tourniquet on the right leg is knocked loose!". Slipping was chosen over holding a smaller share of the
+  bleed because a partial clamp would read as a working tourniquet on the analyzer while the patient kept bleeding;
+  a slip is visible and its answer (tie another, or fetch a real one) is obvious. Crafting takes a jumpsuit in hand
+  first, but upstream's crafting also takes worn items, and the jumpsuit slot comes before the backpack, so with none in
+  hand it tears the one being worn (the banana clown suit and ID card recipes behave the same); the recipe and the
+  guidebook say to hold the one to tear. Fixed in passing: loosening a strap released only the strapped part, so a
+  leg's strap left the foot's bleed clamped with nothing holding it; loosen, slip and the necrosis clock now cover the
+  parts below it (`TiedParts`), as applying one always did. The guidebook and the arterial and bleeding advice name
+  the makeshift strap. `WolfmedMakeshiftTourniquetTest`: the held jumpsuit is torn, not the worn one, in 3 s; the strap
+  is not on after 1 s and is after 4; a 10 hit leaves it on; a 20 Slash slips it and the leg bleeds again while the
+  real strap on the other leg holds; `SlippedStrapReleasesTheFootTest` pins the foot.

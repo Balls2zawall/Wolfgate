@@ -55,6 +55,8 @@ Every topical treats one kind of injury. Used on a part it cannot help, it refus
 
 [bold]Tourniquet:[/bold] stops bleeding on one limb entirely while applied, at the cost of that limb's use.
 
+[bold]Makeshift tourniquet:[/bold] any jumpsuit torn into a strap from the crafting menu, a few seconds by hand; hold the one you mean to tear, or it takes the one you are wearing. It stops a limb the same way, takes longer to tie, and one hard hit on that limb knocks it loose and the bleeding starts again. Replace it with a real one when you can.
+
 Removing damage barely closes the wound underneath it, and a bleeding wound never closes that way at all. Expect to finish the job with gauze, sutures or surgery.
 
 [bold]Moderate wound:[/bold] external surgical treatment.
@@ -67,6 +69,7 @@ Removing damage barely closes the wound underneath it, and a bleeding wound neve
     <GuideEntityEmbed Entity="MedicatedSuture"/>
     <GuideEntityEmbed Entity="RegenerativeMesh"/>
     <GuideEntityEmbed Entity="Tourniquet"/>
+    <GuideEntityEmbed Entity="WFWolfmedMakeshiftTourniquet"/>
   </Box>
 
 ## Embedded objects
