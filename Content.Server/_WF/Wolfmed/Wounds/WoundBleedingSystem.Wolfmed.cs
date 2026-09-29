@@ -1,6 +1,7 @@
 // WOLFGATE: W2. The bleeding rules an arterial bleed plays by, kept out of the vendored bleeding system,
 // which carries only the three call sites that route through here.
 
+using Content.Server._WF.Wolfmed.Stasis;
 using Content.Shared._WF.Wolfmed.Wounds;
 using Robust.Shared.GameObjects;
 using Content.Shared.FixedPoint;
@@ -17,6 +18,11 @@ public sealed partial class WoundBleedingSystem
     /// </summary>
     private float GetTreatmentMultiplier(EntityUid wound, BleedingTreatment treatment)
     {
+        // Avali stasis holds every bleed on the body for as long as it lasts (WolfmedStasisSystem).
+        if (TryComp(wound, out WoundComponent? core) && TryGetBody(core.HoldingPart, out var body) &&
+            HasComp<WolfmedStasisHoldComponent>(body))
+            return 0f;
+
         if (_traits.TryGetBehavior(wound, out WolfmedArterialBleedBehavior behavior) &&
             behavior.TreatmentMultipliers.TryGetValue(treatment, out var multiplier))
             return multiplier;

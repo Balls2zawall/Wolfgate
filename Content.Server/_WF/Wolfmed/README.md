@@ -112,6 +112,8 @@ Discord) saying what broke and what state they were in; misuse is a ban. Remove 
 - [`Content.Server/_WF/Wolfmed/Sounds/WolfmedBleedDripComponent.cs`](Sounds/WolfmedBleedDripComponent.cs)
 - [`Content.Server/_WF/Wolfmed/Sounds/WolfmedBleedDripSystem.cs`](Sounds/WolfmedBleedDripSystem.cs)
 - [`Content.Server/_WF/Wolfmed/Sounds/WolfmedBodySoundSystem.cs`](Sounds/WolfmedBodySoundSystem.cs)
+- [`Content.Server/_WF/Wolfmed/Stasis/WolfmedStasisHoldComponent.cs`](Stasis/WolfmedStasisHoldComponent.cs)
+- [`Content.Server/_WF/Wolfmed/Stasis/WolfmedStasisSystem.cs`](Stasis/WolfmedStasisSystem.cs)
 - [`Content.Server/_WF/Wolfmed/Surgery/SurgerySystem.Autodoc.cs`](Surgery/SurgerySystem.Autodoc.cs)
 - [`Content.Server/_WF/Wolfmed/Surgery/WolfmedChassisRepairSurgerySystem.cs`](Surgery/WolfmedChassisRepairSurgerySystem.cs)
 - [`Content.Server/_WF/Wolfmed/Surgery/WolfmedWoundSurgerySystem.cs`](Surgery/WolfmedWoundSurgerySystem.cs)
@@ -411,6 +413,7 @@ Discord) saying what broke and what state they were in; misuse is a ban. Remove 
 - [`Content.IntegrationTests/Tests/_WF/Wolfmed/WolfmedSpeciesProfileTest.cs`](../../../Content.IntegrationTests/Tests/_WF/Wolfmed/WolfmedSpeciesProfileTest.cs)
 - [`Content.IntegrationTests/Tests/_WF/Wolfmed/WolfmedSpeciesSpawnTest.cs`](../../../Content.IntegrationTests/Tests/_WF/Wolfmed/WolfmedSpeciesSpawnTest.cs)
 - [`Content.IntegrationTests/Tests/_WF/Wolfmed/WolfmedSplintTest.cs`](../../../Content.IntegrationTests/Tests/_WF/Wolfmed/WolfmedSplintTest.cs)
+- [`Content.IntegrationTests/Tests/_WF/Wolfmed/WolfmedStasisTest.cs`](../../../Content.IntegrationTests/Tests/_WF/Wolfmed/WolfmedStasisTest.cs)
 - [`Content.IntegrationTests/Tests/_WF/Wolfmed/WolfmedStepCheckTest.cs`](../../../Content.IntegrationTests/Tests/_WF/Wolfmed/WolfmedStepCheckTest.cs)
 - [`Content.IntegrationTests/Tests/_WF/Wolfmed/WolfmedSyntheticHudTest.cs`](../../../Content.IntegrationTests/Tests/_WF/Wolfmed/WolfmedSyntheticHudTest.cs)
 - [`Content.IntegrationTests/Tests/_WF/Wolfmed/WolfmedThresholdFallbackTest.cs`](../../../Content.IntegrationTests/Tests/_WF/Wolfmed/WolfmedThresholdFallbackTest.cs)
@@ -1068,6 +1071,10 @@ Discord) saying what broke and what state they were in; misuse is a ban. Remove 
 - [`Content.Server/_Shitmed/DelayedDeath/DelayedDeathSystem.cs`](../../_Shitmed/DelayedDeath/DelayedDeathSystem.cs)
   - BRAIN
   - BRAIN: a missing heart is cardiac arrest on a wound host, not a countdown to death.
+- [`Content.Server/_Starlight/Actions/Stasis/StasisSystem.cs`](../../_Starlight/Actions/Stasis/StasisSystem.cs)
+  - a wound host's stasis runs in WolfmedStasisSystem
+  - a wound host keeps a hit's share before it is a wound, in WolfmedStasisSystem.
+  - a wound host's stasis heals in WolfmedStasisSystem, which holds its bleeds and never sets a bone.
 - [`Content.Server/Atmos/EntitySystems/BarotraumaSystem.cs`](../../Atmos/EntitySystems/BarotraumaSystem.cs)
   - M3: P23, a wound host takes pressure damage with no origin, so it lands on a part by
   - M3: origin
@@ -1511,6 +1518,7 @@ Discord) saying what broke and what state they were in; misuse is a ban. Remove 
 - [`Resources/Prototypes/_DV/Body/Organs/feroxi.yml`](../../../Resources/Prototypes/_DV/Body/Organs/feroxi.yml): M4: OD16 parity, Wolfmed lung data (plan 9.2 group A-prime)
 - [`Resources/Prototypes/_DV/Body/Organs/harpy.yml`](../../../Resources/Prototypes/_DV/Body/Organs/harpy.yml): M4: OD16 parity, Wolfmed lung data (plan 9.2 group A-prime)
 - [`Resources/Prototypes/_DV/Entities/Clothing/Eyes/glasses.yml`](../../../Resources/Prototypes/_DV/Entities/Clothing/Eyes/glasses.yml): playtest 3: the IPC's container, so its bar shows
+- [`Resources/Prototypes/_DV/Species/avali.yml`](../../../Resources/Prototypes/_DV/Species/avali.yml): the Starlight teleport sound never shipped here, and the client logged an error every stasis.
 - [`Resources/Prototypes/_EinsteinEngines/Body/Organs/ipc.yml`](../../../Resources/Prototypes/_EinsteinEngines/Body/Organs/ipc.yml)
   - playtest 3 IPC 2: the chassis's own fluid, not Oil
   - BRAIN: organ health, so the pump can be broken
@@ -1680,6 +1688,7 @@ Discord) saying what broke and what state they were in; misuse is a ban. Remove 
   - AUTODOC5: one close chain serves every part, so "ribcage" was on the head too
   - PROTO G, P4-D21: cauterise, close and roll surgery.scar_chance on the incision wound
   - PROTO G, P4-D21: the wound surgeries end here, so this closes the incision they opened
+- [`Resources/Prototypes/_StarLight/Entities/Mobs/Species/avali.yml`](../../../Resources/Prototypes/_StarLight/Entities/Mobs/Species/avali.yml): the Starlight teleport sound never shipped here, and the client logged an error every stasis.
 - [`Resources/Prototypes/_StarLight/Entities/Mobs/Species/shadekin.yml`](../../../Resources/Prototypes/_StarLight/Entities/Mobs/Species/shadekin.yml)
   - M4, OD16: shadekin is a wound host, so Wolfmed decides its state.
   - M4, D29: passive regen is neutralised on a wound host, as BaseMobSpeciesOrganic's is.

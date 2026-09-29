@@ -4481,3 +4481,19 @@ the owner's call; left as it plays.
   once at the end: repaired, `wolfmed-repair-fuel` when the tool ran dry first, or `wolfmed-repair-no-progress`.
   `InstantRepairChainLandsInOneClickTest`: an instant user's 100-damage breach closes in the click, four passes paid,
   nothing queued.
+- **Avali stasis on a wound host (owner, 2026-09-29): hold, close, halve, never a bone.** "How does the Avali stasis
+  ability interact with our medical system?" Starlight's `StasisSystem` works on the flat damage total: its bleed stop
+  is a bloodstream write the wound projection refuses (GUARD E3), its 2-a-second healing is routed damage removal that
+  takes 15% off a wound, and its "resistance" heals back half of the total after the wound is made. On a wound host
+  all three were nothing. `WolfmedStasisSystem` (server, `_WF/Wolfmed/Stasis`) owns stasis on a wound host: it marks
+  the body `WolfmedStasisHoldComponent` while `IsInStasis` (polled, since the stock system holds the enter and exit
+  subscriptions) and the bleeding partial's `GetTreatmentMultiplier` returns 0 for every wound on a held body, so the
+  bleed stops and comes back with the hold; once a second it thins the parts' stored damage by the component's
+  amounts with wound healing off, then spends the same amounts on the body's wounds at topical strength
+  (`TreatWound`), first part first, skipping anything topicals never close or that refuses; and on the routed pass of
+  a hit (`BeforeDamageChangedEvent` after routing) it keeps `wolfmed.stasis_damage_factor` (0.5) of every positive
+  amount before it is a wound. The stock heal-back and update return on a wound host (two marked lines). The owner's
+  rule: stasis never fixes a broken bone. `BoneFractureWound` lists no damage types, and `CloseWounds` skips
+  `WoundFractureComponent` outright. `WolfmedStasisTest` pins the hold, the half hit against a control, the topical
+  close, the stored-damage thinning, the untouched fracture (same wound, grade, severity, no treatment) and the bleed's
+  return after exit.

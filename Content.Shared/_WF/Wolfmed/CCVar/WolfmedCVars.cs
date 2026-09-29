@@ -784,6 +784,13 @@ public sealed class WolfmedCVars
     public static readonly CVarDef<float> ReagentToxinFactor =
         CVarDef.Create("wolfmed.reagent_toxin_factor", 0.5f, CVar.SERVERONLY);
 
+    /// <summary>
+    /// What a hit on a wound host in Avali stasis keeps before it becomes a wound. The stock stasis healed back half
+    /// of the flat total after the fact, which a wound host does not read.
+    /// </summary>
+    public static readonly CVarDef<float> StasisDamageFactor =
+        CVarDef.Create("wolfmed.stasis_damage_factor", 0.5f, CVar.SERVERONLY);
+
     /// <summary>Radiation at or past which the marrow stops: no blood regenerates (plan §3.9).</summary>
     public static readonly CVarDef<float> RadiationMarrowStop =
         CVarDef.Create("wolfmed.rad_marrow_stop", 40f, CVar.SERVERONLY);
