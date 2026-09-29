@@ -4551,3 +4551,81 @@ the owner's call; left as it plays.
   the wound's healing multiplier, and their side damage is toxin load. `AvaliChemistryTest` still expected ammonia to
   burn a human, which the reagent-damage decision made toxin load; it now reads the Poison. Left open: hemophilia (Mono
   trait) still adds no bleeding on a wound host (GUARD E4).
+- **A makeshift tourniquet torn from a jumpsuit (owner, 2026-09-29).** "We need a makeshift tourniquet that can be made
+  out of a jumpsuit." `WFWolfmedMakeshiftTourniquet` (`_WF/Wolfmed/Entities/tourniquet.yml`, parented to `Tourniquet`,
+  its sprite recoloured to grey cloth in `Medical/makeshift_tourniquet.rsi`) is crafted by hand from any jumpsuit with
+  suit sensors: construction `WFWolfmedMakeshiftTourniquet`, one `component: SuitSensor` step, 3 s, Tools. It clamps a
+  limb exactly as the real strap does and is worse in two ways the model already had. It takes 3 s to tie against the
+  real one's 0.5, and it slips: the tied part's `WolfmedTourniquetComponent.SlipDamage` takes the item's
+  `WolfmedMakeshiftTourniquetComponent.slipDamage` (15; null for the real strap, which holds through anything since
+  playtest 4), and `WolfmedTourniquetSlipSystem`, called from `WolfmedPartHitSystem.OnHit` before the wounds see the
+  hit, knocks it loose on one hit of 15 or more on the strapped part (after armour, and only a hit that could interrupt
+  a do-after: fire and bleeding ticks never count). The strap's own 5 Blunt and 5 Asphyxiation stay under the line, and
+  so does a punch or a 10-damage knock; a round or a heavy swing does not. A slip is a loosen nobody asked for
+  (`WolfmedNecrosisSystem.Slip`): the bleeding starts again, the necrosis clock stops, and everyone near sees "The
+  makeshift tourniquet on the right leg is knocked loose!". Slipping was chosen over holding a smaller share of the
+  bleed because a partial clamp would read as a working tourniquet on the analyzer while the patient kept bleeding;
+  a slip is visible and its answer (tie another, or fetch a real one) is obvious. Crafting takes a jumpsuit in hand
+  first, but upstream's crafting also takes worn items, and the jumpsuit slot comes before the backpack, so with none in
+  hand it tears the one being worn (the banana clown suit and ID card recipes behave the same); the recipe and the
+  guidebook say to hold the one to tear. Fixed in passing: loosening a strap released only the strapped part, so a
+  leg's strap left the foot's bleed clamped with nothing holding it; loosen, slip and the necrosis clock now cover the
+  parts below it (`TiedParts`), as applying one always did. The guidebook and the arterial and bleeding advice name
+  the makeshift strap. `WolfmedMakeshiftTourniquetTest`: the held jumpsuit is torn, not the worn one, in 3 s; the strap
+  is not on after 1 s and is after 4; a 10 hit leaves it on; a 20 Slash slips it and the leg bleeds again while the
+  real strap on the other leg holds; `SlippedStrapReleasesTheFootTest` pins the foot.
+- **Sutures anyone can get (owner, 2026-09-29).** "We need more accessible sutures, ones that are found in more places
+  (a downgraded one of the medicated ones, that don't require research, and makeshift variants of them)." Two tiers
+  under `MedicatedSuture`, which stays the top one (`_WF/Wolfmed/Entities/sutures.yml`, sprites from EscapeFromNevado's
+  `stack_medical.dmi` in `Medical/sutures.rsi`, each stack drawn by its count through `layerStates`, the medicated
+  suture's in-hands; stacks of 15 like it). The **suture** (`WFWolfmedSuture`, blue) closes cuts and punctures and
+  counts as sutured for infection (`WolfmedSuture`) exactly as the medicated one does, at half the closing a use
+  (Brute -30, so 10 Slash and 10 Piercing, against -60), bloodloss -6 against -10, and 3 s against 2. It needs no
+  research: a lathe recipe in `TopicalsStatic` (one per print, 25 Steel and 50 Cloth, beside the bruise pack and
+  gauze), the four medical vendors (NanoMed Plus 4, NanoMed 2, CiviMed infinite, the Wolfgate shop 4), and the
+  common and classy medical loot spawners and both dungeon meds spawners (marked lines). Its stack price is the bruise
+  pack's 15, printed from about the same materials. The **makeshift suture** (`WFWolfmedMakeshiftSuture`, tarred) is
+  a metal rod and a cloth, crafted anywhere in 4 s into five (`WFWolfmedMakeshiftSuture5`); -18 (6 and 6), bloodloss
+  -4, 5 s, stack price 1, and dirty. The owner's infection rule (an infection needs a reason) already had "something
+  dirty went into the wound" (`Contaminate`, the knife dig), so a dirty tool is one more caller: the item carries
+  `WolfmedDirtyTreatmentComponent`, and `WoundHealingSystem.TryApplyHealing` (one marked block, the helper in the
+  `_WF` partial) calls `WolfmedInfectionSystem.ContaminateTreated` on the part once the item has done anything, which
+  contaminates every open, infectable wound the item treats (the same choice `MarkSutured` makes). It does not carry
+  `WolfmedSuture`: a sutured wound infects at the profile's Sutured rate, 0, so a dirty stitch that counted as one
+  could never infect at all. A makeshift-closed cut keeps the dressed rate (0.15) times the contamination (2.5), has a
+  reason to infect even under a hardsuit, and clears with antiseptic or a proper suture over it; the analyzer's
+  procedure leaves its Suture and Clean rows open, and the advice says why. The advice names sutures generally
+  instead of "medicated sutures" throughout, the slash, piercing, gunshot and bleeding procedures name the tiers, and
+  the guidebook's Biological tissue section lists both. `WolfmedSutureTiersTest`: one use each on the same 15 Slash
+  cut removes medicated > plain > makeshift, closes the wound in the same order, and the delays climb 2, 3, 5; through
+  the do-after the plain suture marks the cut sutured and leaves it clean, the makeshift one leaves it contaminated
+  (past 1) and not sutured. The treatment matrix lists both new items against every wound, and
+  `WolfmedAvailabilityTest` finds the suture in a vendor or lathe and the makeshift one in a construction recipe.
+- **More to keep someone alive in the kits and belts (owner, 2026-09-29).** "Medkits and EMT belts need to have more
+  lifesaving stuff in them (tourniquets, and whatever else that can temporarily save your life)." What holds a patient
+  for the ten minutes to real care: a tourniquet for a limb bleed, a suture for a cut, a splint so they can move, a
+  painkiller pen that gets a downed patient up at once, and an epinephrine pen (the emergency medipen: 12 epinephrine,
+  which slows the brain clock, and 3 tranexamic acid) where the kit's tier warrants it. The combat and advanced kits stay
+  ahead of the standard one. `Medkit`'s grid goes 6x2 to 7x2 in its marked block (every typed kit inherits it) and
+  `MedkitCombat`'s own 4x2 to the same 7x2 (new marked block): the standard kit was full at 12 and the combat kit at 8,
+  and neither could take what it lacked otherwise. The belts' 8x2 had room.
+  - `MedkitFilled`: bruise pack, ointment, gauze, tourniquet, splint, analgesic canister, tricordrazine canister, and
+    now a suture. 14 of 14.
+  - `MedkitBruteFilled`, the trauma kit: bruise pack, gauze, iron and copper canisters, splint, osteogen canister, and
+    now a tourniquet and a suture. 13 of 14.
+  - `MedkitAdvancedFilled`: medicated suture, regenerative mesh, two blood packs, tourniquet, and now a splint, an
+    emergency medipen and an analgesic pen. 14 of 14.
+  - `MedkitCombatFilled`: medicated suture, regenerative mesh, ephedrine and saline syringes, brute and burn
+    auto-injectors, and now a tourniquet (it had none), a splint and an emergency medipen. 13 of 14.
+  - `ClothingBeltMedicalFilled`: two bruise packs, ointment, blood pack, gauze, emergency medipen, and now a tourniquet
+    and a suture. 15 of 16.
+  - `ClothingBeltMedicalEMTFilled`: bruise pack, ointment, blood pack, gauze, three emergency medipens, and now a
+    tourniquet, a suture and an analgesic pen. 16 of 16.
+  - Left alone: the burn, toxin, oxygen and radiation kits (none of them is for a bleed; the burn kit is 8 of 14 now),
+    the stimkit, and the CMO's webbing, which carries a medicated suture already.
+  Prices: the plain suture's stack price drops from 15 to 5 a unit (75 a full stack), a little over the 4 its print
+  costs, because the kits and the contractor loadout's free filled belts now each carry a stack; a tourniquet
+  appraises at 0 and the pens at their reagents. The medkit crates in `cargo_medical.yml` are Frontier-abstract and
+  cannot be ordered. `NoShipyardShipArbitrage` (every vessel's mapped kits and belts), `NoCargoOrderArbitrage` and the
+  storage fill tests pass; `WolfmedAvailabilityTest.FillsContainWhatTheyDeclareTest` spawns all six fills and finds
+  every certain entry in each, so a fill that stops fitting fails there.
