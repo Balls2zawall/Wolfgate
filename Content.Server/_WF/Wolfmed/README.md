@@ -239,6 +239,7 @@ Discord) saying what broke and what state they were in; misuse is a ban. Remove 
 - [`Content.Shared/_WF/Wolfmed/Surgery/WolfmedSkinGraftComponent.cs`](../../../Content.Shared/_WF/Wolfmed/Surgery/WolfmedSkinGraftComponent.cs)
 - [`Content.Shared/_WF/Wolfmed/Surgery/WolfmedSurgeryComponents.cs`](../../../Content.Shared/_WF/Wolfmed/Surgery/WolfmedSurgeryComponents.cs)
 - [`Content.Shared/_WF/Wolfmed/Surgery/WolfmedSurgeryConditionSystem.cs`](../../../Content.Shared/_WF/Wolfmed/Surgery/WolfmedSurgeryConditionSystem.cs)
+- [`Content.Shared/_WF/Wolfmed/Surgery/WolfmedSurgeryProgressComponent.cs`](../../../Content.Shared/_WF/Wolfmed/Surgery/WolfmedSurgeryProgressComponent.cs)
 - [`Content.Shared/_WF/Wolfmed/Targeting/WolfmedAimScatterSystem.cs`](../../../Content.Shared/_WF/Wolfmed/Targeting/WolfmedAimScatterSystem.cs)
 - [`Content.Shared/_WF/Wolfmed/Targeting/WoundTargetResolver.cs`](../../../Content.Shared/_WF/Wolfmed/Targeting/WoundTargetResolver.cs)
 - [`Content.Shared/_WF/Wolfmed/Wounds/WolfmedBurnFluidComponents.cs`](../../../Content.Shared/_WF/Wolfmed/Wounds/WolfmedBurnFluidComponents.cs)
@@ -423,6 +424,7 @@ Discord) saying what broke and what state they were in; misuse is a ban. Remove 
 - [`Content.IntegrationTests/Tests/_WF/Wolfmed/WolfmedSplintTest.cs`](../../../Content.IntegrationTests/Tests/_WF/Wolfmed/WolfmedSplintTest.cs)
 - [`Content.IntegrationTests/Tests/_WF/Wolfmed/WolfmedStasisTest.cs`](../../../Content.IntegrationTests/Tests/_WF/Wolfmed/WolfmedStasisTest.cs)
 - [`Content.IntegrationTests/Tests/_WF/Wolfmed/WolfmedStepCheckTest.cs`](../../../Content.IntegrationTests/Tests/_WF/Wolfmed/WolfmedStepCheckTest.cs)
+- [`Content.IntegrationTests/Tests/_WF/Wolfmed/WolfmedSurgeryClosingStepTest.cs`](../../../Content.IntegrationTests/Tests/_WF/Wolfmed/WolfmedSurgeryClosingStepTest.cs)
 - [`Content.IntegrationTests/Tests/_WF/Wolfmed/WolfmedSutureTiersTest.cs`](../../../Content.IntegrationTests/Tests/_WF/Wolfmed/WolfmedSutureTiersTest.cs)
 - [`Content.IntegrationTests/Tests/_WF/Wolfmed/WolfmedSyntheticHudTest.cs`](../../../Content.IntegrationTests/Tests/_WF/Wolfmed/WolfmedSyntheticHudTest.cs)
 - [`Content.IntegrationTests/Tests/_WF/Wolfmed/WolfmedThresholdFallbackTest.cs`](../../../Content.IntegrationTests/Tests/_WF/Wolfmed/WolfmedThresholdFallbackTest.cs)
@@ -1417,6 +1419,7 @@ Discord) saying what broke and what state they were in; misuse is a ban. Remove 
   - EXT 1, the P4-D19 wound-severity window a surgery lists in.
   - EXT 1 - P4-D19
 - [`Content.Shared/_Shitmed/Surgery/SharedSurgerySystem.cs`](../../../Content.Shared/_Shitmed/Surgery/SharedSurgerySystem.cs)
+  - playtest 5, a begun procedure stays open until its closing step
   - playtest 3 SAM: a wound host lists by its wounds (HOOK 24)
   - HOOK 24 - P4-D19 wound-severity window
   - HOOK 25 - P4-D18 untreated amputation consequence
