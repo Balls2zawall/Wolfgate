@@ -4665,3 +4665,13 @@ the owner's call; left as it plays.
   `WolfmedSurgeryClosingStepTest`: the graft and the embedded-object removal each run from the window to their own
   seal, the torso closes and the procedure leaves the menu; an open torso without charring still does not offer
   the graft.
+- **A minor wound is not infected by the air (owner, 2026-09-29).** "Minor burns cause sepsis after a while? I think
+  minor injuries shouldn't cause infections." Every infectable wound carries its risk at every stage, and open air is
+  a reason, so a severity-10 scald on an unsuited arm went local, crept up its 15, spread and reached the chest.
+  `HasReason` now refuses the air as a reason for a wound whose current stage is Minor (`WolfmedInfectionSystem.IsMinor`:
+  under 25 on every organic wound, the analyzer's own word), behind `wolfmed.infection_spares_minor` (true). A dirty
+  wound (a bite, a round or shrapnel left in, dead tissue) and a contaminated one (a makeshift suture, a dirty
+  object) are still reasons at any size; charring, an operative incision and a stump have no Minor stage, so they
+  are never spared. A wound that already carries infection and heals down to minor holds where it is.
+  `InfectionNeedsAReasonTest` adds a minor cut and a minor burn in the open for thirty minutes (both at zero) and a
+  minor bite (it goes bad); the spread fixtures' cut is 30 now, moderate, so they still test what they tested.
