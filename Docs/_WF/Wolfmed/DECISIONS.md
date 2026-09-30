@@ -4675,3 +4675,9 @@ the owner's call; left as it plays.
   are never spared. A wound that already carries infection and heals down to minor holds where it is.
   `InfectionNeedsAReasonTest` adds a minor cut and a minor burn in the open for thirty minutes (both at zero) and a
   minor bite (it goes bad); the spread fixtures' cut is 30 now, moderate, so they still test what they tested.
+- **Dying asleep wakes the body (2026-09-30).** "Someone went to sleep while dead and can't wake up when fixed."
+  A body in cardiac arrest is Critical, looks dead, and may still sleep (only Dead refuses it). Falling asleep puts a
+  timerless `StunnedComponent` and `KnockedDownComponent` on the body, and only `SleepingSystem.Wake` takes them off,
+  with the Wake action; `OnMobStateChanged` removed `SleepingComponent` bare on death, so a revived patient stayed
+  down for good and the Wake action had no sleep to end. A marked block now calls `Wake` there.
+  `WolfmedSleepThroughDeathTest`: asleep in arrest, killed, revived: no sleep, stun or knockdown left.
