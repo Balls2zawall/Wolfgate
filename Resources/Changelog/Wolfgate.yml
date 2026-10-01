@@ -748,3 +748,12 @@ Entries:
   id: 100068
   time: '2026-10-01T06:18:01.0000000+00:00'
   url: https://github.com/VanguardControl/Wolfgate/pull/136
+- author: Aphast
+  changes:
+    - type: Add
+      message: A new thicker accent 'neofrench'
+    - type: Tweak
+      message: Slimepeople can now select any color skin
+  id: 100069
+  time: '2026-10-01T07:02:48.0000000+00:00'
+  url: https://github.com/VanguardControl/Wolfgate/pull/138
