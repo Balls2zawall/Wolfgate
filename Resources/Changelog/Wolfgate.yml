@@ -821,3 +821,10 @@ Entries:
   id: 100073
   time: '2026-10-01T18:46:57.0000000+00:00'
   url: https://github.com/VanguardControl/Wolfgate/pull/143
+- author: Happyowl93
+  changes:
+    - type: Add
+      message: Improved mapping tools
+  id: 100074
+  time: '2026-10-01T18:47:52.0000000+00:00'
+  url: https://github.com/VanguardControl/Wolfgate/pull/110
