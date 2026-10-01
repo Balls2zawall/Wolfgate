@@ -1,16 +1,16 @@
 meta:
   format: 7
-  category: Grid
+  category: Map
   engineVersion: 277.0.0
   forkId: ""
   forkVersion: ""
-  time: 09/30/2026 08:09:25
-  entityCount: 10195
-maps: []
+  time: 10/01/2026 08:09:03
+  entityCount: 10200
+maps:
+- 10196
 grids:
 - 1
-orphans:
-- 1
+orphans: []
 nullspace: []
 tilemap:
   7: Space
@@ -118,7 +118,7 @@ entities:
     - type: MetaData
       name: Caelestinus Central
     - type: Transform
-      parent: invalid
+      parent: 10196
     - type: ForceAnchor
     - type: StationTransit
     - type: ProtectedGrid
@@ -6463,7 +6463,7 @@ entities:
             0: 65535
           4,5:
             0: 65254
-            6: 8
+            2: 8
           4,6:
             0: 61614
           4,7:
@@ -6504,17 +6504,17 @@ entities:
           -1,8:
             0: 46079
           -8,0:
-            2: 768
+            3: 768
             0: 34952
           -9,0:
-            2: 52431
-            5: 256
+            3: 52431
+            4: 256
           -8,1:
-            2: 48
+            3: 48
             1: 256
             0: 34952
           -9,1:
-            2: 1023
+            3: 1023
           -8,2:
             0: 48056
           -9,2:
@@ -6527,9 +6527,9 @@ entities:
             0: 48027
           -8,-1:
             0: 35020
-            3: 1
+            5: 1
             1: 256
-            2: 12288
+            3: 12288
           -7,0:
             0: 56785
           -7,1:
@@ -6598,10 +6598,10 @@ entities:
           1,9:
             0: 3
           1,10:
-            2: 528
+            3: 528
             1: 43488
           1,11:
-            2: 34817
+            3: 34817
             1: 10014
           1,12:
             1: 554
@@ -6612,15 +6612,15 @@ entities:
             1: 40960
           2,10:
             1: 24245
-            2: 33034
+            3: 33034
           2,11:
             1: 2014
-            2: 32
+            3: 32
           3,8:
             0: 16
           3,10:
             1: 269
-            2: 2
+            3: 2
           3,9:
             1: 704
           4,8:
@@ -6644,7 +6644,7 @@ entities:
           -3,-4:
             1: 8
           -2,-4:
-            2: 1
+            3: 1
             0: 34956
           -2,-2:
             1: 51
@@ -6707,23 +6707,23 @@ entities:
           -1,12:
             0: 30515
           1,-3:
-            2: 25344
+            3: 25344
             1: 36010
           1,-2:
             0: 52992
             1: 4
-            2: 8
+            3: 8
           1,-4:
             1: 8704
           2,-3:
             1: 20480
-            2: 8192
+            3: 8192
           2,-2:
             1: 15
             0: 12288
           3,-2:
             1: 3607
-            2: 256
+            3: 256
           4,-2:
             1: 256
           4,-1:
@@ -6783,18 +6783,18 @@ entities:
             0: 65521
           -8,-2:
             0: 52445
-            3: 4096
+            5: 4096
           -9,-2:
             0: 12799
-            3: 32768
+            5: 32768
           -9,-1:
-            3: 8
-            2: 62208
+            5: 8
+            3: 62208
             0: 3
           -7,-4:
             0: 4371
             1: 1152
-            2: 8
+            3: 8
           -7,-3:
             0: 4369
             1: 17408
@@ -6837,7 +6837,7 @@ entities:
             0: 65280
           -11,-1:
             0: 8738
-            2: 32768
+            3: 32768
           -11,0:
             0: 11058
             1: 8
@@ -6847,17 +6847,17 @@ entities:
             0: 887
           -10,-2:
             0: 33023
-            4: 12288
+            6: 12288
           -10,-1:
-            4: 3
+            6: 3
             1: 256
-            2: 63488
+            3: 63488
             0: 8
           -10,-5:
             0: 65280
             1: 4
           -10,0:
-            2: 26222
+            3: 26222
             1: 4112
           -9,-5:
             0: 65480
@@ -6878,11 +6878,11 @@ entities:
             0: 136
           -12,4:
             1: 13230
-            2: 16384
+            3: 16384
           -11,1:
             0: 802
             1: 8
-            2: 128
+            3: 128
           -11,3:
             0: 34960
             1: 4352
@@ -6892,7 +6892,7 @@ entities:
             1: 33
             0: 37272
           -10,1:
-            2: 2302
+            3: 2302
             1: 256
           -10,2:
             0: 15291
@@ -6932,27 +6932,27 @@ entities:
           -10,8:
             0: 198
           -12,5:
-            2: 1
+            3: 1
             1: 2
             0: 65416
           -13,4:
-            2: 32768
+            3: 32768
             1: 16417
           -13,5:
-            2: 12
+            3: 12
             0: 65296
           -12,6:
             0: 7
-            2: 1280
+            3: 1280
             1: 4096
           -13,6:
             0: 31
-            2: 60416
+            3: 60416
           -12,7:
             1: 17
           -13,7:
             1: 152
-            2: 4
+            3: 4
           -11,5:
             0: 65535
           -11,6:
@@ -6977,7 +6977,7 @@ entities:
             1: 2048
           -1,-7:
             0: 13107
-            2: 8
+            3: 8
           -1,-6:
             0: 29555
           -1,-9:
@@ -7038,7 +7038,7 @@ entities:
           -7,-7:
             0: 14129
             1: 8
-            2: 128
+            3: 128
           -7,-6:
             0: 4369
             1: 72
@@ -7069,7 +7069,7 @@ entities:
             0: 3327
           -6,14:
             1: 49184
-            2: 1024
+            3: 1024
           -6,15:
             1: 1092
           5,0:
@@ -7098,12 +7098,12 @@ entities:
             0: 65528
           4,4:
             0: 26208
-            6: 34944
+            2: 34944
           5,4:
-            6: 13104
+            2: 13104
             1: 2048
           5,5:
-            6: 3
+            2: 3
             0: 13104
             1: 128
           5,6:
@@ -7114,7 +7114,7 @@ entities:
             1: 256
           6,5:
             1: 272
-            2: 8704
+            3: 8704
           6,6:
             0: 63488
           6,7:
@@ -7354,8 +7354,17 @@ entities:
           immutable: True
           moles: {}
         - volume: 2500
+          temperature: 235
+          moles:
+            Oxygen: 27.225372
+            Nitrogen: 102.419266
+        - volume: 2500
           temperature: 293.15
           moles: {}
+        - volume: 2500
+          temperature: 293.15
+          moles:
+            Plasma: 6666.982
         - volume: 2500
           temperature: 293.15
           moles:
@@ -7364,15 +7373,6 @@ entities:
           temperature: 293.15
           moles:
             Oxygen: 6666.982
-        - volume: 2500
-          temperature: 293.15
-          moles:
-            Plasma: 6666.982
-        - volume: 2500
-          temperature: 235
-          moles:
-            Oxygen: 27.225372
-            Nitrogen: 102.419266
         chunkSize: 4
     - type: GasTileOverlay
     - type: ExplosionAirtightGrid
@@ -7380,6 +7380,18 @@ entities:
     - type: ShipGridLock
       locked: False
     - type: NavMap
+  - uid: 10196
+    components:
+    - type: MetaData
+      name: Colossus Sector
+    - type: Transform
+    - type: Map
+      mapPaused: True
+    - type: GridTree
+    - type: Broadphase
+    - type: OccluderTree
+    - type: Parallax
+      parallax: FrontierStation
 - proto: AirAlarm
   entities:
   - uid: 2
@@ -11002,6 +11014,14 @@ entities:
     - type: Transform
       rot: -1.5707963267948966 rad
       pos: -12.5,24.5
+      parent: 1
+- proto: ButtonFrameExit
+  entities:
+  - uid: 10198
+    components:
+    - type: Transform
+      rot: 1.5707963267948966 rad
+      pos: -13.5,46.5
       parent: 1
 - proto: ButtonFrameGrey
   entities:
@@ -30492,8 +30512,6 @@ entities:
       pos: -11.5,42.5
       parent: 1
     - type: DeviceNetwork
-      configurators:
-      - invalid
       deviceLists:
       - 8030
   - uid: 4189
@@ -30667,8 +30685,6 @@ entities:
       pos: -15.5,41.5
       parent: 1
     - type: DeviceNetwork
-      configurators:
-      - invalid
       deviceLists:
       - 2
       - 8030
@@ -30678,8 +30694,6 @@ entities:
       pos: -14.5,41.5
       parent: 1
     - type: DeviceNetwork
-      configurators:
-      - invalid
       deviceLists:
       - 2
       - 8030
@@ -30700,8 +30714,6 @@ entities:
       pos: -26.5,47.5
       parent: 1
     - type: DeviceNetwork
-      configurators:
-      - invalid
       deviceLists:
       - 8030
   - uid: 5024
@@ -30711,8 +30723,6 @@ entities:
       pos: -7.5,42.5
       parent: 1
     - type: DeviceNetwork
-      configurators:
-      - invalid
       deviceLists:
       - 8030
 - proto: FirelockEdge
@@ -31187,8 +31197,6 @@ entities:
       pos: -5.5,47.5
       parent: 1
     - type: DeviceNetwork
-      configurators:
-      - invalid
       deviceLists:
       - 8030
       - 21
@@ -31198,8 +31206,6 @@ entities:
       pos: -5.5,46.5
       parent: 1
     - type: DeviceNetwork
-      configurators:
-      - invalid
       deviceLists:
       - 8030
       - 21
@@ -31209,7 +31215,7 @@ entities:
       pos: -14.5,38.5
       parent: 1
     - type: Door
-      secondsUntilStateChange: -33104.95
+      secondsUntilStateChange: -34250.99
       state: Closing
     - type: DeviceNetwork
       deviceLists:
@@ -31229,8 +31235,6 @@ entities:
       pos: -16.5,50.5
       parent: 1
     - type: DeviceNetwork
-      configurators:
-      - invalid
       deviceLists:
       - 8030
       - 28
@@ -31240,8 +31244,6 @@ entities:
       pos: -15.5,50.5
       parent: 1
     - type: DeviceNetwork
-      configurators:
-      - invalid
       deviceLists:
       - 8030
       - 28
@@ -31313,8 +31315,6 @@ entities:
       pos: -12.5,45.5
       parent: 1
     - type: DeviceNetwork
-      configurators:
-      - invalid
       deviceLists:
       - 8030
   - uid: 5549
@@ -31323,8 +31323,6 @@ entities:
       pos: -9.5,50.5
       parent: 1
     - type: DeviceNetwork
-      configurators:
-      - invalid
       deviceLists:
       - 8030
 - proto: Fireplace
@@ -41621,8 +41619,6 @@ entities:
       pos: -8.5,41.5
       parent: 1
     - type: DeviceNetwork
-      configurators:
-      - invalid
       deviceLists:
       - 8030
     - type: AtmosPipeColor
@@ -41633,8 +41629,6 @@ entities:
       pos: -17.5,46.5
       parent: 1
     - type: DeviceNetwork
-      configurators:
-      - invalid
       deviceLists:
       - 8030
     - type: AtmosPipeColor
@@ -41646,8 +41640,6 @@ entities:
       pos: -23.5,52.5
       parent: 1
     - type: DeviceNetwork
-      configurators:
-      - invalid
       deviceLists:
       - 8030
     - type: AtmosPipeColor
@@ -42095,8 +42087,6 @@ entities:
       pos: -7.5,44.5
       parent: 1
     - type: DeviceNetwork
-      configurators:
-      - invalid
       deviceLists:
       - 8030
     - type: AtmosPipeColor
@@ -42108,8 +42098,6 @@ entities:
       pos: -10.5,41.5
       parent: 1
     - type: DeviceNetwork
-      configurators:
-      - invalid
       deviceLists:
       - 8030
     - type: AtmosPipeColor
@@ -42121,8 +42109,6 @@ entities:
       pos: -11.5,47.5
       parent: 1
     - type: DeviceNetwork
-      configurators:
-      - invalid
       deviceLists:
       - 8030
     - type: AtmosPipeColor
@@ -42149,8 +42135,6 @@ entities:
       pos: -6.5,44.5
       parent: 1
     - type: DeviceNetwork
-      configurators:
-      - invalid
       deviceLists:
       - 8030
     - type: AtmosPipeLayers
@@ -42269,8 +42253,6 @@ entities:
       pos: -21.5,53.5
       parent: 1
     - type: DeviceNetwork
-      configurators:
-      - invalid
       deviceLists:
       - 8030
     - type: AtmosPipeColor
@@ -42702,8 +42684,6 @@ entities:
       pos: -11.5,40.5
       parent: 1
     - type: DeviceNetwork
-      configurators:
-      - invalid
       deviceLists:
       - 8030
     - type: AtmosPipeLayers
@@ -42717,8 +42697,6 @@ entities:
       pos: -7.5,40.5
       parent: 1
     - type: DeviceNetwork
-      configurators:
-      - invalid
       deviceLists:
       - 8030
     - type: AtmosPipeLayers
@@ -42731,8 +42709,6 @@ entities:
       pos: -19.5,46.5
       parent: 1
     - type: DeviceNetwork
-      configurators:
-      - invalid
       deviceLists:
       - 8030
     - type: AtmosPipeLayers
@@ -42746,8 +42722,6 @@ entities:
       pos: -11.5,49.5
       parent: 1
     - type: DeviceNetwork
-      configurators:
-      - invalid
       deviceLists:
       - 8030
     - type: AtmosPipeLayers
@@ -46208,7 +46182,7 @@ entities:
       parent: 1
     - type: SpecialRespawn
       stationMap:
-      - invalid
+      - 10196
       - 1
 - proto: OperatingTable
   entities:
@@ -55521,6 +55495,18 @@ entities:
     - type: Transform
       pos: 7.5,0.5
       parent: 1
+  - uid: 10199
+    components:
+    - type: Transform
+      rot: 1.5707963267948966 rad
+      pos: -10.5,47.5
+      parent: 1
+  - uid: 10200
+    components:
+    - type: Transform
+      rot: 1.5707963267948966 rad
+      pos: -10.5,48.5
+      parent: 1
 - proto: ShuttersRadiation
   entities:
   - uid: 7713
@@ -55859,6 +55845,20 @@ entities:
         - - Pressed
           - Toggle
         3934:
+        - - Pressed
+          - Toggle
+  - uid: 10197
+    components:
+    - type: Transform
+      rot: 1.5707963267948966 rad
+      pos: -13.5,46.5
+      parent: 1
+    - type: DeviceLinkSource
+      linkedPorts:
+        10199:
+        - - Pressed
+          - Toggle
+        10200:
         - - Pressed
           - Toggle
 - proto: SignalSwitchDirectional
@@ -59741,42 +59741,10 @@ entities:
       parent: 1
 - proto: WallPlastitaniumOutpost
   entities:
-  - uid: 168
-    components:
-    - type: Transform
-      pos: -14.5,47.5
-      parent: 1
-  - uid: 1541
-    components:
-    - type: Transform
-      rot: -1.5707963267948966 rad
-      pos: -14.5,49.5
-      parent: 1
-  - uid: 4802
-    components:
-    - type: Transform
-      pos: -13.5,45.5
-      parent: 1
-  - uid: 5025
-    components:
-    - type: Transform
-      pos: -13.5,46.5
-      parent: 1
   - uid: 5026
     components:
     - type: Transform
       pos: -10.5,50.5
-      parent: 1
-  - uid: 6371
-    components:
-    - type: Transform
-      pos: -14.5,48.5
-      parent: 1
-  - uid: 8034
-    components:
-    - type: Transform
-      rot: 3.141592653589793 rad
-      pos: -11.5,45.5
       parent: 1
   - uid: 8264
     components:
@@ -60148,11 +60116,6 @@ entities:
     components:
     - type: Transform
       pos: -23.5,-5.5
-      parent: 1
-  - uid: 8338
-    components:
-    - type: Transform
-      pos: -10.5,45.5
       parent: 1
   - uid: 8339
     components:
@@ -60858,11 +60821,6 @@ entities:
     components:
     - type: Transform
       pos: -6.5,50.5
-      parent: 1
-  - uid: 8480
-    components:
-    - type: Transform
-      pos: -14.5,46.5
       parent: 1
   - uid: 8481
     components:
@@ -61710,6 +61668,12 @@ entities:
       parent: 1
 - proto: WallReinforcedOutpost
   entities:
+  - uid: 168
+    components:
+    - type: Transform
+      rot: 1.5707963267948966 rad
+      pos: -14.5,47.5
+      parent: 1
   - uid: 200
     components:
     - type: Transform
@@ -61727,6 +61691,12 @@ entities:
       rot: -1.5707963267948966 rad
       pos: -26.5,48.5
       parent: 1
+  - uid: 1541
+    components:
+    - type: Transform
+      rot: 1.5707963267948966 rad
+      pos: -14.5,49.5
+      parent: 1
   - uid: 2544
     components:
     - type: Transform
@@ -61738,11 +61708,29 @@ entities:
     - type: Transform
       pos: -22.5,43.5
       parent: 1
+  - uid: 4802
+    components:
+    - type: Transform
+      rot: 1.5707963267948966 rad
+      pos: -13.5,45.5
+      parent: 1
+  - uid: 5025
+    components:
+    - type: Transform
+      rot: 1.5707963267948966 rad
+      pos: -13.5,46.5
+      parent: 1
   - uid: 6186
     components:
     - type: Transform
       rot: 3.141592653589793 rad
       pos: -18.5,43.5
+      parent: 1
+  - uid: 6371
+    components:
+    - type: Transform
+      rot: 1.5707963267948966 rad
+      pos: -14.5,48.5
       parent: 1
   - uid: 6395
     components:
@@ -61765,6 +61753,24 @@ entities:
     components:
     - type: Transform
       pos: -24.5,41.5
+      parent: 1
+  - uid: 8034
+    components:
+    - type: Transform
+      rot: 1.5707963267948966 rad
+      pos: -11.5,45.5
+      parent: 1
+  - uid: 8338
+    components:
+    - type: Transform
+      rot: 1.5707963267948966 rad
+      pos: -10.5,45.5
+      parent: 1
+  - uid: 8480
+    components:
+    - type: Transform
+      rot: 1.5707963267948966 rad
+      pos: -14.5,46.5
       parent: 1
   - uid: 8643
     components:
@@ -69447,10 +69453,10 @@ entities:
     - type: MobStateActions
       actions: {}
     - type: HumanoidAppearance
+      skinColor: '#B98862FF'
       gender: Male
       age: 58
       eyeColor: '#7C93A0FF'
-      skinColor: '#B98862FF'
       markingSet:
         points:
           Special:
@@ -69612,10 +69618,10 @@ entities:
     - type: MobStateActions
       actions: {}
     - type: HumanoidAppearance
+      skinColor: '#C79A73FF'
       gender: Male
       age: 50
       eyeColor: '#3D2B1FFF'
-      skinColor: '#C79A73FF'
       markingSet:
         points:
           Special:
@@ -69777,11 +69783,11 @@ entities:
     - type: MobStateActions
       actions: {}
     - type: HumanoidAppearance
-      sex: Female
+      skinColor: '#A6714BFF'
       gender: Female
       age: 45
+      sex: Female
       eyeColor: '#7C8B96FF'
-      skinColor: '#A6714BFF'
       markingSet:
         points:
           Special:
@@ -69938,11 +69944,11 @@ entities:
     - type: MobStateActions
       actions: {}
     - type: HumanoidAppearance
-      sex: Female
+      skinColor: '#FFE1CCFF'
       gender: Female
       age: 34
+      sex: Female
       eyeColor: '#4B3B2CFF'
-      skinColor: '#FFE1CCFF'
       markingSet:
         points:
           Special:
@@ -70099,10 +70105,10 @@ entities:
     - type: MobStateActions
       actions: {}
     - type: HumanoidAppearance
+      skinColor: '#C79C6EFF'
       gender: Male
       age: 41
       eyeColor: '#4A6B7CFF'
-      skinColor: '#C79C6EFF'
       markingSet:
         points:
           Special:
@@ -70257,10 +70263,10 @@ entities:
     - type: MobStateActions
       actions: {}
     - type: HumanoidAppearance
+      skinColor: '#C79C6EFF'
       gender: Male
       age: 41
       eyeColor: '#4A6B7CFF'
-      skinColor: '#C79C6EFF'
       markingSet:
         points:
           Special:
@@ -70417,11 +70423,11 @@ entities:
     - type: MobStateActions
       actions: {}
     - type: HumanoidAppearance
-      sex: Female
+      skinColor: '#E8B98EFF'
       gender: Female
       age: 23
+      sex: Female
       eyeColor: '#3A2A20FF'
-      skinColor: '#E8B98EFF'
       markingSet:
         points:
           Special:
@@ -70578,10 +70584,10 @@ entities:
     - type: MobStateActions
       actions: {}
     - type: HumanoidAppearance
+      skinColor: '#E0B38CFF'
       gender: Male
       age: 37
       eyeColor: '#6B5340FF'
-      skinColor: '#E0B38CFF'
       markingSet:
         points:
           Special:
@@ -70743,10 +70749,10 @@ entities:
     - type: MobStateActions
       actions: {}
     - type: HumanoidAppearance
+      skinColor: '#C99A73FF'
       gender: Male
       age: 47
       eyeColor: '#6B7F8CFF'
-      skinColor: '#C99A73FF'
       markingSet:
         points:
           Special:
