@@ -19,7 +19,6 @@
         - Brutepack
         - Ointment
         - Gauze
-        - WFWolfmedSuture # WOLFGATE(Wolfmed): playtest 5: sutures found in more places.
         - EmergencyMedipen
         - PillCanisterIron
       chance: 0.9
@@ -54,7 +53,6 @@
         - Brutepack
         - Ointment
         - Gauze
-        - WFWolfmedSuture # WOLFGATE(Wolfmed): playtest 5: sutures found in more places.
         - EmergencyMedipen
         - EpinephrineChemistryBottle
         - PillCanisterTricordrazine

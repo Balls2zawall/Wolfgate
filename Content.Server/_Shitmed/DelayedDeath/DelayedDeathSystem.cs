@@ -10,7 +10,6 @@ namespace Content.Server._Shitmed.DelayedDeath;
 public partial class DelayedDeathSystem : EntitySystem
 {
     [Dependency] private ChatSystem _chat = default!;
-    [Dependency] private Content.Server._WF.Wolfmed.Life.WolfmedLifeSystem _wolfmedLife = default!; // WOLFGATE(Wolfmed): BRAIN
     [Dependency] private MobStateSystem _mobState = default!;
 
     public override void Initialize()
@@ -27,10 +26,6 @@ public partial class DelayedDeathSystem : EntitySystem
         using var query = EntityQueryEnumerator<DelayedDeathComponent, MobStateComponent>();
         while (query.MoveNext(out var ent, out var comp, out var mob))
         {
-            // WOLFGATE(Wolfmed): BRAIN: a missing heart is cardiac arrest on a wound host, not a countdown to death.
-            if (_wolfmedLife.OwnsDeath(ent))
-                continue;
-
             comp.DeathTimer += frameTime;
 
             if (comp.DeathTimer >= comp.DeathTime && !_mobState.IsDead(ent, mob))

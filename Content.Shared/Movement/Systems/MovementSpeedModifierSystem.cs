@@ -89,11 +89,6 @@ namespace Content.Shared.Movement.Systems
             var ev = new RefreshMovementSpeedModifiersEvent();
             RaiseLocalEvent(uid, ev);
 
-            // WOLFGATE(Wolfmed): playtest 2: Wolfmed's crawl floor goes on after every other modifier (WolfmedCrawlSystem).
-            var floor = new Content.Shared._WF.Wolfmed.Consciousness.WolfmedSpeedFloorEvent(
-                move.BaseWalkSpeed, move.BaseSprintSpeed, ev.WalkSpeedModifier, ev.SprintSpeedModifier);
-            RaiseLocalEvent(uid, ref floor);
-
             // Mono
             if (alsoFriction)
             {
@@ -101,12 +96,12 @@ namespace Content.Shared.Movement.Systems
                 RefreshWeightlessModifiers(uid, move);
             }
 
-            if (MathHelper.CloseTo(floor.Walk, move.WalkSpeedModifier) && // WOLFGATE(Wolfmed): playtest 2: floor.* not ev.*
-                MathHelper.CloseTo(floor.Sprint, move.SprintSpeedModifier))
+            if (MathHelper.CloseTo(ev.WalkSpeedModifier, move.WalkSpeedModifier) &&
+                MathHelper.CloseTo(ev.SprintSpeedModifier, move.SprintSpeedModifier))
                 return;
 
-            move.WalkSpeedModifier = floor.Walk; // WOLFGATE(Wolfmed): playtest 2
-            move.SprintSpeedModifier = floor.Sprint; // WOLFGATE(Wolfmed): playtest 2
+            move.WalkSpeedModifier = ev.WalkSpeedModifier;
+            move.SprintSpeedModifier = ev.SprintSpeedModifier;
             Dirty(uid, move);
         }
 

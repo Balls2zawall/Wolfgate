@@ -524,11 +524,9 @@ public abstract partial class SharedProjectileSystem : EntitySystem
 
         EnsureComp<EmbeddedContainerComponent>(target, out var embeddedContainer);
 
-        // WOLFGATE START: the client replays a thrown embed's collision in prediction, and the projectile is already in
-        // the target's set from the first pass; the debug assert took a debug client down for it. The set add is idempotent.
         //Assert that this entity not embed
-        // DebugTools.AssertEqual(embeddedContainer.EmbeddedObjects.Contains(uid), false);
-        // WOLFGATE END
+        DebugTools.AssertEqual(embeddedContainer.EmbeddedObjects.Contains(uid), false);
+
         embeddedContainer.EmbeddedObjects.Add(uid);
     }
 

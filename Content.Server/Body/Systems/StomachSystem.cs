@@ -12,7 +12,6 @@ namespace Content.Server.Body.Systems
     {
         [Dependency] private IGameTiming _gameTiming = default!;
         [Dependency] private SharedSolutionContainerSystem _solutionContainerSystem = default!;
-        [Dependency] private Content.Server._WF.Wolfmed.Medical.WolfmedOralAbsorptionSystem _wolfmedAbsorption = default!; // WOLFGATE(Wolfmed): playtest 1
 
         public const string DefaultSolutionName = "stomach";
 
@@ -56,7 +55,7 @@ namespace Content.Server.Body.Systems
                 foreach (var delta in stomach.ReagentDeltas)
                 {
                     delta.Increment(stomach.UpdateInterval);
-                    if (delta.Lifetime > _wolfmedAbsorption.GetDigestionDelay(stomach, delta.ReagentQuantity.Reagent.Prototype)) // WOLFGATE(Wolfmed): playtest 1: painkillers absorb fast
+                    if (delta.Lifetime > stomach.DigestionDelay)
                     {
                         if (stomachSolution.TryGetReagent(delta.ReagentQuantity.Reagent, out var reagent))
                         {

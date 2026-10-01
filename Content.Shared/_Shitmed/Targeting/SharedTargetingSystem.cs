@@ -23,8 +23,4 @@ public abstract class SharedTargetingSystem : EntitySystem
 
         return parts;
     }
-
-    // WOLFGATE(Wolfmed): Wolfmed snapshot/targeting needs a single-bit check; copied from Onyx's SharedTargetingSystem.
-    public static bool IsSelectable(TargetBodyPart part)
-        => part != 0 && (part & (part - 1)) == 0 && (part & TargetBodyPart.All) != 0;
 }

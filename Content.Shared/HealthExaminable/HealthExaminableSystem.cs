@@ -1,5 +1,3 @@
-using Content.Shared._Onyx.Wounds; // WOLFGATE(Wolfmed): GUARD F
-using Content.Shared._WF.Wolfmed.Examine; // WOLFGATE(Wolfmed): LOOK
 using Content.Shared.Damage;
 using Content.Shared.Examine;
 using Content.Shared.FixedPoint;
@@ -12,8 +10,6 @@ namespace Content.Shared.HealthExaminable;
 public sealed partial class HealthExaminableSystem : EntitySystem
 {
     [Dependency] private ExamineSystemShared _examineSystem = default!;
-    [Dependency] private WolfmedVisualInspectionSystem _look = default!; // WOLFGATE(Wolfmed): LOOK
-    [Dependency] private Robust.Shared.Network.INetManager _net = default!; // WOLFGATE(Wolfmed): LOOK
 
     public override void Initialize()
     {
@@ -28,42 +24,29 @@ public sealed partial class HealthExaminableSystem : EntitySystem
             return;
 
         var detailsRange = _examineSystem.IsInDetailsRange(args.User, uid);
-        var look = HasComp<WoundHostComponent>(uid); // WOLFGATE(Wolfmed): LOOK, a body can be looked over from across the room; only the detail changes.
 
         var verb = new ExamineVerb()
         {
             Act = () =>
             {
-                // WOLFGATE(Wolfmed) START: the server builds a wound host's look.
-                // The verb is predicted, so the client ran this too, from its own partial copy of the wounds, and that
-                // tooltip (missing the bleed, missing wounds) could be the one left on screen.
-                if (look && _net.IsClient)
-                    return;
-                // WOLFGATE END
-
-                var markup = CreateMarkup(uid, args.User, component, damage, detailsRange); // WOLFGATE(Wolfmed): GUARD F, examiner param for self-vs-other pain visibility; LOOK, examine range
+                var markup = CreateMarkup(uid, component, damage);
                 _examineSystem.SendExamineTooltip(args.User, uid, markup, false, false);
             },
             Text = Loc.GetString("health-examinable-verb-text"),
             Category = VerbCategory.Examine,
-            Disabled = !detailsRange && !look, // WOLFGATE(Wolfmed): LOOK
-            Message = detailsRange || look ? null : Loc.GetString("health-examinable-verb-disabled"), // WOLFGATE(Wolfmed): LOOK
+            Disabled = !detailsRange,
+            Message = detailsRange ? null : Loc.GetString("health-examinable-verb-disabled"),
             Icon = new SpriteSpecifier.Texture(new ("/Textures/Interface/VerbIcons/rejuvenate.svg.192dpi.png"))
         };
 
         args.Verbs.Add(verb);
     }
 
-    public FormattedMessage CreateMarkup(EntityUid uid, EntityUid examiner, HealthExaminableComponent component, DamageableComponent damage, bool detailed = true) // WOLFGATE(Wolfmed): GUARD F; LOOK adds detailed
+    public FormattedMessage CreateMarkup(EntityUid uid, HealthExaminableComponent component, DamageableComponent damage)
     {
         var msg = new FormattedMessage();
 
         var first = true;
-        // WOLFGATE(Wolfmed) START: GUARD F, legacy threshold text is for non-wound-hosts only.
-        // The body is left un-reindented to keep the upstream diff minimal.
-        if (!HasComp<WoundHostComponent>(uid))
-        {
-        // WOLFGATE END
         foreach (var type in component.ExaminableTypes)
         {
             if (!damage.Damage.DamageDict.TryGetValue(type, out var dmg))
@@ -109,12 +92,6 @@ public sealed partial class HealthExaminableSystem : EntitySystem
         {
             msg.AddMarkupOrThrow(Loc.GetString($"health-examinable-{component.LocPrefix}-none"));
         }
-        // WOLFGATE(Wolfmed) START: GUARD F, a wound host gets a visual inspection instead (P2-D20/D2).
-        // LOOK replaces Onyx's AddPartStatusMarkup readout with it.
-        }
-        else
-            _look.AddLookMarkup(uid, examiner, msg, detailed);
-        // WOLFGATE END
 
         // Anything else want to add on to this?
         RaiseLocalEvent(uid, new HealthBeingExaminedEvent(msg), true);

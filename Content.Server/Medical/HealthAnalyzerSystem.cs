@@ -283,8 +283,7 @@ public sealed partial class HealthAnalyzerSystem : EntitySystem
             uncloneable, // Frontier
             // Shitmed Change
             body,
-            part != null ? GetNetEntity(part) : null,
-            BuildWoundDiagnostics(target), BuildOrganInfo(target), BuildChemicalInfo(target, bloodstream), BuildVitalDamage(target) // WOLFGATE(Wolfmed): HOOK 23
+            part != null ? GetNetEntity(part) : null
         ));
     }
 }

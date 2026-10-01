@@ -4,7 +4,6 @@ using Content.IntegrationTests.Pair;
 using Content.Server._EinsteinEngines.Power;
 using Content.Server._EinsteinEngines.Power.Components;
 using Content.Server._HL.Silicons.Synths.Battery;
-using Content.Server.Power.Components;
 using Content.Server.Power.EntitySystems;
 using Content.Server.PowerCell;
 using Content.Shared._EinsteinEngines.Silicon.Components;
@@ -52,18 +51,16 @@ public sealed class SynthRechargeTest
         await server.WaitPost(() =>
         {
             cell = sEntMan.SpawnEntity(Cell, coords);
-            // Wolfmed shuts a chassis down at zero charge and a shut-down chassis cannot drink, so leave a sip.
-            battery.SetCharge(own, sEntMan.GetComponent<BatteryComponent>(own).MaxCharge * 0.05f);
+            battery.SetCharge(own, 0f);
         });
 
-        var ownBefore = await Charge(pair, own);
         var cellCharge = await Charge(pair, cell);
         Assert.That(cellCharge, Is.GreaterThan(0f), "Precondition: the spawned cell is charged.");
 
         await Drink(pair, drinker, cell);
 
         Assert.That(await Charge(pair, cell), Is.EqualTo(0f), "The cell was not drained.");
-        Assert.That(await Charge(pair, own), Is.EqualTo(ownBefore + cellCharge).Within(0.01f), "The drinker did not take the cell's charge.");
+        Assert.That(await Charge(pair, own), Is.EqualTo(cellCharge), "The drinker did not take the cell's charge.");
 
         await pair.CleanReturnAsync();
     }
@@ -86,19 +83,17 @@ public sealed class SynthRechargeTest
         await server.WaitPost(() =>
         {
             apc = sEntMan.SpawnEntity(Apc, coords);
-            // Wolfmed shuts a chassis down at zero charge and a shut-down chassis cannot drink, so leave a sip.
-            battery.SetCharge(own, sEntMan.GetComponent<BatteryComponent>(own).MaxCharge * 0.05f);
+            battery.SetCharge(own, 0f);
         });
 
-        var ownBefore = await Charge(pair, own);
         var before = await Charge(pair, apc);
         Assert.That(before, Is.GreaterThan(0f), "Precondition: the APC holds a charge.");
 
         await Drink(pair, drinker, apc);
 
-        var gained = await Charge(pair, own) - ownBefore;
+        var gained = await Charge(pair, own);
         Assert.That(gained, Is.GreaterThan(0f), "The drinker took nothing from the APC.");
-        Assert.That(await Charge(pair, apc), Is.EqualTo(before - gained).Within(0.01f), "The APC did not lose what the drinker gained.");
+        Assert.That(await Charge(pair, apc), Is.EqualTo(before - gained), "The APC did not lose what the drinker gained.");
 
         await pair.CleanReturnAsync();
     }
@@ -121,14 +116,12 @@ public sealed class SynthRechargeTest
         {
             apc = sEntMan.SpawnEntity(Apc, coords);
             battery.SetCharge(apc, 0f);
-            // Wolfmed shuts a chassis down at zero charge and a shut-down chassis cannot drink, so leave a sip.
-            battery.SetCharge(own, sEntMan.GetComponent<BatteryComponent>(own).MaxCharge * 0.05f);
+            battery.SetCharge(own, 0f);
         });
 
-        var ownBefore = await Charge(pair, own);
         await Drink(pair, drinker, apc);
 
-        Assert.That(await Charge(pair, own), Is.EqualTo(ownBefore).Within(0.01f), "Charge came from an empty APC.");
+        Assert.That(await Charge(pair, own), Is.EqualTo(0f), "Charge came from an empty APC.");
 
         await pair.CleanReturnAsync();
     }
