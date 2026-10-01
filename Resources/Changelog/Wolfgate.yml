@@ -719,3 +719,32 @@ Entries:
   id: 100067
   time: '2026-10-01T02:10:31.0000000+00:00'
   url: https://github.com/VanguardControl/Wolfgate/pull/116
+- author: Gandalf2k15
+  changes:
+    - type: Fix
+      message: >-
+        Buttons with access requirements now actually respect the access
+        requirements.
+    - type: Tweak
+      message: >-
+        A card with access now presses a locked button directly, and the button
+        stays locked.
+    - type: Tweak
+      message: >-
+        Lockable buttons on a ship follow ship access, so your crew can use
+        them.
+    - type: Tweak
+      message: >-
+        Crew on a ship's access list keep their access while the ship is
+        unlocked.
+    - type: Add
+      message: The Access tab can set every door on the ship to one rule at once.
+    - type: Fix
+      message: ERT teams can open the doors of their own faction ship.
+    - type: Tweak
+      message: >-
+        An ERT's ship locks itself once the first responder is aboard, and
+        responders always get an ID card.
+  id: 100068
+  time: '2026-10-01T06:18:01.0000000+00:00'
+  url: https://github.com/VanguardControl/Wolfgate/pull/136
