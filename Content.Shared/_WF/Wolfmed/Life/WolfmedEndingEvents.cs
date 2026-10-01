@@ -17,3 +17,10 @@ public enum WolfmedEnding : byte
 /// </summary>
 [ByRefEvent]
 public record struct WolfmedEndingEvent(WolfmedEnding Ending, EntityUid? Attacker = null, EntityUid? Weapon = null, bool Handled = false);
+
+/// <summary>
+/// Raised broadcast on the server by the melee Execute verb before its do-after starts. Handled means the server took
+/// the start over: it asks the executor "are you sure?" and starts the do-after itself on a yes.
+/// </summary>
+[ByRefEvent]
+public record struct WolfmedExecutionAskEvent(EntityUid Attacker, EntityUid Victim, EntityUid Weapon, bool Handled = false);

@@ -16,3 +16,19 @@ wolfmed-execution-blade-weak-machine = { CAPITALIZE(THE($victim)) }'s neck is cu
 wolfmed-execution-blade-medium = { CAPITALIZE(THE($victim)) }'s throat is cut to the bone!
 wolfmed-execution-blade-medium-machine = { CAPITALIZE(THE($victim)) }'s neck is cut half through!
 wolfmed-execution-blade-heavy = { CAPITALIZE(THE($victim)) }'s head comes off!
+
+## "Are you sure?": what the executor is asked before either Execute verb starts, and the line a weapon that
+## will not kill gets instead.
+
+wolfmed-execution-confirm-title = Execute
+wolfmed-execution-confirm-text = Kill { THE($victim) } with { THE($weapon) }? This cannot be taken back.
+wolfmed-execution-confirm-accept = Execute
+wolfmed-execution-confirm-deny = Cancel
+
+wolfmed-execution-confirm-self-title = End your life
+wolfmed-execution-confirm-self-text = End your own life with { THE($weapon) }? You will not be able to return to this body.
+wolfmed-execution-confirm-self-text-plain = Shoot yourself in the head with { THE($weapon) }?
+wolfmed-execution-confirm-self-accept = Do it
+wolfmed-execution-confirm-self-deny = Cancel
+
+wolfmed-execution-refuse = { CAPITALIZE(THE($weapon)) } won't kill anyone.

@@ -4734,10 +4734,48 @@ the owner's call; left as it plays.
 - **The gun Execute on yourself is a suicide (2026-09-30).** On a wound host with a lethal round it raises
   `SuicideEvent` and `SuicideGhostEvent` before the gore, as the knife path does, so the ghost is out and cannot
   return. The `SuicideEvent` goes out already handled: the gun is the method, and unhandled it runs the tongue-bite
-  default and the sweep for a nearby microwave. `OnYourselfKillsTest` covers a body with no player; the ghost was
-  checked once with a possessed body in a throwaway test and is not pinned yet.
+  default and the sweep for a nearby microwave. `OnYourselfKillsTest` covers a body with no player,
+  `GunOnYourselfGhostsTest` a player's body, the spent round and the ghost.
 - **Execution hooks (2026-09-30).** `WolfmedEndingEvent` carries the attacker and the weapon from its two marked raise
   sites, and its one subscriber applies the Blade tier instead of a bare `EndDeliberately`. The DV gun completion has
   two marked edits: the round is measured before the switch that spends or deletes it, and
   `TryGunExecution` runs in front of the old damage line, which stays for everything it refuses. No new
   subscription.
+- **"Are you sure?" on both Execute verbs (owner, 2026-09-30).** "shows the executor a popup saying 'Are you sure?'
+  or something." `Verb.ConfirmationPopup` is client-only, says a hard-coded "Confirm" and is compiled out in DEBUG,
+  so the question is the server's: `WolfmedChoiceEui`, the window Succumb already uses, with no new client class. For
+  an executor with a player behind it the verb opens the dialog and starts nothing. A yes checks again everything
+  the verb menu checked (that weapon still the one in the active hand, the victim in reach, `CanBeExecuted` or
+  `CanExecuteWithGun`) and only then starts the same do-after as before; a no, a closed window or a disconnect does
+  nothing. One question per executor: a second Execute replaces it, and it is withdrawn on round restart and when
+  the executor dies or goes Unconscious (a broadcast `MobStateChangedEvent`; Unconscious is Critical on a wound
+  host). An executor with nobody behind it is not asked and starts the do-after directly, as it always did. The text
+  names the victim through `Identity.Entity`: "Kill X with the knife? This cannot be taken back." On yourself:
+  "End your own life with the pistol? You will not be able to return to this body.", or a plain "Shoot yourself in
+  the head?" where that promise would not hold (a gun on a body Wolfmed does not own, and the roulette shotgun, whose
+  next shell the dialog must not give away). `ConfirmationTest` answers through `Confirm`, `Decline` and `GetPending`.
+- **A weapon that will not kill is refused (2026-09-30).** A player whose weapon measures non-lethal against a wound
+  host (a disabler, rubber, a beanbag, an empty gun) gets "The disabler won't kill anyone." and no dialog and no
+  do-after, at the verb and again at the yes. Only there: against a body Wolfmed does not own the old x9 head hit can
+  still kill, so that Execute is asked and runs as before, and an executor with no player still takes the old
+  path. The roulette shotgun is never refused: saying its next shell is a dud is the one thing it must not do.
+  `NonLethalIsRefusedTest`.
+- **How the dialog reaches the do-afters (2026-09-30).** Both start methods are private, and the melee one is shared
+  and predicted. Each got one marked block after its own checks that returns when the server asks first, and a `_WF`
+  partial of the same class with `StartConfirmedExecution`, which runs the method again with the question switched
+  off; the upstream lines are untouched. The melee partial raises `WolfmedExecutionAskEvent` (shared code cannot name
+  the server system) and answers "asked" on a client without raising it: a client's own executor is always asked, so
+  the do-after is never predicted and comes down from the server like the gun's. The executor's "You ready the
+  knife" line is a predicted popup the client no longer shows, so the confirmed start sends it from the server.
+- **The suicide command uses the weapon in hand (owner, 2026-09-30).** "Suicide via methods like shooting ones self
+  in the head should kill you, in a gory way." No gun handled `SuicideByEnvironmentEvent`, so the command with a gun
+  in hand bit the tongue. `WolfmedExecutionSystem` takes that pair: on a wound host, a gun in the active hand that
+  measures lethal is fired the way the Execute do-after fires it (`ShotAttemptedEvent`, `AttemptShootEvent`, one
+  round taken and spent, the shot sound, the DV "shoots themselves in the head" line) and `Apply` leaves that round's
+  gore. A gun that will not fire, an empty one, a less-lethal round or a body Wolfmed does not own leaves the event
+  unhandled and the command's default runs and still kills. The command also raises the event on whatever stands
+  within reach, so only the gun in the active hand answers: a mounted gun next to the body does not. With a blade,
+  upstream's own handler now raises `WolfmedEndingEvent` (a third marked raise site), so the blade's tier is applied
+  there too. `Suicide()` still calls `EndDeliberately` afterwards, which refuses a body that is already dead.
+  `SuicideCommandWeaponTest`: a pistol (round spent, gunshot wound and artery), an empty shotgun (dead, no gunshot
+  wound), a claymore (head off, which no single hit's damage can do); every one a ghost that cannot return.

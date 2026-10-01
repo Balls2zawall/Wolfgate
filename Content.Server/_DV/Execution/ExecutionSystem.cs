@@ -139,6 +139,11 @@ public sealed partial class ExecutionSystem : EntitySystem
         if (!CanExecuteWithGun(weapon, victim, attacker))
             return;
 
+        // WOLFGATE(Wolfmed) START: a player is asked "are you sure?" first, and the do-after starts on a yes
+        if (!_wolfmedConfirmed && _wolfmedExecution.AskFirst(weapon, victim, attacker, true))
+            return;
+        // WOLFGATE END
+
         var executionTime = weapon.Comp.ExecutionTime; // Mono
 
         if (attacker == victim)

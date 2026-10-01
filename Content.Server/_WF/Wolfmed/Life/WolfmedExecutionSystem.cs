@@ -73,7 +73,7 @@ public readonly record struct WolfmedKillStrength(WolfmedKillKind Kind, WolfmedK
 /// organ out, an amputation), never a big damage number: one hit cannot sever or ash a head through damage. The brain
 /// is never deleted, so every outcome can still be undone by somebody doing the work.
 /// </remarks>
-public sealed class WolfmedExecutionSystem : EntitySystem
+public sealed partial class WolfmedExecutionSystem : EntitySystem
 {
     [Dependency] private AmputationSystem _amputation = default!;
     [Dependency] private AudioSystem _audio = default!;

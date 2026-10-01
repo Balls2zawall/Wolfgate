@@ -3,10 +3,13 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Content.Client._WF.Wolfmed.Life;
+using Content.Client.ContextMenu.UI;
 using Content.IntegrationTests.Fixtures;
 using Content.IntegrationTests.Fixtures.Attributes;
 using Content.IntegrationTests.Tests._WF.Wolfmed.Scenarios;
 using Content.Server._WF.Wolfmed.Life;
+using Content.Server.Chat;
 using Content.Shared._Onyx.Wounds;
 using Content.Shared._WF.Wolfmed.CCVar;
 using Content.Shared._WF.Wolfmed.Consciousness;
@@ -15,15 +18,22 @@ using Content.Shared._WF.Wolfmed.Wounds;
 using Content.Shared.ActionBlocker;
 using Content.Shared.Body.Part;
 using Content.Shared.Body.Systems;
+using Content.Shared.DoAfter;
+using Content.Shared.Execution;
 using Content.Shared.FixedPoint;
+using Content.Shared.Ghost;
 using Content.Shared.Hands.EntitySystems;
+using Content.Shared.Mind;
 using Content.Shared.Mobs.Systems;
+using Content.Shared.Players;
 using Content.Shared.Verbs;
 using Content.Shared.Weapons.Ranged.Components;
+using Content.Shared.Weapons.Ranged.Events;
 using Content.Shared.Weapons.Ranged.Systems;
 using Content.Shared.Wieldable;
 using Content.Shared.Wieldable.Components;
 using NUnit.Framework;
+using Robust.Client.UserInterface;
 using Robust.Shared.Containers;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Localization;
@@ -35,7 +45,8 @@ namespace Content.IntegrationTests.Tests._WF.Wolfmed;
 
 /// <summary>
 /// Executions and weapon suicides (owner, 2026-09-30): how a weapon is measured, what each strength does to the head,
-/// and who can be executed. The executor here has no player, so the Execute verbs start their do-after directly.
+/// who can be executed, and the "are you sure?" a player is asked first. An executor with no player is not asked:
+/// the Execute verbs start their do-after directly.
 /// </summary>
 [TestFixture]
 [TestOf(typeof(WolfmedExecutionSystem))]
@@ -494,6 +505,397 @@ public sealed class WolfmedExecutionTest : GameTest
                 });
             });
         }
+    }
+
+    /// <summary>
+    /// "Are you sure?": a player's Execute opens a dialog and starts nothing. A no starts nothing, a yes after the
+    /// weapon was dropped starts nothing, and a yes with everything still in place starts the do-after and the victim
+    /// dies, for a knife and for a gun. A second Execute replaces the question, and going Unconscious withdraws it.
+    /// </summary>
+    [Test]
+    public async Task ConfirmationTest()
+    {
+        await Pin();
+        var map = await Pair.CreateTestMap();
+        var s = new WolfmedScenario(SEntMan);
+        var execution = SEntMan.System<WolfmedExecutionSystem>();
+        var hands = SEntMan.System<SharedHandsSystem>();
+        var mobState = SEntMan.System<MobStateSystem>();
+        await Server.WaitPost(() => s.SetAir(map.MapUid, true));
+
+        // The client predicts the end of its own knife execution, which flips combat mode and closes the context menu.
+        // The pooled client is not in the gameplay state, so that menu has to be set up by hand.
+        var contextMenu = Client.ResolveDependency<IUserInterfaceManager>().GetUIController<ContextMenuUIController>();
+        await Client.WaitPost(contextMenu.Setup);
+
+        // A pooled client can still show a dialog an earlier fixture answered on the server: count from what is there.
+        var open = await ClientWindows<WolfmedChoiceWindow>();
+        var executor = await Possess("MobHuman", map);
+        EntityUid first = default, second = default, knife = default, pistol = default, head = default;
+        await Server.WaitPost(() =>
+        {
+            first = SEntMan.SpawnEntity("MobHuman", map.GridCoords);
+            second = SEntMan.SpawnEntity("MobHuman", map.GridCoords);
+            knife = SEntMan.SpawnEntity("KitchenKnife", map.GridCoords);
+            pistol = SEntMan.SpawnEntity("WeaponPistolViper", map.GridCoords);
+        });
+        await RunSeconds(2);
+
+        await Server.WaitAssertion(() =>
+        {
+            head = s.Part(second, BodyPartType.Head);
+            s.Consciousness.SetExternalPressure(first, "test", 1f);
+            s.Consciousness.SetExternalPressure(second, "test", 1f);
+            Arm(executor, knife);
+        });
+        await RunSeconds(1);
+
+        // Asked, and nothing started.
+        await Server.WaitAssertion(() =>
+        {
+            Invoke(first, executor);
+            Assert.That(execution.GetPending(executor), Is.EqualTo((first, knife)), "Execute did not ask the player.");
+            Assert.That(Executing(executor), Is.False, "the do-after started before the answer.");
+        });
+        await RunTicksSync(30);
+        Assert.That(await ClientWindows<WolfmedChoiceWindow>(), Is.EqualTo(open + 1), "the executor's client shows no dialog.");
+
+        // A second Execute replaces the question; it does not stack a second window.
+        await Server.WaitAssertion(() =>
+        {
+            Invoke(second, executor);
+            Assert.That(execution.GetPending(executor), Is.EqualTo((second, knife)));
+        });
+        await RunTicksSync(30);
+        Assert.That(await ClientWindows<WolfmedChoiceWindow>(), Is.EqualTo(open + 1), "the first question was left open.");
+
+        // No.
+        await Server.WaitAssertion(() =>
+        {
+            execution.Decline(executor);
+            Assert.That(execution.GetPending(executor), Is.Null);
+            Assert.That(Executing(executor), Is.False, "a no started the do-after.");
+        });
+        await RunSeconds(7);
+        Assert.That(await ClientWindows<WolfmedChoiceWindow>(), Is.EqualTo(open), "the dialog stayed open after a no.");
+        await Server.WaitAssertion(() =>
+            Assert.That(mobState.IsDead(first) || mobState.IsDead(second), Is.False, "somebody died after a no."));
+
+        // Yes, but the knife is on the floor by then.
+        await Server.WaitAssertion(() =>
+        {
+            Invoke(first, executor);
+            Assert.That(hands.TryDrop(executor, knife), Is.True);
+            Assert.That(execution.Confirm(executor), Is.False, "a yes with the weapon dropped went ahead.");
+            Assert.That(execution.GetPending(executor), Is.Null);
+            Assert.That(Executing(executor), Is.False, "the do-after started with the weapon dropped.");
+        });
+        await RunSeconds(7);
+        await Server.WaitAssertion(() => Assert.That(mobState.IsDead(first), Is.False, "the victim died with the weapon dropped."));
+
+        // Yes.
+        await Server.WaitAssertion(() =>
+        {
+            Arm(executor, knife);
+            Invoke(first, executor);
+            Assert.That(execution.Confirm(executor), Is.True, "a yes with everything in place was refused.");
+            Assert.That(execution.GetPending(executor), Is.Null);
+            Assert.That(Executing(executor), Is.True, "a yes did not start the do-after.");
+        });
+        await RunSeconds(7);
+        Assert.That(await ClientWindows<WolfmedChoiceWindow>(), Is.EqualTo(open), "the dialog stayed open after a yes.");
+        await Server.WaitAssertion(() => Assert.That(mobState.IsDead(first), Is.True, "the confirmed knife execution did not kill."));
+
+        // The gun verb asks the same way.
+        await Server.WaitAssertion(() =>
+        {
+            Assert.That(hands.TryDrop(executor, knife), Is.True);
+            Arm(executor, pistol);
+        });
+        await RunSeconds(3);
+
+        await Server.WaitAssertion(() =>
+        {
+            Invoke(second, executor);
+            Assert.That(execution.GetPending(executor), Is.EqualTo((second, pistol)), "the gun's Execute did not ask the player.");
+            Assert.That(Executing(executor), Is.False, "the gun's do-after started before the answer.");
+        });
+        await RunSeconds(8);
+
+        await Server.WaitAssertion(() =>
+        {
+            Assert.That(mobState.IsDead(second), Is.False, "the gun execution went ahead unanswered.");
+            Assert.That(execution.Confirm(executor), Is.True, "a yes to the gun's question was refused.");
+            Assert.That(Executing(executor), Is.True, "a yes did not start the gun's do-after.");
+        });
+        await RunSeconds(8);
+
+        await Server.WaitAssertion(() =>
+        {
+            Assert.That(mobState.IsDead(second), Is.True, "the confirmed gun execution did not kill.");
+            Assert.That(Wounds(head), Does.Contain(Artery));
+        });
+        await RunSeconds(3);
+
+        // An executor who goes out is no longer asked. The gun verb lets a corpse be shot, so there is still a question.
+        await Server.WaitAssertion(() =>
+        {
+            Invoke(second, executor);
+            Assert.That(execution.GetPending(executor), Is.Not.Null);
+            s.Consciousness.SetExternalPressure(executor, "test", 1f);
+        });
+        await RunTicksSync(30);
+
+        await Server.WaitAssertion(() =>
+        {
+            Assert.That(mobState.IsCritical(executor), Is.True, "the executor fixture did not go Unconscious.");
+            Assert.That(execution.GetPending(executor), Is.Null, "an Unconscious executor still has the question open.");
+        });
+        Assert.That(await ClientWindows<WolfmedChoiceWindow>(), Is.EqualTo(open), "the dialog stayed open on an Unconscious executor.");
+        await Client.WaitPost(contextMenu.Shutdown);
+    }
+
+    /// <summary>A weapon that will not kill is turned away: no dialog, no do-after, nobody dead.</summary>
+    [Test]
+    public async Task NonLethalIsRefusedTest()
+    {
+        await Pin();
+        var map = await Pair.CreateTestMap();
+        var s = new WolfmedScenario(SEntMan);
+        var execution = SEntMan.System<WolfmedExecutionSystem>();
+        await Server.WaitPost(() => s.SetAir(map.MapUid, true));
+
+        var open = await ClientWindows<WolfmedChoiceWindow>();
+        var executor = await Possess("MobHuman", map);
+        EntityUid victim = default, disabler = default;
+        await Server.WaitPost(() =>
+        {
+            victim = SEntMan.SpawnEntity("MobHuman", map.GridCoords);
+            disabler = SEntMan.SpawnEntity("WeaponDisabler", map.GridCoords);
+        });
+        await RunSeconds(2);
+
+        await Server.WaitAssertion(() =>
+        {
+            s.Consciousness.SetExternalPressure(victim, "test", 1f);
+            Arm(executor, disabler);
+        });
+        await RunSeconds(3);
+
+        await Server.WaitAssertion(() =>
+        {
+            Assert.That(execution.Measure(disabler, executor).Lethal, Is.False, "the fixture's disabler measures lethal.");
+            Invoke(victim, executor);
+            Assert.That(execution.GetPending(executor), Is.Null, "a disabler's Execute asked for confirmation.");
+            Assert.That(Executing(executor), Is.False, "a disabler's Execute started the do-after.");
+        });
+        await RunSeconds(8);
+
+        Assert.That(await ClientWindows<WolfmedChoiceWindow>(), Is.EqualTo(open), "a disabler's Execute opened a dialog.");
+        await Server.WaitAssertion(() =>
+        {
+            Assert.That(SEntMan.System<MobStateSystem>().IsDead(victim), Is.False, "a disabler execution killed.");
+            Assert.That(s.Life.GetBrainOrgan(victim)?.Comp.Health, Is.GreaterThan(FixedPoint2.Zero));
+        });
+    }
+
+    /// <summary>
+    /// A player's gun Execute on themselves, once confirmed, spends the round and leaves the body dead with the
+    /// tier's gore and a ghost that cannot return.
+    /// </summary>
+    [Test]
+    public async Task GunOnYourselfGhostsTest()
+    {
+        await Pin();
+        var map = await Pair.CreateTestMap();
+        var s = new WolfmedScenario(SEntMan);
+        var execution = SEntMan.System<WolfmedExecutionSystem>();
+        await Server.WaitPost(() => s.SetAir(map.MapUid, true));
+
+        var body = await Possess("MobHuman", map);
+        EntityUid pistol = default, head = default;
+        await Server.WaitPost(() => pistol = SEntMan.SpawnEntity("WeaponPistolViper", map.GridCoords));
+        await RunSeconds(2);
+
+        await Server.WaitAssertion(() =>
+        {
+            head = s.Part(body, BodyPartType.Head);
+            Arm(body, pistol);
+        });
+        await RunSeconds(3);
+
+        var loaded = 0;
+        await Server.WaitAssertion(() =>
+        {
+            loaded = RoundsLeft(pistol);
+            Invoke(body, body);
+            Assert.That(execution.GetPending(body), Is.EqualTo((body, pistol)), "Execute on yourself did not ask.");
+            Assert.That(execution.Confirm(body), Is.True, "a yes to your own ending was refused.");
+        });
+        await RunSeconds(4);
+
+        await Server.WaitAssertion(() =>
+        {
+            AssertSuicided(s, body, "the gun Execute on yourself");
+            Assert.Multiple(() =>
+            {
+                Assert.That(RoundsLeft(pistol), Is.EqualTo(loaded - 1), "the round was not spent.");
+                Assert.That(Wounds(head), Does.Contain(Artery), "no arterial bleed in the head.");
+                Assert.That(Wounds(head), Does.Contain(Gunshot), "no gunshot wound in the head.");
+            });
+        });
+    }
+
+    /// <summary>
+    /// The suicide command with a weapon in the active hand: a loaded gun is fired into the head, an empty one falls
+    /// back to the default, a blade leaves its tier's gore. Each kills and leaves a ghost that cannot return.
+    /// </summary>
+    [Test]
+    public async Task SuicideCommandWeaponTest()
+    {
+        await Pin();
+        var map = await Pair.CreateTestMap();
+        var s = new WolfmedScenario(SEntMan);
+        var suicide = SEntMan.System<SuicideSystem>();
+        var bodies = SEntMan.System<SharedBodySystem>();
+        await Server.WaitPost(() => s.SetAir(map.MapUid, true));
+
+        // A loaded pistol: the round is spent and the head carries the weak tier.
+        var shot = await PossessArmed(s, map, "WeaponPistolViper");
+        await Server.WaitAssertion(() =>
+        {
+            var loaded = RoundsLeft(shot.Weapon);
+            Assert.That(suicide.Suicide(shot.Body), Is.True, "the suicide was refused.");
+            AssertSuicided(s, shot.Body, "the suicide command with a pistol");
+            Assert.Multiple(() =>
+            {
+                Assert.That(RoundsLeft(shot.Weapon), Is.EqualTo(loaded - 1), "the gun was not fired.");
+                Assert.That(Wounds(shot.Head), Does.Contain(Gunshot), "no gunshot wound in the head.");
+                Assert.That(Wounds(shot.Head), Does.Contain(Artery), "no arterial bleed in the head.");
+            });
+        });
+        await RunSeconds(1);
+
+        // An empty gun: the command's default runs, and it still kills.
+        var empty = await PossessArmed(s, map, "WeaponShotgunSawnEmpty");
+        await Server.WaitAssertion(() =>
+        {
+            Assert.That(suicide.Suicide(empty.Body), Is.True, "the suicide was refused.");
+            AssertSuicided(s, empty.Body, "the suicide command with an empty gun");
+            Assert.Multiple(() =>
+            {
+                Assert.That(Wounds(empty.Head), Does.Not.Contain(Gunshot), "an empty gun left a gunshot wound.");
+                Assert.That(bodies.GetBodyChildrenOfType(empty.Body, BodyPartType.Head), Is.Not.Empty);
+            });
+        });
+        await RunSeconds(1);
+
+        // A claymore: the head comes off, which no single hit's damage can do.
+        var cut = await PossessArmed(s, map, "Claymore");
+        await Server.WaitAssertion(() =>
+        {
+            Assert.That(suicide.Suicide(cut.Body), Is.True, "the suicide was refused.");
+            Assert.Multiple(() =>
+            {
+                Assert.That(SEntMan.System<MobStateSystem>().IsDead(cut.Body), Is.True, "the suicide command with a claymore did not kill.");
+                Assert.That(bodies.GetBodyChildrenOfType(cut.Body, BodyPartType.Head), Is.Empty, "the head is still on.");
+                Assert.That(SEntMan.Deleted(cut.Head), Is.False, "a blade destroyed the head instead of severing it.");
+                Assert.That(HeadStump(cut.Body), Is.Not.Null, "no stump on the torso.");
+            });
+            AssertGhosted(cut.Body, "the suicide command with a claymore");
+        });
+        await RunSeconds(2);
+    }
+
+    /// <summary>Puts the test player into a fresh body of this prototype.</summary>
+    private async Task<EntityUid> Possess(string prototype, TestMapData map)
+    {
+        Assert.That(ServerSession, Is.Not.Null, "These tests need a connected pair.");
+        var session = ServerSession!;
+        var minds = SEntMan.System<SharedMindSystem>();
+        EntityUid body = default;
+
+        await Server.WaitPost(() =>
+        {
+            minds.WipeMind(session.ContentData()?.Mind);
+            body = SEntMan.SpawnEntity(prototype, map.GridCoords);
+            minds.TransferTo(minds.CreateMind(session.UserId).Owner, body);
+        });
+        await RunTicksSync(30);
+        Assert.That(session.AttachedEntity, Is.EqualTo(body), "the player did not attach to the new body.");
+        return body;
+    }
+
+    /// <summary>A fresh player body with this weapon in hand, ready to use.</summary>
+    private async Task<(EntityUid Body, EntityUid Weapon, EntityUid Head)> PossessArmed(WolfmedScenario s, TestMapData map, string weaponProto)
+    {
+        var body = await Possess("MobHuman", map);
+        EntityUid weapon = default, head = default;
+        await Server.WaitPost(() => weapon = SEntMan.SpawnEntity(weaponProto, map.GridCoords));
+        await RunSeconds(2);
+
+        await Server.WaitAssertion(() =>
+        {
+            head = s.Part(body, BodyPartType.Head);
+            Arm(body, weapon);
+        });
+        await RunSeconds(3);
+        return (body, weapon, head);
+    }
+
+    /// <summary>Dead through the brain, and the player is in a ghost that cannot come back.</summary>
+    private void AssertSuicided(WolfmedScenario s, EntityUid body, string what)
+    {
+        Assert.Multiple(() =>
+        {
+            Assert.That(SEntMan.System<MobStateSystem>().IsDead(body), Is.True, $"{what} did not kill.");
+            Assert.That(s.Life.GetBrainOrgan(body)?.Comp.Health, Is.EqualTo(FixedPoint2.Zero), $"{what} left the brain whole.");
+        });
+        AssertGhosted(body, what);
+    }
+
+    private void AssertGhosted(EntityUid body, string what)
+    {
+        var ghost = ServerSession!.AttachedEntity;
+        Assert.Multiple(() =>
+        {
+            Assert.That(ghost, Is.Not.EqualTo(body), $"{what} left the player in the body.");
+            Assert.That(SEntMan.TryGetComponent(ghost, out GhostComponent? ghostComp), Is.True, $"{what} did not ghost.");
+            Assert.That(ghostComp?.CanReturnToBody, Is.False, $"the ghost of {what} can return.");
+        });
+    }
+
+    private async Task<int> ClientWindows<T>() where T : Control
+    {
+        var count = 0;
+        await Client.WaitPost(() => count = Client.ResolveDependency<IUserInterfaceManager>().WindowRoot.Children
+            .OfType<T>().Count(window => window.Visible));
+        return count;
+    }
+
+    private void Invoke(EntityUid victim, EntityUid attacker)
+    {
+        var verb = ExecuteVerb(victim, attacker);
+        Assert.That(verb?.Act, Is.Not.Null, "no Execute verb.");
+        verb!.Act!.Invoke();
+    }
+
+    /// <summary>An Execute do-after is running for this executor.</summary>
+    private bool Executing(EntityUid executor)
+    {
+        if (!SEntMan.TryGetComponent(executor, out DoAfterComponent? comp))
+            return false;
+
+        var doAfters = comp.DoAfters;
+        return doAfters.Values.Any(doAfter => doAfter.Args.Event is ExecutionDoAfterEvent && !doAfter.Cancelled && !doAfter.Completed);
+    }
+
+    /// <summary>The rounds the gun still holds.</summary>
+    private int RoundsLeft(EntityUid gun)
+    {
+        var count = new GetAmmoCountEvent();
+        SEntMan.EventBus.RaiseLocalEvent(gun, ref count);
+        return count.Count;
     }
 
     private sealed record Scene(EntityUid Victim, EntityUid Attacker, EntityUid Weapon, EntityUid Head, EntityUid Brain);

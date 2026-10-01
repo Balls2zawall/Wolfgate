@@ -79,6 +79,7 @@ Discord) saying what broke and what state they were in; misuse is a ban. Remove 
 - [`Content.Server/_WF/Wolfmed/Gore/WolfmedGoreSystem.cs`](Gore/WolfmedGoreSystem.cs)
 - [`Content.Server/_WF/Wolfmed/Gore/WolfmedMachineSparkSystem.cs`](Gore/WolfmedMachineSparkSystem.cs)
 - [`Content.Server/_WF/Wolfmed/Hud/WolfmedSyntheticHudSystem.cs`](Hud/WolfmedSyntheticHudSystem.cs)
+- [`Content.Server/_WF/Wolfmed/Life/ExecutionSystem.Wolfmed.cs`](Life/ExecutionSystem.Wolfmed.cs)
 - [`Content.Server/_WF/Wolfmed/Life/WolfmedBodyTemperatureComponent.cs`](Life/WolfmedBodyTemperatureComponent.cs)
 - [`Content.Server/_WF/Wolfmed/Life/WolfmedBodyTemperatureSystem.cs`](Life/WolfmedBodyTemperatureSystem.cs)
 - [`Content.Server/_WF/Wolfmed/Life/WolfmedBreathingAlertSystem.cs`](Life/WolfmedBreathingAlertSystem.cs)
@@ -89,6 +90,7 @@ Discord) saying what broke and what state they were in; misuse is a ban. Remove 
 - [`Content.Server/_WF/Wolfmed/Life/WolfmedConditionEmoteSystem.cs`](Life/WolfmedConditionEmoteSystem.cs)
 - [`Content.Server/_WF/Wolfmed/Life/WolfmedDormantSystem.cs`](Life/WolfmedDormantSystem.cs)
 - [`Content.Server/_WF/Wolfmed/Life/WolfmedDyingActionsSystem.cs`](Life/WolfmedDyingActionsSystem.cs)
+- [`Content.Server/_WF/Wolfmed/Life/WolfmedExecutionSystem.Confirm.cs`](Life/WolfmedExecutionSystem.Confirm.cs)
 - [`Content.Server/_WF/Wolfmed/Life/WolfmedExecutionSystem.cs`](Life/WolfmedExecutionSystem.cs)
 - [`Content.Server/_WF/Wolfmed/Life/WolfmedLifeSystem.cs`](Life/WolfmedLifeSystem.cs)
 - [`Content.Server/_WF/Wolfmed/Life/WolfmedOverheatComponent.cs`](Life/WolfmedOverheatComponent.cs)
@@ -212,6 +214,7 @@ Discord) saying what broke and what state they were in; misuse is a ban. Remove 
 - [`Content.Shared/_WF/Wolfmed/Hud/WolfmedSyntheticHudComponent.cs`](../../../Content.Shared/_WF/Wolfmed/Hud/WolfmedSyntheticHudComponent.cs)
 - [`Content.Shared/_WF/Wolfmed/Hud/WolfmedSyntheticHudLinePrototype.cs`](../../../Content.Shared/_WF/Wolfmed/Hud/WolfmedSyntheticHudLinePrototype.cs)
 - [`Content.Shared/_WF/Wolfmed/Hud/WolfmedSyntheticHudLineSystem.cs`](../../../Content.Shared/_WF/Wolfmed/Hud/WolfmedSyntheticHudLineSystem.cs)
+- [`Content.Shared/_WF/Wolfmed/Life/SharedExecutionSystem.Wolfmed.cs`](../../../Content.Shared/_WF/Wolfmed/Life/SharedExecutionSystem.Wolfmed.cs)
 - [`Content.Shared/_WF/Wolfmed/Life/WolfmedCoreHeatComponent.cs`](../../../Content.Shared/_WF/Wolfmed/Life/WolfmedCoreHeatComponent.cs)
 - [`Content.Shared/_WF/Wolfmed/Life/WolfmedCritActionsSystem.cs`](../../../Content.Shared/_WF/Wolfmed/Life/WolfmedCritActionsSystem.cs)
 - [`Content.Shared/_WF/Wolfmed/Life/WolfmedDormant.cs`](../../../Content.Shared/_WF/Wolfmed/Life/WolfmedDormant.cs)
@@ -989,6 +992,7 @@ Discord) saying what broke and what state they were in; misuse is a ban. Remove 
 - [`Content.Server/_DV/Execution/ExecutionSystem.cs`](../../_DV/Execution/ExecutionSystem.cs)
   - the kill and the gore tiers on a wound host
   - a Downed wound host is helpless enough to execute
+  - a player is asked "are you sure?" first, and the do-after starts on a yes
   - read the round before the switch below spends or deletes it
   - a lethal round kills a wound host and leaves its tier's gore; anything else takes the old hit
 - [`Content.Server/_EinsteinEngines/Medical/CPR/CPRSystem.cs`](../../_EinsteinEngines/Medical/CPR/CPRSystem.cs)
@@ -1463,7 +1467,9 @@ Discord) saying what broke and what state they were in; misuse is a ban. Remove 
   - M6: P25, the caller's arguments for a handler that re-applies the damage itself.
 - [`Content.Shared/Damage/Systems/PassiveDamageSystem.cs`](../../../Content.Shared/Damage/Systems/PassiveDamageSystem.cs): passive recovery is tagged so the wound rules can tell it from a hit.
 - [`Content.Shared/Execution/SharedExecutionSystem.cs`](../../../Content.Shared/Execution/SharedExecutionSystem.cs)
+  - a player is asked "are you sure?" first, and the server starts this on a yes
   - a Downed wound host is helpless enough to execute
+  - the suicide command with a blade in hand kills a wound host and leaves that blade's gore
   - M2: OD17, on a wound host a suicide is brain 0 then death; the ghost above cannot return.
   - M2: HOOK 13 rewritten (OD17), a wound host's execution is a catastrophic brain injury.
 - [`Content.Shared/Gibbing/Systems/GibbingSystem.cs`](../../../Content.Shared/Gibbing/Systems/GibbingSystem.cs)
