@@ -1078,6 +1078,7 @@ Discord) saying what broke and what state they were in; misuse is a ban. Remove 
   - D13, BloodstreamComponent is server-only in Wolfgate.
   - D13, BloodstreamSystem is server-only in Wolfgate.
   - playtest 1
+  - a bleed that starts on an old wound under a tourniquet is tied off as well
   - playtest 4: a bleed opening on a part under a tourniquet (or below one) is tied off
   - infection creep is not a new injury, it must not strip the dressing
   - playtest 4: a tourniquet stays tied whatever the wound does under it (the strap's own
