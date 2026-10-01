@@ -814,3 +814,10 @@ Entries:
   id: 100072
   time: '2026-10-01T08:14:20.0000000+00:00'
   url: https://github.com/VanguardControl/Wolfgate/pull/141
+- author: Happyowl93
+  changes:
+    - type: Fix
+      message: Fix optical cam bounty
+  id: 100073
+  time: '2026-10-01T18:46:57.0000000+00:00'
+  url: https://github.com/VanguardControl/Wolfgate/pull/143
