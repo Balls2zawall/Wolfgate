@@ -17,6 +17,25 @@ wolfmed-execution-blade-medium = { CAPITALIZE(THE($victim)) }'s throat is cut to
 wolfmed-execution-blade-medium-machine = { CAPITALIZE(THE($victim)) }'s neck is cut half through!
 wolfmed-execution-blade-heavy = { CAPITALIZE(THE($victim)) }'s head comes off!
 
+wolfmed-execution-blunt-weak = { CAPITALIZE(THE($victim)) }'s skull cracks under the blow!
+wolfmed-execution-blunt-weak-machine = { CAPITALIZE(THE($victim)) }'s head casing buckles under the blow!
+wolfmed-execution-blunt-medium = { CAPITALIZE(THE($victim)) }'s skull caves in!
+wolfmed-execution-blunt-medium-machine = { CAPITALIZE(THE($victim)) }'s head is beaten out of shape!
+wolfmed-execution-blunt-heavy = { CAPITALIZE(THE($victim)) }'s head is crushed to pulp!
+wolfmed-execution-blunt-heavy-machine = { CAPITALIZE(THE($victim)) }'s head is crushed to scrap!
+
+## A blunt weapon's own Execute lines, in place of the throat-slitting ones: set on each weapon's Execution component.
+
+wolfmed-execution-bludgeon-initial-internal = You raise { THE($weapon) } over { THE($victim) }'s head.
+wolfmed-execution-bludgeon-initial-external = { CAPITALIZE(THE($attacker)) } raises { POSS-ADJ($attacker) } { $weapon } over { THE($victim) }'s head.
+wolfmed-execution-bludgeon-complete-internal = You bring { THE($weapon) } down on { THE($victim) }'s skull!
+wolfmed-execution-bludgeon-complete-external = { CAPITALIZE(THE($attacker)) } brings { POSS-ADJ($attacker) } { $weapon } down on { THE($victim) }'s skull!
+
+wolfmed-execution-bludgeon-self-initial-internal = You raise { THE($weapon) } to your own head.
+wolfmed-execution-bludgeon-self-initial-external = { CAPITALIZE(THE($attacker)) } raises { POSS-ADJ($attacker) } { $weapon } to { POSS-ADJ($attacker) } own head.
+wolfmed-execution-bludgeon-self-complete-internal = You bring { THE($weapon) } down on your own skull!
+wolfmed-execution-bludgeon-self-complete-external = { CAPITALIZE(THE($attacker)) } brings { POSS-ADJ($attacker) } { $weapon } down on { POSS-ADJ($attacker) } own skull!
+
 ## "Are you sure?": what the executor is asked before either Execute verb starts, and the line a weapon that
 ## will not kill gets instead.
 

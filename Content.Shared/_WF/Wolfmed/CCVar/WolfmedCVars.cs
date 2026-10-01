@@ -1115,6 +1115,14 @@ public sealed class WolfmedCVars
     public static readonly CVarDef<float> ExecutionBladeHeavy =
         CVarDef.Create("wolfmed.execution_blade_heavy", 40f, CVar.SERVERONLY);
 
+    /// <summary>One swing of a blunt weapon from which an execution caves the skull in. Under it the skull is cracked.</summary>
+    public static readonly CVarDef<float> ExecutionBluntMedium =
+        CVarDef.Create("wolfmed.execution_blunt_medium", 20f, CVar.SERVERONLY);
+
+    /// <summary>One swing of a blunt weapon from which an execution crushes the head.</summary>
+    public static readonly CVarDef<float> ExecutionBluntHeavy =
+        CVarDef.Create("wolfmed.execution_blunt_heavy", 40f, CVar.SERVERONLY);
+
     // TEMPORARY (playtest 5): the healmeimbroken command. Delete these two with
     // Content.Server/_WF/Wolfmed/Commands/WolfmedBugRescueSystem.cs once the playtest is over.
 

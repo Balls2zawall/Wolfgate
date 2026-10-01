@@ -46,6 +46,7 @@ public enum WolfmedKillKind : byte
     Ballistic,
     Energy,
     Blade,
+    Blunt,
 }
 
 /// <summary>How much of it there is.</summary>
@@ -100,6 +101,7 @@ public sealed partial class WolfmedExecutionSystem : EntitySystem
     [Dependency] private WolfmedWoundSfxSystem _sfx = default!;
     [Dependency] private WolfmedWoundTraitSystem _traits = default!;
     [Dependency] private WoundBleedingSystem _bleeding = default!;
+    [Dependency] private WoundFractureSystem _fractures = default!;
     [Dependency] private WoundSystem _wounds = default!;
 
     /// <summary>A round whose own damage is under this kills nobody: practice, blanks, EMP, a cap gun.</summary>
@@ -132,15 +134,18 @@ public sealed partial class WolfmedExecutionSystem : EntitySystem
     private static readonly ProtoId<WoundPrototype>[] Burn =
         { "BurnWound", "SlimeBurnWound", "PlantBurnWound", "WFWolfmedOverheatingWound" };
 
+    private static readonly ProtoId<WoundPrototype>[] Bruise =
+        { "BluntWound", "SlimeBluntWound", "PlantBluntWound", "WFWolfmedDentWound" };
+
     private static readonly ProtoId<WoundPrototype>[] Artery = { "WFWolfmedArterialBleedWound" };
 
     #region Measuring
 
-    /// <summary>What one deliberate use of this weapon amounts to now: a gun by its next round, anything else as a blade.</summary>
+    /// <summary>What one deliberate use of this weapon amounts to now: a gun by its next round, anything else by its swing.</summary>
     public WolfmedKillStrength Measure(EntityUid weapon, EntityUid user)
     {
         if (!TryComp(weapon, out GunComponent? gun))
-            return MeasureBlade(weapon, user);
+            return MeasureMelee(weapon, user);
 
         return PeekRound((weapon, gun)) is { } round ? MeasureRound((weapon, gun), round) : WolfmedKillStrength.None;
     }
@@ -190,8 +195,11 @@ public sealed partial class WolfmedExecutionSystem : EntitySystem
         return new WolfmedKillStrength(kind, tier, total, pellets);
     }
 
-    /// <summary>A melee weapon as a blade: one ordinary swing by this user, wield bonus included, never non-lethal.</summary>
-    public WolfmedKillStrength MeasureBlade(EntityUid weapon, EntityUid user)
+    /// <summary>
+    /// A melee weapon by one ordinary swing of this user, wield bonus included: blunt when more than half of it is
+    /// Blunt, a blade otherwise. Never non-lethal while the swing does any harm at all.
+    /// </summary>
+    public WolfmedKillStrength MeasureMelee(EntityUid weapon, EntityUid user)
     {
         if (!TryComp(weapon, out MeleeWeaponComponent? melee))
             return WolfmedKillStrength.None;
@@ -202,14 +210,29 @@ public sealed partial class WolfmedExecutionSystem : EntitySystem
             execution!.Executing = false;
 
         var total = 0f;
+        var blunt = 0f;
         foreach (var (type, amount) in _melee.GetDamage(weapon, user, melee).DamageDict)
         {
-            if (amount > FixedPoint2.Zero && Localized.Contains(type))
-                total += amount.Float();
+            if (amount <= FixedPoint2.Zero || !Localized.Contains(type))
+                continue;
+
+            total += amount.Float();
+            if (type == "Blunt")
+                blunt += amount.Float();
         }
 
         if (executing)
             execution!.Executing = true;
+
+        // A foam club: a swing that does nothing is not a way to kill.
+        if (total <= 0f)
+            return WolfmedKillStrength.None;
+
+        if (blunt * 2f > total)
+        {
+            var bluntTier = Tier(total, _cfg.GetCVar(WolfmedCVars.ExecutionBluntMedium), _cfg.GetCVar(WolfmedCVars.ExecutionBluntHeavy));
+            return new WolfmedKillStrength(WolfmedKillKind.Blunt, bluntTier, total);
+        }
 
         var tier = Tier(total, _cfg.GetCVar(WolfmedCVars.ExecutionBladeMedium), _cfg.GetCVar(WolfmedCVars.ExecutionBladeHeavy));
         return new WolfmedKillStrength(WolfmedKillKind.Blade, tier, total);
@@ -330,6 +353,7 @@ public sealed partial class WolfmedExecutionSystem : EntitySystem
             {
                 WolfmedKillKind.Ballistic => Ballistic(victim, head.Id, attacker, weapon, ref tier),
                 WolfmedKillKind.Energy => Energy(victim, head.Id, ref tier),
+                WolfmedKillKind.Blunt => Blunt(victim, head.Id, attacker, weapon, ref tier),
                 _ => Blade(victim, head.Id, attacker, weapon, ref tier),
             };
 
@@ -358,7 +382,7 @@ public sealed partial class WolfmedExecutionSystem : EntitySystem
 
     private bool CanApply(EntityUid victim) => !TerminatingOrDeleted(victim) && _life.OwnsDeath(victim);
 
-    // Each of the three returns what it did for the admin log, and steps the tier down when a head will not come off.
+    // Each of the four returns what it did for the admin log, and steps the tier down when a head will not come off.
     private string Ballistic(EntityUid body, EntityUid head, EntityUid? attacker, EntityUid weapon, ref WolfmedKillTier tier)
     {
         var direction = _gore.GetHitDirection(body, attacker, weapon);
@@ -441,6 +465,37 @@ public sealed partial class WolfmedExecutionSystem : EntitySystem
         Wound(head, Cut, 50);
         Splatter(body, direction, 30);
         return "throat cut deep";
+    }
+
+    private string Blunt(EntityUid body, EntityUid head, EntityUid? attacker, EntityUid weapon, ref WolfmedKillTier tier)
+    {
+        var direction = _gore.GetHitDirection(body, attacker, weapon);
+        if (tier == WolfmedKillTier.Heavy)
+        {
+            // Crushed: what a heavy round leaves.
+            if (DestroyHead(body, head, false))
+            {
+                Splatter(body, direction, 30);
+                return "head crushed";
+            }
+
+            tier = WolfmedKillTier.Medium;
+        }
+
+        // A head with no bones (slime, plant, chassis) takes the blow and has no skull to break.
+        if (tier == WolfmedKillTier.Weak)
+        {
+            Wound(head, Bruise, 30);
+            _fractures.Break(head, FractureGrade.Simple);
+            Splatter(body, direction, 10);
+            return "skull cracked";
+        }
+
+        // Caved in. The brain stays where it is: it is already at 0 from the kill.
+        Wound(head, Bruise, 80);
+        _fractures.Break(head, FractureGrade.Comminuted);
+        Splatter(body, direction, 30);
+        return "skull caved in";
     }
 
     private EntityUid? Wound(EntityUid part, ProtoId<WoundPrototype>[] candidates, int severity)

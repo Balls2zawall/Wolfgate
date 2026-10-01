@@ -154,7 +154,7 @@ public sealed partial class WolfmedExecutionSystem
         if (!CanApply(victim) || HasComp<RouletteShotgunComponent>(weapon))
             return false;
 
-        if ((gun ? Measure(weapon, attacker) : MeasureBlade(weapon, attacker)).Lethal)
+        if ((gun ? Measure(weapon, attacker) : MeasureMelee(weapon, attacker)).Lethal)
             return false;
 
         _popup.PopupEntity(Loc.GetString("wolfmed-execution-refuse", ("weapon", weapon)), attacker, attacker);

@@ -4793,3 +4793,54 @@ the owner's call; left as it plays.
   cannonball, seismic charge: 7), so the marker now counts only on a round with no energy share; the stamina and stun
   markers are as before. The plasma round reads Energy weak. `MeasureTest`, which also takes a flechette shell
   (6 x 7 = 42) so that "a spread is heavy whatever it sums to" is pinned by a load under the heavy line.
+- **Blunt weapons execute (owner, 2026-09-30).** "Blunts should be able to execute." A fourth kind, Blunt, beside
+  Ballistic, Energy and Blade. `MeasureMelee` (was `MeasureBlade`) reads one ordinary swing through
+  `SharedMeleeWeaponSystem.GetDamage` outside the `Executing` window, wield bonus included, Structural left out: more
+  than half Blunt is Blunt, anything else is still a blade. Lines: `wolfmed.execution_blunt_medium` 20,
+  `wolfmed.execution_blunt_heavy` 40. Weak (crowbar 16, a bat in one hand 15) cracks the skull: a blunt wound and a
+  Simple fracture on the head. Medium (a bat or a sledgehammer in both hands 25, a shovel 24) caves it in: a severe
+  blunt wound and a Comminuted fracture, the brain left where it is at 0, nothing thrown. Heavy (a breaching hammer
+  in both hands 65, the shock maul 75) crushes the head, which is exactly the Ballistic heavy result: head destroyed,
+  organs dropped, stump on the torso, gib decals. The kill is `EndDeliberately` first, as on every kind. `MeasureTest`,
+  `BluntTiersTest`.
+- **Blunt executions on other species (2026-09-30).** The same rule as the rest: the kill always happens and a step
+  that cannot apply is skipped. A slime, a diona and a chassis have no fracture profile, so nothing breaks; the head
+  takes its own blunt wound (slime, plant) or a dent (chassis, with the machine popups), and a head that will not
+  come off steps heavy down to medium. A cybernetic head has a frame to break and breaks it. `SpeciesTest` now runs
+  the Blunt kind and asserts the dent and the absence of a fracture.
+- **A fracture made outright (2026-09-30).** Fractures were only ever rolled from a hit
+  (`HandlePartDamageApplied`), and `SetGrade` is private. `WoundFractureSystem.Break(part, grade)` is a `_WF`
+  partial of the Onyx class: it creates the profile's fracture wound at that grade's threshold, or raises an
+  existing break up to it, and returns null where the part has no fracture profile. The Onyx file is untouched.
+- **Which blunt weapons carry Execution (owner, 2026-09-30).** "Blunts should be able to execute." Every held weapon
+  or tool whose swing is mostly Blunt and at least 10 Blunt, in one hand or wielded, gets the component in YAML: the
+  crowbars, wrench, shovel, rolling pin, jaws of life, maintenance jack, the six toolboxes and the grey one, the
+  robust toolbox, fire extinguisher, both mops, the seclite and tac-lite, baseball bat, sledgehammer, Mjollnir,
+  singularity hammer, pickaxe, kanabou, breaching hammer, shock maul, the Goob hammer, caveman club and the gorilla
+  gauntlet (34 prototypes, 22 more by inheritance). On a base prototype only where every child qualifies, so the
+  crowbars and toolboxes carry it one by one (`BaseCrowbar` has the pocket crowbar at 6, `ToolboxBase` the weapon
+  cases and the cow toolbox). Left out: stun and stamina weapons (stun prod, truncheon, cane, the Overseer mace),
+  guns and the crusher (a `Gun` already has the DV Execute verb), worn gear (gas tanks, jetpacks, magboots,
+  gauntlets, glasses), instruments, logs, the clipboard, the desert stone, weapon and document cases, mech equipment,
+  structures and the debug weapons.
+- **A blunt weapon's lines are its own (2026-09-30).** The upstream melee lines slit a throat. Each blunt weapon's
+  `Execution` component sets all eight `LocId` fields to `wolfmed-execution-bludgeon-*` ("raises the bat over X's
+  head", "brings the bat down on X's skull", and the self variants), with the same three variables. `MeasureTest`
+  sweeps every prototype that carries `Execution`: all eight lines resolve, and none whose swing is mostly Blunt
+  still uses a throat line. Two cult staves inherit the shovel's component and cut (Slash 13): they speak as
+  bludgeons and are measured as blades. A pickaxe in one hand is half Piercing and measures as a blade; in both
+  hands it is Blunt.
+- **A blunt execution takes its do-after (owner, 2026-09-30).** "It should also have a doafter timer." The melee
+  Execute already runs `ExecutionComponent.DoAfterDuration` (5 s, broken by moving or by damage) once the question
+  is answered, and a blunt weapon goes through the same verb, the same dialog and the same do-after with no new
+  code. `BluntDoAfterTest` pins it with a player and a bat: asked first, a do-after of exactly the component's
+  length, the victim alive and unmarked at four seconds and dead at seven, and a second one called off when the
+  executor steps away.
+- **The suicide command and Execute on yourself with a blunt weapon (2026-09-30).** Both reach `Apply` through
+  `WolfmedEndingEvent`, whose subscriber measures the weapon, so the kind follows the weapon: a crowbar or a bat
+  cracks the skull and opens no artery. `BluntOnYourselfTest` (a Simple fracture, a blunt wound, no artery, no cut,
+  a ghost that cannot return).
+- **A swing that does nothing is not lethal (2026-09-30).** Melee was never non-lethal, and with blunt weapons in
+  the foam caveman club (Blunt 0) inherits the component from the real one. A melee weapon whose swing adds up to
+  nothing now measures NonLethal and is refused like a disabler; anything above zero still kills, as a glass shard
+  always did. `MeasureTest`.

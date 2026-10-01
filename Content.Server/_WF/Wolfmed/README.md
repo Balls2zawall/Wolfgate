@@ -281,6 +281,7 @@ Discord) saying what broke and what state they were in; misuse is a ban. Remove 
 - [`Content.Shared/_WF/Wolfmed/Wounds/WolfmedWoundRuleSystem.cs`](../../../Content.Shared/_WF/Wolfmed/Wounds/WolfmedWoundRuleSystem.cs)
 - [`Content.Shared/_WF/Wolfmed/Wounds/WolfmedWoundSfxComponent.cs`](../../../Content.Shared/_WF/Wolfmed/Wounds/WolfmedWoundSfxComponent.cs)
 - [`Content.Shared/_WF/Wolfmed/Wounds/WolfmedWoundTraitSystem.cs`](../../../Content.Shared/_WF/Wolfmed/Wounds/WolfmedWoundTraitSystem.cs)
+- [`Content.Shared/_WF/Wolfmed/Wounds/WoundFractureSystem.Wolfmed.cs`](../../../Content.Shared/_WF/Wolfmed/Wounds/WoundFractureSystem.Wolfmed.cs)
 
 ### Client
 
@@ -1593,6 +1594,8 @@ Discord) saying what broke and what state they were in; misuse is a ban. Remove 
 - [`Resources/Prototypes/_Goobstation/Entities/Clothing/Head/hardsuit-helmets.yml`](../../../Resources/Prototypes/_Goobstation/Entities/Clothing/Head/hardsuit-helmets.yml): P6, P3-D6: locational armour coverage
 - [`Resources/Prototypes/_Goobstation/Entities/Clothing/Head/modsuit.yml`](../../../Resources/Prototypes/_Goobstation/Entities/Clothing/Head/modsuit.yml): P6, P3-D6: locational armour coverage
 - [`Resources/Prototypes/_Goobstation/Entities/Clothing/OuterClothing/armour.yml`](../../../Resources/Prototypes/_Goobstation/Entities/Clothing/OuterClothing/armour.yml): P6, P3-D6: locational armour coverage
+- [`Resources/Prototypes/_Goobstation/Entities/Objects/Misc/Crafting/ghetto_stuff.yml`](../../../Resources/Prototypes/_Goobstation/Entities/Objects/Misc/Crafting/ghetto_stuff.yml): a blunt weapon can execute, with bludgeoning lines in place of the throat-slitting ones
+- [`Resources/Prototypes/_Goobstation/Entities/Objects/Weapons/Melee/hammer.yml`](../../../Resources/Prototypes/_Goobstation/Entities/Objects/Weapons/Melee/hammer.yml): a blunt weapon can execute, with bludgeoning lines in place of the throat-slitting ones
 - [`Resources/Prototypes/_Goobstation/Reagents/medicine.yml`](../../../Resources/Prototypes/_Goobstation/Reagents/medicine.yml): PROTO H: Onyx's Stasizium fracture block, from _Onyx/Reagents/Medicine/first_aid.yml.
 - [`Resources/Prototypes/_HL/Body/Organs/skrell.yml`](../../../Resources/Prototypes/_HL/Body/Organs/skrell.yml)
   - M4: OD16 parity, Wolfmed lung data (plan 9.2 group C)
@@ -1640,6 +1643,7 @@ Discord) saying what broke and what state they were in; misuse is a ban. Remove 
   - P5-D5, PROTO T: as welders.yml - MobIPC moves to WFSiliconWolfmed in WP13-2 and
   - playtest 5, an IPC's parts sit in this container, as the welder lists
 - [`Resources/Prototypes/_Mono/Entities/Objects/Weapons/Guns/Ammunition/Projectiles/12_gauge.yml`](../../../Resources/Prototypes/_Mono/Entities/Objects/Weapons/Guns/Ammunition/Projectiles/12_gauge.yml): W1: buckshot leaves fragments, not a clean channel.
+- [`Resources/Prototypes/_Mono/Entities/Objects/Weapons/Melee/shockmaul.yml`](../../../Resources/Prototypes/_Mono/Entities/Objects/Weapons/Melee/shockmaul.yml): a blunt weapon can execute, with bludgeoning lines in place of the throat-slitting ones
 - [`Resources/Prototypes/_NF/Body/Organs/goblin_organs.yml`](../../../Resources/Prototypes/_NF/Body/Organs/goblin_organs.yml): M4: OD16 parity, Wolfmed lung data (plan 9.2 group A-prime)
 - [`Resources/Prototypes/_NF/Catalog/VendingMachines/Inventories/civimed.yml`](../../../Resources/Prototypes/_NF/Catalog/VendingMachines/Inventories/civimed.yml)
   - playtest 3 IPC 2: Infinite, a chassis's refill beside the blood packs.
@@ -1658,6 +1662,9 @@ Discord) saying what broke and what state they were in; misuse is a ban. Remove 
 - [`Resources/Prototypes/_NF/Entities/Clothing/Head/headwear_punks.yml`](../../../Resources/Prototypes/_NF/Entities/Clothing/Head/headwear_punks.yml): P6, P3-D6: locational armour coverage
 - [`Resources/Prototypes/_NF/Entities/Clothing/OuterClothing/armor.yml`](../../../Resources/Prototypes/_NF/Entities/Clothing/OuterClothing/armor.yml): P6, P3-D6: locational armour coverage
 - [`Resources/Prototypes/_NF/Entities/Markers/Spawners/Random/dungeon_items_medical.yml`](../../../Resources/Prototypes/_NF/Entities/Markers/Spawners/Random/dungeon_items_medical.yml): playtest 5: sutures found in more places.
+- [`Resources/Prototypes/_NF/Entities/Objects/Tools/flashlights.yml`](../../../Resources/Prototypes/_NF/Entities/Objects/Tools/flashlights.yml): a blunt weapon can execute, with bludgeoning lines in place of the throat-slitting ones
+- [`Resources/Prototypes/_NF/Entities/Objects/Tools/tools.yml`](../../../Resources/Prototypes/_NF/Entities/Objects/Tools/tools.yml): a blunt weapon can execute, with bludgeoning lines in place of the throat-slitting ones
+- [`Resources/Prototypes/_NF/Entities/Objects/Weapons/Melee/caveman_club.yml`](../../../Resources/Prototypes/_NF/Entities/Objects/Weapons/Melee/caveman_club.yml): a blunt weapon can execute, with bludgeoning lines in place of the throat-slitting ones
 - [`Resources/Prototypes/_Onyx/Alerts/alerts.yml`](../../../Resources/Prototypes/_Onyx/Alerts/alerts.yml): WP7: only BrokenBones is ported; ModsuitPower/Centered/HierophantBeat/DragonPower/SneakAttack/LossOfSurprise are unrelated features.
 - [`Resources/Prototypes/_Onyx/Chemistry/circulatory_streams.yml`](../../../Resources/Prototypes/_Onyx/Chemistry/circulatory_streams.yml): ported from Onyx for Wolfmed.
 - [`Resources/Prototypes/_Onyx/Entities/categories.yml`](../../../Resources/Prototypes/_Onyx/Entities/categories.yml): only the StatusEffects entityCategory from Onyx's Resources/Prototypes/Entities/categories.yml.
@@ -1850,7 +1857,9 @@ Discord) saying what broke and what state they were in; misuse is a ban. Remove 
   - W5: antiseptics clean open wounds on touch.
   - D20-D22, P2-D7, P2-D9: organic species get wound hosting, pain and a Blunt gib threshold.
   - D29: passive regen is neutralised on wound hosts.
+- [`Resources/Prototypes/Entities/Objects/Misc/fire_extinguisher.yml`](../../../Resources/Prototypes/Entities/Objects/Misc/fire_extinguisher.yml): a blunt weapon can execute, with bludgeoning lines in place of the throat-slitting ones
 - [`Resources/Prototypes/Entities/Objects/Specific/chemistry.yml`](../../../Resources/Prototypes/Entities/Objects/Specific/chemistry.yml): Bobstation's pill swallow (owner's pick, playtest 4), inherited by every Pill variant
+- [`Resources/Prototypes/Entities/Objects/Specific/Janitorial/janitor.yml`](../../../Resources/Prototypes/Entities/Objects/Specific/Janitorial/janitor.yml): a blunt weapon can execute, with bludgeoning lines in place of the throat-slitting ones
 - [`Resources/Prototypes/Entities/Objects/Specific/Medical/healing.yml`](../../../Resources/Prototypes/Entities/Objects/Specific/Medical/healing.yml)
   - W0: a bruise pack treats only Blunt damage.
   - W0: the medicated suture no longer treats bruises.
@@ -1861,12 +1870,19 @@ Discord) saying what broke and what state they were in; misuse is a ban. Remove 
 - [`Resources/Prototypes/Entities/Objects/Specific/Medical/medkits.yml`](../../../Resources/Prototypes/Entities/Objects/Specific/Medical/medkits.yml)
   - ITEMS, playtest 5: 7x2, room for the tourniquet, splint, suture and painkillers.
   - playtest 5: 7x2 like the other kits, room for a tourniquet, a splint and an epinephrine pen.
+- [`Resources/Prototypes/Entities/Objects/Specific/Research/anomaly.yml`](../../../Resources/Prototypes/Entities/Objects/Specific/Research/anomaly.yml): a blunt weapon can execute, with bludgeoning lines in place of the throat-slitting ones
 - [`Resources/Prototypes/Entities/Objects/Specific/Robotics/mmi.yml`](../../../Resources/Prototypes/Entities/Objects/Specific/Robotics/mmi.yml): BRAIN: organ health, so a chassis can be killed
 - [`Resources/Prototypes/Entities/Objects/Tools/cable_coils.yml`](../../../Resources/Prototypes/Entities/Objects/Tools/cable_coils.yml)
   - W6: the surgery tool for the servo step. Servo damage carries no damage type, so the coil's
   - P5-3: matches ONYX cable_coils.yml:179 and Wolfgate's own damageContainers: [Silicon] intent. Without it the default [Biological] (HealingComponent.cs:72-73) overlaps OrganicBodyPartProfile and the coil heals human Heat/Shock wounds at -3/-3 per 0.6s, because HOOK 8 skips the damageContainers check for wound hosts (HealingSystem.cs:201-210) and WoundHealingSystem.IsCompatiblePart never reads it (:154-166).
-- [`Resources/Prototypes/Entities/Objects/Tools/crowbars.yml`](../../../Resources/Prototypes/Entities/Objects/Tools/crowbars.yml): playtest 4, Bob's crowbar hits over the thud on flesh
+- [`Resources/Prototypes/Entities/Objects/Tools/crowbars.yml`](../../../Resources/Prototypes/Entities/Objects/Tools/crowbars.yml)
+  - playtest 4, Bob's crowbar hits over the thud on flesh
+  - a blunt weapon can execute, with bludgeoning lines in place of the throat-slitting ones
+- [`Resources/Prototypes/Entities/Objects/Tools/flashlights.yml`](../../../Resources/Prototypes/Entities/Objects/Tools/flashlights.yml): a blunt weapon can execute, with bludgeoning lines in place of the throat-slitting ones
+- [`Resources/Prototypes/Entities/Objects/Tools/jaws_of_life.yml`](../../../Resources/Prototypes/Entities/Objects/Tools/jaws_of_life.yml): a blunt weapon can execute, with bludgeoning lines in place of the throat-slitting ones
+- [`Resources/Prototypes/Entities/Objects/Tools/toolbox.yml`](../../../Resources/Prototypes/Entities/Objects/Tools/toolbox.yml): a blunt weapon can execute, with bludgeoning lines in place of the throat-slitting ones
 - [`Resources/Prototypes/Entities/Objects/Tools/tools.yml`](../../../Resources/Prototypes/Entities/Objects/Tools/tools.yml)
+  - a blunt weapon can execute, with bludgeoning lines in place of the throat-slitting ones
   - W6: panel-beating. WeldingHealableSystem gates on this component, not on being a welder;
   - EVISC: the surgery step that seats a torn chassis panel
   - V124: the ratchet plays when the pass starts; this is the panel going back into shape.
@@ -1876,6 +1892,10 @@ Discord) saying what broke and what state they were in; misuse is a ban. Remove 
   - P5-D5, PROTO S: MobIPC moves to the WFSiliconWolfmed container in WP13-2;
   - V124: the welder loop covers the pass; this is the seam cooling at the end of it.
 - [`Resources/Prototypes/Entities/Objects/Weapons/Guns/Ammunition/Projectiles/grenade_shrapnel.yml`](../../../Resources/Prototypes/Entities/Objects/Weapons/Guns/Ammunition/Projectiles/grenade_shrapnel.yml): W1: cluster pellets leave fragments behind.
+- [`Resources/Prototypes/Entities/Objects/Weapons/Melee/baseball_bat.yml`](../../../Resources/Prototypes/Entities/Objects/Weapons/Melee/baseball_bat.yml): a blunt weapon can execute, with bludgeoning lines in place of the throat-slitting ones
+- [`Resources/Prototypes/Entities/Objects/Weapons/Melee/hammers.yml`](../../../Resources/Prototypes/Entities/Objects/Weapons/Melee/hammers.yml): a blunt weapon can execute, with bludgeoning lines in place of the throat-slitting ones
+- [`Resources/Prototypes/Entities/Objects/Weapons/Melee/mining.yml`](../../../Resources/Prototypes/Entities/Objects/Weapons/Melee/mining.yml): a blunt weapon can execute, with bludgeoning lines in place of the throat-slitting ones
+- [`Resources/Prototypes/Entities/Objects/Weapons/Melee/weapon_toolbox.yml`](../../../Resources/Prototypes/Entities/Objects/Weapons/Melee/weapon_toolbox.yml): a blunt weapon can execute, with bludgeoning lines in place of the throat-slitting ones
 - [`Resources/Prototypes/Entities/StatusEffects/misc.yml`](../../../Resources/Prototypes/Entities/StatusEffects/misc.yml): Onyx's status effect bases, ported without its standing base or concrete effects.
 - [`Resources/Prototypes/Entities/Structures/Machines/lathe.yml`](../../../Resources/Prototypes/Entities/Structures/Machines/lathe.yml): AUTODOC: the four program disks, behind the same research as the rest of medbay.
 - [`Resources/Prototypes/Guidebook/medical.yml`](../../../Resources/Prototypes/Guidebook/medical.yml)
@@ -1883,6 +1903,8 @@ Discord) saying what broke and what state they were in; misuse is a ban. Remove 
   - AUTODOC
 - [`Resources/Prototypes/Nyanotrasen/Entities/Clothing/Head/hats.yml`](../../../Resources/Prototypes/Nyanotrasen/Entities/Clothing/Head/hats.yml): P6, P3-D6: locational armour coverage
 - [`Resources/Prototypes/Nyanotrasen/Entities/Clothing/OuterClothing/armor.yml`](../../../Resources/Prototypes/Nyanotrasen/Entities/Clothing/OuterClothing/armor.yml): P6, P3-D6: locational armour coverage
+- [`Resources/Prototypes/Nyanotrasen/Entities/Objects/Weapons/Melee/blunt.yml`](../../../Resources/Prototypes/Nyanotrasen/Entities/Objects/Weapons/Melee/blunt.yml): a blunt weapon can execute, with bludgeoning lines in place of the throat-slitting ones
+- [`Resources/Prototypes/Nyanotrasen/Entities/Objects/Weapons/Melee/breaching_hammer.yml`](../../../Resources/Prototypes/Nyanotrasen/Entities/Objects/Weapons/Melee/breaching_hammer.yml): a blunt weapon can execute, with bludgeoning lines in place of the throat-slitting ones
 - [`Resources/Prototypes/Reagents/cleaning.yml`](../../../Resources/Prototypes/Reagents/cleaning.yml): GORE: wall blood splats are entities, not decals.
 - [`Resources/Prototypes/Reagents/Consumable/Drink/alcohol.yml`](../../../Resources/Prototypes/Reagents/Consumable/Drink/alcohol.yml): PROTO K: Onyx's \<Onyx-PartPain> block on Cognac. Onyx puts it in a `Digestion:` group that
 - [`Resources/Prototypes/Reagents/Consumable/Drink/drinks.yml`](../../../Resources/Prototypes/Reagents/Consumable/Drink/drinks.yml): GORE: a mop's water takes Wolfmed's blood off the tile, wall splats and its own floor decals
