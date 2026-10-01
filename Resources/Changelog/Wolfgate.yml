@@ -807,3 +807,10 @@ Entries:
   id: 100071
   time: '2026-10-01T07:39:05.0000000+00:00'
   url: https://github.com/VanguardControl/Wolfgate/pull/140
+- author: Gandalf2k15
+  changes:
+    - type: Add
+      message: Admins can now teleport using the mass scanner.
+  id: 100072
+  time: '2026-10-01T08:14:20.0000000+00:00'
+  url: https://github.com/VanguardControl/Wolfgate/pull/141
