@@ -1095,6 +1095,26 @@ public sealed class WolfmedCVars
     public static readonly CVarDef<float> DripSoundVolume =
         CVarDef.Create("wolfmed.drip_sound_volume", -6f, CVar.SERVERONLY);
 
+    /// <summary>
+    /// Executions and weapon suicides: a gun whose one shot adds up to this much on a body part (pellets summed, the
+    /// gun's damage modifier applied, Structural and Radiation left out) is medium: a hole in the head and the brain
+    /// thrown out. Under it is weak: a head wound and an open artery.
+    /// </summary>
+    public static readonly CVarDef<float> ExecutionMedium =
+        CVarDef.Create("wolfmed.execution_medium", 30f, CVar.SERVERONLY);
+
+    /// <summary>The same sum from which a gun is heavy and destroys the head. A load of several pellets always is.</summary>
+    public static readonly CVarDef<float> ExecutionHeavy =
+        CVarDef.Create("wolfmed.execution_heavy", 60f, CVar.SERVERONLY);
+
+    /// <summary>One swing of a blade from which an execution cuts deep as well as opening the artery. The arterial rule's own line.</summary>
+    public static readonly CVarDef<float> ExecutionBladeMedium =
+        CVarDef.Create("wolfmed.execution_blade_medium", 22f, CVar.SERVERONLY);
+
+    /// <summary>One swing of a blade from which an execution takes the head off.</summary>
+    public static readonly CVarDef<float> ExecutionBladeHeavy =
+        CVarDef.Create("wolfmed.execution_blade_heavy", 40f, CVar.SERVERONLY);
+
     // TEMPORARY (playtest 5): the healmeimbroken command. Delete these two with
     // Content.Server/_WF/Wolfmed/Commands/WolfmedBugRescueSystem.cs once the playtest is over.
 
