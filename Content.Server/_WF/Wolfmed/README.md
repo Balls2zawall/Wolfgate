@@ -1470,6 +1470,8 @@ Discord) saying what broke and what state they were in; misuse is a ban. Remove 
 - [`Content.Shared/Execution/SharedExecutionSystem.cs`](../../../Content.Shared/Execution/SharedExecutionSystem.cs)
   - a player is asked "are you sure?" first, and the server starts this on a yes
   - a Downed wound host is helpless enough to execute
+  - a weapon that does a body no harm is no way to die, so the command's default runs
+  - the lethal amount is shared out over the weapon's damage without its Structural
   - the suicide command with a blade in hand kills a wound host and leaves that blade's gore
   - M2: OD17, on a wound host a suicide is brain 0 then death; the ghost above cannot return.
   - M2: HOOK 13 rewritten (OD17), a wound host's execution is a catastrophic brain injury.
@@ -1665,6 +1667,7 @@ Discord) saying what broke and what state they were in; misuse is a ban. Remove 
 - [`Resources/Prototypes/_NF/Entities/Objects/Tools/flashlights.yml`](../../../Resources/Prototypes/_NF/Entities/Objects/Tools/flashlights.yml): a blunt weapon can execute, with bludgeoning lines in place of the throat-slitting ones
 - [`Resources/Prototypes/_NF/Entities/Objects/Tools/tools.yml`](../../../Resources/Prototypes/_NF/Entities/Objects/Tools/tools.yml): a blunt weapon can execute, with bludgeoning lines in place of the throat-slitting ones
 - [`Resources/Prototypes/_NF/Entities/Objects/Weapons/Melee/caveman_club.yml`](../../../Resources/Prototypes/_NF/Entities/Objects/Weapons/Melee/caveman_club.yml): a blunt weapon can execute, with bludgeoning lines in place of the throat-slitting ones
+- [`Resources/Prototypes/_NF/Entities/Objects/Weapons/Melee/wizard_staff.yml`](../../../Resources/Prototypes/_NF/Entities/Objects/Weapons/Melee/wizard_staff.yml): this staff cuts, so it speaks the throat lines its shovel parent replaced
 - [`Resources/Prototypes/_Onyx/Alerts/alerts.yml`](../../../Resources/Prototypes/_Onyx/Alerts/alerts.yml): WP7: only BrokenBones is ported; ModsuitPower/Centered/HierophantBeat/DragonPower/SneakAttack/LossOfSurprise are unrelated features.
 - [`Resources/Prototypes/_Onyx/Chemistry/circulatory_streams.yml`](../../../Resources/Prototypes/_Onyx/Chemistry/circulatory_streams.yml): ported from Onyx for Wolfmed.
 - [`Resources/Prototypes/_Onyx/Entities/categories.yml`](../../../Resources/Prototypes/_Onyx/Entities/categories.yml): only the StatusEffects entityCategory from Onyx's Resources/Prototypes/Entities/categories.yml.

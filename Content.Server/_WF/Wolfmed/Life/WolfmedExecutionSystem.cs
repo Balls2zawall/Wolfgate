@@ -196,7 +196,7 @@ public sealed partial class WolfmedExecutionSystem : EntitySystem
     }
 
     /// <summary>
-    /// A melee weapon by one ordinary swing of this user, wield bonus included: blunt when more than half of it is
+    /// A melee weapon by one ordinary swing of this user, wield bonus included: blunt when at least half of it is
     /// Blunt, a blade otherwise. Never non-lethal while the swing does any harm at all.
     /// </summary>
     public WolfmedKillStrength MeasureMelee(EntityUid weapon, EntityUid user)
@@ -228,7 +228,8 @@ public sealed partial class WolfmedExecutionSystem : EntitySystem
         if (total <= 0f)
             return WolfmedKillStrength.None;
 
-        if (blunt * 2f > total)
+        // An even split is a bludgeon: a pickaxe in one hand is half Blunt, half Piercing.
+        if (blunt * 2f >= total)
         {
             var bluntTier = Tier(total, _cfg.GetCVar(WolfmedCVars.ExecutionBluntMedium), _cfg.GetCVar(WolfmedCVars.ExecutionBluntHeavy));
             return new WolfmedKillStrength(WolfmedKillKind.Blunt, bluntTier, total);

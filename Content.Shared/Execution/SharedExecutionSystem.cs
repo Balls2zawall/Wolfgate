@@ -153,10 +153,21 @@ public sealed partial class SharedExecutionSystem : EntitySystem
         if (!TryComp<DamageableComponent>(args.Victim, out var damageableComponent))
             return;
 
+        // WOLFGATE(Wolfmed) START: a weapon that does a body no harm is no way to die, so the command's default runs
+        // Structural comes out first: the lethal amount is shared out over the total, and its share was lost.
+        var wolfmedDamage = new DamageSpecifier(melee.Damage);
+        wolfmedDamage.DamageDict.Remove("Structural");
+        if (wolfmedDamage.GetTotal() <= 0)
+            return;
+        // WOLFGATE END
+
         ShowExecutionInternalPopup(internalMsg, args.Victim, args.Victim, entity, false);
         ShowExecutionExternalPopup(externalMsg, args.Victim, args.Victim, entity);
         _audio.PlayPredicted(melee.HitSound, args.Victim, args.Victim);
-        _suicide.ApplyLethalDamage((args.Victim, damageableComponent), melee.Damage);
+        // WOLFGATE(Wolfmed) START: the lethal amount is shared out over the weapon's damage without its Structural
+        // _suicide.ApplyLethalDamage((args.Victim, damageableComponent), melee.Damage);
+        _suicide.ApplyLethalDamage((args.Victim, damageableComponent), wolfmedDamage);
+        // WOLFGATE END
         // WOLFGATE(Wolfmed) START: the suicide command with a blade in hand kills a wound host and leaves that blade's gore
         // Not from the Execute do-after, which also lands here: it raises its own ending once the ghost has left.
         if (!entity.Comp.Executing)

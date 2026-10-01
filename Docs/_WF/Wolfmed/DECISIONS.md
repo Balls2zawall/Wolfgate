@@ -4844,3 +4844,35 @@ the owner's call; left as it plays.
   the foam caveman club (Blunt 0) inherits the component from the real one. A melee weapon whose swing adds up to
   nothing now measures NonLethal and is refused like a disabler; anything above zero still kills, as a glass shard
   always did. `MeasureTest`.
+- **The suicide command with a weapon that harms nobody (2026-09-30).** The foam caveman club (Blunt 0) inherits
+  `Execution` from the real one, and `SharedSuicideSystem.ApplyLethalDamage` shares the lethal amount out over the
+  weapon's total: zero over zero, a `DivideByZeroException` after the player had been ghosted for good, the body left
+  alive. `SharedExecutionSystem.OnSuicideByEnvironment` now takes a copy of the weapon's damage without Structural
+  and leaves the event unhandled when nothing is left, so the command's default runs and kills, on a wound host and
+  on any other body. `BluntOnYourselfTest`, `SuicideCommandElsewhereTest`.
+- **The lethal amount is not shared with Structural (2026-09-30).** The same upstream method takes its total with
+  Structural in and then removes Structural, so only the rest of the lethal amount lands. A wound host never noticed
+  (`EndDeliberately` kills it), but a body Wolfmed does not own did: a monkey with a breaching hammer (Blunt 15,
+  Structural 50) took 47 of its 200 and lived, its player gone. Upstream had this with the fire axe alone; every
+  blunt weapon that carries Structural brought it along. The copy without Structural is what is passed on, so the
+  whole lethal amount lands. `SuicideCommandElsewhereTest` (breaching hammer, fire axe, bat, foam club on a monkey).
+- **The blunt heavy line is 50 (2026-09-30).** At 40 a maintenance jack in both hands (12 + 33 = 45) crushed a head,
+  and the engineering vendor gives jacks away. The data has a gap between it and the breaching hammer's 65, so
+  `wolfmed.execution_blunt_heavy` is 50 and the jack caves the skull in instead. `MeasureTest` pins the jack and
+  names the only blunt weapons that reach the heavy line (the breaching hammer and the shock maul, in both hands),
+  so another one arriving is a decision and not an accident.
+- **An even split is a bludgeon, and the cult staves speak as blades (2026-09-30).** Replaces the last two sentences
+  of "A blunt weapon's lines are its own". `MeasureMelee` counts at least half Blunt as Blunt, so a pickaxe in one
+  hand (Blunt 5, Piercing 5) cracks the skull its lines bring it down on. `WizardStaffMeleeBlood`, and the dark bolt
+  staff under it, cut (Slash 13): they restate the upstream throat lines over the shovel's bludgeon ones.
+  `MeasureTest` now spawns every prototype that carries `Execution` and measures it, in one hand and in both where
+  it has a wield bonus: a weapon measured Blunt that slits a throat fails, and so does one measured Blade that is
+  brought down on a skull. Upstream's test prop (Slash 5, Blunt 5, default lines) is the one named exception.
+- **A tier is a floor under the swing (2026-09-30).** The melee Execute still makes its upstream swing first, nine
+  times the weapon's damage with resistances bypassed, on the part the executor aims at; the tier is applied after
+  it. Aimed at the torso, where a fresh body aims, the head carries the tier alone, and that is what `BluntTiersTest`
+  and `BladeTiersTest` pin exactly. Aimed at the head the swing lands there too: a crowbar's 144 Blunt leaves a
+  Comminuted fracture, a crush injury and a concussion, `Break(Simple)` leaves the worse break alone, and the weak
+  tier's "skull cracks" understates it. Kept as it is: the swing is upstream's own and a blade's lands the same way,
+  the victim is dead on every tier, and the ladder still orders (the brain stays in at weak and medium, only heavy
+  takes the head off). `BluntTiersTest` runs a crowbar and a wielded bat aimed at the head and asserts the floor.

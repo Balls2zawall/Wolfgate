@@ -11,6 +11,7 @@ using Content.IntegrationTests.Tests._WF.Wolfmed.Scenarios;
 using Content.Server._WF.Wolfmed.Life;
 using Content.Server.Chat;
 using Content.Shared._Onyx.Wounds;
+using Content.Shared._Shitmed.Targeting;
 using Content.Shared._WF.Wolfmed.CCVar;
 using Content.Shared._WF.Wolfmed.Consciousness;
 using Content.Shared._WF.Wolfmed.Life;
@@ -18,6 +19,7 @@ using Content.Shared._WF.Wolfmed.Wounds;
 using Content.Shared.ActionBlocker;
 using Content.Shared.Body.Part;
 using Content.Shared.Body.Systems;
+using Content.Shared.Damage;
 using Content.Shared.DoAfter;
 using Content.Shared.Execution;
 using Content.Shared.FixedPoint;
@@ -25,6 +27,7 @@ using Content.Shared.Ghost;
 using Content.Shared.Hands.EntitySystems;
 using Content.Shared.Mind;
 using Content.Shared.Mind.Components;
+using Content.Shared.Mobs.Components;
 using Content.Shared.Mobs.Systems;
 using Content.Shared.Players;
 using Content.Shared.Verbs;
@@ -107,6 +110,8 @@ public sealed class WolfmedExecutionTest : GameTest
         ("Sledgehammer", WolfmedKillTier.Weak, 10f),
         ("SecBreachingHammer", WolfmedKillTier.Weak, 15f),
         ("Shovel", WolfmedKillTier.Medium, 24f),
+        ("MaintenanceJack", WolfmedKillTier.Weak, 12f),
+        ("Pickaxe", WolfmedKillTier.Weak, 10f), // Blunt 5 and Piercing 5: an even split is a bludgeon
     };
 
     /// <summary>The same weapons in both hands: the wield bonus is part of the swing.</summary>
@@ -115,7 +120,18 @@ public sealed class WolfmedExecutionTest : GameTest
         ("BaseBallBat", WolfmedKillTier.Medium, 25f),
         ("Sledgehammer", WolfmedKillTier.Medium, 25f),
         ("SecBreachingHammer", WolfmedKillTier.Heavy, 65f),
+        ("Pickaxe", WolfmedKillTier.Medium, 30f),
+        // 45: the engineering vendor gives these away, so the heavy line sits above it.
+        ("MaintenanceJack", WolfmedKillTier.Medium, 45f),
     };
+
+    /// <summary>The only blunt weapons that crush a head, and only in both hands.</summary>
+    private static readonly string[] HeadCrushers = { "SecBreachingHammer", "WeaponShockMaul" };
+
+    /// <summary>Carriers whose lines and measure may disagree. Upstream's test prop is half Slash, half Blunt.</summary>
+    private static readonly string[] MixedLines = { "MixedDamageTestObject" };
+
+    private const string BludgeonLines = "wolfmed-execution-bludgeon-";
 
     private async Task Pin()
     {
@@ -135,13 +151,22 @@ public sealed class WolfmedExecutionTest : GameTest
         var execution = SEntMan.System<WolfmedExecutionSystem>();
         var weapons = new Dictionary<string, EntityUid>();
         var wielders = new Dictionary<string, EntityUid>();
-        EntityUid user = default, foamClub = default;
+        var carriers = new Dictionary<string, EntityUid>();
+        var factory = Server.ResolveDependency<IComponentFactory>();
+        EntityUid user = default, foamClub = default, sweeper = default;
 
         await Server.WaitPost(() =>
         {
             new WolfmedScenario(SEntMan).SetAir(map.MapUid, true);
             user = SEntMan.SpawnEntity("MobHuman", map.GridCoords);
+            sweeper = SEntMan.SpawnEntity("MobHuman", map.GridCoords);
             foamClub = SEntMan.SpawnEntity("CavemanClubCursed", map.GridCoords);
+            foreach (var prototype in SProtoMan.EnumeratePrototypes<EntityPrototype>())
+            {
+                if (!prototype.Abstract && prototype.TryGetComponent(out ExecutionComponent? _, factory))
+                    carriers[prototype.ID] = SEntMan.SpawnEntity(prototype.ID, map.GridCoords);
+            }
+
             foreach (var id in Guns.Select(gun => gun.Gun).Concat(Blades.Select(blade => blade.Blade))
                          .Concat(Blunts.Select(blunt => blunt.Weapon)))
                 weapons[id] = SEntMan.SpawnEntity(id, map.GridCoords);
@@ -242,44 +267,76 @@ public sealed class WolfmedExecutionTest : GameTest
             foreach (var tier in new[] { "weak", "medium", "heavy" })
                 Assert.That(locale.HasString($"wolfmed-execution-blunt-{tier}-machine"), Is.True, $"no machine popup for blunt {tier}.");
 
-            // Every weapon that offers Execute has its eight lines, and a blunt one does not talk about throats.
-            var factory = Server.ResolveDependency<IComponentFactory>();
-            var throats = new ExecutionComponent();
-            var carriers = 0;
+            // Every weapon that offers Execute has its eight lines, and they say what it is measured as, in one hand
+            // and in both: a bludgeon does not talk about throats, a blade is not brought down on a skull.
+            var hands = SEntMan.System<SharedHandsSystem>();
+            var throats = Lines(new ExecutionComponent());
             var bludgeons = 0;
+            var blades = 0;
             var unsaid = new List<string>();
-            foreach (var prototype in SProtoMan.EnumeratePrototypes<EntityPrototype>())
+            var crushers = new List<string>();
+            foreach (var (id, weapon) in carriers.OrderBy(pair => pair.Key))
             {
-                if (!prototype.TryGetComponent(out ExecutionComponent? comp, factory))
+                if (SEntMan.Deleted(weapon) || !SEntMan.TryGetComponent(weapon, out ExecutionComponent? comp))
                     continue;
 
-                carriers++;
-                var blunt = prototype.TryGetComponent(out MeleeWeaponComponent? melee, factory) && MostlyBlunt(melee);
-                if (blunt)
-                    bludgeons++;
-
-                foreach (var (line, throat) in Lines(comp).Zip(Lines(throats)))
+                var lines = Lines(comp);
+                foreach (var line in lines)
                 {
                     if (!locale.HasString(line))
-                        unsaid.Add($"{prototype.ID}: no text for {line}");
-                    else if (blunt && line == throat)
-                        unsaid.Add($"{prototype.ID} is a blunt weapon and still says {line}");
+                        unsaid.Add($"{id}: no text for {line}");
+                }
+
+                var measured = new List<WolfmedKillStrength> { execution.MeasureMelee(weapon, sweeper) };
+                if (SEntMan.HasComponent<IncreaseDamageOnWieldComponent>(weapon) &&
+                    SEntMan.TryGetComponent(weapon, out WieldableComponent? wieldable) &&
+                    hands.TryPickupAnyHand(sweeper, weapon))
+                {
+                    if (SEntMan.System<SharedWieldableSystem>().TryWield(weapon, wieldable, sweeper))
+                        measured.Add(execution.MeasureMelee(weapon, sweeper));
+
+                    Assert.That(hands.TryDrop(sweeper, weapon), Is.True, $"the sweep could not put {id} down again.");
+                }
+
+                var blunt = measured[0].Kind == WolfmedKillKind.Blunt;
+                if (blunt)
+                    bludgeons++;
+                else if (measured[0].Kind == WolfmedKillKind.Blade)
+                    blades++;
+
+                if (blunt || measured.Count > 1)
+                    TestContext.Out.WriteLine($"{id}: {string.Join(", wielded ", measured)}");
+
+                if (measured.Any(strength => strength is { Kind: WolfmedKillKind.Blunt, Tier: WolfmedKillTier.Heavy }))
+                    crushers.Add(id);
+
+                if (MixedLines.Contains(id))
+                    continue;
+
+                foreach (var strength in measured)
+                {
+                    if (strength.Kind == WolfmedKillKind.Blunt && lines.Any(line => throats.Contains(line)))
+                        unsaid.Add($"{id} measures {strength} and still slits a throat");
+                    else if (strength.Kind == WolfmedKillKind.Blade && lines.Any(line => line.Id.StartsWith(BludgeonLines)))
+                        unsaid.Add($"{id} measures {strength} and speaks as a bludgeon");
                 }
             }
 
-            TestContext.Out.WriteLine($"{carriers} prototypes carry Execution, {bludgeons} of them blunt.");
+            TestContext.Out.WriteLine($"{carriers.Count} prototypes carry Execution: {blades} blades, {bludgeons} blunt.");
             Assert.Multiple(() =>
             {
-                Assert.That(carriers, Is.GreaterThan(bludgeons), "the sweep found no blade.");
+                Assert.That(blades, Is.GreaterThan(20), "the sweep found too few blades to mean anything.");
                 Assert.That(bludgeons, Is.GreaterThan(20), "the sweep found too few blunt weapons to mean anything.");
                 Assert.That(unsaid, Is.Empty, string.Join("\n", unsaid));
+                // Crushing a head is the heaviest thing a weapon in the hand does: a tool anybody is handed must not.
+                Assert.That(crushers, Is.EquivalentTo(HeadCrushers), "the blunt weapons that reach the heavy tier changed.");
             });
         });
     }
 
     /// <summary>
     /// Blunt weapons: a crowbar cracks the skull, a bat in both hands caves it in and leaves the brain where it is, a
-    /// breaching hammer in both hands crushes the head and leaves a stump.
+    /// breaching hammer in both hands crushes the head and leaves a stump. Aimed at the head the swing adds to that.
     /// </summary>
     [Test]
     public async Task BluntTiersTest()
@@ -345,6 +402,35 @@ public sealed class WolfmedExecutionTest : GameTest
                 Assert.That(containers.IsEntityInContainer(heavy.Brain), Is.False, "the brain is not loose.");
             });
         });
+
+        // The swing itself still lands where the executor aims, nine times over. Above it went into the torso and the
+        // head carries the tier alone; aimed at the head the tier is a floor, and still only heavy takes the head off.
+        foreach (var (weapon, wield, floor) in new[]
+                 {
+                     ("Crowbar", false, FractureGrade.Simple),
+                     ("BaseBallBat", true, FractureGrade.Comminuted),
+                 })
+        {
+            var aimed = await Execute(map, s, "MobHuman", weapon, wield, TargetBodyPart.Head);
+            await Server.WaitAssertion(() =>
+            {
+                var fracture = fractures.GetFracture(aimed.Head);
+                TestContext.Out.WriteLine(
+                    $"{weapon} aimed at the head: head {string.Join(", ", Wounds(aimed.Head))}, fracture {fracture?.Comp2.Grade}, " +
+                    $"blunt {Severity(aimed.Head, "BluntWound")}, torso {string.Join(", ", Wounds(s.Part(aimed.Victim, BodyPartType.Torso)))}");
+                Assert.Multiple(() =>
+                {
+                    Assert.That(mobState.IsDead(aimed.Victim), Is.True, $"a head-aimed {weapon} execution did not kill.");
+                    Assert.That(fracture?.Comp2.Grade, Is.GreaterThanOrEqualTo(floor), $"a head-aimed {weapon} broke less than its tier.");
+                    Assert.That(Wounds(aimed.Head), Does.Contain("BluntWound"), "no blunt wound on the head.");
+                    Assert.That(Wounds(aimed.Head), Does.Not.Contain(Artery), "a blunt weapon opened the throat.");
+                    Assert.That(body.GetBodyChildrenOfType(aimed.Victim, BodyPartType.Head), Is.Not.Empty,
+                        $"a head-aimed {weapon} took the head off: only the heavy tier does.");
+                    Assert.That(s.Life.GetBrainOrgan(aimed.Victim)?.Owner, Is.EqualTo(aimed.Brain), "the brain left the body.");
+                    Assert.That(s.Life.GetBrainOrgan(aimed.Victim)?.Comp.Health, Is.EqualTo(FixedPoint2.Zero));
+                });
+            });
+        }
     }
 
     /// <summary>
@@ -491,8 +577,61 @@ public sealed class WolfmedExecutionTest : GameTest
             AssertSkullCracked(fractures, bat.Head, "the suicide command with a bat");
             Assert.That(bodies.GetBodyChildrenOfType(bat.Body, BodyPartType.Head), Is.Not.Empty);
         });
+        await RunSeconds(1);
+
+        // The foam club (Blunt 0) is no way to die: the command's default runs, and it still kills.
+        var foam = await PossessArmed(s, map, "CavemanClubCursed");
+        await Server.WaitAssertion(() =>
+        {
+            Assert.That(execution.Measure(foam.Weapon, foam.Body).Lethal, Is.False, "the fixture's foam club measures lethal.");
+            Assert.That(SEntMan.System<SuicideSystem>().Suicide(foam.Body), Is.True, "the suicide was refused.");
+            AssertSuicided(s, foam.Body, "the suicide command with a foam club");
+            Assert.Multiple(() =>
+            {
+                Assert.That(fractures.GetFracture(foam.Head), Is.Null, "a foam club broke the skull.");
+                Assert.That(Wounds(foam.Head), Does.Not.Contain("BluntWound"), "a foam club left a blunt wound.");
+            });
+        });
         await RunSeconds(2);
         await Client.WaitPost(contextMenu.Shutdown);
+    }
+
+    /// <summary>
+    /// The suicide command on a body Wolfmed does not own, with a weapon that offers Execute in hand, still kills:
+    /// the weapon's Structural share is not taken out of the lethal amount, and a foam club leaves it to the default.
+    /// </summary>
+    [Test]
+    public async Task SuicideCommandElsewhereTest()
+    {
+        await Pin();
+        var map = await Pair.CreateTestMap();
+        var s = new WolfmedScenario(SEntMan);
+        var mobState = SEntMan.System<MobStateSystem>();
+        await Server.WaitPost(() => s.SetAir(map.MapUid, true));
+
+        // Blunt 15 of 65, Slash 20 of 30 and Blunt 15 of 20 with their Structural; the last is Blunt 0.
+        foreach (var weaponProto in new[] { "SecBreachingHammer", "FireAxe", "BaseBallBat", "CavemanClubCursed" })
+        {
+            var monkey = await Possess("MobMonkey", map);
+            EntityUid weapon = default;
+            await Server.WaitPost(() => weapon = SEntMan.SpawnEntity(weaponProto, map.GridCoords));
+            await RunSeconds(1);
+
+            await Server.WaitAssertion(() =>
+            {
+                Assert.That(s.Life.OwnsDeath(monkey), Is.False, "the fixture is a wound host, so this proves nothing.");
+                Arm(monkey, weapon);
+                Assert.That(SEntMan.System<SharedHandsSystem>().GetActiveItem(monkey), Is.EqualTo(weapon));
+                Assert.That(SEntMan.System<SuicideSystem>().Suicide(monkey), Is.True, "the suicide was refused.");
+                var damage = SEntMan.GetComponent<DamageableComponent>(monkey).TotalDamage;
+                var lethal = SEntMan.GetComponent<MobThresholdsComponent>(monkey).Thresholds.Keys.Last();
+                TestContext.Out.WriteLine($"{weaponProto}: {damage} of {lethal}");
+                Assert.That(mobState.IsDead(monkey), Is.True,
+                    $"the suicide command with {weaponProto} left the body alive at {damage} of {lethal}.");
+                AssertGhosted(monkey, $"the suicide command with {weaponProto}");
+            });
+            await RunSeconds(1);
+        }
     }
 
     /// <summary>The weak blunt tier and nothing of a blade's: a blunt wound, a simple fracture, no artery, no cut.</summary>
@@ -522,24 +661,6 @@ public sealed class WolfmedExecutionTest : GameTest
 
         Assert.That(SEntMan.System<SharedWieldableSystem>().TryWield(weapon, SEntMan.GetComponent<WieldableComponent>(weapon), holder),
             Is.True, $"{SEntMan.ToPrettyString(weapon)} would not wield.");
-    }
-
-    /// <summary>More than half of one ordinary swing is Blunt; Structural and Radiation never land on a body part.</summary>
-    private static bool MostlyBlunt(MeleeWeaponComponent melee)
-    {
-        var total = FixedPoint2.Zero;
-        var blunt = FixedPoint2.Zero;
-        foreach (var (type, amount) in melee.Damage.DamageDict)
-        {
-            if (amount <= FixedPoint2.Zero || type is "Structural" or "Radiation")
-                continue;
-
-            total += amount;
-            if (type == "Blunt")
-                blunt += amount;
-        }
-
-        return blunt * 2 > total;
     }
 
     private static LocId[] Lines(ExecutionComponent comp)
@@ -1368,9 +1489,15 @@ public sealed class WolfmedExecutionTest : GameTest
 
     /// <summary>
     /// Spawns a helpless victim and an armed attacker, the weapon in both hands if asked, invokes Execute and runs
-    /// the do-after out.
+    /// the do-after out. The attacker aims where a fresh body does, at the torso, unless told otherwise.
     /// </summary>
-    private async Task<Scene> Execute(TestMapData map, WolfmedScenario s, string victimProto, string weaponProto, bool wield = false)
+    private async Task<Scene> Execute(
+        TestMapData map,
+        WolfmedScenario s,
+        string victimProto,
+        string weaponProto,
+        bool wield = false,
+        TargetBodyPart aim = TargetBodyPart.Torso)
     {
         EntityUid victim = default, attacker = default, weapon = default, head = default, brain = default;
         await Server.WaitPost(() =>
@@ -1387,6 +1514,7 @@ public sealed class WolfmedExecutionTest : GameTest
             brain = s.Life.GetBrainOrgan(victim)!.Value.Owner;
             s.Consciousness.SetExternalPressure(victim, "test", 1f);
             Assert.That(SEntMan.System<MobStateSystem>().IsCritical(victim), Is.True, "the victim is not helpless.");
+            SEntMan.GetComponent<TargetingComponent>(attacker).Target = aim;
             Arm(attacker, weapon);
             if (wield)
                 Wield(attacker, weapon);
