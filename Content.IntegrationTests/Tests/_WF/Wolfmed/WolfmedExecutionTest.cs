@@ -24,6 +24,7 @@ using Content.Shared.FixedPoint;
 using Content.Shared.Ghost;
 using Content.Shared.Hands.EntitySystems;
 using Content.Shared.Mind;
+using Content.Shared.Mind.Components;
 using Content.Shared.Mobs.Systems;
 using Content.Shared.Players;
 using Content.Shared.Verbs;
@@ -83,6 +84,10 @@ public sealed class WolfmedExecutionTest : GameTest
         ("Cartridge9x19mmRubber", WolfmedKillKind.NonLethal, WolfmedKillTier.Weak),
         ("ShellShotgun12_gaugePractice", WolfmedKillKind.NonLethal, WolfmedKillTier.Weak), // six pellets of nothing
         ("CartridgeRocket", WolfmedKillKind.NonLethal, WolfmedKillTier.Weak), // the shell carries the blast; it is not a bullet
+        // Heat 15 and a token blast: a bullet that burns, not a carrier shell.
+        ("Cartridge68x52mmCaselessPlasma", WolfmedKillKind.Energy, WolfmedKillTier.Weak),
+        // Six pellets of Piercing 7 are 42, under the heavy line: heavy by the pellets alone.
+        ("ShellShotgun12_gaugeFlechette", WolfmedKillKind.Ballistic, WolfmedKillTier.Heavy),
     };
 
     private static readonly (string Blade, WolfmedKillTier Tier)[] Blades =
@@ -149,6 +154,17 @@ public sealed class WolfmedExecutionTest : GameTest
             }
 
             Assert.That(wrong, Is.Empty, string.Join("\n", wrong));
+
+            // The flechette shell is what pins "a spread is heavy whatever it sums to": buckshot reaches the line anyway.
+            var flechette = execution.MeasureRound((weapons["WeaponPistolViper"], pistol),
+                SProtoMan.Index<EntityPrototype>("ShellShotgun12_gaugeFlechette"));
+            Assert.Multiple(() =>
+            {
+                Assert.That(flechette.Pellets, Is.EqualTo(6));
+                Assert.That(flechette.Damage, Is.EqualTo(42f).Within(0.01f));
+                Assert.That(flechette.Damage, Is.LessThan(Server.CfgMan.GetCVar(WolfmedCVars.ExecutionHeavy)),
+                    "the flechette fixture reaches the heavy line by its sum, so it pins nothing.");
+            });
 
             // Buckshot is six pellets and is summed; the Structural on a .45 and the pulse sniper is left out.
             Assert.Multiple(() =>
@@ -502,9 +518,86 @@ public sealed class WolfmedExecutionTest : GameTest
                     Assert.That(SEntMan.System<MobStateSystem>().IsDead(body), Is.True, $"{weaponProto} on yourself did not kill.");
                     Assert.That(s.Life.GetBrainOrgan(body)?.Comp.Health, Is.EqualTo(FixedPoint2.Zero));
                     Assert.That(Wounds(head), Does.Contain(Artery), $"{weaponProto} on yourself left no artery open.");
+                    // The weak tier's own severity: applied twice, the wound merges to double.
+                    Assert.That(Severity(head, Artery), Is.EqualTo(FixedPoint2.New(20)),
+                        $"{weaponProto} on yourself did not apply its tier exactly once.");
                 });
             });
         }
+    }
+
+    /// <summary>
+    /// A player's blade Execute on themselves, once confirmed, applies the blade's tier once, after the ghost has left:
+    /// a kitchen knife opens the artery at the weak tier's severity, a claymore takes the head off, and each leaves the
+    /// player in a ghost that cannot return, never in the brain of their own severed head.
+    /// </summary>
+    [Test]
+    public async Task BladeOnYourselfGhostsTest()
+    {
+        await Pin();
+        var map = await Pair.CreateTestMap();
+        var s = new WolfmedScenario(SEntMan);
+        var execution = SEntMan.System<WolfmedExecutionSystem>();
+        var mobState = SEntMan.System<MobStateSystem>();
+        var bodies = SEntMan.System<SharedBodySystem>();
+        await Server.WaitPost(() => s.SetAir(map.MapUid, true));
+
+        // The client predicts the end of its own blade execution, which flips combat mode and closes the context menu.
+        var contextMenu = Client.ResolveDependency<IUserInterfaceManager>().GetUIController<ContextMenuUIController>();
+        await Client.WaitPost(contextMenu.Setup);
+
+        var knifed = await ConfirmOnYourself(s, map, execution, "KitchenKnife");
+        await Server.WaitAssertion(() =>
+        {
+            AssertSuicided(s, knifed.Body, "the knife Execute on yourself");
+            Assert.Multiple(() =>
+            {
+                Assert.That(Severity(knifed.Head, Artery), Is.EqualTo(FixedPoint2.New(20)),
+                    "the knife's tier was not applied exactly once.");
+                Assert.That(Wounds(knifed.Head), Does.Not.Contain("SlashWound"), "a weak blade left the medium tier's cut.");
+                Assert.That(bodies.GetBodyChildrenOfType(knifed.Body, BodyPartType.Head), Is.Not.Empty);
+            });
+        });
+        await RunSeconds(1);
+
+        var cut = await ConfirmOnYourself(s, map, execution, "Claymore");
+        await Server.WaitAssertion(() =>
+        {
+            Assert.Multiple(() =>
+            {
+                Assert.That(mobState.IsDead(cut.Body), Is.True, "the claymore Execute on yourself did not kill.");
+                Assert.That(bodies.GetBodyChildrenOfType(cut.Body, BodyPartType.Head), Is.Empty, "the head is still on.");
+                Assert.That(SEntMan.Deleted(cut.Head), Is.False, "a blade destroyed the head instead of severing it.");
+                Assert.That(HeadStump(cut.Body), Is.Not.Null, "no stump on the torso.");
+                Assert.That(ServerSession!.AttachedEntity, Is.Not.EqualTo(cut.Brain), "the player is in the brain of the severed head.");
+                Assert.That(SEntMan.GetComponent<MindContainerComponent>(cut.Brain).Mind, Is.Null,
+                    "the mind rode the brain out: the head came off before the ghost left.");
+            });
+            AssertGhosted(cut.Body, "the claymore Execute on yourself");
+        });
+        await RunSeconds(2);
+        await Client.WaitPost(contextMenu.Shutdown);
+    }
+
+    /// <summary>A fresh player body uses Execute on itself with this weapon, says yes, and the do-after runs out.</summary>
+    private async Task<(EntityUid Body, EntityUid Head, EntityUid Brain)> ConfirmOnYourself(
+        WolfmedScenario s,
+        TestMapData map,
+        WolfmedExecutionSystem execution,
+        string weaponProto)
+    {
+        var armed = await PossessArmed(s, map, weaponProto);
+        EntityUid brain = default;
+        await Server.WaitAssertion(() =>
+        {
+            brain = s.Life.GetBrainOrgan(armed.Body)!.Value.Owner;
+            Invoke(armed.Body, armed.Body);
+            Assert.That(execution.GetPending(armed.Body), Is.EqualTo((armed.Body, armed.Weapon)),
+                $"Execute on yourself with {weaponProto} did not ask.");
+            Assert.That(execution.Confirm(armed.Body), Is.True, $"a yes to your own ending with {weaponProto} was refused.");
+        });
+        await RunSeconds(7);
+        return (armed.Body, armed.Head, brain);
     }
 
     /// <summary>

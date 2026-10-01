@@ -174,7 +174,7 @@ public sealed partial class WolfmedExecutionSystem : EntitySystem
             cuts |= type is "Piercing" or "Slash";
         }
 
-        if (perRound < NonLethalBelow || !cuts && perRound <= LessLethalAtMost && IsLessLethal(bullet))
+        if (perRound < NonLethalBelow || !cuts && perRound <= LessLethalAtMost && IsLessLethal(bullet, energy <= 0f))
             return WolfmedKillStrength.None;
 
         var pellets = bullet.TryGetComponent(out ProjectileSpreadComponent? spread, _factory) ? Math.Max(1, spread.Count) : 1;
@@ -223,12 +223,13 @@ public sealed partial class WolfmedExecutionSystem : EntitySystem
         return total >= medium ? WolfmedKillTier.Medium : WolfmedKillTier.Weak;
     }
 
-    private bool IsLessLethal(EntityPrototype bullet)
+    private bool IsLessLethal(EntityPrototype bullet, bool bluntOnly)
     {
+        // A launcher's shell is Blunt alone and only carries its blast; a plasma round or a fireball burns as well.
         return bullet.TryGetComponent(out StaminaDamageOnCollideComponent? _, _factory) ||
                bullet.TryGetComponent(out StunOnCollideComponent? _, _factory) ||
                bullet.TryGetComponent(out HitscanStaminaDamageComponent? _, _factory) ||
-               bullet.TryGetComponent(out ExplosiveComponent? _, _factory);
+               bluntOnly && bullet.TryGetComponent(out ExplosiveComponent? _, _factory);
     }
 
     private bool IsSpent(EntityUid round) => TryComp(round, out CartridgeAmmoComponent? cartridge) && cartridge.Spent;

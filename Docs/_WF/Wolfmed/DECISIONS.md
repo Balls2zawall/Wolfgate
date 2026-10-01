@@ -4779,3 +4779,17 @@ the owner's call; left as it plays.
   there too. `Suicide()` still calls `EndDeliberately` afterwards, which refuses a body that is already dead.
   `SuicideCommandWeaponTest`: a pistol (round spent, gunshot wound and artery), an empty shotgun (dead, no gunshot
   wound), a claymore (head off, which no single hit's damage can do); every one a ghost that cannot return.
+- **A blade Execute on yourself applies once, after the ghost (review, 2026-09-30).** The do-after raises
+  `SuicideEvent` unhandled, `SuicideSystem` forwards it to the blade in the active hand, and upstream's
+  `OnSuicideByEnvironment` then ran the suicide command's marked raise as well: the tier landed while the mind was
+  still in the body, and again after the ghost. A kitchen knife's artery merged to 40, and a claymore took the head
+  off with the player in it, who sat in the brain and could come back. That raise is now skipped while the blade is
+  `Executing`; the do-after's own raise, after `SuicideGhostEvent`, is the only one. The suicide command is unchanged:
+  it ghosts first. `BladeOnYourselfGhostsTest` (a player's body: artery 20, head off, a ghost that cannot return, no
+  mind in the brain); `OnYourselfKillsTest` now asserts the artery's severity.
+- **An explosive charge marks a carrier shell only (review, 2026-09-30).** The explosive marker made every explosive
+  round of 20 or less non-lethal, which also caught rounds that burn: the 6.8 mm caseless plasma round (Heat 15), the
+  Lawbringer's explode bolt and the fireball. Every launcher shell it was added for is Blunt alone (rocket, 40 mm,
+  cannonball, seismic charge: 7), so the marker now counts only on a round with no energy share; the stamina and stun
+  markers are as before. The plasma round reads Energy weak. `MeasureTest`, which also takes a flechette shell
+  (6 x 7 = 42) so that "a spread is heavy whatever it sums to" is pinned by a load under the heavy line.

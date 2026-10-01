@@ -158,8 +158,12 @@ public sealed partial class SharedExecutionSystem : EntitySystem
         _audio.PlayPredicted(melee.HitSound, args.Victim, args.Victim);
         _suicide.ApplyLethalDamage((args.Victim, damageableComponent), melee.Damage);
         // WOLFGATE(Wolfmed) START: the suicide command with a blade in hand kills a wound host and leaves that blade's gore
-        var wolfmedSuicided = new Content.Shared._WF.Wolfmed.Life.WolfmedEndingEvent(Content.Shared._WF.Wolfmed.Life.WolfmedEnding.Suicide, args.Victim, entity);
-        RaiseLocalEvent(args.Victim, ref wolfmedSuicided);
+        // Not from the Execute do-after, which also lands here: it raises its own ending once the ghost has left.
+        if (!entity.Comp.Executing)
+        {
+            var wolfmedSuicided = new Content.Shared._WF.Wolfmed.Life.WolfmedEndingEvent(Content.Shared._WF.Wolfmed.Life.WolfmedEnding.Suicide, args.Victim, entity);
+            RaiseLocalEvent(args.Victim, ref wolfmedSuicided);
+        }
         // WOLFGATE END
         args.Handled = true;
     }
