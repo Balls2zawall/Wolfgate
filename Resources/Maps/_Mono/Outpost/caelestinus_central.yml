@@ -1,16 +1,16 @@
 meta:
   format: 7
-  category: Grid
+  category: Map
   engineVersion: 277.0.0
   forkId: ""
   forkVersion: ""
   time: 09/30/2026 08:09:25
   entityCount: 10195
-maps: []
+maps:
+- 1
 grids:
-- 1
-orphans:
-- 1
+- 2
+orphans: []
 nullspace: []
 tilemap:
   7: Space
