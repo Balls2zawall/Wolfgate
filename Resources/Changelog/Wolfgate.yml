@@ -1030,3 +1030,13 @@ Entries:
   id: 100077
   time: '2026-10-02T03:19:24.0000000+00:00'
   url: https://github.com/VanguardControl/Wolfgate/pull/145
+- author: Gandalf2k15
+  changes:
+    - type: Add
+      message: >-
+        Subtle emote. You can now use the subtle emote which only sends to those
+        within 1.5 tiles of your character and isn't visible to ghosts. Access
+        it via rightclick or /subtle in chat.
+  id: 100078
+  time: '2026-10-02T04:09:21.0000000+00:00'
+  url: https://github.com/VanguardControl/Wolfgate/pull/146
