@@ -1013,3 +1013,10 @@ Entries:
   id: 100075
   time: '2026-10-01T19:28:54.0000000+00:00'
   url: https://github.com/VanguardControl/Wolfgate/pull/32
+- author: Gandalf2k15
+  changes:
+    - type: Fix
+      message: Shields now respect FTL cooldown again
+  id: 100076
+  time: '2026-10-02T00:39:43.0000000+00:00'
+  url: https://github.com/VanguardControl/Wolfgate/pull/144
