@@ -31125,8 +31125,6 @@ entities:
       pos: -14.5,38.5
       parent: 1
     - type: DeviceNetwork
-      configurators:
-      - invalid
       deviceLists:
       - 9
       - 2
