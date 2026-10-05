@@ -1158,3 +1158,10 @@ Entries:
   id: 100084
   time: '2026-10-05T21:36:01.0000000+00:00'
   url: https://github.com/VanguardControl/Wolfgate/pull/165
+- author: Gandalf2k15
+  changes:
+    - type: Remove
+      message: Hydrakin have been disabled at the request of the creator.
+  id: 100085
+  time: '2026-10-05T21:43:36.0000000+00:00'
+  url: https://github.com/VanguardControl/Wolfgate/pull/157
