@@ -1151,3 +1151,10 @@ Entries:
   id: 100083
   time: '2026-10-05T09:05:13.0000000+00:00'
   url: https://github.com/VanguardControl/Wolfgate/pull/161
+- author: Gandalf2k15
+  changes:
+    - type: Add
+      message: Admins now get access to a bigger radar for monitoring.
+  id: 100084
+  time: '2026-10-05T21:36:01.0000000+00:00'
+  url: https://github.com/VanguardControl/Wolfgate/pull/165
