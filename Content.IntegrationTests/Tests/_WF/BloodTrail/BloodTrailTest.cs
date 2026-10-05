@@ -1,4 +1,5 @@
 #nullable enable
+using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
 using Content.Server._WF.BloodTrail;
@@ -6,12 +7,15 @@ using Content.Server.Body.Systems;
 using Content.Server.Decals;
 using Content.Server.Fluids.EntitySystems;
 using Content.Shared.Chemistry.Components;
+using Content.Shared.Chemistry.Reagent;
+using Content.Shared.FixedPoint;
 using Content.Shared.Gravity;
 using Content.Shared.Mobs;
 using Content.Shared.Mobs.Systems;
 using Content.Shared.Standing;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Map;
+using Robust.Shared.Map.Components;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics;
 using Robust.Shared.Physics.Components;
@@ -28,6 +32,7 @@ public sealed class BloodTrailTest
 {
     private const string Human = "MobHuman";
     private const int Row = 12;
+    private const string Paint = "Dirt";
     private static readonly Box2 Floor = new(-1, -1, Row + 1, 2);
 
     public enum Posture
@@ -180,6 +185,53 @@ public sealed class BloodTrailTest
             var dragMarks = decals.GetDecalsIntersecting(map.Grid, Floor)
                 .Count(entry => prints.DraggingDecals.Contains(entry.Decal.Id));
             Assert.That(dragMarks, Is.GreaterThan(1));
+        });
+
+        await pair.CleanReturnAsync();
+    }
+
+    /// <summary>Space cleaner and a mop's water both take the prints off, and water leaves other decals alone.</summary>
+    [TestCase("SpaceCleaner", false)]
+    [TestCase("Water", true)]
+    public async Task PrintsWashOff(string reagent, bool paintStays)
+    {
+        await using var pair = await PoolManager.GetServerClient(new PoolSettings { Connected = false });
+        var server = pair.Server;
+        var map = await pair.CreateTestMap();
+        var entMan = server.EntMan;
+        var mapSys = entMan.System<SharedMapSystem>();
+        var xformSys = entMan.System<SharedTransformSystem>();
+        var decals = entMan.System<DecalSystem>();
+
+        await server.WaitAssertion(() =>
+        {
+            var human = SpawnOnFloor(entMan, map);
+            entMan.System<FootPrintsSystem>().Stain(human, Color.Red);
+            for (var i = 1; i <= 4; i++)
+                xformSys.SetLocalPosition(human, new Vector2(0.5f + i * 0.75f, 0.5f));
+
+            entMan.System<StandingStateSystem>().Down(human, playSound: false);
+            for (var i = 5; i <= 8; i++)
+                xformSys.SetLocalPosition(human, new Vector2(0.5f + i * 0.75f, 0.5f));
+
+            Assert.That(decals.TryAddDecal(Paint, new EntityCoordinates(map.Grid, 2, 0), out _, cleanable: true), Is.True);
+
+            List<string> Placed() => decals.GetDecalsIntersecting(map.Grid, Floor).Select(entry => entry.Decal.Id).ToList();
+            var before = Placed();
+            Assert.That(before.Count(id => id.StartsWith(FootPrintsSystem.DecalPrefix)), Is.EqualTo(8));
+            Assert.That(before.Any(id => id.Contains("Dragging")), Is.True);
+
+            var proto = server.ProtoMan.Index<ReagentPrototype>(reagent);
+            var grid = entMan.GetComponent<MapGridComponent>(map.Grid);
+            for (var x = 0; x < Row; x++)
+                proto.ReactionTile(mapSys.GetTileRef(map.Grid, grid, new Vector2i(x, 0)), FixedPoint2.New(5), entMan, null);
+
+            var after = Placed();
+            Assert.Multiple(() =>
+            {
+                Assert.That(after.Where(id => id.StartsWith(FootPrintsSystem.DecalPrefix)), Is.Empty);
+                Assert.That(after.Contains(Paint), Is.EqualTo(paintStays));
+            });
         });
 
         await pair.CleanReturnAsync();

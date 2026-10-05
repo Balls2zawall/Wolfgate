@@ -4,7 +4,7 @@ Blood footprints and drag trails, ported from Colonial Marines Universe's decal 
 puddle on the floor is stained with its color and leaves prints as it moves until the stain runs out: footprints while
 walking (bare, shoe or pressure suit), drag marks while crawling, lying down or being hauled around critical or dead. A
 bleeding body stains itself from the puddles it spills, so dragging or crawling with a wound leaves a trail. The prints
-are cleanable decals; space cleaner removes them.
+are cleanable decals: space cleaner removes them, and so does a mop's water, through Wolfmed's blood wash.
 
 Entry points: `PuddleFootPrintsSystem` stains any mob that starts touching a puddle, and `FootPrintsSystem` places the
 decals from the mob's `MoveEvent`. `FootPrintsSystem.Stain` is the way in for anything else that should leave a trail.

@@ -28,6 +28,9 @@ public sealed partial class FootPrintsSystem : EntitySystem
     [Dependency] private IRobustRandom _random = default!;
     [Dependency] private StandingStateSystem _standing = default!;
 
+    /// <summary>Every decal this module leaves starts with this, which is how a wash tells them from paint.</summary>
+    public const string DecalPrefix = "Footprint";
+
     /// <summary>Prints one spot holds before new ones are skipped, so a busy corridor can't pile decals up.</summary>
     public const int MaxPrintsNearby = 8;
 
