@@ -89,6 +89,9 @@ Standalone edits outside `_WF` that serve no module: files with an untagged `WOL
   - ammo container copied from BaseWeaponBallisticTurret.
   - gun tuning copied from BaseWeaponBallisticTurret (the angles are Mono's).
   - fire modes copied from BaseWeaponBallisticTurret.
+- [`Resources/Prototypes/GameRules/pests.yml`](../../Resources/Prototypes/GameRules/pests.yml)
+  - pest events were crowding out the rest of the table (was 6)
+  - each pest event at most once per 90 minutes
 - [`Resources/ServerInfo/_Mono/Guidebook/Rules/Conflict/Four_PortStriking.xml`](../../Resources/ServerInfo/_Mono/Guidebook/Rules/Conflict/Four_PortStriking.xml)
   - fixed broken link, was MonolithRuleRoleplayEightSafeZones
   - was color=blue, unreadable on the dark background
