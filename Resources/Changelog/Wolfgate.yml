@@ -1137,3 +1137,10 @@ Entries:
   id: 100081
   time: '2026-10-05T08:42:29.0000000+00:00'
   url: https://github.com/VanguardControl/Wolfgate/pull/40
+- author: Gandalf2k15
+  changes:
+    - type: Tweak
+      message: Pest events trigger less now.
+  id: 100082
+  time: '2026-10-05T09:04:59.0000000+00:00'
+  url: https://github.com/VanguardControl/Wolfgate/pull/163
