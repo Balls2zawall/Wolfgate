@@ -1144,3 +1144,10 @@ Entries:
   id: 100082
   time: '2026-10-05T09:04:59.0000000+00:00'
   url: https://github.com/VanguardControl/Wolfgate/pull/163
+- author: Gandalf2k15
+  changes:
+    - type: Fix
+      message: Flaky wolfmed tests
+  id: 100083
+  time: '2026-10-05T09:05:13.0000000+00:00'
+  url: https://github.com/VanguardControl/Wolfgate/pull/161
