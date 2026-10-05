@@ -28,7 +28,7 @@ namespace Content.IntegrationTests.Tests._WF.Wolfmed;
 /// </summary>
 [TestFixture]
 [TestOf(typeof(WolfmedWoundOverlaySystem))]
-public sealed class WolfmedWoundOverlayTest : GameTest
+public sealed class WolfmedWoundOverlayTest : WolfmedGameTest
 {
     /// <summary>
     /// A bleeding slash drips; dressed it stops and shows the still wound; a heavy bleed trickles; an unhurt limb and a
@@ -37,7 +37,7 @@ public sealed class WolfmedWoundOverlayTest : GameTest
     [Test]
     public async Task BleedingWoundOverlayTest()
     {
-        var map = await Pair.CreateTestMap();
+        var map = await CreateTestMap();
         EntityUid body = default;
 
         await Server.WaitAssertion(() =>
@@ -117,7 +117,7 @@ public sealed class WolfmedWoundOverlayTest : GameTest
     [Test]
     public async Task RotOverlayTest()
     {
-        var map = await Pair.CreateTestMap();
+        var map = await CreateTestMap();
         EntityUid body = default;
         EntityUid wound = default;
 
@@ -194,7 +194,7 @@ public sealed class WolfmedWoundOverlayTest : GameTest
     [Test]
     public async Task ArteryOverlayTest()
     {
-        var map = await Pair.CreateTestMap();
+        var map = await CreateTestMap();
         EntityUid body = default;
         EntityUid head = default;
 
@@ -367,7 +367,7 @@ public sealed class WolfmedWoundOverlayTest : GameTest
     [Test]
     public async Task StumpOverlayTest()
     {
-        var map = await Pair.CreateTestMap();
+        var map = await CreateTestMap();
         EntityUid body = default;
 
         await Server.WaitAssertion(() =>
