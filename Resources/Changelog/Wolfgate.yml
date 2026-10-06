@@ -1192,3 +1192,12 @@ Entries:
   id: 100088
   time: '2026-10-06T06:59:48.0000000+00:00'
   url: https://github.com/VanguardControl/Wolfgate/pull/170
+- author: Gandalf2k15
+  changes:
+    - type: Add
+      message: >-
+        You can now set your character to use digitigrade or plantigrade legs if
+        it supports it and doesn't already have a snowflake leg set.
+  id: 100089
+  time: '2026-10-06T19:28:48.0000000+00:00'
+  url: https://github.com/VanguardControl/Wolfgate/pull/171
