@@ -1172,3 +1172,12 @@ Entries:
   id: 100086
   time: '2026-10-06T03:06:57.0000000+00:00'
   url: https://github.com/VanguardControl/Wolfgate/pull/169
+- author: Erol509
+  changes:
+    - type: Add
+      message: >-
+        Change various sprites for tiles, cryo tubes, hellfire freezers,
+        hydroponics and gas overlays.
+  id: 100087
+  time: '2026-10-06T06:53:50.0000000+00:00'
+  url: https://github.com/VanguardControl/Wolfgate/pull/162
