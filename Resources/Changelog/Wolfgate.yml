@@ -1181,3 +1181,14 @@ Entries:
   id: 100087
   time: '2026-10-06T06:53:50.0000000+00:00'
   url: https://github.com/VanguardControl/Wolfgate/pull/162
+- author: Gandalf2k15
+  changes:
+    - type: Fix
+      message: >-
+        Faxing leopard, cecropia, lunar or rosy mothroaches no longer shows a
+        missing sprite.
+    - type: Tweak
+      message: Conveyor and fax machine menu icons use the new sprites.
+  id: 100088
+  time: '2026-10-06T06:59:48.0000000+00:00'
+  url: https://github.com/VanguardControl/Wolfgate/pull/170
