@@ -172,8 +172,7 @@ public sealed class WolfmedGoreSystem : EntitySystem
         // blood goes (Wolfmed's splats and gibs, BloodTrail's prints), so a spilled cup never washes a mapper's paint.
         if (TryComp(gridUid, out DecalGridComponent? decalGrid))
         {
-            var bounds = _lookup.GetLocalBounds(tile, grid.TileSize).Enlarged(0.5f).Translated(new Vector2(-0.5f, -0.5f));
-            foreach (var (index, decal) in _decals.GetDecalsIntersecting(gridUid, bounds, decalGrid).ToList())
+            foreach (var (index, decal) in _decals.GetDecalsIntersecting(gridUid, WashBounds(tile, grid), decalGrid).ToList())
             {
                 if (!decal.Cleanable || !IsBloodDecal(decal.Id) || spent + DecalCleanCost > budget)
                     continue;
@@ -184,6 +183,27 @@ public sealed class WolfmedGoreSystem : EntitySystem
         }
 
         return spent;
+    }
+
+    /// <summary>Whether a wash of this tile would find a blood decal to take.</summary>
+    public bool HasBloodDecals(EntityUid gridUid, MapGridComponent grid, Vector2i tile)
+    {
+        if (!TryComp(gridUid, out DecalGridComponent? decalGrid))
+            return false;
+
+        foreach (var (_, decal) in _decals.GetDecalsIntersecting(gridUid, WashBounds(tile, grid), decalGrid))
+        {
+            if (decal.Cleanable && IsBloodDecal(decal.Id))
+                return true;
+        }
+
+        return false;
+    }
+
+    /// <summary>The reach of one wash: the tile and half a tile around it, as CleanDecalsReaction has it.</summary>
+    private Box2 WashBounds(Vector2i tile, MapGridComponent grid)
+    {
+        return _lookup.GetLocalBounds(tile, grid.TileSize).Enlarged(0.5f).Translated(new Vector2(-0.5f, -0.5f));
     }
 
     /// <summary>Every decal Wolfmed leaves starts with this: the floor splats and the gibs.</summary>

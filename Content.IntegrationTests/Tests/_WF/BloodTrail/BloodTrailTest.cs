@@ -7,12 +7,16 @@ using Content.Server.Body.Systems;
 using Content.Server.Decals;
 using Content.Server.Fluids.EntitySystems;
 using Content.Shared.Chemistry.Components;
+using Content.Shared.Chemistry.EntitySystems;
 using Content.Shared.Chemistry.Reagent;
 using Content.Shared.FixedPoint;
+using Content.Shared.Fluids;
 using Content.Shared.Gravity;
+using Content.Shared.Interaction;
 using Content.Shared.Mobs;
 using Content.Shared.Mobs.Systems;
 using Content.Shared.Standing;
+using Content.Shared.Timing;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Map;
 using Robust.Shared.Map.Components;
@@ -33,6 +37,8 @@ public sealed class BloodTrailTest
     private const string Human = "MobHuman";
     private const int Row = 12;
     private const string Paint = "Dirt";
+    private const string Mop = "MopItem";
+    private const string Water = "Water";
     private static readonly Box2 Floor = new(-1, -1, Row + 1, 2);
 
     public enum Posture
@@ -231,6 +237,63 @@ public sealed class BloodTrailTest
             {
                 Assert.That(after.Where(id => id.StartsWith(FootPrintsSystem.DecalPrefix)), Is.Empty);
                 Assert.That(after.Contains(Paint), Is.EqualTo(paintStays));
+            });
+        });
+
+        await pair.CleanReturnAsync();
+    }
+
+    /// <summary>
+    /// The prints lie where there is no puddle to mop, so a wet mop used on the bare floor takes them off. A dry
+    /// one does not, and other decals stay.
+    /// </summary>
+    [Test]
+    public async Task MopWashesPrintsOffBareFloor()
+    {
+        await using var pair = await PoolManager.GetServerClient(new PoolSettings { Connected = false });
+        var server = pair.Server;
+        var map = await pair.CreateTestMap();
+        var entMan = server.EntMan;
+        var xformSys = entMan.System<SharedTransformSystem>();
+        var decals = entMan.System<DecalSystem>();
+        var interaction = entMan.System<SharedInteractionSystem>();
+        var solutions = entMan.System<SharedSolutionContainerSystem>();
+
+        await server.WaitAssertion(() =>
+        {
+            var human = SpawnOnFloor(entMan, map);
+            entMan.System<FootPrintsSystem>().Stain(human, Color.Red);
+            for (var i = 1; i <= 6; i++)
+                xformSys.SetLocalPosition(human, new Vector2(0.5f + i * 0.75f, 0.5f));
+
+            Assert.That(decals.TryAddDecal(Paint, new EntityCoordinates(map.Grid, 2, 0), out _, cleanable: true), Is.True);
+
+            var mop = entMan.SpawnEntity(Mop, new EntityCoordinates(map.Grid, 0.5f, 0.5f));
+            entMan.RemoveComponent<UseDelayComponent>(mop);
+            Assert.That(solutions.TryGetSolution(mop, AbsorbentComponent.SolutionName, out var soln, out var solution), Is.True);
+            Assert.That(solution!.Volume, Is.EqualTo(FixedPoint2.Zero), "the mop no longer starts dry.");
+
+            List<string> Placed() => decals.GetDecalsIntersecting(map.Grid, Floor).Select(entry => entry.Decal.Id).ToList();
+            int Prints() => Placed().Count(id => id.StartsWith(FootPrintsSystem.DecalPrefix));
+
+            void MopRow()
+            {
+                for (var x = 0; x < Row; x++)
+                    interaction.InteractDoAfter(human, mop, null, new EntityCoordinates(map.Grid, x + 0.5f, 0.5f), true);
+            }
+
+            Assert.That(Prints(), Is.EqualTo(6));
+            MopRow();
+            Assert.That(Prints(), Is.EqualTo(6), "A dry mop washed the floor.");
+
+            Assert.That(solutions.TryAddReagent(soln!.Value, Water, 20), Is.True);
+            MopRow();
+            Assert.Multiple(() =>
+            {
+                Assert.That(Prints(), Is.Zero);
+                Assert.That(Placed(), Does.Contain(Paint));
+                Assert.That(solution.Volume, Is.LessThan(FixedPoint2.New(20)).And.GreaterThan(FixedPoint2.New(15)),
+                    "Washing should cost the mop a little water.");
             });
         });
 

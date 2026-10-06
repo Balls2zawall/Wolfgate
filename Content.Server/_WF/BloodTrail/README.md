@@ -4,11 +4,13 @@ Blood footprints and drag trails, ported from Colonial Marines Universe's decal 
 puddle on the floor is stained with its color and leaves prints as it moves until the stain runs out: footprints while
 walking (bare, shoe or pressure suit), drag marks while crawling, lying down or being hauled around critical or dead. A
 bleeding body stains itself from the puddles it spills, so dragging or crawling with a wound leaves a trail. The prints
-are cleanable decals: space cleaner removes them, and so does a mop's water, through Wolfmed's blood wash.
+are cleanable decals: space cleaner removes them, and so does a mop's water, through Wolfmed's blood wash. A wet mop
+used on the bare floor washes that tile, since the prints lie where there is no puddle to mop.
 
 Entry points: `PuddleFootPrintsSystem` stains any mob that starts touching a puddle, and `FootPrintsSystem` places the
 decals from the mob's `MoveEvent`. `FootPrintsSystem.Stain` is the way in for anything else that should leave a trail.
 Nothing is added to a prototype: `FootPrintsComponent` is given to a mob the first time it is stained.
+`AbsorbentSystem.TryMopFloor`, a partial hooked into the mop's `AfterInteractEvent`, is the bare-floor wash.
 
 Differences from CMU: a mob lying down or crawling counts as dragged, shoes and pressure suits pick their own print,
 only humanoids leave footprints (other mobs leave drag marks), a floating mob neither stains nor prints, a puddle
@@ -21,6 +23,7 @@ stains again on every visit and is not drained, and a spot holds at most `MaxPri
 
 ### Server
 
+- [`Content.Server/_WF/BloodTrail/AbsorbentSystem.BloodTrail.cs`](AbsorbentSystem.BloodTrail.cs)
 - [`Content.Server/_WF/BloodTrail/FootPrintsComponent.cs`](FootPrintsComponent.cs)
 - [`Content.Server/_WF/BloodTrail/FootPrintsSystem.cs`](FootPrintsSystem.cs)
 - [`Content.Server/_WF/BloodTrail/PuddleFootPrintsSystem.cs`](PuddleFootPrintsSystem.cs)
@@ -39,6 +42,6 @@ stains again on every visit and is not drained, and a spot holds at most `MaxPri
 
 ## Non-modular edits
 
-None.
+- [`Content.Server/Fluids/EntitySystems/AbsorbentSystem.cs`](../../Fluids/EntitySystems/AbsorbentSystem.cs): a mop used on bare floor washes the blood decals off the tile
 
 <!-- WOLFGATE-GENERATED END -->
