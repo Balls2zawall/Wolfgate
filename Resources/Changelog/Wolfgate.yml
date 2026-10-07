@@ -1238,3 +1238,14 @@ Entries:
   id: 100092
   time: '2026-10-07T19:53:03.0000000+00:00'
   url: https://github.com/VanguardControl/Wolfgate/pull/172
+- author: Gandalf2k15
+  changes:
+    - type: Add
+      message: Engineer NPC.
+    - type: Fix
+      message: USSP now patrols properly
+    - type: Fix
+      message: Things should despawn less.
+  id: 100093
+  time: '2026-10-07T22:31:26.0000000+00:00'
+  url: https://github.com/VanguardControl/Wolfgate/pull/178
