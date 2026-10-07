@@ -1212,3 +1212,22 @@ Entries:
   id: 100090
   time: '2026-10-07T06:05:25.0000000+00:00'
   url: https://github.com/VanguardControl/Wolfgate/pull/175
+- author: Gandalf2k15
+  changes:
+    - type: Add
+      message: >-
+        NPC-crewed ships: patrols, freighters, pirates, traders and fleet
+        battles now roam the sector as random encounters.
+    - type: Add
+      message: >-
+        Faction patrols warn ships of enemy companies off their zones and fire
+        on those that come too close or shoot at them.
+    - type: Add
+      message: >-
+        Derelict hulks held by space dwellers can be cleared and claimed as your
+        own ship.
+    - type: Add
+      message: Wandering traders with randomised stock.
+  id: 100091
+  time: '2026-10-07T19:49:45.0000000+00:00'
+  url: https://github.com/VanguardControl/Wolfgate/pull/155
