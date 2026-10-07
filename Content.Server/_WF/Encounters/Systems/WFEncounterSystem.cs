@@ -9,6 +9,7 @@ using Content.Server.NPC.Components;
 using Content.Server.NPC.Systems;
 using Content.Server.Radio.EntitySystems;
 using Content.Server.StationEvents.Events;
+using Content.Server.Worldgen.Components;
 using Content.Shared._NF.Shipyard.Prototypes;
 using Content.Shared._WF.CCVar;
 using Content.Shared._WF.Encounters;
@@ -40,6 +41,7 @@ public sealed partial class WFEncounterSystem : EntitySystem
     [Dependency] private IConfigurationManager _config = default!;
     [Dependency] private AdminVesselSpawnSystem _vessels = default!;
     [Dependency] private WFCrewSetupSystem _setup = default!;
+    [Dependency] private WFCrewWorkSystem _work = default!;
     [Dependency] private WFCrewObjectiveSystem _objectives = default!;
     [Dependency] private WFCrewPlannerSystem _planner = default!;
     [Dependency] private WFCrewShipStatusSystem _status = default!;
@@ -560,6 +562,7 @@ public sealed partial class WFEncounterSystem : EntitySystem
         var marker = AddComp<WFEncounterGridComponent>(grid);
         marker.Encounter = encounter;
         marker.Key = ship.Key;
+        Unload(grid);
 
         var name = Loc.GetString("wf-encounter-ship-name", ("vessel", vessel.Name), ("designation", designation));
         _meta.SetEntityName(grid, name);
@@ -636,6 +639,20 @@ public sealed partial class WFEncounterSystem : EntitySystem
         if (ship.Deckhands <= 0)
             posts.RemoveAll(post => post.Role == WFCrewRoles.Deckhand.Id);
 
+        // An engineer keeps the plant fuelled from the stores, where the ship's roles allow one: posted beside the plant,
+        // or failing a safe tile there, in a deckhand's place or alongside the last of the crew.
+        var engineer = false;
+        if (ship.Engineer && (ship.Roles.Count == 0 || ship.Roles.Any(role => role == WFCrewRoles.Engineer)) && _work.HasPlant(grid))
+        {
+            if (_work.TryFindPost(grid, out var plant))
+                posts.Add(new WFCrewSetupPost { Role = WFCrewRoles.Engineer.Id, Position = plant.Position });
+            else if (posts.FindLastIndex(post => post.Role == WFCrewRoles.Deckhand.Id) is var hand && hand >= 0)
+                posts[hand].Role = WFCrewRoles.Engineer.Id;
+            else if (posts.Count > 0)
+                posts.Add(new WFCrewSetupPost { Role = WFCrewRoles.Engineer.Id, Position = posts[^1].Position });
+            engineer = posts.Any(post => post.Role == WFCrewRoles.Engineer.Id);
+        }
+
         // A skill set on the ship is the crew's; left unset, each takes one from the profile's pool.
         if (posts.Count == 0 || !_setup.TrySpawn(grid, posts, mission, ship.Skill == null, out _))
             return false;
@@ -646,7 +663,16 @@ public sealed partial class WFEncounterSystem : EntitySystem
             ? (_random.Prob(0.5f) ? WFEncounterStranding.Fuel : WFEncounterStranding.Thrusters)
             : ship.Stranded;
         if (state.Stranding != WFEncounterStranding.Fuel)
+        {
+            // The crew arrive on a running ship: plant fuelled and lit, batteries charged, and fuel for the trip stowed
+            // for the engineer. From here the plant burns what it has; nobody tops it up but him, from those stores.
             _power.SetPower(true, grid, false);
+            _work.Commission(grid);
+            if (engineer)
+                _work.StockFuel(grid);
+        }
+        // A fighter with nobody to post by the plant keeps itself fuelled instead.
+        state.AutoRefuel = !engineer;
         if (state.Stranding != WFEncounterStranding.None)
             LeaveStranded(grid, state.Stranding);
         state.NextPower = _timing.CurTime + PowerInterval;
@@ -664,6 +690,27 @@ public sealed partial class WFEncounterSystem : EntitySystem
         }
 
         return true;
+    }
+
+    /// <summary>
+    /// Strips the world loaders from a ship's consoles. A helm or gunnery console generates the world for 700 m around
+    /// it, meant for a crew of players; a crew of NPCs would seed asteroid fields and drones wherever it wandered, for
+    /// the cleanup to sweep away again. Players bring the world with them when they come to look.
+    /// </summary>
+    private void Unload(EntityUid grid)
+    {
+        var loaders = new List<EntityUid>();
+        var query = EntityQueryEnumerator<WorldLoaderComponent, TransformComponent>();
+        while (query.MoveNext(out var uid, out _, out var xform))
+        {
+            if (xform.GridUid == grid)
+                loaders.Add(uid);
+        }
+
+        foreach (var uid in loaders)
+        {
+            RemComp<WorldLoaderComponent>(uid);
+        }
     }
 
     private string PlaceName(EntityUid? place)
@@ -870,6 +917,9 @@ public sealed partial class WFEncounterSystem : EntitySystem
             if (HoldsForVisitors(ship) && ship.HasOrders)
                 Serve(ship);
 
+            if (ship.AutoRefuel && !IsStranded(ship) && HasLivingCrew(ship))
+                _work.Refuel(ship.Grid);
+
             var adrift = _status.IsAdrift(ship.Grid);
             if (IsStranded(ship))
             {
@@ -878,23 +928,10 @@ public sealed partial class WFEncounterSystem : EntitySystem
                     Rescue(encounter, key, ship);
             }
 
-            if (IsStranded(ship) && ship.Stranding == WFEncounterStranding.Thrusters && now >= ship.NextPower
-                && HasLivingCrew(ship))
-            {
-                ship.NextPower = now + PowerInterval;
-                _power.SetPower(true, ship.Grid, false);
-            }
-
             var fighting = _alerts.IsAlerted(ship.Grid, ship.Group);
             if (!adrift || fighting)
             {
                 ship.AdriftSince = null;
-                if (!fighting && !IsStranded(ship) && now >= ship.NextPower && HasLivingCrew(ship))
-                {
-                    ship.NextPower = now + PowerInterval;
-                    _power.SetPower(true, ship.Grid, false);
-                }
-
                 continue;
             }
 
@@ -1104,8 +1141,9 @@ public sealed partial class WFEncounterSystem : EntitySystem
 
             if (encounter.JumpAt is { } jump)
             {
-                // A ship with passengers waits a while for the customers aboard or docked with it.
-                if (now >= jump && (overdue || !HoldsForVisitors(ship) || !PlayersAboard(ship.Grid)))
+                // A ship jumps out only once nobody is aboard or docked with it: a trader waits for its customers, and
+                // no hull vanishes from under a player who is working on it.
+                if (now >= jump && !PlayersAboard(ship.Grid))
                     RemoveShip(ship);
                 else
                     remaining = true;
