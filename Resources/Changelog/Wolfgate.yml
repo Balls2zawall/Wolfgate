@@ -1249,3 +1249,12 @@ Entries:
   id: 100093
   time: '2026-10-07T22:31:26.0000000+00:00'
   url: https://github.com/VanguardControl/Wolfgate/pull/178
+- author: Gandalf2k15
+  changes:
+    - type: Add
+      message: >-
+        You can now make custom animated markings to your character, abuse of
+        the system will lead to your removal.
+  id: 100094
+  time: '2026-10-08T20:45:50.0000000+00:00'
+  url: https://github.com/VanguardControl/Wolfgate/pull/179
