@@ -1258,3 +1258,10 @@ Entries:
   id: 100094
   time: '2026-10-08T20:45:50.0000000+00:00'
   url: https://github.com/VanguardControl/Wolfgate/pull/179
+- author: Gandalf2k15
+  changes:
+    - type: Add
+      message: A camera pan view!
+  id: 100095
+  time: '2026-10-09T00:52:23.0000000+00:00'
+  url: https://github.com/VanguardControl/Wolfgate/pull/183
