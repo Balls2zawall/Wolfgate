@@ -1337,3 +1337,10 @@ Entries:
   id: 100103
   time: '2026-10-09T18:34:35.0000000+00:00'
   url: https://github.com/VanguardControl/Wolfgate/pull/198
+- author: Gandalf2k15
+  changes:
+    - type: Add
+      message: A new loadout screen!
+  id: 100104
+  time: '2026-10-09T20:56:53.0000000+00:00'
+  url: https://github.com/VanguardControl/Wolfgate/pull/199
