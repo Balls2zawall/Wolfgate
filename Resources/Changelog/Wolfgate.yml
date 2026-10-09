@@ -1303,3 +1303,10 @@ Entries:
   id: 100099
   time: '2026-10-09T15:05:17.0000000+00:00'
   url: https://github.com/VanguardControl/Wolfgate/pull/194
+- author: Happyowl93
+  changes:
+    - type: Add
+      message: Adds ASF faction
+  id: 100100
+  time: '2026-10-09T15:45:20.0000000+00:00'
+  url: https://github.com/VanguardControl/Wolfgate/pull/168
