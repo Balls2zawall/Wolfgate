@@ -1310,3 +1310,16 @@ Entries:
   id: 100100
   time: '2026-10-09T15:45:20.0000000+00:00'
   url: https://github.com/VanguardControl/Wolfgate/pull/168
+- author: Gandalf2k15
+  changes:
+    - type: Add
+      message: >-
+        Added a wide, rounded hyperspace distortion cone with compact white
+        particles around departing and arriving ships.
+    - type: Tweak
+      message: >-
+        Ships now visually rush into and out of hyperspace for outside
+        observers.
+  id: 100101
+  time: '2026-10-09T16:30:16.0000000+00:00'
+  url: https://github.com/VanguardControl/Wolfgate/pull/195
