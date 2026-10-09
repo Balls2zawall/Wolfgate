@@ -1285,3 +1285,14 @@ Entries:
   id: 100097
   time: '2026-10-09T04:40:37.0000000+00:00'
   url: https://github.com/VanguardControl/Wolfgate/pull/191
+- author: Erol509
+  changes:
+    - type: Add
+      message: Avali has new organ sprites, and they are now uniqure
+    - type: Add
+      message: Avali limbs can now be printed at the biogenerator
+    - type: Add
+      message: Avali can now get hydration from drinking ammonia.
+  id: 100098
+  time: '2026-10-09T05:36:26.0000000+00:00'
+  url: https://github.com/VanguardControl/Wolfgate/pull/181
