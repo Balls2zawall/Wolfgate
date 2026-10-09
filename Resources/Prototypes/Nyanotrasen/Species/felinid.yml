@@ -1,7 +1,7 @@
 - type: species
   id: Felinid
   name: species-name-felinid
-  roundStart: true # WOLFGATE(felinids) mrrow
+  roundStart: true # WOLFGATE(felinids): mrrow
   prototype: MobFelinid
   sprites: MobHumanSprites
   markingLimits: MobFelinidMarkingLimits
