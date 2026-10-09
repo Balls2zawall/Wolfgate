@@ -1323,3 +1323,10 @@ Entries:
   id: 100101
   time: '2026-10-09T16:30:16.0000000+00:00'
   url: https://github.com/VanguardControl/Wolfgate/pull/195
+- author: Gandalf2k15
+  changes:
+    - type: Tweak
+      message: Players an NPC's are no longer visible in ship pan view.
+  id: 100102
+  time: '2026-10-09T17:06:45.0000000+00:00'
+  url: https://github.com/VanguardControl/Wolfgate/pull/196
