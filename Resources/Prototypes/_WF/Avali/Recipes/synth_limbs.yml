@@ -1,64 +1,62 @@
-# WOLFGATE(AvaliAddons) START: Bio-synthetic Avali body parts
 - type: latheRecipe
-  id: SynthHeadAvaliEmpty
-  result: BioSynthAvaliHeadEmpty
+  id: WFSynthAvaliHeadEmpty
+  result: WFBioSynthAvaliHeadEmpty
   completetime: 10
   materials:
     Biomass: 5
 
 - type: latheRecipe
-  id: SynthAvaliLeftArm
-  result: BioSynthAvaliLeftArm
+  id: WFSynthAvaliLeftArm
+  result: WFBioSynthAvaliLeftArm
   completetime: 5
   materials:
     Biomass: 7
 
 - type: latheRecipe
-  id: SynthAvaliLeftHand
-  result: BioSynthAvaliLeftHand
+  id: WFSynthAvaliLeftHand
+  result: WFBioSynthAvaliLeftHand
   completetime: 5
   materials:
     Biomass: 3
 
 - type: latheRecipe
-  id: SynthAvaliRightArm
-  result: BioSynthAvaliRightArm
+  id: WFSynthAvaliRightArm
+  result: WFBioSynthAvaliRightArm
   completetime: 5
   materials:
     Biomass: 7
 
 - type: latheRecipe
-  id: SynthAvaliRightHand
-  result: BioSynthAvaliRightHand
+  id: WFSynthAvaliRightHand
+  result: WFBioSynthAvaliRightHand
   completetime: 5
   materials:
     Biomass: 3
 
 - type: latheRecipe
-  id: SynthAvaliLeftLeg
-  result: BioSynthAvaliLeftLeg
+  id: WFSynthAvaliLeftLeg
+  result: WFBioSynthAvaliLeftLeg
   completetime: 5
   materials:
     Biomass: 7
 
 - type: latheRecipe
-  id: SynthAvaliRightLeg
-  result: BioSynthAvaliRightLeg
+  id: WFSynthAvaliRightLeg
+  result: WFBioSynthAvaliRightLeg
   completetime: 5
   materials:
     Biomass: 7
 
 - type: latheRecipe
-  id: SynthAvaliLeftFoot
-  result: BioSynthAvaliLeftFoot
+  id: WFSynthAvaliLeftFoot
+  result: WFBioSynthAvaliLeftFoot
   completetime: 5
   materials:
     Biomass: 3
 
 - type: latheRecipe
-  id: SynthAvaliRightFoot
-  result: BioSynthAvaliRightFoot
+  id: WFSynthAvaliRightFoot
+  result: WFBioSynthAvaliRightFoot
   completetime: 5
   materials:
     Biomass: 3
-# WOLFGATE END

@@ -730,3 +730,17 @@ ClothingOuterHardsuitMercenaryWarlord: ClothingOuterHardsuitWarlord
 ClothingHelmetHardsuitMercenaryWarlord: ClothingHelmetHardsuitWarlord
 # WOLFGATE END
 
+
+# WOLFGATE(Avali) START: WF prefix on the Avali brain and bio-synthetic limbs
+# 2026-10-09
+OrganAvaliBrain: WFOrganAvaliBrain
+BioSynthAvaliHeadEmpty: WFBioSynthAvaliHeadEmpty
+BioSynthAvaliLeftArm: WFBioSynthAvaliLeftArm
+BioSynthAvaliRightArm: WFBioSynthAvaliRightArm
+BioSynthAvaliLeftHand: WFBioSynthAvaliLeftHand
+BioSynthAvaliRightHand: WFBioSynthAvaliRightHand
+BioSynthAvaliLeftLeg: WFBioSynthAvaliLeftLeg
+BioSynthAvaliRightLeg: WFBioSynthAvaliRightLeg
+BioSynthAvaliLeftFoot: WFBioSynthAvaliLeftFoot
+BioSynthAvaliRightFoot: WFBioSynthAvaliRightFoot
+# WOLFGATE END
