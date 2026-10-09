@@ -1265,3 +1265,12 @@ Entries:
   id: 100095
   time: '2026-10-09T00:52:23.0000000+00:00'
   url: https://github.com/VanguardControl/Wolfgate/pull/183
+- author: Balls2zawall
+  changes:
+    - type: Add
+      message: >-
+        Added Felinids back to the character creator species roster, rejoice!
+        or... meow or something.
+  id: 100096
+  time: '2026-10-09T04:23:00.0000000+00:00'
+  url: https://github.com/VanguardControl/Wolfgate/pull/189
