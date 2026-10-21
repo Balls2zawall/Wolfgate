@@ -2617,3 +2617,10 @@ Entries:
   id: 100192
   time: '2026-10-21T18:59:14.0000000+00:00'
   url: https://github.com/VanguardControl/Wolfgate/pull/313
+- author: Gandalf2k15
+  changes:
+    - type: Fix
+      message: Cockpit panning should be less buggy.
+  id: 100193
+  time: '2026-10-21T18:59:58.0000000+00:00'
+  url: https://github.com/VanguardControl/Wolfgate/pull/314
