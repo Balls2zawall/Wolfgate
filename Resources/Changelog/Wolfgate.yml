@@ -2608,3 +2608,12 @@ Entries:
   id: 100191
   time: '2026-10-21T18:54:51.0000000+00:00'
   url: https://github.com/VanguardControl/Wolfgate/pull/310
+- author: Gandalf2k15
+  changes:
+    - type: Tweak
+      message: >-
+        NPC ship gunners hold fire rather than shoot through a friendly or
+        neutral ship in the way. The Reavers don't care and fire anyway.
+  id: 100192
+  time: '2026-10-21T18:59:14.0000000+00:00'
+  url: https://github.com/VanguardControl/Wolfgate/pull/313
