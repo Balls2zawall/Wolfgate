@@ -2601,3 +2601,10 @@ Entries:
   id: 100190
   time: '2026-10-21T18:43:19.0000000+00:00'
   url: https://github.com/VanguardControl/Wolfgate/pull/311
+- author: TheSlapper
+  changes:
+    - type: Add
+      message: Various mapping assets.
+  id: 100191
+  time: '2026-10-21T18:54:51.0000000+00:00'
+  url: https://github.com/VanguardControl/Wolfgate/pull/310
