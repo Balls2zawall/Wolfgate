@@ -644,6 +644,7 @@ public sealed partial class WFEncounterSystem : EntitySystem
             AttackRange = ship.AttackRange,
             ZoneLines = ship.ZoneLines,
             ZoneTargets = ship.ZoneTargets,
+            KnownThreatsOnly = ship.KnownThreatsOnly,
             Icon = ship.Icon,
             Hunt = ship.Hunt || ship.Extort != null,
             Extort = ship.Extort is { } extort ? NewExtort(extort) : null,

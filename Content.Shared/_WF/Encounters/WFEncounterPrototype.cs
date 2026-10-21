@@ -226,6 +226,13 @@ public sealed partial class WFEncounterShip
     [DataField]
     public WFEncounterZoneTargets ZoneTargets = WFEncounterZoneTargets.Everyone;
 
+    /// <summary>
+    /// Takes on only known threats: a player ship running with its IFF hidden or unlabelled is not warned or fired on
+    /// as an unknown, only answered once it fires.
+    /// </summary>
+    [DataField]
+    public bool KnownThreatsOnly;
+
     /// <summary>Player ships of another company inside this range are told over the radio to turn away.</summary>
     [DataField]
     public float WarnRange;

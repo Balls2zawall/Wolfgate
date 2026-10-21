@@ -13,6 +13,9 @@ which flies back to its orbit once the drone is down or gone; Caelestinus itself
 warned or fired on, and a player vessel may land 40 stray ship hits in 30 s on one (`strayHits` on
 `WFCrewProfileJudge`) before it is answered.
 
+They mind known threats only (`knownThreatsOnly` on the encounter ship): a player ship with its IFF hidden or
+unlabelled is not warned off or fired on as an unknown, as other patrols do, only answered once it fires on them.
+
 The patrol encounters show in the admin encounter window and `wf_encounter list` like any other; ending one there
 starts its respawn timer.
 
@@ -32,6 +35,7 @@ starts its respawn timer.
 ### Integration tests
 
 - [`Content.IntegrationTests/Tests/_WF/JudgePatrol/WFCrewTest.JudgeStrays.cs`](../../../Content.IntegrationTests/Tests/_WF/JudgePatrol/WFCrewTest.JudgeStrays.cs)
+- [`Content.IntegrationTests/Tests/_WF/JudgePatrol/WFEncounterTest.KnownThreats.cs`](../../../Content.IntegrationTests/Tests/_WF/JudgePatrol/WFEncounterTest.KnownThreats.cs)
 - [`Content.IntegrationTests/Tests/_WF/JudgePatrol/WFEncounterTest.StationPatrol.cs`](../../../Content.IntegrationTests/Tests/_WF/JudgePatrol/WFEncounterTest.StationPatrol.cs)
 
 ### Prototypes

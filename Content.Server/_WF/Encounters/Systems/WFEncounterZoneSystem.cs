@@ -432,6 +432,14 @@ public sealed partial class WFEncounterZoneSystem : EntitySystem
             // told to show himself and shot across the bows in the warning zone, and fired on in the attack zone. With
             // it on, a patrol only minds its faction's enemies.
             var masked = IffMasked(intruder);
+            // A ship minding only known threats leaves a player hull running dark alone; its fire is still answered.
+            if (masked && ship.KnownThreatsOnly)
+            {
+                Release(encounter, ship, intruder);
+                _alerts.EndZoneWarning(ship.Grid, intruder);
+                continue;
+            }
+
             // A civilian ship showing its IFF is never a navy patrol's target, whichever navy its faction is at war with.
             // A zone that warns everyone off, like the USSP remnant's, still does.
             if (!masked && ship.ZoneTargets == WFEncounterZoneTargets.AtWar && IsCivilian(crewed))
