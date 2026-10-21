@@ -2594,3 +2594,10 @@ Entries:
   id: 100189
   time: '2026-10-21T07:08:18.0000000+00:00'
   url: https://github.com/VanguardControl/Wolfgate/pull/309
+- author: Gandalf2k15
+  changes:
+    - type: Tweak
+      message: Encounter ships no longer get adamantium hulls.
+  id: 100190
+  time: '2026-10-21T18:43:19.0000000+00:00'
+  url: https://github.com/VanguardControl/Wolfgate/pull/311
