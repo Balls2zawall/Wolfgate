@@ -2728,3 +2728,10 @@ Entries:
   id: 100195
   time: '2026-10-21T21:11:30.0000000+00:00'
   url: https://github.com/VanguardControl/Wolfgate/pull/301
+- author: Gandalf2k15
+  changes:
+    - type: Tweak
+      message: EMP's no longer affect shuttle consoles.
+  id: 100196
+  time: '2026-10-21T22:33:08.0000000+00:00'
+  url: https://github.com/VanguardControl/Wolfgate/pull/298
