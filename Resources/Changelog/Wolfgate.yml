@@ -2836,3 +2836,20 @@ Entries:
   id: 100203
   time: '2026-10-22T21:19:54.0000000+00:00'
   url: https://github.com/VanguardControl/Wolfgate/pull/327
+- author: Gandalf2k15
+  changes:
+    - type: Fix
+      message: >-
+        You no longer get unbuckled the moment you sit in a chair placed next to
+        a table, wall or another chair.
+    - type: Fix
+      message: Bunk beds keep both sleepers buckled in.
+    - type: Fix
+      message: Wall handrails hold you instead of dropping you instantly.
+    - type: Tweak
+      message: >-
+        The pilot seat turns toward wherever you click while you're sitting in
+        it.
+  id: 100204
+  time: '2026-10-22T21:45:20.0000000+00:00'
+  url: https://github.com/VanguardControl/Wolfgate/pull/322
