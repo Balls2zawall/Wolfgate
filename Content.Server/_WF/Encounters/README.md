@@ -45,8 +45,11 @@ orders aimed at it. A real ship nobody has boarded, docked with or fought, with 
 to simulation after `dematerialize_delay` with every player past `dematerialize_range`. Spawns and despawns are queued
 and run one per `materialize_interval`. Simulated docking (`DockedTo`, `RedockTo`, `AreDocked`) carries over both ways,
 and a ship spawned on top of another is moved clear. Two simulated ships where one is ordered to attack the other
-fight it out by a roll (`duel_mean_seconds`, weighted by hull worth, crew skill and refit). Encounters with a warrant
-are always real, since the warrant names crewmen. Tests run with simulation off (`PoolManager.Cvars.cs`).
+fight it out by a roll (`duel_mean_seconds`, weighted by hull worth, crew skill and refit); each round raises
+`WFEncounterSimulatedHitEvent`, which a Reaver stronghold counts as a hit. A simulated extorter roams and picks its mark
+off the map, then closes on it and is spawned on the way. A crew warrant stands on a simulated ship and marks its crew
+when the hull spawns; a captain warrant names the man, so its encounter is always real. A ship hit by any ship weapon,
+an NPC's included, never goes back to simulation. Tests run with simulation off (`PoolManager.Cvars.cs`).
 
 Pirate and Reaver ships fly by threat tier (`tiers` on a ship: the band with the highest `minTier` at or below the
 tier picks the hulls, crew `skills` and `retrofit`). The tier is the one passed to `TrySpawn`, else the Reaver

@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Numerics;
 using Content.Server._WF.Encounters.Components;
 using Content.Server._WF.Encounters.Systems;
+using Content.Server._WF.NpcCrew;
 using Content.Server._WF.NpcCrew.Components;
 using Content.Server._WF.NpcCrew.Systems;
 using Content.Server.Shuttles.Events;
@@ -58,6 +59,32 @@ public sealed partial class WFEncounterTest
     company: PDV
     objectives:
     - kind: Hold
+
+- type: wfEncounter
+  id: WFTestSimExtorter
+  name: wf-encounter-name-pirates
+  start: Manual
+  lifetime: Persistent
+  bounty:
+    ship: ship
+    target: Crew
+    spesos: 5000
+    title: wf-bounty-title-fugitive-wanted
+    description: wf-bounty-desc-fugitive-wanted
+  ships:
+  - key: ship
+    vessel: WFDredger
+    side: pirates
+    faction: PirateNF
+    company: WFAshfallReavers
+    wander: 2
+    wanderRadius: 800
+    extort:
+      toll: 1000
+      reach: 4000
+      standoff: 300
+      markMin: 2
+      markMax: 3
 ";
 
     /// <summary>Turns simulation on for a test, with quick spawning and going back, and restores it after.</summary>
@@ -265,6 +292,89 @@ public sealed partial class WFEncounterTest
                 encounters.End(host);
                 encounters.End(visitor);
                 MovePlayer(Vector2.Zero);
+            });
+        });
+    }
+
+    /// <summary>
+    /// A simulated extorter roams and picks a player ship off the map as its mark, closes on it as a point, and is
+    /// spawned on the way, its crew then marked on its warrant.
+    /// </summary>
+    [Test]
+    public async Task SimulatedExtortersRoamPickAMarkAndSpawnOnTheWay()
+    {
+        await WithSimulation(async () =>
+        {
+            EntityUid encounter = default, grid = default;
+            EntityUid? board = null;
+            var config = Server.ResolveDependency<IConfigurationManager>();
+            await Server.WaitAssertion(() =>
+            {
+                config.SetCVar(EncountersCVars.MaterializeRange, 700f);
+                board = EnsureBoard();
+                grid = PutPlayerOnGrid(new Vector2(20000, 20000));
+                encounter = SpawnBountyEncounter("WFTestSimExtorter", new Vector2(23000, 20000));
+                Assert.That(Ship(encounter).Virtual, Is.True, "Far from the player, the extorter starts simulated.");
+                Assert.That(SEntMan.HasComponent<WFEncounterBountyComponent>(encounter), Is.True, "Its crew warrant stands while it is simulated.");
+            });
+
+            await Until(() => Ship(encounter).Extort is { Phase: WFExtortPhase.Close } extort && extort.Mark == grid, 20,
+                "Simulated, it picks the player's ship as its mark.");
+            EntityUid? markWhenSpawned = null;
+            var spawnedAt = 0f;
+            await Until(() =>
+            {
+                var ship = Ship(encounter);
+                if (!ship.Virtual)
+                    return true;
+
+                markWhenSpawned = ship.Extort!.Mark;
+                spawnedAt = (Server.System<SharedTransformSystem>().GetWorldPosition(ship.Grid)
+                             - Server.System<SharedTransformSystem>().GetWorldPosition(grid)).Length();
+                return false;
+            }, 120, "It closes on its mark and is spawned on the way.");
+            await Server.WaitAssertion(() =>
+            {
+                // Spawned, it hails at once; the test grid has no console to answer, so what it does next is not this test's.
+                Assert.That(markWhenSpawned, Is.EqualTo(grid), "It held its mark all the way in.");
+                Assert.That(spawnedAt, Is.GreaterThan(300f), "It is spawned before it reaches its standoff.");
+                Assert.That(SEntMan.GetComponent<WFEncounterBountyComponent>(encounter).Crew, Is.Not.Empty, "Its new crew are on the warrant.");
+                Server.System<WFEncounterSystem>().End(encounter);
+                SendPlayerHome(grid);
+                if (board is { } spawned)
+                    SEntMan.DeleteEntity(spawned);
+                config.SetCVar(EncountersCVars.MaterializeRange, EncountersCVars.MaterializeRange.DefaultValue);
+            });
+        });
+    }
+
+    /// <summary>A real ship another ship has shot at stays real when the players leave it: it would come back whole.</summary>
+    [Test]
+    public async Task AShipThatWasShotStaysReal()
+    {
+        await WithSimulation(async () =>
+        {
+            EntityUid encounter = default;
+            var at = new Vector2(30000, -20000);
+            await Server.WaitPost(() =>
+            {
+                MovePlayer(at + new Vector2(0f, 1500f));
+                var prototype = Server.ResolveDependency<IPrototypeManager>().Index<WFEncounterPrototype>("WFTestSimHauler");
+                Assert.That(Server.System<WFEncounterSystem>().TrySpawn(prototype, new MapCoordinates(at, MapData.MapId), out encounter), Is.True);
+            });
+            await Until(() => !Ship(encounter).Virtual, 30, "The hauler near the player is spawned.");
+            await Server.WaitPost(() =>
+            {
+                var hit = new WFCrewHullHitEvent(Ship(encounter).Grid, MapData.Grid);
+                SEntMan.EventBus.RaiseEvent(EventSource.Local, ref hit);
+                MovePlayer(Vector2.Zero);
+            });
+            await RunTicks(60 * 12);
+            await Server.WaitAssertion(() =>
+            {
+                Assert.That(Ship(encounter).Virtual, Is.False, "Shot, it stays real with nobody near.");
+                Assert.That(Ship(encounter).Touched, Is.True);
+                Server.System<WFEncounterSystem>().End(encounter);
             });
         });
     }

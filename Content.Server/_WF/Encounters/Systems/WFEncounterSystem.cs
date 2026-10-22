@@ -357,7 +357,8 @@ public sealed partial class WFEncounterSystem : EntitySystem
             comp.Stops.AddRange(stops);
         _meta.SetEntityName(uid, comp.Name);
         comp.Tier = TierFor(prototype, tier);
-        comp.Simulated = _simulate && prototype.Bounty == null;
+        // A warrant on a captain names him on the board, so his ship is real from the start; one on a crew names the ship.
+        comp.Simulated = _simulate && prototype.Bounty is not { Target: WFEncounterBountyTarget.Captain };
         comp.Threat = prototype.Threat ?? comp.Tier;
 
         WFEncounterManifestPrototype? manifest = null;
@@ -1119,9 +1120,17 @@ public sealed partial class WFEncounterSystem : EntitySystem
         var now = _timing.CurTime;
         foreach (var (key, ship) in encounter.Comp.Ships)
         {
-            // A simulated ship has no crew to tend it; it only flies its orders.
-            if (TerminatingOrDeleted(ship.Grid) || ship.Virtual)
+            if (TerminatingOrDeleted(ship.Grid))
                 continue;
+
+            // A simulated ship has no crew to tend it; it only flies its orders. A simulated extorter still roams and
+            // picks its mark off the map, and is spawned on its way to it, well before it is near enough to hail.
+            if (ship.Virtual)
+            {
+                if (ship.Extort is { Phase: WFExtortPhase.Roam or WFExtortPhase.Close } virtualExtort && encounter.Comp.Begun)
+                    Extort(encounter, key, ship, virtualExtort);
+                continue;
+            }
 
             if (ship.Flees > 0f && encounter.Comp.Begun)
                 Flee(encounter, key, ship);

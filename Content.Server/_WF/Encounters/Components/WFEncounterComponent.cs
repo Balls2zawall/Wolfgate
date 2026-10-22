@@ -63,7 +63,7 @@ public sealed partial class WFEncounterComponent : Component
     [DataField]
     public bool Pinned;
 
-    /// <summary>Whether its ships are simulated while nobody is near. A warrant names crewmen, so its encounter is always real.</summary>
+    /// <summary>Whether its ships are simulated while nobody is near. A warrant on a captain names him, so its encounter is always real.</summary>
     [DataField]
     public bool Simulated;
 
@@ -235,7 +235,7 @@ public sealed partial class WFEncounterShipState
     /// <summary>Since when no player has been near this real ship.</summary>
     public TimeSpan? AloneSince;
 
-    /// <summary>Players have boarded, docked with or fought it: it stays real.</summary>
+    /// <summary>Players have boarded or docked with it, or anyone has shot it: it stays real.</summary>
     [DataField]
     public bool Touched;
 

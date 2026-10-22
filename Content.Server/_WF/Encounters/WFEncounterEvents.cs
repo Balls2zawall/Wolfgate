@@ -28,6 +28,10 @@ public record struct WFEncounterThreatTierEvent(int? Tier);
 [ByRefEvent]
 public readonly record struct WFEncounterShipSpawnedEvent(EntityUid Encounter, string Key, EntityUid Grid);
 
+/// <summary>Raised, by ref and broadcast, each round two simulated ships fight: the victim's stand-in and the attacker's.</summary>
+[ByRefEvent]
+public readonly record struct WFEncounterSimulatedHitEvent(EntityUid Victim, EntityUid Attacker);
+
 /// <summary>Raised, by ref and broadcast, before each marker update goes out; a subscriber may add markers of its own.</summary>
 [ByRefEvent]
 public readonly record struct WFEncounterCollectMarkersEvent(List<WFEncounterMarker> Markers);

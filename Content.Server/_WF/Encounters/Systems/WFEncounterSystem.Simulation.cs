@@ -405,8 +405,15 @@ public sealed partial class WFEncounterSystem
 
             var pair = proxy.Id < target.Id ? (proxy, target) : (target, proxy);
             if (!seen.Add(pair)
-                || (_objectives.ShipCentre(proxy) - _objectives.ShipCentre(target)).LengthSquared() > DuelRange * DuelRange
-                || !_random.Prob(MathF.Min(1f, (float) PollInterval.TotalSeconds / _duelMean)))
+                || (_objectives.ShipCentre(proxy) - _objectives.ShipCentre(target)).LengthSquared() > DuelRange * DuelRange)
+                continue;
+
+            // Each round of the fight lands on both, as hits would: a stronghold under fire answers as it does to real ones.
+            var struck = new WFEncounterSimulatedHitEvent(target, proxy);
+            RaiseLocalEvent(ref struck);
+            var answered = new WFEncounterSimulatedHitEvent(proxy, target);
+            RaiseLocalEvent(ref answered);
+            if (!_random.Prob(MathF.Min(1f, (float) PollInterval.TotalSeconds / _duelMean)))
                 continue;
 
             var mine = Strength(ship);

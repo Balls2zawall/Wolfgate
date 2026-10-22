@@ -25,6 +25,12 @@ public sealed partial class WFReaverCampaignSystem
             ShieldHub(campaign, ev.Encounter, ev.Key);
     }
 
+    /// <summary>A round of a simulated fight on a hub or its reinforcement counts as a hit, as another campaign's real one does.</summary>
+    private void OnSimulatedHit(ref WFEncounterSimulatedHitEvent ev)
+    {
+        RecordCampaignHit(ev.Victim, ev.Attacker);
+    }
+
     /// <summary>A stronghold's rank on the map: the tier it was founded at plus its level, and three stars for the citadel.</summary>
     private static void SetThreat(WFReaverStrongholdComponent stronghold, WFEncounterComponent encounter)
     {

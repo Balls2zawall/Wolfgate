@@ -162,6 +162,7 @@ and counted for the round summary. `wf_reavers respond <q> <r>` sends one by han
 - [`Content.IntegrationTests/Tests/_WF/ReaverCampaign/WFReaverRaidTest.cs`](../../../Content.IntegrationTests/Tests/_WF/ReaverCampaign/WFReaverRaidTest.cs)
 - [`Content.IntegrationTests/Tests/_WF/ReaverCampaign/WFReaverReinforcementTest.cs`](../../../Content.IntegrationTests/Tests/_WF/ReaverCampaign/WFReaverReinforcementTest.cs)
 - [`Content.IntegrationTests/Tests/_WF/ReaverCampaign/WFReaverSanctuaryTest.cs`](../../../Content.IntegrationTests/Tests/_WF/ReaverCampaign/WFReaverSanctuaryTest.cs)
+- [`Content.IntegrationTests/Tests/_WF/ReaverCampaign/WFReaverSimulationTest.cs`](../../../Content.IntegrationTests/Tests/_WF/ReaverCampaign/WFReaverSimulationTest.cs)
 - [`Content.IntegrationTests/Tests/_WF/ReaverCampaign/WFReaverStarvedTest.cs`](../../../Content.IntegrationTests/Tests/_WF/ReaverCampaign/WFReaverStarvedTest.cs)
 - [`Content.IntegrationTests/Tests/_WF/ReaverCampaign/WFReaverStrongholdTest.cs`](../../../Content.IntegrationTests/Tests/_WF/ReaverCampaign/WFReaverStrongholdTest.cs)
 - [`Content.IntegrationTests/Tests/_WF/ReaverCampaign/WFReaverTestBase.cs`](../../../Content.IntegrationTests/Tests/_WF/ReaverCampaign/WFReaverTestBase.cs)
