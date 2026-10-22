@@ -171,7 +171,10 @@ is gone after again. A warrant with `broadcast` set is read out to the whole sec
 fugitives' are, and every PDA carries the bounty board program so the Warrants tab is there to read.
 
 Admins use the Encounters window in the Wolfgate admin tab, or `wf_encounter list | spawn <prototype> [distance] |
-end <encounter> | schedule | pause | resume`. Other code calls `WFEncounterSystem.TrySpawn`, `Resolve`, `End` and
+end <encounter> | schedule | pause | resume`. The window's Running tab lists the encounters beside the one picked, with
+its ships (simulated, spawning or spawned) and an order panel: pick a ship, an order and, where it needs one, a player
+ship, and `WFEncounterSystem.AdminOrder` has it extort or board that ship, attack or follow it, come to the admin, hold,
+resume its own orders, spawn its hull now, or send the encounter away. The Start and Scheduler tabs hold the rest. Other code calls `WFEncounterSystem.TrySpawn`, `Resolve`, `End` and
 `Reveal` and listens for `WFEncounterStartedEvent` and `WFEncounterResolvedEvent`.
 
 Systems that run encounters of their own (the Reaver campaign, sector control) have more entry points. `TrySpawn(..., offBudget)`
@@ -214,6 +217,7 @@ are always real), freight value and payouts, follow-up encounters, and a real FT
 - [`Content.Server/_WF/Encounters/Systems/WFEncounterMarkerSystem.cs`](Systems/WFEncounterMarkerSystem.cs)
 - [`Content.Server/_WF/Encounters/Systems/WFEncounterRewardSystem.cs`](Systems/WFEncounterRewardSystem.cs)
 - [`Content.Server/_WF/Encounters/Systems/WFEncounterSchedulerSystem.cs`](Systems/WFEncounterSchedulerSystem.cs)
+- [`Content.Server/_WF/Encounters/Systems/WFEncounterSystem.Admin.cs`](Systems/WFEncounterSystem.Admin.cs)
 - [`Content.Server/_WF/Encounters/Systems/WFEncounterSystem.Battle.cs`](Systems/WFEncounterSystem.Battle.cs)
 - [`Content.Server/_WF/Encounters/Systems/WFEncounterSystem.Build.cs`](Systems/WFEncounterSystem.Build.cs)
 - [`Content.Server/_WF/Encounters/Systems/WFEncounterSystem.cs`](Systems/WFEncounterSystem.cs)
@@ -255,6 +259,7 @@ are always real), freight value and payouts, follow-up encounters, and a real FT
 
 ### Integration tests
 
+- [`Content.IntegrationTests/Tests/_WF/Encounters/WFEncounterTest.AdminOrders.cs`](../../../Content.IntegrationTests/Tests/_WF/Encounters/WFEncounterTest.AdminOrders.cs)
 - [`Content.IntegrationTests/Tests/_WF/Encounters/WFEncounterTest.AuditLifecycle.cs`](../../../Content.IntegrationTests/Tests/_WF/Encounters/WFEncounterTest.AuditLifecycle.cs)
 - [`Content.IntegrationTests/Tests/_WF/Encounters/WFEncounterTest.AuditZones.cs`](../../../Content.IntegrationTests/Tests/_WF/Encounters/WFEncounterTest.AuditZones.cs)
 - [`Content.IntegrationTests/Tests/_WF/Encounters/WFEncounterTest.BatchCore.cs`](../../../Content.IntegrationTests/Tests/_WF/Encounters/WFEncounterTest.BatchCore.cs)

@@ -90,17 +90,12 @@ wf-encounter-admin-keep = Keep until ended
 wf-encounter-admin-tier-sector = Sector threat tier
 wf-encounter-admin-tier = Tier {$tier}
 wf-encounter-admin-search-hint = name, prototype, ship or state
-wf-encounter-admin-running = Encounters
 wf-encounter-admin-none = No encounters.
 wf-encounter-admin-none-match = Nothing matches the search.
 wf-encounter-admin-bad-input = Enter whole seconds, a cap and a distance as plain numbers.
 wf-encounter-admin-bad-settings = Intervals must be 30 to 86400 seconds with the longest not below the shortest, and the cap 0 to 10.
 wf-encounter-admin-gone = That encounter or ship no longer exists.
-wf-encounter-admin-entry = {$name} ({$prototype}): {$state}, running {$age}
-wf-encounter-admin-entry-pinned = {$name} ({$prototype}): {$state}, running {$age}, kept until ended
 wf-encounter-admin-expires = Expires in {$time}
-wf-encounter-admin-ship = {$key}: {$name}, side {$side}, {$crew} crew, {$activity}
-wf-encounter-admin-ship-disabled = {$key}: {$name}, side {$side}, {$crew} crew, out of the fight
 wf-encounter-admin-ship-gone = {$key}: gone, side {$side}
 wf-encounter-admin-teleport = Go to
 wf-encounter-admin-resolve = Resolve
@@ -110,6 +105,74 @@ wf-encounter-admin-preset = Preset
 wf-encounter-admin-budget = Budget in use: {$cost} of {$budget}
 wf-encounter-admin-start-round = Place round-start encounters
 wf-encounter-admin-reveal = Reveal
+wf-encounter-admin-tab-encounters = Running
+wf-encounter-admin-tab-start = Start
+wf-encounter-admin-tab-scheduler = Scheduler
+wf-encounter-admin-show-resolved = Show finished encounters
+wf-encounter-admin-pick = Pick an encounter on the left.
+wf-encounter-admin-start-search-hint = prototype id
+wf-encounter-admin-prototype = Encounter
+wf-encounter-admin-tier-label = Threat
+wf-encounter-admin-prototype-running = {$label} (running)
+wf-encounter-admin-list-entry = {$rank}{$name} · {$ships} {$ships ->
+    [one] ship
+   *[other] ships
+}{$simulated ->
+    [0] {""}
+   *[other] , {$simulated} simulated
+}{$resolved ->
+    [1] {" "}(finished)
+   *[other] {""}
+}
+wf-encounter-admin-detail-prototype = Prototype: {$prototype}
+wf-encounter-admin-detail-state = State: {$state}
+wf-encounter-admin-detail-age = Running {$age}
+wf-encounter-admin-detail-pinned = Kept until ended
+wf-encounter-admin-detail-threat = Threat {$threat}
+wf-encounter-admin-ships = Ships
+wf-encounter-admin-ship-line = {$key}: {$name} · {$side} · {$status} · {$crew} crew
+wf-encounter-admin-ship-status-gone = gone
+wf-encounter-admin-ship-status-building = spawning
+wf-encounter-admin-ship-status-simulated = simulated
+wf-encounter-admin-ship-status-disabled = out of the fight
+wf-encounter-admin-ship-status-real = spawned
+wf-encounter-admin-order = Give an order
+wf-encounter-admin-order-ship = Ship
+wf-encounter-admin-order-do = Order
+wf-encounter-admin-order-target = Target
+wf-encounter-admin-order-go = Do it
+wf-encounter-admin-target = {$name} ({$players}), {$distance}
+wf-encounter-admin-target-distance = {$km} km
+wf-encounter-admin-target-elsewhere = another map
+wf-encounter-admin-target-none = No player ships
+wf-encounter-admin-order-extort = Extort
+wf-encounter-admin-order-board = Board
+wf-encounter-admin-order-attack = Attack
+wf-encounter-admin-order-follow = Follow
+wf-encounter-admin-order-cometome = Come to me
+wf-encounter-admin-order-hold = Hold position
+wf-encounter-admin-order-resume = Resume its orders
+wf-encounter-admin-order-spawnnow = Spawn now
+wf-encounter-admin-order-sendaway = Send away
+wf-encounter-admin-order-extort-hint = Goes after the target for its toll: closes in, hails and boards a ship that won't pay.
+wf-encounter-admin-order-board-hint = Runs the target down, docks and raids it.
+wf-encounter-admin-order-attack-hint = Engages the target, then holds where it ends up.
+wf-encounter-admin-order-follow-hint = Keeps station on the target, then holds.
+wf-encounter-admin-order-cometome-hint = Flies to where you are and holds there.
+wf-encounter-admin-order-hold-hint = Stops where it is.
+wf-encounter-admin-order-resume-hint = Takes up the orders it was spawned with.
+wf-encounter-admin-order-spawnnow-hint = Builds the simulated ship's hull and crew now, wherever it is.
+wf-encounter-admin-order-sendaway-hint = Wraps the encounter up: its ships jump out once nobody is aboard.
+wf-encounter-admin-order-no-target = Pick a player ship to aim the order at.
+wf-encounter-admin-order-done = {$key}: {$order}.
+wf-encounter-admin-order-resolved = That encounter is already over.
+wf-encounter-admin-order-building = That ship is spawning; try again in a moment.
+wf-encounter-admin-order-failed = The ship could not take that order.
+wf-encounter-admin-order-not-extorter = Only an extorter can extort.
+wf-encounter-admin-order-boarding = It is boarding a ship already.
+wf-encounter-admin-order-not-hunter = Only a boarding ship can board.
+wf-encounter-admin-order-not-here = You need to be on the ship's map.
+wf-encounter-admin-order-not-simulated = That ship is already spawned.
 
 # wf_encounter command
 cmd-wf_encounter-desc = Lists, spawns and ends encounters, and runs or pauses the encounter scheduler.
