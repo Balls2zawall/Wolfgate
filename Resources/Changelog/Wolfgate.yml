@@ -2749,3 +2749,30 @@ Entries:
   id: 100197
   time: '2026-10-22T01:45:04.0000000+00:00'
   url: https://github.com/VanguardControl/Wolfgate/pull/316
+- author: Gandalf2k15
+  changes:
+    - type: Fix
+      message: Expedition consoles on ships started from the lobby now show offers.
+    - type: Fix
+      message: Ships started from the lobby now get a numbered name like bought ships.
+    - type: Fix
+      message: >-
+        NPC ships no longer attack player ships of their own faction. They only
+        shoot back after a lot of friendly fire.
+    - type: Tweak
+      message: >-
+        NPC patrols judge a ship by its IFF flag when it shows theirs, otherwise
+        by the free crew aboard. Cuffed prisoners don't count.
+    - type: Tweak
+      message: Judge patrols leave player ships alone unless fired on heavily.
+    - type: Tweak
+      message: >-
+        Reaver campaign crews shoot on sight and are hostile to everyone except
+        the Underground, PDV included.
+    - type: Fix
+      message: '*giggles and similar emotes read as typed instead of "laughs".'
+    - type: Fix
+      message: Less lag when NPC ships spawn.
+  id: 100198
+  time: '2026-10-22T02:56:50.0000000+00:00'
+  url: https://github.com/VanguardControl/Wolfgate/pull/317
