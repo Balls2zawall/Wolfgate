@@ -301,14 +301,16 @@ public sealed partial class WFEncounterBountySystem : EntitySystem
     /// <summary>Whether the target is dead (not merely down) or destroyed; a crew's ship being gone counts too.</summary>
     private bool Taken(WFEncounterBountyComponent bounty, WFEncounterShipState ship)
     {
-        // Simulated, nobody can have taken them; beaten in a simulated fight, the ship is removed and the warrant withdrawn.
-        if (ship.Virtual)
+        // Simulated or still being built, nobody can have taken them: the crew are marked once the hull is crewed. Beaten in
+        // a simulated fight, the ship is removed and the warrant withdrawn.
+        if (ship.Virtual || ship.Building)
             return false;
 
         if (bounty.Target == WFEncounterBountyTarget.Captain)
             return bounty.Fugitive is not { } fugitive || Down(fugitive);
 
-        return TerminatingOrDeleted(ship.Grid) || bounty.Crew.All(Down);
+        // A crew warrant with nobody marked yet is not taken by its hands all being down.
+        return TerminatingOrDeleted(ship.Grid) || bounty.Crew.Count > 0 && bounty.Crew.All(Down);
     }
 
     private bool Down(EntityUid uid)
