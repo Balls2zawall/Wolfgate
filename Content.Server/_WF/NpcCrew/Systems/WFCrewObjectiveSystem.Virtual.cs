@@ -4,6 +4,7 @@ using Content.Server._WF.NpcCrew.Components;
 using Content.Shared._WF.NpcCrew;
 using Robust.Shared.Map;
 using Robust.Shared.Map.Components;
+using Robust.Shared.Physics.Components;
 
 namespace Content.Server._WF.NpcCrew.Systems;
 
@@ -152,9 +153,10 @@ public sealed partial class WFCrewObjectiveSystem
                 }
                 return;
             default:
-                // Follow, escort, circle, loiter and attack: close to the range and keep there.
+                // Follow, escort, circle, loiter and attack: close to the range and keep there, moving with the target.
                 ship.Comp.DockedTo = null;
-                Approach(ship, from, ShipCentre(target), item.Range, elapsed);
+                if (Approach(ship, from, ShipCentre(target), item.Range, elapsed))
+                    KeepStation(ship, target, elapsed);
                 if (item.Duration > 0 && state.Elapsed >= item.Duration)
                     Finish(state);
                 return;
@@ -178,8 +180,26 @@ public sealed partial class WFCrewObjectiveSystem
         var step = MathF.Min(distance - reach, ship.Comp.Speed * elapsed);
         var direction = offset / distance;
         _transform.SetWorldPosition(ship, from + direction * step);
-        ship.Comp.Velocity = direction * ship.Comp.Speed;
+        // What it actually covered, not its top speed: the sector markers run it on between updates by this.
+        ship.Comp.Velocity = elapsed > 0f ? direction * step / elapsed : Vector2.Zero;
         return distance - step <= reach;
+    }
+
+    /// <summary>Moves a simulated ship within range of its target along with it, so an escort keeps pace instead of stopping and catching up.</summary>
+    private void KeepStation(Entity<WFCrewVirtualShipComponent> ship, EntityUid target, float elapsed)
+    {
+        var velocity = TryComp<WFCrewVirtualShipComponent>(target, out var leader) ? leader.Velocity
+            : TryComp<PhysicsComponent>(target, out var body) ? body.LinearVelocity
+            : Vector2.Zero;
+        if (velocity.LengthSquared() <= 0.01f)
+            return;
+
+        // No faster than it can fly.
+        if (velocity.Length() > ship.Comp.Speed)
+            velocity = Vector2.Normalize(velocity) * ship.Comp.Speed;
+
+        _transform.SetWorldPosition(ship, _transform.GetWorldPosition(ship) + velocity * elapsed);
+        ship.Comp.Velocity = velocity;
     }
 
     private static void Finish(QueueState state)

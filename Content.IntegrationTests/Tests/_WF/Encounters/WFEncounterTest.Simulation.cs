@@ -61,6 +61,26 @@ public sealed partial class WFEncounterTest
     - kind: Hold
 
 - type: wfEncounter
+  id: WFTestSimPair
+  name: wf-encounter-name-pirates
+  start: Manual
+  ships:
+  - key: lead
+    vessel: WFDredger
+    side: pirates
+    objectives:
+    - kind: GoTo
+      offset: 0, 4000
+  - key: wing
+    vessel: WFDredger
+    side: pirates
+    offset: 150, 0
+    objectives:
+    - kind: Escort
+      target: lead
+      range: 150
+
+- type: wfEncounter
   id: WFTestSimExtorter
   name: wf-encounter-name-pirates
   start: Manual
@@ -376,6 +396,47 @@ public sealed partial class WFEncounterTest
                 Assert.That(Ship(encounter).Touched, Is.True);
                 Server.System<WFEncounterSystem>().End(encounter);
             });
+        });
+    }
+
+    /// <summary>
+    /// A simulated wing escorting its lead keeps pace with it: it stays at its range, and the velocity it reports for the
+    /// markers is the lead's, so the map shows the pair moving together and their zone ring holds steady.
+    /// </summary>
+    [Test]
+    public async Task ASimulatedEscortKeepsPaceWithItsLead()
+    {
+        await WithSimulation(async () =>
+        {
+            EntityUid encounter = default;
+            await Server.WaitAssertion(() =>
+            {
+                var prototype = Server.ResolveDependency<IPrototypeManager>().Index<WFEncounterPrototype>("WFTestSimPair");
+                Assert.That(Server.System<WFEncounterSystem>().TrySpawn(prototype, new MapCoordinates(new Vector2(-30000, 0), MapData.MapId), out encounter), Is.True);
+            });
+
+            // Settled in behind its lead first.
+            await RunTicks(60 * 10);
+            var worst = 0f;
+            var drift = 0f;
+            for (var i = 0; i < 30; i++)
+            {
+                await RunTicks(30);
+                await Server.WaitPost(() =>
+                {
+                    var comp = SEntMan.GetComponent<WFEncounterComponent>(encounter);
+                    var lead = comp.Ships["lead"].Grid;
+                    var wing = comp.Ships["wing"].Grid;
+                    var transform = Server.System<SharedTransformSystem>();
+                    worst = MathF.Max(worst, (transform.GetWorldPosition(lead) - transform.GetWorldPosition(wing)).Length());
+                    drift = MathF.Max(drift, (SEntMan.GetComponent<WFCrewVirtualShipComponent>(lead).Velocity
+                                              - SEntMan.GetComponent<WFCrewVirtualShipComponent>(wing).Velocity).Length());
+                });
+            }
+
+            Assert.That(worst, Is.LessThan(200f), "The wing stays at its range from the lead.");
+            Assert.That(drift, Is.LessThan(2f), "It reports the lead's velocity, not a stop-start sprint.");
+            await Server.WaitPost(() => Server.System<WFEncounterSystem>().End(encounter));
         });
     }
 }
