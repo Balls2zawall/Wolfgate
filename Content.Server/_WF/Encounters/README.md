@@ -43,7 +43,11 @@ within `materialize_range` (4 km, past radar range), or a jump plotted to an exi
 its hull, crew and retrofit (seeded, so it looks the same each time), hands it the stand-in's orders and retargets any
 orders aimed at it. A real ship nobody has boarded, docked with or fought, with its whole crew and no alert, goes back
 to simulation after `dematerialize_delay` with every player past `dematerialize_range`. Spawns and despawns are queued
-and run one per `materialize_interval`. Simulated docking (`DockedTo`, `RedockTo`, `AreDocked`) carries over both ways,
+and run one at a time. A ship spawned from simulation is built over several ticks (`WFEncounterSystem.Build.cs`):
+its hull is loaded onto a paused staging map, map-initialised 250 entities a tick, moved into place, refitted, crewed
+three men a tick and powered up, and only then given the stand-in's orders; it is left out of judging, fights and
+despawning meanwhile. Each build logs its time per stage and its worst tick. The hull load itself is one engine call
+and the largest step left (a few hundred ms on a big hull in DebugOpt). Simulated docking (`DockedTo`, `RedockTo`, `AreDocked`) carries over both ways,
 and a ship spawned on top of another is moved clear. Two simulated ships where one is ordered to attack the other
 fight it out by a roll (`duel_mean_seconds`, weighted by hull worth, crew skill and refit); each round raises
 `WFEncounterSimulatedHitEvent`, which a Reaver stronghold counts as a hit. A simulated extorter roams and picks its mark
@@ -211,6 +215,7 @@ are always real), freight value and payouts, follow-up encounters, and a real FT
 - [`Content.Server/_WF/Encounters/Systems/WFEncounterRewardSystem.cs`](Systems/WFEncounterRewardSystem.cs)
 - [`Content.Server/_WF/Encounters/Systems/WFEncounterSchedulerSystem.cs`](Systems/WFEncounterSchedulerSystem.cs)
 - [`Content.Server/_WF/Encounters/Systems/WFEncounterSystem.Battle.cs`](Systems/WFEncounterSystem.Battle.cs)
+- [`Content.Server/_WF/Encounters/Systems/WFEncounterSystem.Build.cs`](Systems/WFEncounterSystem.Build.cs)
 - [`Content.Server/_WF/Encounters/Systems/WFEncounterSystem.cs`](Systems/WFEncounterSystem.cs)
 - [`Content.Server/_WF/Encounters/Systems/WFEncounterSystem.Deed.cs`](Systems/WFEncounterSystem.Deed.cs)
 - [`Content.Server/_WF/Encounters/Systems/WFEncounterSystem.Derelict.cs`](Systems/WFEncounterSystem.Derelict.cs)

@@ -112,6 +112,13 @@ public sealed partial class WFEncounterSystem
     /// <summary>Spawns or despawns one queued ship, once the interval since the last has passed.</summary>
     private void StepSimulation()
     {
+        // A ship being built takes a stage a tick, and holds the queue up until it is done.
+        if (StepBuilding())
+        {
+            _nextStep = _timing.CurTime + _materializeInterval;
+            return;
+        }
+
         if (_pending.Count == 0 || _timing.CurTime < _nextStep)
             return;
 
@@ -143,7 +150,7 @@ public sealed partial class WFEncounterSystem
         {
             foreach (var (key, ship) in encounter.Ships)
             {
-                if (TerminatingOrDeleted(ship.Grid))
+                if (TerminatingOrDeleted(ship.Grid) || ship.Building)
                     continue;
 
                 // Back alongside for real, or the ship it was to dock with gone: no longer counted docked meanwhile.
@@ -228,7 +235,8 @@ public sealed partial class WFEncounterSystem
     /// </summary>
     private bool CanSimulate(WFEncounterComponent encounter, WFEncounterShipState ship)
     {
-        if (!_simulate || !encounter.Simulated || encounter.Resolution != null || encounter.Pinned || ship.Touched || ship.Derelict)
+        if (!_simulate || !encounter.Simulated || encounter.Resolution != null || encounter.Pinned || ship.Touched || ship.Derelict
+            || ship.Building)
             return false;
 
         if (PlayersAboard(ship.Grid) || DockedWithPlayerShip(ship.Grid)
@@ -263,7 +271,10 @@ public sealed partial class WFEncounterSystem
         return count;
     }
 
-    /// <summary>Spawns a simulated ship's hull where its stand-in is, hands it the stand-in's orders and docking, and removes the stand-in.</summary>
+    /// <summary>
+    /// Starts building a simulated ship's hull where its stand-in is, over the ticks that follow: see
+    /// <c>WFEncounterSystem.Build.cs</c>.
+    /// </summary>
     private void Materialize(Entity<WFEncounterComponent> encounter, string key, WFEncounterShipState state)
     {
         if (!_prototypes.TryIndex(encounter.Comp.Prototype, out var prototype)
@@ -271,38 +282,24 @@ public sealed partial class WFEncounterSystem
             return;
 
         var proxy = state.Grid;
-        var at = _transform.GetMapCoordinates(proxy);
-        var docked = CompOrNull<WFCrewVirtualShipComponent>(proxy)?.DockedTo;
         WFEncounterManifestPrototype? manifest = null;
         if (encounter.Comp.Manifest is { } manifestId)
             _prototypes.TryIndex(manifestId, out manifest);
 
-        if (!Build(encounter, ship, state, at, manifest, null))
+        _building = new ShipBuild
         {
-            Log.Error($"Encounter {prototype.ID} could not spawn simulated ship '{key}'; it is lost.");
-            state.Grid = proxy;
-            state.Virtual = true;
-            RemoveShip(state);
-            return;
-        }
-
-        var grid = state.Grid;
-        Clear(grid, docked);
-        _objectives.MoveQueue(proxy, grid, state.Group);
-        _objectives.Retarget(proxy, grid);
-        RepointDocks(proxy, grid);
-        // It was alongside another ship: it comes alongside again for real, and counts as docked until then. A partner
-        // still simulated is flown at until it is spawned too, when the docking order follows it to its hull.
-        if (docked is { } partner && !TerminatingOrDeleted(partner))
-        {
-            state.RedockTo = partner;
-            _objectives.Prepend(grid, state.Group, new WFCrewObjective { Kind = WFCrewObjectiveKind.Dock, Target = GetNetEntity(partner) });
-        }
-
-        Del(proxy);
-        Log.Info($"Encounter {prototype.ID} spawned simulated ship '{key}' as {ToPrettyString(grid)}.");
-        var ev = new WFEncounterShipSpawnedEvent(encounter, key, grid);
-        RaiseLocalEvent(ref ev);
+            Encounter = encounter,
+            Ship = ship,
+            State = state,
+            At = _transform.GetMapCoordinates(proxy),
+            Manifest = manifest,
+            Proxy = proxy,
+            Docked = CompOrNull<WFCrewVirtualShipComponent>(proxy)?.DockedTo,
+        };
+        // Left alone while it is built: not judged, despawned or fought.
+        state.Building = true;
+        Log.Info($"Encounter {prototype.ID} spawning simulated ship '{key}'.");
+        StepBuilding();
     }
 
     /// <summary>Puts an untouched real ship back into simulation: a stand-in takes its place, orders and docking, and the hull and crew go.</summary>
@@ -392,7 +389,7 @@ public sealed partial class WFEncounterSystem
         {
             foreach (var ship in encounter.Ships.Values)
             {
-                if (ship.Virtual && !TerminatingOrDeleted(ship.Grid))
+                if (ship.Virtual && !ship.Building && !TerminatingOrDeleted(ship.Grid))
                     crews[ship.Grid] = ship;
             }
         }

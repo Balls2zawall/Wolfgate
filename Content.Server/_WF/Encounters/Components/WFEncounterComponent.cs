@@ -235,6 +235,9 @@ public sealed partial class WFEncounterShipState
     /// <summary>Since when no player has been near this real ship.</summary>
     public TimeSpan? AloneSince;
 
+    /// <summary>Its hull is spawned but not yet refitted, crewed and powered; it is left alone until it is.</summary>
+    public bool Building;
+
     /// <summary>Players have boarded or docked with it, or anyone has shot it: it stays real.</summary>
     [DataField]
     public bool Touched;
