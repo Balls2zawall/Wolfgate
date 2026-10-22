@@ -2819,3 +2819,20 @@ Entries:
   id: 100202
   time: '2026-10-22T21:12:20.0000000+00:00'
   url: https://github.com/VanguardControl/Wolfgate/pull/315
+- author: Gandalf2k15
+  changes:
+    - type: Add
+      message: >-
+        You can roll up the sleeves of any jumpsuit or jumpskirt. Right-click it
+        and pick Roll up sleeves.
+    - type: Add
+      message: >-
+        You can roll a jumpsuit down and tie the sleeves round your waist with
+        Roll down jumpsuit.
+    - type: Add
+      message: >-
+        Many department jumpsuits and skirts roll down using sprites from
+        Meridian Rift.
+  id: 100203
+  time: '2026-10-22T21:19:54.0000000+00:00'
+  url: https://github.com/VanguardControl/Wolfgate/pull/327
