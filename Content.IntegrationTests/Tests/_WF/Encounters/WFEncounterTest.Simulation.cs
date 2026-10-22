@@ -474,4 +474,59 @@ public sealed partial class WFEncounterTest
             await Server.WaitPost(() => Server.System<WFEncounterSystem>().End(encounter));
         });
     }
+
+    /// <summary>A simulated ship ordered to circle a station flies round it at its range, as a real patrol does, and does not park.</summary>
+    [Test]
+    public async Task ASimulatedPatrolCirclesItsStation()
+    {
+        await WithSimulation(async () =>
+        {
+            EntityUid encounter = default, station = default;
+            var centre = new Vector2(30000, 25000);
+            await Server.WaitPost(() =>
+            {
+                var maps = Server.System<SharedMapSystem>();
+                var grid = maps.CreateGridEntity(MapData.MapId);
+                maps.SetTile(grid, Vector2i.Zero, new Tile(1));
+                Server.System<SharedTransformSystem>().SetCoordinates(grid.Owner, new EntityCoordinates(MapData.MapUid, centre));
+                station = grid.Owner;
+                var prototype = Server.ResolveDependency<IPrototypeManager>().Index<WFEncounterPrototype>("WFTestSimHauler");
+                var encounters = Server.System<WFEncounterSystem>();
+                Assert.That(encounters.TrySpawn(prototype, new MapCoordinates(centre + new Vector2(1500f, 0f), MapData.MapId), out encounter), Is.True);
+                Assert.That(encounters.SetOrders(encounter, "ship", new List<WFCrewObjective>
+                {
+                    new() { Kind = WFCrewObjectiveKind.Circle, Target = SEntMan.GetNetEntity(station), Range = 700f },
+                }), Is.True);
+            });
+
+            // Out to its circle first.
+            await RunTicks(60 * 40);
+            var angles = new List<float>();
+            for (var i = 0; i < 10; i++)
+            {
+                await RunTicks(60 * 3);
+                await Server.WaitPost(() =>
+                {
+                    var offset = Server.System<SharedTransformSystem>().GetWorldPosition(Ship(encounter).Grid)
+                                 - Server.System<SharedTransformSystem>().GetWorldPosition(station);
+                    Assert.That(offset.Length(), Is.InRange(600f, 800f), "It keeps to its range.");
+                    angles.Add(MathF.Atan2(offset.Y, offset.X));
+                });
+            }
+
+            var swept = 0f;
+            for (var i = 1; i < angles.Count; i++)
+            {
+                var step = angles[i] - angles[i - 1];
+                swept += MathF.Abs(MathF.IEEERemainder(step, MathF.Tau));
+            }
+
+            Assert.That(swept, Is.GreaterThan(0.5f), "It goes round the station rather than parking off it.");
+            await Server.WaitPost(() =>
+            {
+                Server.System<WFEncounterSystem>().End(encounter);
+                SEntMan.DeleteEntity(station);
+            });
+        });
+    }
 }

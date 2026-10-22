@@ -3,6 +3,7 @@ using System.Numerics;
 using Content.Server._WF.NpcCrew.Components;
 using Content.Shared._WF.NpcCrew;
 using Robust.Shared.Map;
+using Robust.Shared.Maths;
 using Robust.Shared.Map.Components;
 using Robust.Shared.Physics.Components;
 
@@ -160,8 +161,16 @@ public sealed partial class WFCrewObjectiveSystem
                     Finish(state);
                 }
                 return;
+            case WFCrewObjectiveKind.Circle:
+            case WFCrewObjectiveKind.Loiter:
+                // Circling a point, as a patrol posted off a station does: out to the range, then round it.
+                ship.Comp.DockedTo = null;
+                Orbit(ship, from, ShipCentre(target), item.Range, elapsed);
+                if (item.Duration > 0 && state.Elapsed >= item.Duration)
+                    Finish(state);
+                return;
             default:
-                // Follow, escort, circle, loiter and attack: close to the range and keep there, moving with the target.
+                // Follow, escort and attack: close to the range and keep there, moving with the target.
                 ship.Comp.DockedTo = null;
                 if (Approach(ship, from, ShipCentre(target), item.Range, elapsed))
                     KeepStation(ship, target, elapsed);
@@ -191,6 +200,32 @@ public sealed partial class WFCrewObjectiveSystem
         // What it actually covered, not its top speed: the sector markers run it on between updates by this.
         ship.Comp.Velocity = elapsed > 0f ? direction * step / elapsed : Vector2.Zero;
         return distance - step <= reach;
+    }
+
+    /// <summary>How far off its circle a simulated ship may be and still fly round it rather than back out to it.</summary>
+    private const float OrbitSlack = 50f;
+
+    /// <summary>Flies a simulated ship round a point at a radius: to the circle first, then along it at its speed.</summary>
+    private void Orbit(Entity<WFCrewVirtualShipComponent> ship, Vector2 from, Vector2 centre, float radius, float elapsed)
+    {
+        radius = MathF.Max(radius, 100f);
+        var offset = from - centre;
+        var distance = offset.Length();
+        if (distance < 0.01f)
+            offset = Vector2.UnitX;
+
+        var outward = Vector2.Normalize(offset);
+        if (MathF.Abs(distance - radius) > OrbitSlack)
+        {
+            Approach(ship, from, centre + outward * radius, 0f, elapsed);
+            return;
+        }
+
+        // Anticlockwise along the circle: the arc it covers at its speed.
+        var turn = new Angle(ship.Comp.Speed * elapsed / radius);
+        var next = centre + turn.RotateVec(outward) * radius;
+        _transform.SetWorldPosition(ship, next);
+        ship.Comp.Velocity = elapsed > 0f ? (next - from) / elapsed : Vector2.Zero;
     }
 
     /// <summary>Moves a simulated ship within range of its target along with it, so an escort keeps pace instead of stopping and catching up.</summary>
