@@ -2915,3 +2915,13 @@ Entries:
   id: 100207
   time: '2026-10-22T22:32:49.0000000+00:00'
   url: https://github.com/VanguardControl/Wolfgate/pull/326
+- author: Gandalf2k15
+  changes:
+    - type: Tweak
+      message: >-
+        Healing chems now close wounds of the damage type they heal, not just
+        the damage number. Bleeds, fractures, lodged rounds and pumping arteries
+        still need proper treatment.
+  id: 100208
+  time: '2026-10-22T22:33:07.0000000+00:00'
+  url: https://github.com/VanguardControl/Wolfgate/pull/328
