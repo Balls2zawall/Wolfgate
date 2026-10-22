@@ -2783,3 +2783,16 @@ Entries:
   id: 100199
   time: '2026-10-22T03:17:54.0000000+00:00'
   url: https://github.com/VanguardControl/Wolfgate/pull/318
+- author: Gandalf2k15
+  changes:
+    - type: Fix
+      message: >-
+        Jump boots and the modsuit jump carry you the full distance again
+        instead of a third of a tile.
+    - type: Fix
+      message: >-
+        A welder now seals a synthetic's fluid leak even after the chassis
+        damage is already repaired.
+  id: 100200
+  time: '2026-10-22T04:37:58.0000000+00:00'
+  url: https://github.com/VanguardControl/Wolfgate/pull/320
