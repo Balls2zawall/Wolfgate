@@ -2925,3 +2925,12 @@ Entries:
   id: 100208
   time: '2026-10-22T22:33:07.0000000+00:00'
   url: https://github.com/VanguardControl/Wolfgate/pull/328
+- author: Gandalf2k15
+  changes:
+    - type: Fix
+      message: >-
+        Missile engine sounds no longer keep looping forever after the missile
+        is gone, which you'd hear in the lobby or after respawning.
+  id: 100209
+  time: '2026-10-22T22:54:12.0000000+00:00'
+  url: https://github.com/VanguardControl/Wolfgate/pull/329
