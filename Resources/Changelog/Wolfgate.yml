@@ -2776,3 +2776,10 @@ Entries:
   id: 100198
   time: '2026-10-22T02:56:50.0000000+00:00'
   url: https://github.com/VanguardControl/Wolfgate/pull/317
+- author: Gandalf2k15
+  changes:
+    - type: Fix
+      message: Fixed a few sources of network traffic causing clientside jittering.
+  id: 100199
+  time: '2026-10-22T03:17:54.0000000+00:00'
+  url: https://github.com/VanguardControl/Wolfgate/pull/318
