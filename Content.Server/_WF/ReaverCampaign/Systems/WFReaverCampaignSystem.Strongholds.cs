@@ -116,10 +116,10 @@ public sealed partial class WFReaverCampaignSystem
         return true;
     }
 
-    /// <summary>Anchors a shield generator on the hub's lead hull if it has none.</summary>
+    /// <summary>Anchors a shield generator on the hub's lead hull if it has none; a simulated hub gets it once its hull is spawned.</summary>
     private void ShieldHub(WFReaverCampaignPrototype campaign, EntityUid encounter, string lead)
     {
-        if (TryComp<WFEncounterComponent>(encounter, out var comp) && comp.Ships.TryGetValue(lead, out var ship))
+        if (TryComp<WFEncounterComponent>(encounter, out var comp) && comp.Ships.TryGetValue(lead, out var ship) && !ship.Virtual)
             EnsureShield(campaign, ship.Grid);
     }
 

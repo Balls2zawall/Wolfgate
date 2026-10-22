@@ -24,6 +24,10 @@ public readonly record struct WFEncounterStationsEvent(MapId Map, List<Entity<Ma
 [ByRefEvent]
 public record struct WFEncounterThreatTierEvent(int? Tier);
 
+/// <summary>Raised, by ref and broadcast, when a simulated encounter ship's hull has been spawned.</summary>
+[ByRefEvent]
+public readonly record struct WFEncounterShipSpawnedEvent(EntityUid Encounter, string Key, EntityUid Grid);
+
 /// <summary>Raised, by ref and broadcast, before each marker update goes out; a subscriber may add markers of its own.</summary>
 [ByRefEvent]
 public readonly record struct WFEncounterCollectMarkersEvent(List<WFEncounterMarker> Markers);

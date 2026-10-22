@@ -107,6 +107,7 @@ public sealed partial class WFEncounterSystem : EntitySystem
         SubscribeLocalEvent<WFEncounterPassengerComponent, BeforeDamageChangedEvent>(OnPassengerDamaged,
             before: [typeof(Content.Shared._Onyx.Wounds.WoundDamageRoutingSystem)]);
         InitializeExtort();
+        InitializeSimulation();
     }
 
     /// <summary>A hidden encounter shows itself once one of its crews raises the alarm.</summary>
@@ -356,11 +357,13 @@ public sealed partial class WFEncounterSystem : EntitySystem
             comp.Stops.AddRange(stops);
         _meta.SetEntityName(uid, comp.Name);
         comp.Tier = TierFor(prototype, tier);
+        comp.Simulated = _simulate && prototype.Bounty == null;
         comp.Threat = prototype.Threat ?? comp.Tier;
 
         WFEncounterManifestPrototype? manifest = null;
         if (prototype.Manifests.Count > 0)
             _prototypes.TryIndex(_random.Pick(prototype.Manifests), out manifest);
+        comp.Manifest = manifest?.ID;
         foreach (var ship in prototype.Ships)
         {
             if (comp.Ships.ContainsKey(ship.Key) || !TrySpawnShip((uid, comp), ship, designation, manifest, spawner))
@@ -654,29 +657,11 @@ public sealed partial class WFEncounterSystem : EntitySystem
         var band = BandFor(ship, encounter.Comp.Tier);
         var vessels = band?.Vessels ?? ship.Vessels;
         ProtoId<VesselPrototype>? vesselId = vessels.Count > 0 ? _random.Pick(vessels) : ship.Vessel;
-        WFCrewSkill? skill = band is { Skills.Count: > 0 } ? _random.Pick(band.Skills) : ship.Skill;
-        if (vesselId is not { } id || !_prototypes.TryIndex(id, out var vessel)
-            || !_vessels.TrySpawnVessel(vessel, encounter.Comp.Origin.MapId, encounter.Comp.Origin.Position + ship.Offset, spawner, out var spawned))
+        if (vesselId is not { } id || !_prototypes.TryIndex(id, out var vessel))
             return false;
-
-        var grid = spawned.Value;
-        var marker = AddComp<WFEncounterGridComponent>(grid);
-        marker.Encounter = encounter;
-        marker.Key = ship.Key;
-        Unload(grid);
-        // A crew that is not allowed the hull's best plating gets it swapped out before anything else goes aboard.
-        _setup.ApplyHullSwaps(grid, ship.Profile);
-        _setup.MarkProfile(grid, ship.Profile);
-
-        var name = Loc.GetString("wf-encounter-ship-name", ("vessel", vessel.Name), ("designation", designation));
-        _meta.SetEntityName(grid, name);
-        // Warship designs come off the line with their IFF switched off. A crew flies with it on, so a scope shows
-        // who is who; one lying in wait hides it again below.
-        _shuttles.RemoveIFFFlag(grid, Content.Shared.Shuttles.Components.IFFFlags.HideLabel | Content.Shared.Shuttles.Components.IFFFlags.Hide);
 
         var state = new WFEncounterShipState
         {
-            Grid = grid,
             Group = Capped($"enc{encounter.Owner.Id}-{ship.Key}", WFCrewLimits.MaxGroup),
             Side = ship.Side.Length > 0 ? ship.Side : ship.Key,
             WarnRange = ship.WarnRange,
@@ -692,11 +677,60 @@ public sealed partial class WFEncounterSystem : EntitySystem
             Flees = ship.Flees,
             Stealth = ship.Stealth,
             Passengers = ship.Passengers.Count > 0,
+            Vessel = id,
+            Skill = band is { Skills.Count: > 0 } ? _random.Pick(band.Skills) : ship.Skill,
+            Retrofit = band?.Retrofit ?? ship.Retrofit,
+            Seed = _random.Next(),
+            Name = Loc.GetString("wf-encounter-ship-name", ("vessel", vessel.Name), ("designation", designation)),
+            Stranding = ship.Stranded == WFEncounterStranding.Random
+                ? (_random.Prob(0.5f) ? WFEncounterStranding.Fuel : WFEncounterStranding.Thrusters)
+                : ship.Stranded,
+            Lurking = ship.Lurks && encounter.Comp.StartRadius > 0f,
         };
         encounter.Comp.Ships.Add(ship.Key, state);
-        // Raiders refit what they took: guns on its hardpoints and grime on its decks, before anyone goes aboard.
-        if ((band?.Retrofit ?? ship.Retrofit) is { } retrofitId && _prototypes.TryIndex(retrofitId, out var retrofit))
-            state.Retrofitted = _retrofit.Apply(grid, retrofit);
+
+        // Nobody near: the ship is a point on the map until somebody comes to look.
+        var at = new MapCoordinates(encounter.Comp.Origin.Position + ship.Offset, encounter.Comp.Origin.MapId);
+        if (encounter.Comp.Simulated)
+        {
+            SpawnProxy(encounter, ship, state, at);
+            return true;
+        }
+
+        return Build(encounter, ship, state, at, manifest, spawner);
+    }
+
+    /// <summary>Spawns a planned ship's hull where it stands, crews it and readies it: the real ship, at spawn or when a simulated one is looked at.</summary>
+    private bool Build(Entity<WFEncounterComponent> encounter, WFEncounterShip ship, WFEncounterShipState state, MapCoordinates at,
+        WFEncounterManifestPrototype? manifest, EntityUid? spawner)
+    {
+        if (state.Vessel is not { } id || !_prototypes.TryIndex(id, out var vessel)
+            || !_vessels.TrySpawnVessel(vessel, at.MapId, at.Position, spawner, out var spawned))
+            return false;
+
+        var grid = spawned.Value;
+        state.Grid = grid;
+        state.Virtual = false;
+        var marker = AddComp<WFEncounterGridComponent>(grid);
+        marker.Encounter = encounter;
+        marker.Key = ship.Key;
+        Unload(grid);
+        // A crew that is not allowed the hull's best plating gets it swapped out before anything else goes aboard.
+        _setup.ApplyHullSwaps(grid, ship.Profile);
+        _setup.MarkProfile(grid, ship.Profile);
+
+        var name = state.Name;
+        _meta.SetEntityName(grid, name);
+        // Warship designs come off the line with their IFF switched off. A crew flies with it on, so a scope shows
+        // who is who; one lying in wait hides it again below.
+        _shuttles.RemoveIFFFlag(grid, Content.Shared.Shuttles.Components.IFFFlags.HideLabel | Content.Shared.Shuttles.Components.IFFFlags.Hide);
+        if (state.Color is { } color)
+            _shuttles.SetIFFColor(grid, color);
+
+        // Raiders refit what they took: guns on its hardpoints and grime on its decks, before anyone goes aboard. The
+        // seed keeps the same refit each time a simulated ship is spawned.
+        if (state.Retrofit is { } retrofitId && _prototypes.TryIndex(retrofitId, out var retrofit))
+            state.Retrofitted = _retrofit.Apply(grid, retrofit, state.Seed);
 
         // Boarders come for the ship, not to shoot it up: their guns answer ship guns only. Docked, their clamps hold it.
         if (state.Hunt)
@@ -723,6 +757,7 @@ public sealed partial class WFEncounterSystem : EntitySystem
             return true;
         }
 
+        var skill = state.Skill;
         var mission = new WFCrewMission
         {
             Group = state.Group,
@@ -788,9 +823,6 @@ public sealed partial class WFEncounterSystem : EntitySystem
 
         // Shipyard hulls come with empty reactors and flat batteries; the crew arrive with theirs charged, unless the
         // ship is out of fuel. Stranding comes after the crew, whose arrival records the hull for repair devices.
-        state.Stranding = ship.Stranded == WFEncounterStranding.Random
-            ? (_random.Prob(0.5f) ? WFEncounterStranding.Fuel : WFEncounterStranding.Thrusters)
-            : ship.Stranded;
         if (state.Stranding != WFEncounterStranding.Fuel)
         {
             // The crew arrive on a running ship: plant fuelled and lit, batteries charged, and fuel for the trip stowed
@@ -806,7 +838,7 @@ public sealed partial class WFEncounterSystem : EntitySystem
             LeaveStranded(grid, state.Stranding);
         state.NextPower = _timing.CurTime + PowerInterval;
 
-        if (ship.Lurks && encounter.Comp.StartRadius > 0f)
+        if (state.Lurking)
             Mask(state);
 
         var berths = _planner.HoldTiles(grid, ship.Passengers.Count);
@@ -820,6 +852,7 @@ public sealed partial class WFEncounterSystem : EntitySystem
 
         // Whatever came aboard with the ship is the crew's: taking it in front of them is theft.
         EntityManager.System<WFCrewConductSystem>().MarkProperty(grid, state.Group);
+        state.Crew = crewmen.Count;
         return true;
     }
 
@@ -903,6 +936,13 @@ public sealed partial class WFEncounterSystem : EntitySystem
         if (TerminatingOrDeleted(ship.Grid))
             return;
 
+        if (ship.Virtual)
+        {
+            _objectives.Cancel(ship.Grid, ship.Group);
+            Del(ship.Grid);
+            return;
+        }
+
         _setup.ClearCrew(ship.Grid, ship.Group, keepCorpses: true);
         // Anyone still aboard is left in space, not deleted with the hull.
         _lifecycle.UnparentPlayersFromGrid(ship.Grid, true);
@@ -941,6 +981,7 @@ public sealed partial class WFEncounterSystem : EntitySystem
     {
         base.Update(frameTime);
         HoldTimers();
+        StepSimulation();
         if (_timing.CurTime < _nextPoll)
             return;
 
@@ -979,6 +1020,10 @@ public sealed partial class WFEncounterSystem : EntitySystem
             if (!CleanUp(encounter))
                 QueueDel(uid);
         }
+
+        if (!playersKnown)
+            FindPlayers();
+        PlanSimulation();
 
         if (_running.Count == 0)
             return;
@@ -1074,7 +1119,8 @@ public sealed partial class WFEncounterSystem : EntitySystem
         var now = _timing.CurTime;
         foreach (var (key, ship) in encounter.Comp.Ships)
         {
-            if (TerminatingOrDeleted(ship.Grid))
+            // A simulated ship has no crew to tend it; it only flies its orders.
+            if (TerminatingOrDeleted(ship.Grid) || ship.Virtual)
                 continue;
 
             if (ship.Flees > 0f && encounter.Comp.Begun)
@@ -1168,6 +1214,9 @@ public sealed partial class WFEncounterSystem : EntitySystem
     /// <summary>Whether any of a ship's crew is alive: aboard it, or with <paramref name="anywhere"/> wherever they are.</summary>
     public bool HasLivingCrew(WFEncounterShipState ship, bool anywhere = false)
     {
+        if (ship.Virtual)
+            return !TerminatingOrDeleted(ship.Grid);
+
         var crew = EntityQueryEnumerator<WFCrewComponent, TransformComponent>();
         while (crew.MoveNext(out var uid, out var member, out var xform))
         {
@@ -1185,6 +1234,10 @@ public sealed partial class WFEncounterSystem : EntitySystem
     /// </summary>
     public bool InFight(WFEncounterShipState ship)
     {
+        // A simulated ship is in it until it is beaten in a simulated fight or spawned and beaten for real.
+        if (ship.Virtual)
+            return !TerminatingOrDeleted(ship.Grid);
+
         // A hulk has no crew to lose: it is there until somebody claims it or its time runs out.
         if (ship.Derelict)
             return !TerminatingOrDeleted(ship.Grid);

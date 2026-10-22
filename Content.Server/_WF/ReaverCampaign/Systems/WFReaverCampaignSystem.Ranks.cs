@@ -14,6 +14,17 @@ public sealed partial class WFReaverCampaignSystem
             ev.Tier = state.Tier;
     }
 
+    /// <summary>A hub or convoy lead simulated until now gets the shield it was founded without.</summary>
+    private void OnShipSpawned(ref WFEncounterShipSpawnedEvent ev)
+    {
+        if (Campaign is not { } campaign)
+            return;
+
+        var lead = CompOrNull<WFReaverStrongholdComponent>(ev.Encounter)?.Lead ?? CompOrNull<WFReaverConvoyComponent>(ev.Encounter)?.Lead;
+        if (lead == ev.Key)
+            ShieldHub(campaign, ev.Encounter, ev.Key);
+    }
+
     /// <summary>A stronghold's rank on the map: the tier it was founded at plus its level, and three stars for the citadel.</summary>
     private static void SetThreat(WFReaverStrongholdComponent stronghold, WFEncounterComponent encounter)
     {

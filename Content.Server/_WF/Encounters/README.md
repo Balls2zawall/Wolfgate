@@ -35,6 +35,19 @@ carries its deed (`deed`, `WFEncounterShipDeed` by default; null for none) and d
 encounter, cancels its crew's orders, frees its passengers, opens its clamps and makes it immune to cleanup, so it
 never despawns. It gives no ownership; the encounter completes once it has no ships left.
 
+Encounter ships are simulated while nobody is near (`wf.encounters.simulate`, `WFEncounterSystem.Simulation.cs`). A
+simulated ship is a stand-in entity carrying `WFEncounterGridComponent` and `WFCrewVirtualShipComponent` in place of its
+hull; `WFCrewObjectiveSystem` flies its queue as a point at cruise speed (travel, timed holds, docking by reaching the
+target), and campaigns, markers and judging read it like a ship that is in the fight. A living player or an admin ghost
+within `materialize_range` (4 km, past radar range), or a jump plotted to an exit within it (`FTLStartedEvent`), spawns
+its hull, crew and retrofit (seeded, so it looks the same each time), hands it the stand-in's orders and retargets any
+orders aimed at it. A real ship nobody has boarded, docked with or fought, with its whole crew and no alert, goes back
+to simulation after `dematerialize_delay` with every player past `dematerialize_range`. Spawns and despawns are queued
+and run one per `materialize_interval`. Simulated docking (`DockedTo`, `RedockTo`, `AreDocked`) carries over both ways,
+and a ship spawned on top of another is moved clear. Two simulated ships where one is ordered to attack the other
+fight it out by a roll (`duel_mean_seconds`, weighted by hull worth, crew skill and refit). Encounters with a warrant
+are always real, since the warrant names crewmen. Tests run with simulation off (`PoolManager.Cvars.cs`).
+
 Pirate and Reaver ships fly by threat tier (`tiers` on a ship: the band with the highest `minTier` at or below the
 tier picks the hulls, crew `skills` and `retrofit`). The tier is the one passed to `TrySpawn`, else the Reaver
 campaign's (`WFEncounterThreatTierEvent`), else 0; admins set it with `wf_encounter spawn ... tier=N` or the window's
@@ -202,6 +215,7 @@ are always real), freight value and payouts, follow-up encounters, and a real FT
 - [`Content.Server/_WF/Encounters/Systems/WFEncounterSystem.Fugitive.cs`](Systems/WFEncounterSystem.Fugitive.cs)
 - [`Content.Server/_WF/Encounters/Systems/WFEncounterSystem.Hunt.cs`](Systems/WFEncounterSystem.Hunt.cs)
 - [`Content.Server/_WF/Encounters/Systems/WFEncounterSystem.Radar.cs`](Systems/WFEncounterSystem.Radar.cs)
+- [`Content.Server/_WF/Encounters/Systems/WFEncounterSystem.Simulation.cs`](Systems/WFEncounterSystem.Simulation.cs)
 - [`Content.Server/_WF/Encounters/Systems/WFEncounterSystem.Stranded.cs`](Systems/WFEncounterSystem.Stranded.cs)
 - [`Content.Server/_WF/Encounters/Systems/WFEncounterTraderHailSystem.cs`](Systems/WFEncounterTraderHailSystem.cs)
 - [`Content.Server/_WF/Encounters/Systems/WFEncounterVoteSystem.cs`](Systems/WFEncounterVoteSystem.cs)
@@ -255,6 +269,7 @@ are always real), freight value and payouts, follow-up encounters, and a real FT
 - [`Content.IntegrationTests/Tests/_WF/Encounters/WFEncounterTest.Reactor.cs`](../../../Content.IntegrationTests/Tests/_WF/Encounters/WFEncounterTest.Reactor.cs)
 - [`Content.IntegrationTests/Tests/_WF/Encounters/WFEncounterTest.Retrofit.cs`](../../../Content.IntegrationTests/Tests/_WF/Encounters/WFEncounterTest.Retrofit.cs)
 - [`Content.IntegrationTests/Tests/_WF/Encounters/WFEncounterTest.Sanctuary.cs`](../../../Content.IntegrationTests/Tests/_WF/Encounters/WFEncounterTest.Sanctuary.cs)
+- [`Content.IntegrationTests/Tests/_WF/Encounters/WFEncounterTest.Simulation.cs`](../../../Content.IntegrationTests/Tests/_WF/Encounters/WFEncounterTest.Simulation.cs)
 - [`Content.IntegrationTests/Tests/_WF/Encounters/WFEncounterTest.Stealth.cs`](../../../Content.IntegrationTests/Tests/_WF/Encounters/WFEncounterTest.Stealth.cs)
 - [`Content.IntegrationTests/Tests/_WF/Encounters/WFEncounterTest.Storyteller.cs`](../../../Content.IntegrationTests/Tests/_WF/Encounters/WFEncounterTest.Storyteller.cs)
 - [`Content.IntegrationTests/Tests/_WF/Encounters/WFEncounterTest.Stranded.cs`](../../../Content.IntegrationTests/Tests/_WF/Encounters/WFEncounterTest.Stranded.cs)
@@ -305,6 +320,7 @@ are always real), freight value and payouts, follow-up encounters, and a real FT
   - flag a ship held by docking clamps on the plot.
   - a clamped port's undock says so.
 - [`Content.Client/Shuttles/UI/ShuttleNavControl.xaml.cs`](../../../Content.Client/Shuttles/UI/ShuttleNavControl.xaml.cs): Sector markers for visible encounters.
+- [`Content.IntegrationTests/PoolManager.Cvars.cs`](../../../Content.IntegrationTests/PoolManager.Cvars.cs): tests spawn real ships unless they turn simulation on
 - [`Content.Server/Cargo/Systems/PricingSystem.cs`](../../Cargo/Systems/PricingSystem.cs): a claimed hulk is worth a fraction of its parts
 - [`Content.Server/Shuttles/Systems/DockingSystem.cs`](../../Shuttles/Systems/DockingSystem.cs): a raider's docking clamps hold the ship until released at its helm.
 - [`Content.Server/Shuttles/Systems/ShuttleConsoleSystem.cs`](../../Shuttles/Systems/ShuttleConsoleSystem.cs): docking screens show clamped ports.

@@ -13,7 +13,6 @@ using Robust.Shared.Containers;
 using Robust.Shared.Map;
 using Robust.Shared.Map.Components;
 using Robust.Shared.Prototypes;
-using Robust.Shared.Random;
 
 namespace Content.Server._WF.Encounters.Systems;
 
@@ -21,7 +20,6 @@ namespace Content.Server._WF.Encounters.Systems;
 public sealed partial class WFPirateRetrofitSystem : EntitySystem
 {
     [Dependency] private IPrototypeManager _prototypes = default!;
-    [Dependency] private IRobustRandom _random = default!;
     [Dependency] private ITileDefinitionManager _tileDefs = default!;
     [Dependency] private SharedMapSystem _map = default!;
     [Dependency] private SharedTransformSystem _transform = default!;
@@ -32,11 +30,16 @@ public sealed partial class WFPirateRetrofitSystem : EntitySystem
 
     private static readonly ProtoId<TagPrototype> WallTag = "Wall";
 
+    /// <summary>The run's random source: seeded, so the same hull with the same seed gets the same refit.</summary>
+    private System.Random _rng = new();
+
     /// <summary>Retrofits a hull. True if it mounted guns of its pool, false if it only dirtied the decks.</summary>
-    public bool Apply(EntityUid grid, WFPirateRetrofitPrototype retrofit)
+    public bool Apply(EntityUid grid, WFPirateRetrofitPrototype retrofit, int seed)
     {
         if (!TryComp<MapGridComponent>(grid, out var gridComp))
             return false;
+
+        _rng = new System.Random(seed);
 
         var ent = new Entity<MapGridComponent>(grid, gridComp);
         var armed = retrofit.Guns.Count > 0 && Arm(ent, retrofit);
@@ -63,8 +66,10 @@ public sealed partial class WFPirateRetrofitSystem : EntitySystem
                 hardpoints.Add((uid, hardpoint));
         }
 
-        _random.Shuffle(hardpoints);
-        var target = Math.Min(_random.Next(retrofit.MinGuns, Math.Max(retrofit.MinGuns, retrofit.MaxGuns) + 1), hardpoints.Count);
+        // In a fixed order before the shuffle, so the seed decides it and not the order entities came in.
+        hardpoints.Sort((a, b) => Order(a.Uid, b.Uid));
+        Shuffle(hardpoints);
+        var target = Math.Min(_rng.Next(retrofit.MinGuns, Math.Max(retrofit.MinGuns, retrofit.MaxGuns) + 1), hardpoints.Count);
         var power = ProcessingPower(grid.Owner);
         var used = 0;
         var mounted = 0;
@@ -100,7 +105,7 @@ public sealed partial class WFPirateRetrofitSystem : EntitySystem
             if (fits.Count == 0)
                 continue;
 
-            var pick = _random.Pick(fits);
+            var pick = Pick(fits);
             var xform = Transform(hardpoint.Uid);
             var spawned = Spawn(pick, xform.Coordinates);
             _transform.SetLocalRotation(spawned, xform.LocalRotation);
@@ -166,14 +171,18 @@ public sealed partial class WFPirateRetrofitSystem : EntitySystem
         while (query.MoveNext(out var uid, out _, out var xform, out var meta))
         {
             if (xform.GridUid == grid.Owner && xform.Anchored && meta.EntityPrototype is { } proto
-                && retrofit.WallSwaps.TryGetValue(proto.ID, out var rusted) && _random.Prob(retrofit.WallChance))
+                && retrofit.WallSwaps.TryGetValue(proto.ID, out var rusted))
             {
                 swaps.Add((uid, rusted));
             }
         }
 
+        swaps.Sort((a, b) => Order(a.Wall, b.Wall));
         foreach (var (wall, rusted) in swaps)
         {
+            if (!Prob(retrofit.WallChance))
+                continue;
+
             var xform = Transform(wall);
             var coordinates = xform.Coordinates;
             var rotation = xform.LocalRotation;
@@ -220,10 +229,10 @@ public sealed partial class WFPirateRetrofitSystem : EntitySystem
             var id = _tileDefs[floor.Tile.TypeId].ID;
             foreach (var swap in retrofit.TileSwaps)
             {
-                if (swap.To.Count == 0 || !swap.From.Contains(id) || !_random.Prob(swap.Chance))
+                if (swap.To.Count == 0 || !swap.From.Contains(id) || !Prob(swap.Chance))
                     continue;
 
-                var worn = (ContentTileDefinition) _tileDefs[_random.Pick(swap.To)];
+                var worn = (ContentTileDefinition) _tileDefs[Pick(swap.To)];
                 changes.Add((floor.GridIndices, new Tile(worn.TileId)));
                 break;
             }
@@ -244,10 +253,10 @@ public sealed partial class WFPirateRetrofitSystem : EntitySystem
         for (var i = 0; i < decals; i++)
         {
             var decal = PickDecal(retrofit.Decals, total);
-            var tile = _random.Pick(floors).GridIndices;
-            var jitter = new Vector2(_random.NextFloat(-0.2f, 0.2f), _random.NextFloat(-0.2f, 0.2f));
+            var tile = Pick(floors).GridIndices;
+            var jitter = new Vector2(NextFloat(-0.2f, 0.2f), NextFloat(-0.2f, 0.2f));
             var at = new EntityCoordinates(grid.Owner, (Vector2) tile + jitter);
-            _decals.TryAddDecal(decal.Id, at, out _, decal.Color, _random.NextAngle(), cleanable: true);
+            _decals.TryAddDecal(decal.Id, at, out _, decal.Color, new Angle(NextFloat(0f, MathF.Tau)), cleanable: true);
         }
 
         if (retrofit.Litter.Count == 0)
@@ -256,13 +265,13 @@ public sealed partial class WFPirateRetrofitSystem : EntitySystem
         var litter = (int) (floors.Count * retrofit.LitterDensity);
         for (var i = 0; i < litter; i++)
         {
-            Spawn(_random.Pick(retrofit.Litter), _map.GridTileToLocal(grid.Owner, grid.Comp, _random.Pick(floors).GridIndices));
+            Spawn(Pick(retrofit.Litter), _map.GridTileToLocal(grid.Owner, grid.Comp, Pick(floors).GridIndices));
         }
     }
 
     private WFPirateRetrofitDecal PickDecal(List<WFPirateRetrofitDecal> decals, float total)
     {
-        var roll = _random.NextFloat(total);
+        var roll = NextFloat(0f, total);
         foreach (var decal in decals)
         {
             roll -= decal.Weight;
@@ -295,7 +304,7 @@ public sealed partial class WFPirateRetrofitSystem : EntitySystem
                 _ => null,
             };
 
-            if (corner is not { } web || !_random.Prob(retrofit.CobwebChance))
+            if (corner is not { } web || !Prob(retrofit.CobwebChance))
                 continue;
 
             var spawned = Spawn(web.Web, _map.GridTileToLocal(grid.Owner, grid.Comp, at));
@@ -309,20 +318,58 @@ public sealed partial class WFPirateRetrofitSystem : EntitySystem
         if (retrofit.LightsOut <= 0f)
             return;
 
-        var bulbs = new List<EntityUid>();
+        var fixtures = new List<EntityUid>();
         var query = EntityQueryEnumerator<PoweredLightComponent, TransformComponent>();
         while (query.MoveNext(out var uid, out _, out var xform))
         {
-            if (xform.GridUid != grid || !_random.Prob(retrofit.LightsOut)
-                || !_containers.TryGetContainer(uid, SharedPoweredLightSystem.LightBulbContainer, out var container))
-                continue;
+            if (xform.GridUid == grid)
+                fixtures.Add(uid);
+        }
 
-            bulbs.AddRange(container.ContainedEntities);
+        fixtures.Sort(Order);
+        var bulbs = new List<EntityUid>();
+        foreach (var fixture in fixtures)
+        {
+            if (Prob(retrofit.LightsOut) && _containers.TryGetContainer(fixture, SharedPoweredLightSystem.LightBulbContainer, out var container))
+                bulbs.AddRange(container.ContainedEntities);
         }
 
         foreach (var bulb in bulbs)
         {
             Del(bulb);
+        }
+    }
+
+    /// <summary>Orders two entities by where they stand on their grid.</summary>
+    private int Order(EntityUid a, EntityUid b)
+    {
+        var first = Transform(a).LocalPosition;
+        var second = Transform(b).LocalPosition;
+        var x = first.X.CompareTo(second.X);
+        return x != 0 ? x : first.Y.CompareTo(second.Y);
+    }
+
+    private bool Prob(float chance)
+    {
+        return _rng.NextDouble() < chance;
+    }
+
+    private float NextFloat(float min, float max)
+    {
+        return min + (float) _rng.NextDouble() * (max - min);
+    }
+
+    private T Pick<T>(IReadOnlyList<T> list)
+    {
+        return list[_rng.Next(list.Count)];
+    }
+
+    private void Shuffle<T>(List<T> list)
+    {
+        for (var i = list.Count - 1; i > 0; i--)
+        {
+            var j = _rng.Next(i + 1);
+            (list[i], list[j]) = (list[j], list[i]);
         }
     }
 }
