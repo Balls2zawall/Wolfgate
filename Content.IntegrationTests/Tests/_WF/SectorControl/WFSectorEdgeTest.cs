@@ -38,6 +38,17 @@ public sealed class WFSectorEdgeTest : WFSectorTestBase
             Assert.That(territory.TryClaim(map, outside, Holder, null), Is.False);
             Assert.That(territory.Contest(map, outside, Holder, STiming.CurTime + TimeSpan.FromMinutes(5)), Is.False, "Nor contested.");
             Assert.That(territory.TryClaim(map, edge, Holder, null), Is.True, "The outermost drawn cell can.");
+
+            // In the outside cell's own column, a cell nearer the origin is drawn and can be held: it is the distance
+            // of a cell's centre that counts, not its column.
+            var column = new WFSectorCell(outside.Q, -1);
+            for (var r = -1; !WFSectorHex.InSector(column, size) && r > -outside.Q; r--)
+            {
+                column = new WFSectorCell(outside.Q, r);
+            }
+
+            Assert.That(WFSectorHex.InSector(column, size), Is.True);
+            Assert.That(territory.TryClaim(map, column, Holder, null), Is.True, "A drawn cell in the same column can be held.");
         });
     }
 }

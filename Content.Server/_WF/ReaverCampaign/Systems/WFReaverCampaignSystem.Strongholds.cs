@@ -101,9 +101,11 @@ public sealed partial class WFReaverCampaignSystem
     public bool TryFoundAt(MapCoordinates at, out EntityUid stronghold, ProtoId<WFEncounterPrototype>? prototype = null)
     {
         stronghold = default;
+        // Nothing past the sector's edge can be held, so no stronghold is founded there.
         if (Campaign is not { } campaign || State(true) is not { } state || state.Finished
             || !_prototypes.TryIndex(prototype ?? campaign.Stronghold, out var encounterPrototype)
-            || encounterPrototype.Ships.Count == 0)
+            || encounterPrototype.Ships.Count == 0
+            || !WFSectorHex.InSector(_territory.CellOf(at), _territory.CellSize))
             return false;
 
         var regroup = state.Founded > 0 && Strongholds().Count == 0;

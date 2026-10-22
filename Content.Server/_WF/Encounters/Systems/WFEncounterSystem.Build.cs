@@ -127,8 +127,7 @@ public sealed partial class WFEncounterSystem
         if (!ok)
         {
             Log.Error($"Encounter ship '{build.Ship.Key}' could not be built at its {stage} stage.");
-            if (build.Grid.IsValid() && !TerminatingOrDeleted(build.Grid))
-                _lifecycle.UnparentPlayersFromGrid(build.Grid, true);
+            DiscardHull(build);
             build.State.Building = false;
             return false;
         }
@@ -142,6 +141,27 @@ public sealed partial class WFEncounterSystem
         }
 
         return true;
+    }
+
+    /// <summary>Removes a build's hull, staged or placed, with any crew it got; players aboard are left in space.</summary>
+    private void DiscardHull(ShipBuild build)
+    {
+        if (!build.Grid.IsValid() || TerminatingOrDeleted(build.Grid))
+            return;
+
+        _setup.ClearCrew(build.Grid, build.State.Group, keepCorpses: false);
+        _lifecycle.UnparentPlayersFromGrid(build.Grid, true);
+    }
+
+    /// <summary>Removes everything an abandoned build made: its hull and the stand-in it was to replace, orders and all.</summary>
+    private void Discard(ShipBuild build)
+    {
+        DiscardHull(build);
+        if (build.Proxy is not { } proxy || TerminatingOrDeleted(proxy))
+            return;
+
+        _objectives.Cancel(proxy, build.State.Group);
+        Del(proxy);
     }
 
     /// <summary>
@@ -478,11 +498,12 @@ public sealed partial class WFEncounterSystem
         if (_building is not { } build)
             return false;
 
-        // Its encounter, or its stand-in, went while it was building (beaten in a simulated fight, say): what it made goes too.
-        if (TerminatingOrDeleted(build.Encounter) || build.Proxy is { } proxy && TerminatingOrDeleted(proxy))
+        // Its encounter ended, or its ship or stand-in went, while it was building (beaten in a simulated fight, say):
+        // whatever it made goes, hull and stand-in both.
+        if (TerminatingOrDeleted(build.Encounter) || build.State.Removed
+            || build.Proxy is { } proxy && TerminatingOrDeleted(proxy) && build.Stage < BuildStage.Place)
         {
-            if (build.Grid.IsValid() && !TerminatingOrDeleted(build.Grid))
-                _lifecycle.UnparentPlayersFromGrid(build.Grid, true);
+            Discard(build);
             build.State.Building = false;
             _building = null;
             return true;

@@ -63,6 +63,7 @@ public sealed partial class WFEncounterTest
             }
 
             Assert.That(WornTileCount(lead.Grid), Is.GreaterThan(0), "Its decks are worn.");
+            Assert.That(Crew(lead.Group), Is.Not.Empty, "It is crewed.");
             foreach (var crewman in Crew(lead.Group))
             {
                 Assert.That(SEntMan.GetComponent<WFCrewComponent>(crewman).Skill, Is.EqualTo(WFCrewSkill.Green), "Its crew are green.");

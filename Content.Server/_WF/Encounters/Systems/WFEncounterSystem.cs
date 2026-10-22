@@ -310,8 +310,9 @@ public sealed partial class WFEncounterSystem : EntitySystem
     /// <summary>
     /// Spawns an encounter with its origin at a point in space. <paramref name="stops"/> are the stations its
     /// placement chose: orders can aim at the first and last, and a route calls at each in turn. Fails, leaving
-    /// nothing behind, when a ship cannot be loaded or crewed or its orders are invalid. Ships that fly by tier take
-    /// <paramref name="tier"/>, else the sector threat's, else tier 0.
+    /// nothing behind, when a ship cannot be loaded or crewed or its orders are invalid. A simulated ship is only built
+    /// when a player comes near; one that cannot be built then is lost, with whatever was made of it. Ships that fly by
+    /// tier take <paramref name="tier"/>, else the sector threat's, else tier 0.
     /// </summary>
     public bool TrySpawn(WFEncounterPrototype prototype, MapCoordinates origin, out EntityUid encounter, EntityUid? spawner = null,
         IReadOnlyList<EntityUid>? stops = null, bool pinned = false, bool offBudget = false, int? tier = null)

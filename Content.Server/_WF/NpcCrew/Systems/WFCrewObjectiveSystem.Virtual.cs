@@ -221,9 +221,15 @@ public sealed partial class WFCrewObjectiveSystem
             return;
         }
 
-        // Anticlockwise along the circle: the arc it covers at its speed.
-        var turn = new Angle(ship.Comp.Speed * elapsed / radius);
+        // Anticlockwise along the circle: the arc it covers at its speed, and no further than that in all, so a ship a
+        // little off the circle eases onto it rather than jumping there.
+        var reach = ship.Comp.Speed * elapsed;
+        var turn = new Angle(reach / radius);
         var next = centre + turn.RotateVec(outward) * radius;
+        var step = next - from;
+        if (step.Length() > reach)
+            next = from + Vector2.Normalize(step) * reach;
+
         _transform.SetWorldPosition(ship, next);
         ship.Comp.Velocity = elapsed > 0f ? (next - from) / elapsed : Vector2.Zero;
     }

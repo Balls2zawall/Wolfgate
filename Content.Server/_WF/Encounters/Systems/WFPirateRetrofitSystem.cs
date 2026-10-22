@@ -340,13 +340,17 @@ public sealed partial class WFPirateRetrofitSystem : EntitySystem
         }
     }
 
-    /// <summary>Orders two entities by where they stand on their grid.</summary>
+    /// <summary>Orders two entities by where they stand on their grid, then by what they are, so the order is the same each time the hull is spawned.</summary>
     private int Order(EntityUid a, EntityUid b)
     {
         var first = Transform(a).LocalPosition;
         var second = Transform(b).LocalPosition;
         var x = first.X.CompareTo(second.X);
-        return x != 0 ? x : first.Y.CompareTo(second.Y);
+        if (x != 0)
+            return x;
+
+        var y = first.Y.CompareTo(second.Y);
+        return y != 0 ? y : string.CompareOrdinal(MetaData(a).EntityPrototype?.ID, MetaData(b).EntityPrototype?.ID);
     }
 
     private bool Prob(float chance)

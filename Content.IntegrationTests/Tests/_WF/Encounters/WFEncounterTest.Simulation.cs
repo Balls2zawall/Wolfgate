@@ -502,14 +502,19 @@ public sealed partial class WFEncounterTest
             // Out to its circle first.
             await RunTicks(60 * 40);
             var angles = new List<float>();
+            Vector2? last = null;
             for (var i = 0; i < 10; i++)
             {
                 await RunTicks(60 * 3);
                 await Server.WaitPost(() =>
                 {
-                    var offset = Server.System<SharedTransformSystem>().GetWorldPosition(Ship(encounter).Grid)
-                                 - Server.System<SharedTransformSystem>().GetWorldPosition(station);
+                    var at = Server.System<SharedTransformSystem>().GetWorldPosition(Ship(encounter).Grid);
+                    var offset = at - Server.System<SharedTransformSystem>().GetWorldPosition(station);
                     Assert.That(offset.Length(), Is.InRange(600f, 800f), "It keeps to its range.");
+                    var speed = SEntMan.GetComponent<WFCrewVirtualShipComponent>(Ship(encounter).Grid).Speed;
+                    if (last is { } before)
+                        Assert.That((at - before).Length(), Is.LessThanOrEqualTo(speed * 180f / STiming.TickRate * 1.1f), "No faster than its cruise speed.");
+                    last = at;
                     angles.Add(MathF.Atan2(offset.Y, offset.X));
                 });
             }
@@ -526,6 +531,50 @@ public sealed partial class WFEncounterTest
             {
                 Server.System<WFEncounterSystem>().End(encounter);
                 SEntMan.DeleteEntity(station);
+            });
+        });
+    }
+
+    /// <summary>An encounter ended while one of its ships is being built leaves neither the half-built hull nor the stand-in behind.</summary>
+    [Test]
+    public async Task AnEncounterEndedMidBuildLeavesNothingBehind()
+    {
+        await WithSimulation(async () =>
+        {
+            EntityUid encounter = default, proxy = default, hull = default;
+            var at = new Vector2(30000, -25000);
+            await Server.WaitPost(() =>
+            {
+                var prototype = Server.ResolveDependency<IPrototypeManager>().Index<WFEncounterPrototype>("WFTestSimHauler");
+                Assert.That(Server.System<WFEncounterSystem>().TrySpawn(prototype, new MapCoordinates(at, MapData.MapId), out encounter), Is.True);
+                proxy = Ship(encounter).Grid;
+                MovePlayer(at + new Vector2(0f, 1500f));
+            });
+
+            // A tick at a time until its hull has taken over but its crew and orders are not yet aboard.
+            var caught = false;
+            for (var i = 0; i < 60 * 30 && !caught; i++)
+            {
+                await RunTicks(1);
+                await Server.WaitPost(() =>
+                {
+                    var ship = Ship(encounter);
+                    if (!ship.Building || ship.Virtual)
+                        return;
+
+                    hull = ship.Grid;
+                    caught = true;
+                    Server.System<WFEncounterSystem>().End(encounter);
+                });
+            }
+
+            Assert.That(caught, Is.True, "The ship was caught mid-build.");
+            await RunTicks(30);
+            await Server.WaitAssertion(() =>
+            {
+                Assert.That(SEntMan.EntityExists(hull), Is.False, "The half-built hull is gone.");
+                Assert.That(SEntMan.EntityExists(proxy), Is.False, "And so is the stand-in.");
+                MovePlayer(Vector2.Zero);
             });
         });
     }
