@@ -439,4 +439,39 @@ public sealed partial class WFEncounterTest
             await Server.WaitPost(() => Server.System<WFEncounterSystem>().End(encounter));
         });
     }
+
+    /// <summary>
+    /// A real ship whose queue is held when it goes back to simulation flies on as a simulated ship; one stopped for a
+    /// lost target keeps saying so, for the encounter to skip the order.
+    /// </summary>
+    [Test]
+    public async Task AHeldShipFliesOnOnceSimulated()
+    {
+        await WithSimulation(async () =>
+        {
+            EntityUid encounter = default;
+            var at = new Vector2(-30000, 20000);
+            await Server.WaitPost(() =>
+            {
+                MovePlayer(at + new Vector2(0f, 1500f));
+                var prototype = Server.ResolveDependency<IPrototypeManager>().Index<WFEncounterPrototype>("WFTestSimWanderer");
+                Assert.That(Server.System<WFEncounterSystem>().TrySpawn(prototype, new MapCoordinates(at, MapData.MapId), out encounter), Is.True);
+            });
+            await Until(() => !Ship(encounter).Virtual && !Ship(encounter).Building, 30, "The wanderer near the player is spawned.");
+
+            Vector2 heldAt = default;
+            await Server.WaitPost(() =>
+            {
+                var ship = Ship(encounter);
+                // Held, as for visitors or a hail.
+                Server.System<WFCrewObjectiveSystem>().Control(ship.Grid, ship.Group, WFCrewSetupAction.Pause);
+                MovePlayer(Vector2.Zero);
+            });
+            await Until(() => Ship(encounter).Virtual, 30, "Left alone, it goes back to simulation.");
+            await Server.WaitPost(() => heldAt = Server.System<SharedTransformSystem>().GetWorldPosition(Ship(encounter).Grid));
+            await Until(() => (Server.System<SharedTransformSystem>().GetWorldPosition(Ship(encounter).Grid) - heldAt).Length() > 50f, 20,
+                "Simulated, it flies on with nobody to hold for.");
+            await Server.WaitPost(() => Server.System<WFEncounterSystem>().End(encounter));
+        });
+    }
 }

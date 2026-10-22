@@ -28,7 +28,8 @@ public sealed partial class WFCrewObjectiveSystem
         state.Started = false;
         state.Pilot = null;
         state.Elapsed = 0;
-        if (state.Status != "paused")
+        // A stopped queue keeps why it stopped, a failed dock or a lost target, for whoever runs it to deal with.
+        if (!state.Paused)
             state.Status = "pending";
         _queues[(to, group)] = state;
         UpdateEscort(to, group, state);
@@ -89,6 +90,13 @@ public sealed partial class WFCrewObjectiveSystem
     private void StepVirtual(Entity<WFCrewVirtualShipComponent> ship, QueueState state, float elapsed)
     {
         ship.Comp.Velocity = Vector2.Zero;
+        // Held for visitors or a hail when it was real: nobody is aboard a simulated ship to wait for, so it flies on.
+        if (state.Paused && state.Status == "paused")
+        {
+            state.Paused = false;
+            state.Status = "pending";
+        }
+
         if (state.Paused || state.Items.Count == 0)
             return;
 
