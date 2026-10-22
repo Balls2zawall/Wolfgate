@@ -2853,3 +2853,16 @@ Entries:
   id: 100204
   time: '2026-10-22T21:45:20.0000000+00:00'
   url: https://github.com/VanguardControl/Wolfgate/pull/322
+- author: Gandalf2k15
+  changes:
+    - type: Tweak
+      message: >-
+        Screen shake no longer throws your view far. Hard hits now shake faster
+        and a bit longer instead.
+    - type: Add
+      message: >-
+        Added a "Default to North" option to the Extra tab of the game options.
+        With it on, your view faces north on every grid you step onto.
+  id: 100205
+  time: '2026-10-22T21:45:30.0000000+00:00'
+  url: https://github.com/VanguardControl/Wolfgate/pull/323
