@@ -2735,3 +2735,17 @@ Entries:
   id: 100196
   time: '2026-10-21T22:33:08.0000000+00:00'
   url: https://github.com/VanguardControl/Wolfgate/pull/298
+- author: Gandalf2k15
+  changes:
+    - type: Add
+      message: >-
+        Added a message sound picker to the Voice section of the character
+        creator. Choose the sound your character makes when they talk, or keep
+        your species' default.
+    - type: Add
+      message: Added the Moth, Wawa, Gorilla and Sheleg message sounds from HardLight.
+    - type: Tweak
+      message: Moths now chatter when they talk.
+  id: 100197
+  time: '2026-10-22T01:45:04.0000000+00:00'
+  url: https://github.com/VanguardControl/Wolfgate/pull/316
