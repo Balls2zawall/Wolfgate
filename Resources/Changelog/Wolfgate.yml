@@ -2812,3 +2812,10 @@ Entries:
   id: 100201
   time: '2026-10-22T04:45:16.0000000+00:00'
   url: https://github.com/VanguardControl/Wolfgate/pull/321
+- author: TheSlapper
+  changes:
+    - type: Add
+      message: Various walls and doors.
+  id: 100202
+  time: '2026-10-22T21:12:20.0000000+00:00'
+  url: https://github.com/VanguardControl/Wolfgate/pull/315
