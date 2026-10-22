@@ -3,6 +3,7 @@
 wf-mapping-mode-map-name = Mapping: {$name}
 wf-mapping-mode-admin-map-name = Mapping mode admin map
 wf-mapping-mode-off = Mapping mode is off.
+wf-mapping-mode-no-round = Mapping mode is on, so no round starts.
 wf-mapping-mode-not-in-lobby = You have to be in the lobby to do that.
 wf-mapping-mode-bad-name = Names are 1 to {$max} letters, digits, spaces, dashes or underscores.
 wf-mapping-mode-too-many-sessions = The server is at its limit of {$max} mapping sessions.
