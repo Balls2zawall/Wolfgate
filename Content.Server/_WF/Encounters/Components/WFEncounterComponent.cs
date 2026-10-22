@@ -61,6 +61,14 @@ public sealed partial class WFEncounterComponent : Component
     [DataField]
     public bool Pinned;
 
+    /// <summary>The threat tier it spawned at, if its ships fly by tier.</summary>
+    [DataField]
+    public int? Tier;
+
+    /// <summary>The threat rank shown on the map; none for an unranked encounter.</summary>
+    [DataField]
+    public int? Threat;
+
     /// <summary>The stations its placement chose, in the order a route calls at them.</summary>
     [DataField]
     public List<EntityUid> Stops = new();
@@ -182,6 +190,10 @@ public sealed partial class WFEncounterShipState
     /// <summary>Whether it is a crewless hulk, in the encounter for as long as it is there.</summary>
     [DataField]
     public bool Derelict;
+
+    /// <summary>Whether its hull got pirate retrofitting that mounts guns: a civilian hull the raiders armed.</summary>
+    [DataField]
+    public bool Retrofitted;
 
     /// <summary>Whether it lies in wait, its IFF label hidden, until the encounter begins.</summary>
     [DataField]

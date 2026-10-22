@@ -62,6 +62,7 @@ public sealed partial class WFEncounterSystem : EntitySystem
     [Dependency] private SharedMapSystem _mapSystem = default!;
     [Dependency] private NPCRetaliationSystem _retaliation = default!;
     [Dependency] private NpcFactionSystem _factions = default!;
+    [Dependency] private WFPirateRetrofitSystem _retrofit = default!;
 
     private static readonly TimeSpan PollInterval = TimeSpan.FromSeconds(5);
 
@@ -308,10 +309,11 @@ public sealed partial class WFEncounterSystem : EntitySystem
     /// <summary>
     /// Spawns an encounter with its origin at a point in space. <paramref name="stops"/> are the stations its
     /// placement chose: orders can aim at the first and last, and a route calls at each in turn. Fails, leaving
-    /// nothing behind, when a ship cannot be loaded or crewed or its orders are invalid.
+    /// nothing behind, when a ship cannot be loaded or crewed or its orders are invalid. Ships that fly by tier take
+    /// <paramref name="tier"/>, else the sector threat's, else tier 0.
     /// </summary>
     public bool TrySpawn(WFEncounterPrototype prototype, MapCoordinates origin, out EntityUid encounter, EntityUid? spawner = null,
-        IReadOnlyList<EntityUid>? stops = null, bool pinned = false, bool offBudget = false)
+        IReadOnlyList<EntityUid>? stops = null, bool pinned = false, bool offBudget = false, int? tier = null)
     {
         encounter = default;
         if (origin.MapId == MapId.Nullspace || prototype.Ships.Count == 0 || !_mapSystem.TryGetMap(origin.MapId, out var map))
@@ -353,6 +355,8 @@ public sealed partial class WFEncounterSystem : EntitySystem
         if (stops != null)
             comp.Stops.AddRange(stops);
         _meta.SetEntityName(uid, comp.Name);
+        comp.Tier = TierFor(prototype, tier);
+        comp.Threat = prototype.Threat ?? comp.Tier;
 
         WFEncounterManifestPrototype? manifest = null;
         if (prototype.Manifests.Count > 0)
@@ -612,10 +616,45 @@ public sealed partial class WFEncounterSystem : EntitySystem
         return queue;
     }
 
+    /// <summary>The tier an encounter's ships fly at: the one given, else the sector threat's, else 0; none if no ship flies by tier.</summary>
+    private int? TierFor(WFEncounterPrototype prototype, int? tier)
+    {
+        if (!prototype.Ships.Any(ship => ship.Tiers.Count > 0))
+            return null;
+
+        if (tier == null)
+        {
+            var ev = new WFEncounterThreatTierEvent(null);
+            RaiseLocalEvent(ref ev);
+            tier = ev.Tier;
+        }
+
+        return Math.Clamp(tier ?? 0, 0, WFEncounterThreat.MaxTier);
+    }
+
+    /// <summary>The ship's band for a tier: the one with the highest minimum at or below it, or none.</summary>
+    public static WFEncounterShipTier? BandFor(WFEncounterShip ship, int? tier)
+    {
+        if (tier is not { } at)
+            return null;
+
+        WFEncounterShipTier? best = null;
+        foreach (var band in ship.Tiers)
+        {
+            if (band.MinTier <= at && (best == null || band.MinTier > best.MinTier))
+                best = band;
+        }
+
+        return best;
+    }
+
     private bool TrySpawnShip(Entity<WFEncounterComponent> encounter, WFEncounterShip ship, string designation,
         WFEncounterManifestPrototype? manifest, EntityUid? spawner)
     {
-        ProtoId<VesselPrototype>? vesselId = ship.Vessels.Count > 0 ? _random.Pick(ship.Vessels) : ship.Vessel;
+        var band = BandFor(ship, encounter.Comp.Tier);
+        var vessels = band?.Vessels ?? ship.Vessels;
+        ProtoId<VesselPrototype>? vesselId = vessels.Count > 0 ? _random.Pick(vessels) : ship.Vessel;
+        WFCrewSkill? skill = band is { Skills.Count: > 0 } ? _random.Pick(band.Skills) : ship.Skill;
         if (vesselId is not { } id || !_prototypes.TryIndex(id, out var vessel)
             || !_vessels.TrySpawnVessel(vessel, encounter.Comp.Origin.MapId, encounter.Comp.Origin.Position + ship.Offset, spawner, out var spawned))
             return false;
@@ -655,6 +694,10 @@ public sealed partial class WFEncounterSystem : EntitySystem
             Passengers = ship.Passengers.Count > 0,
         };
         encounter.Comp.Ships.Add(ship.Key, state);
+        // Raiders refit what they took: guns on its hardpoints and grime on its decks, before anyone goes aboard.
+        if ((band?.Retrofit ?? ship.Retrofit) is { } retrofitId && _prototypes.TryIndex(retrofitId, out var retrofit))
+            state.Retrofitted = _retrofit.Apply(grid, retrofit);
+
         // Boarders come for the ship, not to shoot it up: their guns answer ship guns only. Docked, their clamps hold it.
         if (state.Hunt)
         {
@@ -697,7 +740,7 @@ public sealed partial class WFEncounterSystem : EntitySystem
             CallsForHelp = ship.Distress && ship.Passengers.Count == 0,
             Disengage = ship.Disengage,
             DisengageRange = ship.DisengageRange,
-            Skill = ship.Skill ?? WFCrewSkill.Veteran,
+            Skill = skill ?? WFCrewSkill.Veteran,
         };
         if (ship.Navigation is { } navigation && _prototypes.TryIndex(navigation, out var profile))
             mission.Navigation = profile.Settings.Clone();
@@ -737,7 +780,7 @@ public sealed partial class WFEncounterSystem : EntitySystem
         }
 
         // A skill set on the ship is the crew's; left unset, each takes one from the profile's pool.
-        if (posts.Count == 0 || !_setup.TrySpawn(grid, posts, mission, ship.Skill == null, out var crewmen))
+        if (posts.Count == 0 || !_setup.TrySpawn(grid, posts, mission, skill == null, out var crewmen))
             return false;
 
         if (ship.Deed is { } deed)

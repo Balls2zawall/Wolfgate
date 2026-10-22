@@ -35,6 +35,17 @@ carries its deed (`deed`, `WFEncounterShipDeed` by default; null for none) and d
 encounter, cancels its crew's orders, frees its passengers, opens its clamps and makes it immune to cleanup, so it
 never despawns. It gives no ownership; the encounter completes once it has no ships left.
 
+Pirate and Reaver ships fly by threat tier (`tiers` on a ship: the band with the highest `minTier` at or below the
+tier picks the hulls, crew `skills` and `retrofit`). The tier is the one passed to `TrySpawn`, else the Reaver
+campaign's (`WFEncounterThreatTierEvent`), else 0; admins set it with `wf_encounter spawn ... tier=N` or the window's
+tier picker. Tiers 0-2 fly retrofitted civilian hulls with Green crews, tier 3 mixes heavy civilian hulls and gunships,
+tiers 4-5 fly the black-market line. Stronghold hubs draw from a pool of civilian hulls with docking ports and a fixed
+gun count. `WFPirateRetrofitSystem` applies a `wfPirateRetrofit` (pirate retrofitting) as a hull spawns: it pulls mapped
+guns its pool doesn't list, fills hardpoints at random from the pool within the fire control's processing power, and
+wears the decks (worn tiles, rusted walls, grime decals, cobwebs, dead lights, litter). The encounter's rank (its tier,
+a stronghold's founding tier plus level, three stars for the citadel) goes out on the markers and is drawn as chevrons
+and stars beside the radar label and under the sector map glyph, with the threat and hull class on its card.
+
 The encounter pirates fly as the Ashfall Reavers (`WFAshfallReavers`, a company nobody can pick, at war with both
 navies in `standing.yml`) on scrapyard and black-market hulls, in pirate slops. The prototypes cover freight runs, TSF and Phaethon Dynasty patrols (one of each at round start, kept to different
 stations and away from the other's home ports with `avoidStations`) and transports, wandering traders (with exotic dealers under mercenary escort), pirate raiders
@@ -195,6 +206,7 @@ are always real), freight value and payouts, follow-up encounters, and a real FT
 - [`Content.Server/_WF/Encounters/Systems/WFEncounterTraderHailSystem.cs`](Systems/WFEncounterTraderHailSystem.cs)
 - [`Content.Server/_WF/Encounters/Systems/WFEncounterVoteSystem.cs`](Systems/WFEncounterVoteSystem.cs)
 - [`Content.Server/_WF/Encounters/Systems/WFEncounterZoneSystem.cs`](Systems/WFEncounterZoneSystem.cs)
+- [`Content.Server/_WF/Encounters/Systems/WFPirateRetrofitSystem.cs`](Systems/WFPirateRetrofitSystem.cs)
 - [`Content.Server/_WF/Encounters/Systems/WFSalvageClaimSystem.cs`](Systems/WFSalvageClaimSystem.cs)
 - [`Content.Server/_WF/Encounters/WFEncounterEvents.cs`](WFEncounterEvents.cs)
 
@@ -205,6 +217,7 @@ are always real), freight value and payouts, follow-up encounters, and a real FT
 - [`Content.Shared/_WF/Encounters/WFEncounterMarkers.cs`](../../../Content.Shared/_WF/Encounters/WFEncounterMarkers.cs)
 - [`Content.Shared/_WF/Encounters/WFEncounterPresetPrototype.cs`](../../../Content.Shared/_WF/Encounters/WFEncounterPresetPrototype.cs)
 - [`Content.Shared/_WF/Encounters/WFEncounterPrototype.cs`](../../../Content.Shared/_WF/Encounters/WFEncounterPrototype.cs)
+- [`Content.Shared/_WF/Encounters/WFPirateRetrofitPrototype.cs`](../../../Content.Shared/_WF/Encounters/WFPirateRetrofitPrototype.cs)
 - [`Content.Shared/_WF/Encounters/WFStandingPrototype.cs`](../../../Content.Shared/_WF/Encounters/WFStandingPrototype.cs)
 
 ### Client
@@ -215,6 +228,7 @@ are always real), freight value and payouts, follow-up encounters, and a real FT
 - [`Content.Client/_WF/Encounters/WFEncounterClientSystem.cs`](../../../Content.Client/_WF/Encounters/WFEncounterClientSystem.cs)
 - [`Content.Client/_WF/Encounters/WFEncounterColors.cs`](../../../Content.Client/_WF/Encounters/WFEncounterColors.cs)
 - [`Content.Client/_WF/Encounters/WFEncounterMarkerClientSystem.cs`](../../../Content.Client/_WF/Encounters/WFEncounterMarkerClientSystem.cs)
+- [`Content.Client/_WF/Encounters/WFEncounterRanks.cs`](../../../Content.Client/_WF/Encounters/WFEncounterRanks.cs)
 - [`Content.Client/_WF/Encounters/WFEncounterWindow.cs`](../../../Content.Client/_WF/Encounters/WFEncounterWindow.cs)
 
 ### Integration tests
@@ -239,6 +253,7 @@ are always real), freight value and payouts, follow-up encounters, and a real FT
 - [`Content.IntegrationTests/Tests/_WF/Encounters/WFEncounterTest.Pinned.cs`](../../../Content.IntegrationTests/Tests/_WF/Encounters/WFEncounterTest.Pinned.cs)
 - [`Content.IntegrationTests/Tests/_WF/Encounters/WFEncounterTest.Placement.cs`](../../../Content.IntegrationTests/Tests/_WF/Encounters/WFEncounterTest.Placement.cs)
 - [`Content.IntegrationTests/Tests/_WF/Encounters/WFEncounterTest.Reactor.cs`](../../../Content.IntegrationTests/Tests/_WF/Encounters/WFEncounterTest.Reactor.cs)
+- [`Content.IntegrationTests/Tests/_WF/Encounters/WFEncounterTest.Retrofit.cs`](../../../Content.IntegrationTests/Tests/_WF/Encounters/WFEncounterTest.Retrofit.cs)
 - [`Content.IntegrationTests/Tests/_WF/Encounters/WFEncounterTest.Sanctuary.cs`](../../../Content.IntegrationTests/Tests/_WF/Encounters/WFEncounterTest.Sanctuary.cs)
 - [`Content.IntegrationTests/Tests/_WF/Encounters/WFEncounterTest.Stealth.cs`](../../../Content.IntegrationTests/Tests/_WF/Encounters/WFEncounterTest.Stealth.cs)
 - [`Content.IntegrationTests/Tests/_WF/Encounters/WFEncounterTest.Storyteller.cs`](../../../Content.IntegrationTests/Tests/_WF/Encounters/WFEncounterTest.Storyteller.cs)
@@ -257,6 +272,7 @@ are always real), freight value and payouts, follow-up encounters, and a real FT
 - [`Resources/Prototypes/_WF/Encounters/fugitives.yml`](../../../Resources/Prototypes/_WF/Encounters/fugitives.yml)
 - [`Resources/Prototypes/_WF/Encounters/manifests.yml`](../../../Resources/Prototypes/_WF/Encounters/manifests.yml)
 - [`Resources/Prototypes/_WF/Encounters/presets.yml`](../../../Resources/Prototypes/_WF/Encounters/presets.yml)
+- [`Resources/Prototypes/_WF/Encounters/retrofits.yml`](../../../Resources/Prototypes/_WF/Encounters/retrofits.yml)
 - [`Resources/Prototypes/_WF/Encounters/standing.yml`](../../../Resources/Prototypes/_WF/Encounters/standing.yml)
 - [`Resources/Prototypes/_WF/Encounters/vessels.yml`](../../../Resources/Prototypes/_WF/Encounters/vessels.yml)
 - [`Resources/Prototypes/_WF/Encounters/warrants.yml`](../../../Resources/Prototypes/_WF/Encounters/warrants.yml)
@@ -270,6 +286,7 @@ are always real), freight value and payouts, follow-up encounters, and a real FT
 ### Textures
 
 - [`Resources/Textures/_WF/Encounters/markers.rsi/`](../../../Resources/Textures/_WF/Encounters/markers.rsi/)
+- [`Resources/Textures/_WF/Encounters/ranks.rsi/`](../../../Resources/Textures/_WF/Encounters/ranks.rsi/)
 
 ### Shared maps
 

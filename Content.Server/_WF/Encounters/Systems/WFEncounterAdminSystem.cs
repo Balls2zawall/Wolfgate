@@ -67,7 +67,8 @@ public sealed partial class WFEncounterAdminSystem : EntitySystem
                 if (!float.IsFinite(request.Distance) || request.Distance is < 0 or > 20000)
                     return Loc.GetString("cmd-wf_encounter-bad-distance", ("arg", request.Distance));
                 var origin = new MapCoordinates(here.Position + new Vector2(0f, request.Distance), here.MapId);
-                if (!_scheduler.TryStartAt(prototype, origin, out var spawned, actor, request.Pinned))
+                var tier = request.Tier is { } asked ? Math.Clamp(asked, 0, WFEncounterThreat.MaxTier) : (int?) null;
+                if (!_scheduler.TryStartAt(prototype, origin, out var spawned, actor, request.Pinned, tier))
                     return Loc.GetString("cmd-wf_encounter-spawn-failed", ("prototype", prototype.ID));
                 Audit(session, $"started encounter {prototype.ID} as {ToPrettyString(spawned):entity}{(request.Pinned ? ", kept until ended" : string.Empty)}");
                 return null;

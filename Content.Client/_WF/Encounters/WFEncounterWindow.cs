@@ -33,6 +33,8 @@ public sealed partial class WFEncounterWindow : DefaultWindow
     private readonly LineEdit _distance = new() { Text = "300", MinWidth = 70 };
     private readonly LineEdit _search = new() { HorizontalExpand = true };
     private readonly CheckBox _keep = new() { Pressed = true };
+    /// <summary>The threat tier to spawn at: the sector's first, then each tier.</summary>
+    private readonly OptionButton _tier = new();
     private readonly Label _status = new();
     private readonly BoxContainer _list = new() { Orientation = BoxContainer.LayoutOrientation.Vertical, SeparationOverride = 8 };
     private readonly List<string> _prototypeIds = new();
@@ -73,7 +75,13 @@ public sealed partial class WFEncounterWindow : DefaultWindow
         body.AddChild(Row(new Label { Text = Text("search") }, _search));
         _prototype.OnItemSelected += args => _prototype.SelectId(args.Id);
         _keep.Text = Text("keep");
-        body.AddChild(Row(_prototype, new Label { Text = Text("distance") }, _distance, _keep, Button("spawn", Spawn)));
+        _tier.AddItem(Text("tier-sector"), 0);
+        for (var tier = 0; tier <= WFEncounterThreat.MaxTier; tier++)
+        {
+            _tier.AddItem(Text("tier", ("tier", tier)), tier + 1);
+        }
+        _tier.OnItemSelected += args => _tier.SelectId(args.Id);
+        body.AddChild(Row(_prototype, new Label { Text = Text("distance") }, _distance, _tier, _keep, Button("spawn", Spawn)));
 
         body.AddChild(Heading("running"));
         body.AddChild(_status);
@@ -141,6 +149,7 @@ public sealed partial class WFEncounterWindow : DefaultWindow
             Prototype = _prototypeIds[_prototype.SelectedId],
             Distance = distance,
             Pinned = _keep.Pressed,
+            Tier = _tier.SelectedId > 0 ? _tier.SelectedId - 1 : null,
         });
     }
 

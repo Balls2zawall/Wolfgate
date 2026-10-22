@@ -74,6 +74,8 @@ public sealed partial class WFEncounterMarkerSystem : EntitySystem
                     Velocity = body?.LinearVelocity ?? Vector2.Zero,
                     WarnRange = disabled ? 0f : ship.WarnRange,
                     AttackRange = disabled ? 0f : ship.AttackRange,
+                    Threat = encounter.Threat,
+                    Retrofitted = ship.Retrofitted,
                 });
             }
         }

@@ -48,6 +48,8 @@ public sealed class WFEncounterAdminRequest : EntityEventArgs
     public float Distance = 300f;
     /// <summary>Spawn: whether the encounter is kept until an admin ends it, or jumps out and is cleaned up as usual.</summary>
     public bool Pinned = true;
+    /// <summary>Spawn: the threat tier for ships that fly by tier; none takes the sector threat's.</summary>
+    public int? Tier;
     public bool Enabled;
     public bool Paused;
     public float IntervalMin;

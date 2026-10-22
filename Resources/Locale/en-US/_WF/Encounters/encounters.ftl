@@ -87,6 +87,8 @@ wf-encounter-admin-spawn = Start
 wf-encounter-admin-prototype-manual = {$id} (manual only)
 wf-encounter-admin-search = Search
 wf-encounter-admin-keep = Keep until ended
+wf-encounter-admin-tier-sector = Sector threat tier
+wf-encounter-admin-tier = Tier {$tier}
 wf-encounter-admin-search-hint = name, prototype, ship or state
 wf-encounter-admin-running = Encounters
 wf-encounter-admin-none = No encounters.
@@ -111,11 +113,12 @@ wf-encounter-admin-reveal = Reveal
 
 # wf_encounter command
 cmd-wf_encounter-desc = Lists, spawns and ends encounters, and runs or pauses the encounter scheduler.
-cmd-wf_encounter-help = Usage: {$command} list | spawn <prototype> [distance] [keep|jump] | end <encounter> | schedule | pause | resume
+cmd-wf_encounter-help = Usage: {$command} list | spawn <prototype> [distance] [keep|jump] [tier=N] | end <encounter> | schedule | pause | resume
 cmd-wf_encounter-hint-sub = <subcommand>
 cmd-wf_encounter-hint-prototype = <encounter prototype>
 cmd-wf_encounter-hint-distance = [metres north of you] [keep|jump]
 cmd-wf_encounter-hint-keep = [keep until ended | jump out as usual]
+cmd-wf_encounter-hint-tier = [tier=0..5, the sector threat's if left out]
 cmd-wf_encounter-hint-uid = <encounter entity>
 cmd-wf_encounter-list-line = {$uid} {$prototype} "{$name}" {$state}, {$ships} ships, origin {$x}, {$y}
 cmd-wf_encounter-list-footer = {$count} encounters.
@@ -123,6 +126,7 @@ cmd-wf_encounter-state-active = Active
 cmd-wf_encounter-no-player = You need a body or a ghost on a map to spawn an encounter.
 cmd-wf_encounter-unknown = {$prototype} is not an encounter.
 cmd-wf_encounter-bad-distance = {$arg} is not a distance between 0 and 20000.
+cmd-wf_encounter-bad-tier = {$arg} is not a threat tier from tier=0 to tier={$max}.
 cmd-wf_encounter-spawned = Started "{$name}" as {$uid}.
 cmd-wf_encounter-spawn-failed = {$prototype} could not be started. Station encounters need a station (routes need two) on this map; otherwise the server log says which ship failed.
 cmd-wf_encounter-not-found = {$arg} is not an encounter.
@@ -133,6 +137,18 @@ cmd-wf_encounter-paused = Encounter scheduler paused.
 cmd-wf_encounter-resumed = Encounter scheduler resumed.
 wf-encounter-distress-attacked = Mayday, mayday! This is {$name}. We are under attack at {$x}, {$y}. Any vessel, please, we need help!
 wf-encounter-map-object = Contact: {$name}
+wf-encounter-map-object-ranked = Contact: {$name} · Threat {$threat}
+wf-encounter-threat-rank = Threat {$threat ->
+    [0] none
+    [1] one chevron
+    [2] two chevrons
+    [3] three chevrons
+    [4] one star
+    [5] two stars
+   *[other] three stars
+}
+wf-encounter-threat-retrofit = Retrofitted civilian hulls
+wf-encounter-threat-gunship = Pirate gunships
 wf-encounter-name-trader-surplus = Surplus dealer {$designation}
 wf-encounter-announce-trader-surplus = {$name} is in the sector with decommissioned military stock. Arms, kit and ammunition, priced to move. Come alongside with your hands where we can see them.
 wf-encounter-name-trader-curios = Curio dealer {$designation}
