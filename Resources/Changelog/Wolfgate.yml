@@ -2866,3 +2866,45 @@ Entries:
   id: 100205
   time: '2026-10-22T21:45:30.0000000+00:00'
   url: https://github.com/VanguardControl/Wolfgate/pull/323
+- author: Gandalf2k15
+  changes:
+    - type: Tweak
+      message: >-
+        Low-threat Reavers and pirates now fly beat-up civilian ships with
+        bolted-on light guns and green crews. Faction gunships only show up once
+        the Reaver threat climbs to tier 3 and up.
+    - type: Add
+      message: >-
+        Pirate retrofitting: raider ships come with random guns on their
+        hardpoints, rusted walls, dirty floors, cobwebs, grime and dead lights.
+    - type: Tweak
+      message: >-
+        Pirate guns and crew skill scale with the Reaver threat tier. No heavy
+        cannons or EMP guns at the low tiers.
+    - type: Tweak
+      message: >-
+        Reaver strongholds use a mix of civilian hulls with matching gun counts,
+        and get tougher guns as the threat rises.
+    - type: Add
+      message: The MMC Dredger can now show up as a pirate ship.
+    - type: Add
+      message: >-
+        Pirate and Reaver contacts show their threat as chevrons and stars on
+        the radar and sector map, and as "Threat N" in the map list.
+    - type: Tweak
+      message: >-
+        Ships far from any player are simulated instead of spawned, which cuts
+        server load. They spawn when you get within 4 km or jump in nearby.
+    - type: Tweak
+      message: >-
+        Fights between NPC factions nobody is watching are decided by a dice
+        roll. Show up and you'll find the real fight.
+    - type: Tweak
+      message: Simulated extorters still roam and pick a victim from the map.
+    - type: Fix
+      message: >-
+        Factions can no longer claim sectors outside the hex grid shown on the
+        sector map.
+  id: 100206
+  time: '2026-10-22T22:32:18.0000000+00:00'
+  url: https://github.com/VanguardControl/Wolfgate/pull/319
