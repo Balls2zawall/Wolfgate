@@ -2970,3 +2970,12 @@ Entries:
   id: 100211
   time: '2026-10-23T03:29:58.0000000+00:00'
   url: https://github.com/VanguardControl/Wolfgate/pull/331
+- author: Erol509
+  changes:
+    - type: Tweak
+      message: >-
+        Updated closet, locker, wardrobe, wall-mounted storage, and floor
+        appearances.
+  id: 100212
+  time: '2026-10-23T18:45:54.0000000+00:00'
+  url: https://github.com/VanguardControl/Wolfgate/pull/182
