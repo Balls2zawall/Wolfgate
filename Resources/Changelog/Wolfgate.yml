@@ -2953,3 +2953,20 @@ Entries:
   id: 100210
   time: '2026-10-23T03:29:04.0000000+00:00'
   url: https://github.com/VanguardControl/Wolfgate/pull/332
+- author: Gandalf2k15
+  changes:
+    - type: Add
+      message: >-
+        Added Blackanvil Chop-Shop, an illegal drydock out past Anvilhold. Pull
+        any ship into a berth and break it for sheets and cash.
+    - type: Add
+      message: >-
+        Breaking someone else's ship or a lawful NPC ship puts a warrant on you.
+        Whoever kills you collects it.
+    - type: Tweak
+      message: >-
+        NPC crews now go after the player breaking their ship, and that player's
+        own ship, instead of the drydock.
+  id: 100211
+  time: '2026-10-23T03:29:58.0000000+00:00'
+  url: https://github.com/VanguardControl/Wolfgate/pull/331
