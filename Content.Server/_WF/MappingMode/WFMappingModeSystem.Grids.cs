@@ -1,8 +1,8 @@
 using System.Linq;
 using System.Numerics;
+using Content.Shared._CE.ZLevels.Core.Components;
 using Content.Shared._WF.MappingMode;
 using Content.Shared._WF.MappingTools;
-using Content.Shared.Database;
 using Robust.Shared.Map;
 using Robust.Shared.Map.Components;
 using Robust.Shared.Network;
@@ -25,7 +25,6 @@ public sealed partial class WFMappingModeSystem
         SubscribeNetworkEvent<WFMappingGridListRequest>(OnGridListRequest);
         SubscribeNetworkEvent<WFMappingGoToGridRequest>(OnGoToGridRequest);
         SubscribeNetworkEvent<WFMappingDeleteGridRequest>(OnDeleteGridRequest);
-        SubscribeNetworkEvent<WFMappingSnapGridRequest>(OnSnapGridRequest);
     }
 
     /// <summary>The grids directly on a map, most tiles first.</summary>
@@ -39,10 +38,24 @@ public sealed partial class WFMappingModeSystem
                 continue;
 
             grids.Add(new WFMappingGridInfo(GetNetEntity(child), MetaData(child).EntityName, CountTiles(child, grid),
-                CountGridEntities(child), IsAligned(child)));
+                CountGridEntities(child), CompOrNull<CEZMapComponent>(map)?.Depth ?? 0));
         }
 
         grids.Sort((a, b) => b.Tiles.CompareTo(a.Tiles));
+        return grids;
+    }
+
+    /// <summary>The grids on every level of a session, top level first, most tiles first within a level.</summary>
+    public List<WFMappingGridInfo> GridsOfSession(WFMappingSession session)
+    {
+        var grids = new List<WFMappingGridInfo>();
+        foreach (var map in SessionMaps(session.Id))
+        {
+            if (!TerminatingOrDeleted(map))
+                grids.AddRange(GridsOn(map));
+        }
+
+        grids.Sort((a, b) => a.Depth != b.Depth ? b.Depth.CompareTo(a.Depth) : b.Tiles.CompareTo(a.Tiles));
         return grids;
     }
 
@@ -142,15 +155,12 @@ public sealed partial class WFMappingModeSystem
     {
         var player = args.SenderSession;
         if (!Enabled || !TryGetPresent(player, out var session) ||
-            !TryThrottle(_gridThrottle, player, "grid list") ||
-            player.AttachedEntity is not { } observer ||
-            Transform(observer).MapUid is not { } map ||
-            !IsSessionMap(map, session))
+            !TryThrottle(_gridThrottle, player, "grid list"))
         {
             return;
         }
 
-        RaiseNetworkEvent(new WFMappingGridListEvent(GridsOn(map)), player);
+        RaiseNetworkEvent(new WFMappingGridListEvent(GridsOfSession(session)), player);
     }
 
     private void OnGoToGridRequest(WFMappingGoToGridRequest ev, EntitySessionEventArgs args)
@@ -206,42 +216,7 @@ public sealed partial class WFMappingModeSystem
         }
 
         _tools.Delete(player, new MappingSelection { Grid = ev.Grid, Area = area });
-        RaiseNetworkEvent(new WFMappingGridListEvent(GridsOn(map)), player);
-    }
-
-    /// <summary>Moves a grid onto whole tiles and the nearest right angle, so it lines up with other levels.</summary>
-    private void OnSnapGridRequest(WFMappingSnapGridRequest ev, EntitySessionEventArgs args)
-    {
-        var player = args.SenderSession;
-        if (!Enabled || !TryGetPresent(player, out var session) ||
-            !TryThrottle(_gridThrottle, player, "snap grid"))
-        {
-            return;
-        }
-
-        if (!TryGetEntity(ev.Grid, out var grid) ||
-            TerminatingOrDeleted(grid) ||
-            !HasComp<MapGridComponent>(grid) ||
-            Transform(grid.Value).ParentUid is not { Valid: true } map ||
-            !HasComp<MapComponent>(map) ||
-            !IsSessionMap(map, session))
-        {
-            Refuse(player, "wf-mapping-ship-goto-not-yours");
-            return;
-        }
-
-        if (IsAligned(grid.Value))
-        {
-            Notify(player, true, "wf-mapping-mode-menu-snap-grid-already");
-            return;
-        }
-
-        var (position, rotation) = SnappedPose(grid.Value);
-        _transform.SetLocalPositionRotation(grid.Value, position, rotation);
-        _adminLog.Add(LogType.Action, LogImpact.Low,
-            $"{player:player} snapped mapping grid {ToPrettyString(grid.Value):grid} to {position}, {rotation}");
-        Notify(player, true, "wf-mapping-mode-menu-snap-grid-done");
-        RaiseNetworkEvent(new WFMappingGridListEvent(GridsOn(map)), player);
+        RaiseNetworkEvent(new WFMappingGridListEvent(GridsOfSession(session)), player);
     }
 
     /// <summary>Puts an observer at a world position on a map.</summary>

@@ -36,7 +36,7 @@
 
   The Tools tab has the same actions as buttons.
 
-  Paste shows a preview on the cursor. R turns it. Click to put it down. Shift+click puts it down and keeps the preview for another copy. Right click drops it. A paste in space lands on the grid it was copied from, or on a new grid if that grid is gone.
+  Paste shows a preview on the cursor. R turns it. Click to put it down. Shift+click puts it down and keeps the preview for another copy. Right click drops it. A paste in space lands on the grid it was copied from, or on the nearest grid if that one is gone.
 
   Mirroring flips rotations, pipe fittings and one-sided decals. Lopsided sprites, such as a chair's armrest or a sign's text, keep their look.
 

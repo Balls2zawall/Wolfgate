@@ -44,6 +44,9 @@
                                    HorizontalExpand="True" ClipText="True" />
                             <Button Name="NextGridButton" Access="Public" Text="{Loc 'wf-mapping-ship-menu-next-grid'}"
                                     ToolTip="{Loc 'wf-mapping-ship-menu-next-grid-tooltip'}" TooltipDelay="0" />
+                            <Button Name="NewGridButton" Access="Public" ToggleMode="True"
+                                    Text="{Loc 'wf-mapping-mode-menu-new-grid'}"
+                                    ToolTip="{Loc 'wf-mapping-mode-menu-new-grid-tooltip'}" TooltipDelay="0" />
                             <Button Name="GridsRefreshButton" Access="Public" Text="{Loc 'wf-mapping-mode-lobby-refresh'}" />
                         </BoxContainer>
                         <BoxContainer Name="GridList" Access="Public" Orientation="Vertical" SeparationOverride="2" />

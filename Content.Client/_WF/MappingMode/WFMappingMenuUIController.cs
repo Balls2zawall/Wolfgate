@@ -48,6 +48,7 @@ public sealed partial class WFMappingMenuUIController : UIController, IOnStateEx
         system.SessionEnded += UpdateSession;
         system.GridsUpdated += UpdateGrids;
         system.PendingDeleteChanged += UpdatePendingDelete;
+        system.NewGridChanged += UpdateNewGrid;
     }
 
     public void OnSystemUnloaded(WFMappingClientSystem system)
@@ -60,6 +61,7 @@ public sealed partial class WFMappingMenuUIController : UIController, IOnStateEx
         system.SessionEnded -= UpdateSession;
         system.GridsUpdated -= UpdateGrids;
         system.PendingDeleteChanged -= UpdatePendingDelete;
+        system.NewGridChanged -= UpdateNewGrid;
     }
 
     public void OnSystemLoaded(WFMappingReferenceSystem system)
@@ -128,7 +130,7 @@ public sealed partial class WFMappingMenuUIController : UIController, IOnStateEx
         window.AutosaveRequested += minutes => _mapping.Send(new WFMappingAutosaveStepRequest(minutes));
         window.DeleteGridButton.OnPressed += _ => DeleteGrid();
         window.DeleteGridRequested += grid => _mapping.PreviewDelete(grid);
-        window.SnapGridRequested += grid => _mapping.SnapGrid(grid);
+        window.NewGridButton.OnToggled += args => _mapping.SetNewGrid(args.Pressed);
         window.DeleteConfirmButton.OnPressed += _ => _mapping.ConfirmDelete();
         window.DeleteCancelButton.OnPressed += _ => _mapping.CancelDelete();
         window.GoToGridRequested += grid => _mapping.GoToGrid(grid);
@@ -163,6 +165,7 @@ public sealed partial class WFMappingMenuUIController : UIController, IOnStateEx
         UpdateLibrary();
         UpdateGrids();
         UpdatePendingDelete();
+        UpdateNewGrid();
         UpdateReferences();
         UpdateDownload();
         UpdateUpload();
@@ -253,6 +256,12 @@ public sealed partial class WFMappingMenuUIController : UIController, IOnStateEx
     private void UpdateGrids()
     {
         _window?.SetGrids(_mapping.Grids);
+    }
+
+    private void UpdateNewGrid()
+    {
+        if (_window != null)
+            _window.NewGridButton.Pressed = _mapping.NewGridNext;
     }
 
     private void UpdatePendingDelete()

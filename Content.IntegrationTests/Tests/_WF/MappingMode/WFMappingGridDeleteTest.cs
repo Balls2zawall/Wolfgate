@@ -1,5 +1,4 @@
 #nullable enable
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
@@ -249,54 +248,6 @@ public sealed class WFMappingGridDeleteTest
             Assert.That(Children(entMan.GetComponent<TransformComponent>(restored).ChildEnumerator).Any(c =>
                     entMan.GetComponent<MetaDataComponent>(c).EntityPrototype?.ID == "WFMappingModeTestFixture"),
                 Is.True, "The fixture comes back with it.");
-        });
-
-        await Disable(pair);
-        await pair.CleanReturnAsync();
-    }
-
-    /// <summary>The grid list's Snap: a grid part of a tile off and turned moves onto whole tiles and a right angle.</summary>
-    [Test]
-    public async Task SnapGridRequest()
-    {
-        await using var pair = await PoolManager.GetServerClient(Settings);
-        var server = pair.Server;
-        var entMan = server.EntMan;
-        var mapping = entMan.System<WFMappingModeSystem>();
-        var mapSys = entMan.System<MapSystem>();
-        var xformSys = entMan.System<TransformSystem>();
-        var tileDefs = server.ResolveDependency<ITileDefinitionManager>();
-        await Enable(pair);
-        var a = (await AddMappers(pair, 1))[0];
-
-        EntityUid grid = default;
-        WFMappingSession session = default!;
-        var plating = new Tile(tileDefs["Plating"].TileId);
-
-        await server.WaitAssertion(() =>
-        {
-            Assert.That(mapping.TryCreateSession(a, "Grid Snap Test", out var created), Is.True);
-            session = created!;
-            var newGrid = mapSys.CreateGridEntity(entMan.GetComponent<MapComponent>(session.RootMap).MapId);
-            grid = newGrid.Owner;
-            mapSys.SetTile(grid, newGrid.Comp, Vector2i.Zero, plating);
-            xformSys.SetLocalPositionRotation(grid, new Vector2(11.3916435f, -14.710812f), Angle.FromDegrees(92));
-
-            Assert.That(mapping.GridsOn(session.RootMap).Single().Aligned, Is.False);
-            RaiseAs(entMan, a, new WFMappingSnapGridRequest(entMan.GetNetEntity(grid)));
-        });
-
-        await pair.RunTicksSync(3);
-        await server.WaitAssertion(() =>
-        {
-            var xform = entMan.GetComponent<TransformComponent>(grid);
-            Assert.Multiple(() =>
-            {
-                Assert.That(Vector2.Distance(xform.LocalPosition, new Vector2(11, -15)), Is.LessThan(0.001f));
-                Assert.That(Math.Abs(Angle.ShortestDistance(xform.LocalRotation, Angle.FromDegrees(90)).Theta),
-                    Is.LessThan(0.001));
-                Assert.That(mapping.GridsOn(session.RootMap).Single().Aligned, Is.True);
-            });
         });
 
         await Disable(pair);

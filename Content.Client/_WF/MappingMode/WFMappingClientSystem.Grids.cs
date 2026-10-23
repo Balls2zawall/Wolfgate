@@ -4,7 +4,7 @@ namespace Content.Client._WF.MappingMode;
 
 public sealed partial class WFMappingClientSystem
 {
-    /// <summary>The grids on the mapper's level as the server last listed them, largest first.</summary>
+    /// <summary>The grids on every level of the session as the server last listed them.</summary>
     public List<WFMappingGridInfo> Grids { get; private set; } = new();
 
     public event Action? GridsUpdated;
@@ -45,7 +45,7 @@ public sealed partial class WFMappingClientSystem
         RaiseNetworkEvent(new WFMappingGoToGridRequest(grid));
     }
 
-    /// <summary>Goes to the grid after the last one visited, largest first and round again; asks for the list if empty.</summary>
+    /// <summary>Goes to the grid after the last one visited, in list order and round again; asks for the list if empty.</summary>
     public void GoToNextGrid()
     {
         if (Grids.Count == 0)
@@ -57,12 +57,6 @@ public sealed partial class WFMappingClientSystem
 
         var index = _lastGrid is { } last ? Grids.FindIndex(g => g.Grid == last) + 1 : 0;
         GoToGrid(Grids[index % Grids.Count].Grid);
-    }
-
-    /// <summary>Asks the server to move a grid onto whole tiles and the nearest right angle.</summary>
-    public void SnapGrid(NetEntity grid)
-    {
-        RaiseNetworkEvent(new WFMappingSnapGridRequest(grid));
     }
 
     /// <summary>Goes to a grid and shows it in red until the deletion is confirmed or cancelled.</summary>

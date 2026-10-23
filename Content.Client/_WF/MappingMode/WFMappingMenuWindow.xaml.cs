@@ -33,9 +33,8 @@ public sealed partial class WFMappingMenuWindow : FancyWindow
     public event Action<string>? ReferencePicked;
     public event Action<NetEntity>? GoToGridRequested;
     public event Action<NetEntity>? DeleteGridRequested;
-    public event Action<NetEntity>? SnapGridRequested;
 
-    /// <summary>Raised every few seconds while the Session tab shows, so the grid list follows level changes.</summary>
+    /// <summary>Raised every few seconds while the Session tab shows, so the grid list follows edits.</summary>
     public event Action? GridsWanted;
 
     private static readonly TimeSpan GridsInterval = TimeSpan.FromSeconds(3);
@@ -158,7 +157,7 @@ public sealed partial class WFMappingMenuWindow : FancyWindow
                 ("max", WFMappingLibraryList.FormatMiB(library.MaxBytes)));
     }
 
-    /// <summary>One row per grid on the mapper's level: tiles, entities, Go to, Snap and Delete.</summary>
+    /// <summary>One row per grid on every level: level, tiles, entities, Go to and Delete.</summary>
     public void SetGrids(List<WFMappingGridInfo> grids)
     {
         GridList.RemoveAllChildren();
@@ -172,8 +171,8 @@ public sealed partial class WFMappingMenuWindow : FancyWindow
             var row = new BoxContainer { Orientation = BoxContainer.LayoutOrientation.Horizontal, SeparationOverride = 4 };
             row.AddChild(new Label
             {
-                Text = Loc.GetString("wf-mapping-ship-menu-grid-row", ("name", grid.Name), ("tiles", grid.Tiles),
-                    ("entities", grid.Entities)),
+                Text = Loc.GetString("wf-mapping-ship-menu-grid-row", ("depth", grid.Depth), ("name", grid.Name),
+                    ("tiles", grid.Tiles), ("entities", grid.Entities)),
                 HorizontalExpand = true,
                 ClipText = true,
             });
@@ -182,18 +181,6 @@ public sealed partial class WFMappingMenuWindow : FancyWindow
             var goTo = new Button { Text = Loc.GetString("wf-mapping-ship-menu-goto") };
             goTo.OnPressed += _ => GoToGridRequested?.Invoke(target);
             row.AddChild(goTo);
-
-            var snap = new Button
-            {
-                Text = Loc.GetString("wf-mapping-mode-menu-snap-grid-row"),
-                ToolTip = Loc.GetString(grid.Aligned
-                    ? "wf-mapping-mode-menu-snap-grid-aligned-tooltip"
-                    : "wf-mapping-mode-menu-snap-grid-row-tooltip"),
-                TooltipDelay = 0,
-                Disabled = grid.Aligned,
-            };
-            snap.OnPressed += _ => SnapGridRequested?.Invoke(target);
-            row.AddChild(snap);
 
             var delete = new Button
             {

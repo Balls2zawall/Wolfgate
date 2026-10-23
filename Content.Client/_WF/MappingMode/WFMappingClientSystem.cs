@@ -95,6 +95,7 @@ public sealed partial class WFMappingClientSystem : EntitySystem
 
         InitializeDownload();
         InitializeGrids();
+        InitializeWorldGrid();
     }
 
     public override void Shutdown()
@@ -114,6 +115,13 @@ public sealed partial class WFMappingClientSystem : EntitySystem
             Setup();
         else if (_setUp && !inSession)
             Teardown();
+
+        if (_setUp)
+        {
+            UpdateTilePlacement();
+            if (_perspective)
+                UpdatePerspective();
+        }
     }
 
     public void Send(EntityEventArgs ev)
@@ -206,6 +214,11 @@ public sealed partial class WFMappingClientSystem : EntitySystem
         _overlays.RemoveOverlay<WFMappingBoundsOverlay>();
         _overlays.RemoveOverlay<WFMappingDeletePreviewOverlay>();
         CancelDelete();
+        if (NewGridNext)
+        {
+            NewGridNext = false;
+            NewGridChanged?.Invoke();
+        }
         if (!_shuttingDown)
             ReloadScreen();
 
