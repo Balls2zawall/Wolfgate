@@ -5,6 +5,7 @@ using Content.Server._WF.Encounters.Components;
 using Content.Server._WF.Encounters.Systems;
 using Content.Server._WF.NpcCrew.Components;
 using Content.Server._WF.ShipAccess;
+using Content.Server.Atmos.EntitySystems;
 using Content.Server.Chat.Managers;
 using Content.Server.GameTicking;
 using Content.Server.Shuttles.Components;
@@ -13,7 +14,9 @@ using Content.Server.Station.Systems;
 using Content.Shared._NF.Shipyard.Prototypes;
 using Content.Shared._WF.DroneRings;
 using Content.Shared._WF.Encounters;
+using Content.Shared._WF.NpcCrew;
 using Content.Shared._WF.ShipAccess;
+using Content.Shared.Atmos;
 using Content.Shared.GameTicking;
 using Content.Shared.Maps;
 using Content.Shared.Physics;
@@ -39,6 +42,7 @@ public sealed class WFDoomedScenarioSystem : EntitySystem
     [Dependency] private SharedMapSystem _map = default!;
     [Dependency] private SharedTransformSystem _transform = default!;
     [Dependency] private TurfSystem _turf = default!;
+    [Dependency] private AtmosphereSystem _atmosphere = default!;
     [Dependency] private StationSystem _stations = default!;
     [Dependency] private ShipRepairSystem _repair = default!;
     [Dependency] private WFShipScenarioSystem _ships = default!;
@@ -175,8 +179,15 @@ public sealed class WFDoomedScenarioSystem : EntitySystem
             scenario.Encounter = encounter;
             if (TryComp<WFEncounterComponent>(encounter, out var comp))
             {
-                foreach (var ship in comp.Ships.Values)
+                // @player skips station ships without a deed, so the Reach is named outright.
+                foreach (var (key, ship) in comp.Ships)
+                {
                     EnsureComp<WFCrewOnSightComponent>(ship.Grid);
+                    _encounters.SetOrders((encounter, comp), key, new List<WFCrewObjective>
+                    {
+                        new() { Kind = WFCrewObjectiveKind.Attack, Target = GetNetEntity(hull) },
+                    });
+                }
             }
         }
 
@@ -222,7 +233,10 @@ public sealed class WFDoomedScenarioSystem : EntitySystem
         return false;
     }
 
-    /// <summary>Chooses enclosed deck over lattices, missing tiles, walls and equipment.</summary>
+    /// <summary>
+    /// Chooses enclosed deck over lattices, missing tiles, walls and equipment, and breathable air over gas stores.
+    /// Falls back to any deck if no tile's air is known yet.
+    /// </summary>
     private bool TryFindFloor(EntityUid hull, out EntityCoordinates coordinates)
     {
         coordinates = default;
@@ -230,14 +244,29 @@ public sealed class WFDoomedScenarioSystem : EntitySystem
             return false;
         var tiles = _map.GetAllTilesEnumerator(hull, grid);
         var count = 0;
+        var breathable = 0;
         while (tiles.MoveNext(out var tile))
         {
             if (tile.Value.Tile.IsEmpty || _turf.IsSpace(tile.Value) || _turf.IsTileBlocked(tile.Value, CollisionGroup.MobMask))
                 continue;
-            if (_random.Next(++count) == 0)
+            if (IsBreathable(_atmosphere.GetTileMixture(hull, null, tile.Value.GridIndices)))
+            {
+                if (_random.Next(++breathable) == 0)
+                    coordinates = _turf.GetTileCenter(tile.Value);
+            }
+            else if (breathable == 0 && _random.Next(++count) == 0)
                 coordinates = _turf.GetTileCenter(tile.Value);
         }
-        return count > 0;
+        return breathable > 0 || count > 0;
+    }
+
+    /// <summary>Near-standard pressure and temperature, mostly oxygen and nitrogen.</summary>
+    private static bool IsBreathable(GasMixture? air)
+    {
+        if (air == null || air.TotalMoles <= 0f || air.Pressure is < 80f or > 150f || air.Temperature is < 270f or > 320f)
+            return false;
+        var oxygen = air.GetMoles(Gas.Oxygen);
+        return oxygen / air.TotalMoles >= 0.16f && (oxygen + air.GetMoles(Gas.Nitrogen)) / air.TotalMoles >= 0.95f;
     }
 
     /// <summary>The Reavers jam the drive until their ambush is over.</summary>

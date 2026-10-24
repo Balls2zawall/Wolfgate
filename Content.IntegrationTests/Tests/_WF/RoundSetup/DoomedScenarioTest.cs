@@ -10,6 +10,7 @@ using Content.Shared._WF.RoundSetup;
 using Content.Shared._WF.ShipAccess;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Map;
+using Robust.Shared.Map.Components;
 
 namespace Content.IntegrationTests.Tests._WF.RoundSetup;
 
@@ -67,6 +68,16 @@ public sealed class DoomedScenarioTest
             em.EventBus.RaiseEvent(EventSource.Local, ref ftl);
             Assert.That(ftl.Cancelled, Is.False, "No ambush yet, so nothing jams the drive.");
 
+            for (var i = 0; i < 50; i++)
+            {
+                Assert.That(system.TryGetSpawn(lobby, out var pick), Is.True);
+                var air = server.System<Content.Server.Atmos.EntitySystems.AtmosphereSystem>().GetTileMixture(pick.EntityId, null,
+                    server.System<SharedMapSystem>().TileIndicesFor(pick.EntityId, em.GetComponent<MapGridComponent>(pick.EntityId), pick));
+                Assert.That(air, Is.Not.Null);
+                Assert.That(air!.GetMoles(Content.Shared.Atmos.Gas.NitrousOxide), Is.LessThan(0.1f), "Nobody spawns in a gas store.");
+                Assert.That(air.Pressure, Is.InRange(80f, 150f));
+            }
+
             actor = em.SpawnEntity("MobHuman", spawn);
             server.PlayerMan.SetAttachedEntity(pair.Player!, actor);
             system.NotifyArrival(lobby, pair.Player!);
@@ -76,6 +87,8 @@ public sealed class DoomedScenarioTest
                 .Where(comp => comp.Prototype == WFDoomedScenarioSystem.Ambush).ToList();
             Assert.That(ambushes, Has.Count.EqualTo(1), "A second arrival must not spawn another ambush.");
             Assert.That(ambushes[0].Ships, Has.Count.EqualTo(3));
+            Assert.That(ambushes[0].Ships.Values.All(ship => ship.HasOrders), Is.True,
+                "Every Reaver must be ordered to attack the Reach at once.");
             Assert.That(ambushes[0].Tier, Is.InRange(WFDoomedScenarioSystem.MinTier, WFDoomedScenarioSystem.MaxTier));
 
             ftl = new ConsoleFTLAttemptEvent(hull, false, string.Empty);

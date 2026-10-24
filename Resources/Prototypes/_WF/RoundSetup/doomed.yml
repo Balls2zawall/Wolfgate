@@ -29,7 +29,7 @@
       Janitor: [ -1, -1 ]
 
 # Down With Ye' Ship!: three tier 4-5 Reaver warships round the SY Reach, fighting to the last man.
-# Spawned by WFDoomedScenarioSystem on the crew's first arrival; @player is then the Reach.
+# Spawned by WFDoomedScenarioSystem on the crew's first arrival, which orders each ship to attack the Reach.
 - type: wfEncounter
   id: WFDoomedReaverAmbush
   name: wf-round-setup-doomed-ambush
@@ -64,9 +64,6 @@
     attackRange: 1200
     zoneLines: wf-encounter-pirate-zone
     disengage: Destroy
-    objectives:
-    - kind: Attack
-      target: "@player"
   - key: bravo
     navigation: WFCrewNavigationRaider
     side: reavers
@@ -92,9 +89,6 @@
     attackRange: 1200
     zoneLines: wf-encounter-pirate-zone
     disengage: Destroy
-    objectives:
-    - kind: Attack
-      target: "@player"
   - key: charlie
     navigation: WFCrewNavigationRaider
     side: reavers
@@ -120,6 +114,3 @@
     attackRange: 1200
     zoneLines: wf-encounter-pirate-zone
     disengage: Destroy
-    objectives:
-    - kind: Attack
-      target: "@player"
