@@ -3003,3 +3003,10 @@ Entries:
   id: 100214
   time: '2026-10-24T06:47:55.0000000+00:00'
   url: https://github.com/VanguardControl/Wolfgate/pull/339
+- author: Gandalf2k15
+  changes:
+    - type: Add
+      message: Added a global search bar to settings.
+  id: 100215
+  time: '2026-10-24T21:51:08.0000000+00:00'
+  url: https://github.com/VanguardControl/Wolfgate/pull/340
