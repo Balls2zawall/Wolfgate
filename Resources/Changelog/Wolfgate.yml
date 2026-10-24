@@ -3010,3 +3010,10 @@ Entries:
   id: 100215
   time: '2026-10-24T21:51:08.0000000+00:00'
   url: https://github.com/VanguardControl/Wolfgate/pull/340
+- author: Gandalf2k15
+  changes:
+    - type: Fix
+      message: Delayroundend now actually works.
+  id: 100216
+  time: '2026-10-24T21:52:13.0000000+00:00'
+  url: https://github.com/VanguardControl/Wolfgate/pull/341
