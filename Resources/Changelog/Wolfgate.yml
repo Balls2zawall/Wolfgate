@@ -2986,3 +2986,20 @@ Entries:
   id: 100213
   time: '2026-10-24T04:16:47.0000000+00:00'
   url: https://github.com/VanguardControl/Wolfgate/pull/337
+- author: Gandalf2k15
+  changes:
+    - type: Add
+      message: >-
+        New crew scenario "Down With Ye' Ship!": your crew starts on the SY
+        Reach in drone space, surrounded by three Reaver warships with your FTL
+        jammed. Good luck.
+    - type: Add
+      message: >-
+        Crew scenarios now show a colour-coded difficulty: Ship and Faction
+        crews are Normal, Crashlanded is Very Hard, Down With Ye' Ship! is
+        Impossible.
+    - type: Add
+      message: Actually adds the vulp speech bubble
+  id: 100214
+  time: '2026-10-24T06:47:55.0000000+00:00'
+  url: https://github.com/VanguardControl/Wolfgate/pull/339
