@@ -3133,3 +3133,16 @@ Entries:
   id: 100221
   time: '2026-10-25T05:33:05.0000000+00:00'
   url: https://github.com/VanguardControl/Wolfgate/pull/350
+- author: Gandalf2k15
+  changes:
+    - type: Tweak
+      message: >-
+        Buying a safety deposit box now asks you to confirm the size and price
+        first.
+    - type: Tweak
+      message: >-
+        The safety deposit box guide now lists everything a box refuses, and
+        updates itself when that list changes.
+  id: 100222
+  time: '2026-10-25T05:43:53.0000000+00:00'
+  url: https://github.com/VanguardControl/Wolfgate/pull/348
