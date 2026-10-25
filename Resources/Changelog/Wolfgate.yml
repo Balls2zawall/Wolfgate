@@ -3274,3 +3274,12 @@ Entries:
   id: 100232
   time: '2026-10-25T20:43:09.0000000+00:00'
   url: https://github.com/VanguardControl/Wolfgate/pull/361
+- author: Balls2zawall
+  changes:
+    - type: Tweak
+      message: >-
+        Re-lit most of Flagship Halcyon and got rid of jarring dark corners,
+        bringing it up to current standards.
+  id: 100233
+  time: '2026-10-25T20:43:20.0000000+00:00'
+  url: https://github.com/VanguardControl/Wolfgate/pull/360
