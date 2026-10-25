@@ -3245,3 +3245,16 @@ Entries:
   id: 100229
   time: '2026-10-25T09:35:01.0000000+00:00'
   url: https://github.com/VanguardControl/Wolfgate/pull/354
+- author: Happyowl93
+  changes:
+    - type: Add
+      message: >-
+        You can now offer items in your hand so other player can accept them,
+        default keybind is J
+    - type: Add
+      message: >-
+        If you point to an item currently in your hands or worn, you will
+        display it for others to see.
+  id: 100230
+  time: '2026-10-25T20:38:24.0000000+00:00'
+  url: https://github.com/VanguardControl/Wolfgate/pull/358
