@@ -3224,3 +3224,24 @@ Entries:
   id: 100228
   time: '2026-10-25T08:35:28.0000000+00:00'
   url: https://github.com/VanguardControl/Wolfgate/pull/357
+- author: Gandalf2k15
+  changes:
+    - type: Add
+      message: >-
+        Mapping mode: an Export wizard that checks your map for problems
+        (missing console, docks, thrusters, power, unsaveable mobs and more),
+        lets you fill in the ship details, and downloads one zip laid out for
+        the repo. Also exports multi-level maps, or just the bare grid file for
+        POIs.
+    - type: Add
+      message: >-
+        Mapping mode: Test map. One click loads a copy of your ship next to a
+        test station and spawns you on it as your character; Back to mapping
+        returns you to where you were.
+    - type: Fix
+      message: >-
+        Mapping mode saves a multi-level map as one package instead of one
+        prompt per level.
+  id: 100229
+  time: '2026-10-25T09:35:01.0000000+00:00'
+  url: https://github.com/VanguardControl/Wolfgate/pull/354
