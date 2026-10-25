@@ -3283,3 +3283,13 @@ Entries:
   id: 100233
   time: '2026-10-25T20:43:20.0000000+00:00'
   url: https://github.com/VanguardControl/Wolfgate/pull/360
+- author: Balls2zawall
+  changes:
+    - type: Tweak
+      message: >-
+        Added a surgery room in the underground fugitive base, and took a quick
+        pass at lighting so there's not as many pitch black corners and doors
+        you can't see.
+  id: 100234
+  time: '2026-10-25T21:06:25.0000000+00:00'
+  url: https://github.com/VanguardControl/Wolfgate/pull/362
