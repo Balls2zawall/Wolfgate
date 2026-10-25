@@ -3197,3 +3197,30 @@ Entries:
   id: 100227
   time: '2026-10-25T08:35:16.0000000+00:00'
   url: https://github.com/VanguardControl/Wolfgate/pull/355
+- author: Gandalf2k15
+  changes:
+    - type: Fix
+      message: >-
+        Platelet Factories and other positive traits no longer turn themselves
+        off when you join with downside traits.
+    - type: Fix
+      message: >-
+        The character creator now fits smaller windows and the in-round creator
+        window. The preview panel scrolls instead of stacking its buttons, and
+        the marking grids shrink to fit.
+    - type: Fix
+      message: >-
+        Cockpit flight dials now shrink only as much as needed instead of
+        dropping to a tiny size and leaving a gap above the fuel gauge.
+    - type: Fix
+      message: >-
+        The cockpit docking plot is a usable size again at mid resolutions such
+        as 1366x768.
+    - type: Fix
+      message: >-
+        The stealth suit, other stealth effects, shield outlines, holopad
+        holograms and tile shaders render properly again since the engine
+        update.
+  id: 100228
+  time: '2026-10-25T08:35:28.0000000+00:00'
+  url: https://github.com/VanguardControl/Wolfgate/pull/357
