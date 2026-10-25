@@ -3293,3 +3293,26 @@ Entries:
   id: 100234
   time: '2026-10-25T21:06:25.0000000+00:00'
   url: https://github.com/VanguardControl/Wolfgate/pull/362
+- author: Gandalf2k15
+  changes:
+    - type: Fix
+      message: >-
+        Dead or shut-down synthetics can no longer use their own chassis panel.
+        Mechanics linked in with a multitool still can.
+    - type: Tweak
+      message: Chassis reboot now has a 2-minute cooldown.
+    - type: Fix
+      message: Synthetics now get cold on depressurised tiles, not just in open space.
+    - type: Fix
+      message: Oculine now heals injured eyes, not just flash damage.
+    - type: Fix
+      message: >-
+        The used ship dealer takes back voucher ships. You don't get paid for
+        them.
+    - type: Fix
+      message: >-
+        Cells and other items a deposit box refuses can't be smuggled inside a
+        device anymore. They get handed back when you deposit.
+  id: 100235
+  time: '2026-10-25T22:18:15.0000000+00:00'
+  url: https://github.com/VanguardControl/Wolfgate/pull/363
