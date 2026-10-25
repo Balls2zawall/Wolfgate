@@ -3146,3 +3146,12 @@ Entries:
   id: 100222
   time: '2026-10-25T05:43:53.0000000+00:00'
   url: https://github.com/VanguardControl/Wolfgate/pull/348
+- author: Balls2zawall
+  changes:
+    - type: Tweak
+      message: >-
+        Tweaked Helios to fit new mapping standards. Wallmounts on windows and
+        harsh lighting artifacts have been removed.
+  id: 100223
+  time: '2026-10-25T07:24:53.0000000+00:00'
+  url: https://github.com/VanguardControl/Wolfgate/pull/347
