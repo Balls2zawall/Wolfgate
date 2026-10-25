@@ -3267,3 +3267,10 @@ Entries:
   id: 100231
   time: '2026-10-25T20:38:55.0000000+00:00'
   url: https://github.com/VanguardControl/Wolfgate/pull/359
+- author: DriftingSkies
+  changes:
+    - type: Fix
+      message: fixes markings being deleted with modsuit control modules
+  id: 100232
+  time: '2026-10-25T20:43:09.0000000+00:00'
+  url: https://github.com/VanguardControl/Wolfgate/pull/361
