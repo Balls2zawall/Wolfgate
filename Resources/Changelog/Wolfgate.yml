@@ -3055,3 +3055,50 @@ Entries:
   id: 100218
   time: '2026-10-25T01:28:18.0000000+00:00'
   url: https://github.com/VanguardControl/Wolfgate/pull/346
+- author: Gandalf2k15
+  changes:
+    - type: Add
+      message: Avali have their own deathgasp.
+    - type: Add
+      message: The shuttle console's map screen has a search box for FTL destinations.
+    - type: Tweak
+      message: >-
+        The destination list scrolls instead of stretching the window, and long
+        names are cut off instead of running out of the list.
+    - type: Tweak
+      message: FTL jumps still knock you down but no longer throw you off the ship.
+    - type: Fix
+      message: >-
+        Mopping a small blood puddle on a footprinted tile no longer leaves an
+        empty puddle you can't mop.
+    - type: Fix
+      message: >-
+        Synthetic survival boxes no longer say cable "doesn't go in there" when
+        you put it back.
+    - type: Fix
+      message: >-
+        Emptying a beaker into the ChemMaster buffer no longer freezes your
+        game.
+    - type: Fix
+      message: Ships bought with an Agent ID can now be sold to the used ship dealer.
+    - type: Fix
+      message: >-
+        NPC crew in hardsuits no longer leave stuck helmets on the floor when
+        decapitated.
+    - type: Fix
+      message: >-
+        The R-300 howitzer now reloads from a linked ammo loader after each
+        shot.
+    - type: Fix
+      message: Tools taken out of a safety deposit box are no longer stuck on cooldown.
+    - type: Fix
+      message: Pressing E (or Z in hand) on a PDA opens it again.
+    - type: Fix
+      message: >-
+        Deploying a modsuit over a hardsuit's helmet now works, and hats under
+        either helmet come back afterwards.
+    - type: Add
+      message: A jukebox volume slider!
+  id: 100219
+  time: '2026-10-25T02:03:54.0000000+00:00'
+  url: https://github.com/VanguardControl/Wolfgate/pull/345
