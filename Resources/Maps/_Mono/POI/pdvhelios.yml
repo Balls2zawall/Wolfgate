@@ -4,8 +4,8 @@ meta:
   engineVersion: 291.0.0
   forkId: ""
   forkVersion: ""
-  time: 10/25/2026 02:09:21
-  entityCount: 8646
+  time: 10/25/2026 02:40:37
+  entityCount: 8647
 maps: []
 grids:
 - 1
@@ -6293,7 +6293,7 @@ entities:
       pos: 1.5,30.5
     - type: Door
       state: Opening
-      secondsUntilStateChange: -12003.487
+      secondsUntilStateChange: -13876.951
     - type: DeviceLinkSource
       lastSignals:
         DoorStatus: True
@@ -24666,6 +24666,12 @@ entities:
       parent: 1
       rot: 1.5707963267948966 rad
       pos: -38.5,28.5
+  - uid: 5916
+    components:
+    - type: Transform
+      parent: 1
+      rot: 1.5707963267948966 rad
+      pos: 4.5,61.5
 - proto: CatwalkMono
   entities:
   - uid: 3639
