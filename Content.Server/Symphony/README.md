@@ -67,6 +67,7 @@ ticket table, the feedback table or any of the endpoints change.
 - [`.github/workflows/publish.yml`](../../.github/workflows/publish.yml): run name for the SSymphony panel
 - [`Content.Client/Audio/ContentAudioSystem.LobbyMusic.cs`](../../Content.Client/Audio/ContentAudioSystem.LobbyMusic.cs)
   - attempt
+  - an uploaded track is asked of the cache only once it is here, since the cache remembers a miss
   - a track the panel uploaded can arrive just after the playlist naming it
 - [`Content.Client/Launcher/LauncherConnectingGui.xaml.cs`](../../Content.Client/Launcher/LauncherConnectingGui.xaml.cs)
   - Symphony, the Link Discord buttons, built in LauncherConnectingGui.Symphony.cs

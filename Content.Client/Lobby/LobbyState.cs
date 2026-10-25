@@ -277,7 +277,9 @@ namespace Content.Client.Lobby
         {
             if (Lobby == null || _gameTicker.LobbyBackground != path)
                 return;
-            if (_resourceCache.TryGetResource<TextureResource>(new ResPath(path), out var texture))
+            // Asked of the cache only once the file is here: a miss is remembered by the cache, and it would then
+            // refuse the file for the rest of the session even after it arrived.
+            if (SymphonyWait.Arrived(_resourceCache, path) && _resourceCache.TryGetResource<TextureResource>(new ResPath(path), out var texture))
             {
                 Lobby.Background.Texture = texture;
                 return;
