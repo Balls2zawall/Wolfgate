@@ -3258,3 +3258,12 @@ Entries:
   id: 100230
   time: '2026-10-25T20:38:24.0000000+00:00'
   url: https://github.com/VanguardControl/Wolfgate/pull/358
+- author: Happyowl93
+  changes:
+    - type: Fix
+      message: >-
+        Docked ships now count toward FTL mass, so a small docked drive pod no
+        longer makes a heavy ship spool up, travel and cool down faster.
+  id: 100231
+  time: '2026-10-25T20:38:55.0000000+00:00'
+  url: https://github.com/VanguardControl/Wolfgate/pull/359
