@@ -3166,3 +3166,12 @@ Entries:
   id: 100224
   time: '2026-10-25T07:45:14.0000000+00:00'
   url: https://github.com/VanguardControl/Wolfgate/pull/353
+- author: Gandalf2k15
+  changes:
+    - type: Fix
+      message: >-
+        Crew starts no longer spawn you outside the ship or on a gun. You start
+        inside, in breathable air, or in the cockpit on small pods.
+  id: 100225
+  time: '2026-10-25T07:45:23.0000000+00:00'
+  url: https://github.com/VanguardControl/Wolfgate/pull/352
