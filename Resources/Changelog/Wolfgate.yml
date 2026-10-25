@@ -3123,3 +3123,13 @@ Entries:
   id: 100220
   time: '2026-10-25T05:30:06.0000000+00:00'
   url: https://github.com/VanguardControl/Wolfgate/pull/349
+- author: Gandalf2k15
+  changes:
+    - type: Fix
+      message: >-
+        Ship owners can add an ID card they're holding to their ship's access
+        list from the shuttle console's Access tab. The card's owner doesn't
+        need to be there.
+  id: 100221
+  time: '2026-10-25T05:33:05.0000000+00:00'
+  url: https://github.com/VanguardControl/Wolfgate/pull/350
