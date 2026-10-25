@@ -3017,3 +3017,24 @@ Entries:
   id: 100216
   time: '2026-10-24T21:52:13.0000000+00:00'
   url: https://github.com/VanguardControl/Wolfgate/pull/341
+- author: TheSlapper
+  changes:
+    - type: Add
+      message: Adds new clown/mime items.
+    - type: Add
+      message: Adds new and existing clown/mime items to the vagrant loadout.
+    - type: Add
+      message: Adds clown/mime clothing to the autodrobe.
+    - type: Fix
+      message: Corrects the unicycles movement to how it was intended to be.
+    - type: Add
+      message: >-
+        Re-adds the clown waddle. Now featured on the kinds of shoes you'd
+        imagine.
+    - type: Fix
+      message: >-
+        Corrects some hood/helmet items to properly hid player hair, such as the
+        jester hat.
+  id: 100217
+  time: '2026-10-25T00:29:58.0000000+00:00'
+  url: https://github.com/VanguardControl/Wolfgate/pull/343
