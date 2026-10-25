@@ -3316,3 +3316,25 @@ Entries:
   id: 100235
   time: '2026-10-25T22:18:15.0000000+00:00'
   url: https://github.com/VanguardControl/Wolfgate/pull/363
+- author: Gandalf2k15
+  changes:
+    - type: Add
+      message: >-
+        Admins can mark an ahelp as resolved with the new Resolve button, and
+        the player is told it's resolved.
+    - type: Tweak
+      message: >-
+        Once a staff member answers an ahelp, the player's messages stop
+        bwoinking staff until it's resolved. Staff replies no longer bwoink
+        other staff.
+    - type: Fix
+      message: >-
+        The play sound box in the ahelp panel now works when the panel is popped
+        out and for event staff.
+    - type: Fix
+      message: >-
+        Admin-only ahelp messages no longer reach the player when the panel is
+        popped out.
+  id: 100236
+  time: '2026-10-25T23:55:06.0000000+00:00'
+  url: https://github.com/VanguardControl/Wolfgate/pull/364
