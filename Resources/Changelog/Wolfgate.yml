@@ -3155,3 +3155,14 @@ Entries:
   id: 100223
   time: '2026-10-25T07:24:53.0000000+00:00'
   url: https://github.com/VanguardControl/Wolfgate/pull/347
+- author: Gandalf2k15
+  changes:
+    - type: Fix
+      message: >-
+        Mops, cleanbots and space cleaner now clean up dirt decals, including
+        the grime already placed on maps.
+    - type: Fix
+      message: The Avali tail wag button no longer makes you start flying.
+  id: 100224
+  time: '2026-10-25T07:45:14.0000000+00:00'
+  url: https://github.com/VanguardControl/Wolfgate/pull/353
