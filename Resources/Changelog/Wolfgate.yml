@@ -3102,3 +3102,24 @@ Entries:
   id: 100219
   time: '2026-10-25T02:03:54.0000000+00:00'
   url: https://github.com/VanguardControl/Wolfgate/pull/345
+- author: Gandalf2k15
+  changes:
+    - type: Add
+      message: Added a jukebox volume slider to the options menu.
+    - type: Tweak
+      message: >-
+        The chop-shop now pays 80% of a ship's shipyard value in thalers per
+        tile.
+    - type: Fix
+      message: >-
+        Ownerless spawned vessels can be broken at the chop-shop, and it now
+        tells you why it refuses a hull.
+    - type: Fix
+      message: >-
+        Auto get-up keeps working when a player enters or leaves a body
+        mid-knockdown.
+    - type: Fix
+      message: Ghost chat links no longer try to follow speakers in nullspace.
+  id: 100220
+  time: '2026-10-25T05:30:06.0000000+00:00'
+  url: https://github.com/VanguardControl/Wolfgate/pull/349
