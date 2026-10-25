@@ -3175,3 +3175,16 @@ Entries:
   id: 100225
   time: '2026-10-25T07:45:23.0000000+00:00'
   url: https://github.com/VanguardControl/Wolfgate/pull/352
+- author: Gandalf2k15
+  changes:
+    - type: Fix
+      message: >-
+        The TSFMC Industrial Materials Crate now contains copper and lithium
+        instead of uranium and plasma.
+    - type: Fix
+      message: >-
+        The TSFMC Exotic Materials Crate description now says it contains 1
+        fissile uranium plate.
+  id: 100226
+  time: '2026-10-25T08:08:07.0000000+00:00'
+  url: https://github.com/VanguardControl/Wolfgate/pull/356
