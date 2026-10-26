@@ -3379,3 +3379,16 @@ Entries:
   id: 100240
   time: '2026-10-26T03:53:00.0000000+00:00'
   url: https://github.com/VanguardControl/Wolfgate/pull/369
+- author: Gandalf2k15
+  changes:
+    - type: Add
+      message: >-
+        Crew listings now show which crew members are alive, critical, dead or
+        missing, and how intact their ship is.
+    - type: Add
+      message: >-
+        Joining a crew that is all dead or has a wrecked ship now warns you and
+        asks you to confirm.
+  id: 100241
+  time: '2026-10-26T05:16:54.0000000+00:00'
+  url: https://github.com/VanguardControl/Wolfgate/pull/371
