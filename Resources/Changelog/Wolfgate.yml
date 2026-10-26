@@ -3351,3 +3351,12 @@ Entries:
   id: 100237
   time: '2026-10-26T01:56:03.0000000+00:00'
   url: https://github.com/VanguardControl/Wolfgate/pull/365
+- author: Gandalf2k15
+  changes:
+    - type: Fix
+      message: >-
+        Fixed the client freezing and lagging with "Can't resolve
+        TransformComponent" error spam, mostly near ships changing Z-levels.
+  id: 100238
+  time: '2026-10-26T02:04:03.0000000+00:00'
+  url: https://github.com/VanguardControl/Wolfgate/pull/368
