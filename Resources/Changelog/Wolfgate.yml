@@ -3481,3 +3481,12 @@ Entries:
   id: 100246
   time: '2026-10-26T19:53:53.0000000+00:00'
   url: https://github.com/VanguardControl/Wolfgate/pull/377
+- author: Gandalf2k15
+  changes:
+    - type: Fix
+      message: >-
+        Clicking a player in the admin help window selects only that player
+        again.
+  id: 100247
+  time: '2026-10-26T21:04:41.0000000+00:00'
+  url: https://github.com/VanguardControl/Wolfgate/pull/379
