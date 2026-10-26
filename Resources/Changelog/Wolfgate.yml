@@ -3369,3 +3369,13 @@ Entries:
   id: 100239
   time: '2026-10-26T03:47:42.0000000+00:00'
   url: https://github.com/VanguardControl/Wolfgate/pull/370
+- author: Gandalf2k15
+  changes:
+    - type: Tweak
+      message: >-
+        The "no admins online" ahelp ping can now go to its own Discord channel
+        without the full ahelp relay. Set discord.on_call_webhook and leave
+        discord.ahelp_webhook empty.
+  id: 100240
+  time: '2026-10-26T03:53:00.0000000+00:00'
+  url: https://github.com/VanguardControl/Wolfgate/pull/369
