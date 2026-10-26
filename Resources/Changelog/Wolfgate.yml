@@ -3338,3 +3338,16 @@ Entries:
   id: 100236
   time: '2026-10-25T23:55:06.0000000+00:00'
   url: https://github.com/VanguardControl/Wolfgate/pull/364
+- author: Gandalf2k15
+  changes:
+    - type: Fix
+      message: >-
+        Typing or pasting a colour into the custom colour picker no longer
+        changes it to a different value.
+    - type: Fix
+      message: >-
+        Applied markings in the character creator no longer pile on top of each
+        other after adding and removing them.
+  id: 100237
+  time: '2026-10-26T01:56:03.0000000+00:00'
+  url: https://github.com/VanguardControl/Wolfgate/pull/365
