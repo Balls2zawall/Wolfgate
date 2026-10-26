@@ -3360,3 +3360,12 @@ Entries:
   id: 100238
   time: '2026-10-26T02:04:03.0000000+00:00'
   url: https://github.com/VanguardControl/Wolfgate/pull/368
+- author: Gandalf2k15
+  changes:
+    - type: Tweak
+      message: >-
+        Most species now get 8 leg and arm marking slots, plus 4 chest and 4
+        head slots.
+  id: 100239
+  time: '2026-10-26T03:47:42.0000000+00:00'
+  url: https://github.com/VanguardControl/Wolfgate/pull/370
