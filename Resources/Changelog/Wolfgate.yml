@@ -3392,3 +3392,21 @@ Entries:
   id: 100241
   time: '2026-10-26T05:16:54.0000000+00:00'
   url: https://github.com/VanguardControl/Wolfgate/pull/371
+- author: Gandalf2k15
+  changes:
+    - type: Add
+      message: >-
+        Added over 2,000 pieces of clothing from Meridian Rift: uniforms, suits,
+        hats, masks, shoes, gloves, glasses and neckwear.
+    - type: Add
+      message: >-
+        Recolourable clothing! Pick a recolourable item in the loadout menu and
+        set each of its colours, or reset it to the default.
+    - type: Add
+      message: >-
+        Job loadouts and clothing vendors now stock the new clothing that fits
+        their department. ClothesMate carries the everyday civilian clothes and
+        AutoDrobe the costumes.
+  id: 100242
+  time: '2026-10-26T05:17:29.0000000+00:00'
+  url: https://github.com/VanguardControl/Wolfgate/pull/367
