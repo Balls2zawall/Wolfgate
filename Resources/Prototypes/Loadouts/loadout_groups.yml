@@ -58,6 +58,52 @@
   - Glasses
   - GlassesJamjar
   - GlassesJensen
+  # WOLFGATE(MeridianClothing) START: Meridian Rift clothing, written by Tools/_WF/MeridianClothing/port.py
+  - WFMeridianLoadoutClothingGlassesBiker
+  - WFMeridianLoadoutClothingGlassesBlindfoldColor
+  - WFMeridianLoadoutClothingGlassesBlindfoldWhite
+  - WFMeridianLoadoutClothingGlassesCold
+  - WFMeridianLoadoutClothingGlassesEyepatchMedical
+  - WFMeridianLoadoutClothingGlassesEyepatchRogue
+  - WFMeridianLoadoutClothingGlassesEyepatchWhite
+  - WFMeridianLoadoutClothingGlassesEyepatchWrap
+  - WFMeridianLoadoutClothingGlassesGeistGazers
+  - WFMeridianLoadoutClothingGlassesGodeye
+  - WFMeridianLoadoutClothingGlassesHeat
+  - WFMeridianLoadoutClothingGlassesHudArAviator
+  - WFMeridianLoadoutClothingGlassesHudArAviatorScience
+  - WFMeridianLoadoutClothingGlassesHudArProjector
+  - WFMeridianLoadoutClothingGlassesHudArProjectorScience
+  - WFMeridianLoadoutClothingGlassesHudEyepatchSci
+  - WFMeridianLoadoutClothingGlassesHudGunPermit
+  - WFMeridianLoadoutClothingGlassesMaterial
+  - WFMeridianLoadoutClothingGlassesMonocle
+  - WFMeridianLoadoutClothingGlassesNerveStaple
+  - WFMeridianLoadoutClothingGlassesNightmareVision
+  - WFMeridianLoadoutClothingGlassesOrange
+  - WFMeridianLoadoutClothingGlassesOsi
+  - WFMeridianLoadoutClothingGlassesOverwatch
+  - WFMeridianLoadoutClothingGlassesPhantom
+  - WFMeridianLoadoutClothingGlassesPrismGlasses
+  - WFMeridianLoadoutClothingGlassesPsych
+  - WFMeridianLoadoutClothingGlassesRed
+  - WFMeridianLoadoutClothingGlassesRegularCircle
+  - WFMeridianLoadoutClothingGlassesRegularHipster
+  - WFMeridianLoadoutClothingGlassesRegularKim
+  - WFMeridianLoadoutClothingGlassesRegularModern
+  - WFMeridianLoadoutClothingGlassesRegularThin
+  - WFMeridianLoadoutClothingGlassesSalesman
+  - WFMeridianLoadoutClothingGlassesScienceNight
+  - WFMeridianLoadoutClothingGlassesSciencePrescription
+  - WFMeridianLoadoutClothingGlassesSunglassesBig
+  - WFMeridianLoadoutClothingGlassesSunglassesChemical
+  - WFMeridianLoadoutClothingGlassesSunglassesGar
+  - WFMeridianLoadoutClothingGlassesSunglassesGarGiga
+  - WFMeridianLoadoutClothingGlassesSunglassesOval
+  - WFMeridianLoadoutClothingGlassesTrickblindfoldHamburg
+  - WFMeridianLoadoutClothingGlassesTrickblindfoldObsolete
+  - WFMeridianLoadoutClothingGlassesWelding
+  # WOLFGATE END
 
 - type: loadoutGroup
   id: GroupTankHarness
@@ -105,6 +151,34 @@
   loadouts:
   - CaptainHead
   - CaptainCap
+  # WOLFGATE(MeridianClothing) START: Meridian Rift clothing, written by Tools/_WF/MeridianClothing/port.py
+  - WFMeridianLoadoutClothingHeadBeretBlueshield
+  - WFMeridianLoadoutClothingHeadCaphatBeret
+  - WFMeridianLoadoutClothingHeadCollectableCaptain
+  - WFMeridianLoadoutClothingHeadCollectableHop
+  - WFMeridianLoadoutClothingHeadHatsCaphatAzulean
+  - WFMeridianLoadoutClothingHeadHatsCaphatAzuleanUpstart
+  - WFMeridianLoadoutClothingHeadHatsCaphatBicorne
+  - WFMeridianLoadoutClothingHeadHatsCaphatBunnyearsCaptain
+  - WFMeridianLoadoutClothingHeadHatsCaphatNaval
+  - WFMeridianLoadoutClothingHeadHatsCaphatNavalCustom
+  - WFMeridianLoadoutClothingHeadHatsCaphatNavalCustomGold
+  - WFMeridianLoadoutClothingHeadHatsCaphatNavalFleetAdmiral
+  - WFMeridianLoadoutClothingHeadHatsCaphatParadeFedcap
+  - WFMeridianLoadoutClothingHeadHatsCaphatParadeFedcapBlack
+  - WFMeridianLoadoutClothingHeadHatsCaphatParadeFedcapCustom
+  - WFMeridianLoadoutClothingHeadHatsCaphatParadeFedcapCustomGold
+  - WFMeridianLoadoutClothingHeadHatsCaphatParadeFedcapEng
+  - WFMeridianLoadoutClothingHeadHatsCaphatParadeFedcapMedsci
+  - WFMeridianLoadoutClothingHeadHatsCaphatParadeFedcapSec
+  - WFMeridianLoadoutClothingHeadHatsCaphatPilot
+  - WFMeridianLoadoutClothingHeadHoodedWinterhoodCaptain
+  - WFMeridianLoadoutClothingHeadHoodedWinterhoodHop
+  - WFMeridianLoadoutClothingHeadHoodedWinterhoodNovaBlueshield
+  - WFMeridianLoadoutClothingHeadNanotrasenConsultant
+  - WFMeridianLoadoutClothingHeadPlaybunnyearsHop
+  - WFMeridianLoadoutClothingHeadSoftBlueshield
+  # WOLFGATE END
 
 - type: loadoutGroup
   id: CaptainJumpsuit
@@ -114,6 +188,54 @@
   - CaptainJumpskirt
   - CaptainFormalSuit
   - CaptainFormalSkirt
+  # WOLFGATE(MeridianClothing) START: Meridian Rift clothing, written by Tools/_WF/MeridianClothing/port.py
+  - WFMeridianLoadoutClothingUnderAkulaWetsuitJobCommand
+  - WFMeridianLoadoutClothingUnderCostumeCaptain
+  - WFMeridianLoadoutClothingUnderCostumeCaptainSkirt
+  - WFMeridianLoadoutClothingUnderCostumeHeadOfPersonnel
+  - WFMeridianLoadoutClothingUnderCostumeHeadOfPersonnelSkirt
+  - WFMeridianLoadoutClothingUnderCostumeNriCaptain
+  - WFMeridianLoadoutClothingUnderImperialskirtvestBlueshield
+  - WFMeridianLoadoutClothingUnderImperialvestBlueshield
+  - WFMeridianLoadoutClothingUnderRankBlueshield
+  - WFMeridianLoadoutClothingUnderRankBlueshieldConsult
+  - WFMeridianLoadoutClothingUnderRankBlueshieldConsultSkirt
+  - WFMeridianLoadoutClothingUnderRankBlueshieldFormal
+  - WFMeridianLoadoutClothingUnderRankBlueshieldRussian
+  - WFMeridianLoadoutClothingUnderRankBlueshieldSkirt
+  - WFMeridianLoadoutClothingUnderRankBlueshieldTurtleneck
+  - WFMeridianLoadoutClothingUnderRankBlueshieldTurtleneckSkirt
+  - WFMeridianLoadoutClothingUnderRankBridgeOfficer
+  - WFMeridianLoadoutClothingUnderRankBridgeOfficerSkirt
+  - WFMeridianLoadoutClothingUnderRankBridgeOfficerTurtle
+  - WFMeridianLoadoutClothingUnderRankBridgeOfficerTurtleSkirt
+  - WFMeridianLoadoutClothingUnderRankCaptainBunnysuit
+  - WFMeridianLoadoutClothingUnderRankCaptainNovaBlack
+  - WFMeridianLoadoutClothingUnderRankCaptainNovaKilt
+  - WFMeridianLoadoutClothingUnderRankCaptainNovaPilot
+  - WFMeridianLoadoutClothingUnderRankCaptainNovaPilotSkirt
+  - WFMeridianLoadoutClothingUnderRankCaptainNovaUtility
+  - WFMeridianLoadoutClothingUnderRankCaptainRoyal
+  - WFMeridianLoadoutClothingUnderRankCivilianHeadOfPersonnelNovaParade
+  - WFMeridianLoadoutClothingUnderRankCivilianHeadOfPersonnelNovaParadeFemale
+  - WFMeridianLoadoutClothingUnderRankCivilianHeadOfPersonnelNovaTurtleneck
+  - WFMeridianLoadoutClothingUnderRankCivilianHeadOfPersonnelNovaTurtleneckSkirt
+  - WFMeridianLoadoutClothingUnderRankCivilianHeadOfPersonnelSkirt
+  - WFMeridianLoadoutClothingUnderRankNanotrasenConsultant
+  - WFMeridianLoadoutClothingUnderRankNanotrasenConsultantSkirt
+  - WFMeridianLoadoutClothingUnderRankSecurityHeadOfSecurity
+  - WFMeridianLoadoutClothingUnderRankSecurityHeadOfSecurityBunnysuit
+  - WFMeridianLoadoutClothingUnderRankSecurityHeadOfSecurityNova
+  - WFMeridianLoadoutClothingUnderRankSecurityHeadOfSecurityNovaAltSkirt
+  - WFMeridianLoadoutClothingUnderRankSecurityHeadOfSecurityNovaBlue
+  - WFMeridianLoadoutClothingUnderRankSecurityHeadOfSecurityNovaFormal
+  - WFMeridianLoadoutClothingUnderRankSecurityHeadOfSecurityNovaFormalBlue
+  - WFMeridianLoadoutClothingUnderRankSecurityHeadOfSecurityNovaParadeFemale
+  - WFMeridianLoadoutClothingUnderTrekCommand
+  - WFMeridianLoadoutClothingUnderTrekCommandEnt
+  - WFMeridianLoadoutClothingUnderTrekCommandNext
+  - WFMeridianLoadoutClothingUnderTrekCommandVoy
+  # WOLFGATE END
 
 - type: loadoutGroup
   id: CaptainNeck
@@ -123,6 +245,12 @@
   - CaptainCloak
   - CaptainCloakFormal
   - CaptainMantle
+  # WOLFGATE(MeridianClothing) START: Meridian Rift clothing, written by Tools/_WF/MeridianClothing/port.py
+  - WFMeridianLoadoutClothingNeckPauldronCaptain
+  - WFMeridianLoadoutClothingNeckPauldronCommander
+  - WFMeridianLoadoutClothingNeckTieBunnytieCaptain
+  - WFMeridianLoadoutClothingNeckTieBunnytieHop
+  # WOLFGATE END
 
 - type: loadoutGroup
   id: CaptainBackpack
@@ -138,6 +266,10 @@
   loadouts:
   - CaptainOuterClothing
   - CaptainWintercoat
+  # WOLFGATE(MeridianClothing) START: Meridian Rift clothing, written by Tools/_WF/MeridianClothing/port.py
+  - WFMeridianLoadoutClothingSuitHoodedWintercoatNovaBlueshield
+  - WFMeridianLoadoutClothingSuitNovaBridgeOfficerGoth
+  # WOLFGATE END
 
 - type: loadoutGroup
   id: HoPHead
@@ -145,6 +277,34 @@
   minLimit: 0
   loadouts:
   - HoPHead
+  # WOLFGATE(MeridianClothing) START: Meridian Rift clothing, written by Tools/_WF/MeridianClothing/port.py
+  - WFMeridianLoadoutClothingHeadBeretBlueshield
+  - WFMeridianLoadoutClothingHeadCaphatBeret
+  - WFMeridianLoadoutClothingHeadCollectableCaptain
+  - WFMeridianLoadoutClothingHeadCollectableHop
+  - WFMeridianLoadoutClothingHeadHatsCaphatAzulean
+  - WFMeridianLoadoutClothingHeadHatsCaphatAzuleanUpstart
+  - WFMeridianLoadoutClothingHeadHatsCaphatBicorne
+  - WFMeridianLoadoutClothingHeadHatsCaphatBunnyearsCaptain
+  - WFMeridianLoadoutClothingHeadHatsCaphatNaval
+  - WFMeridianLoadoutClothingHeadHatsCaphatNavalCustom
+  - WFMeridianLoadoutClothingHeadHatsCaphatNavalCustomGold
+  - WFMeridianLoadoutClothingHeadHatsCaphatNavalFleetAdmiral
+  - WFMeridianLoadoutClothingHeadHatsCaphatParadeFedcap
+  - WFMeridianLoadoutClothingHeadHatsCaphatParadeFedcapBlack
+  - WFMeridianLoadoutClothingHeadHatsCaphatParadeFedcapCustom
+  - WFMeridianLoadoutClothingHeadHatsCaphatParadeFedcapCustomGold
+  - WFMeridianLoadoutClothingHeadHatsCaphatParadeFedcapEng
+  - WFMeridianLoadoutClothingHeadHatsCaphatParadeFedcapMedsci
+  - WFMeridianLoadoutClothingHeadHatsCaphatParadeFedcapSec
+  - WFMeridianLoadoutClothingHeadHatsCaphatPilot
+  - WFMeridianLoadoutClothingHeadHoodedWinterhoodCaptain
+  - WFMeridianLoadoutClothingHeadHoodedWinterhoodHop
+  - WFMeridianLoadoutClothingHeadHoodedWinterhoodNovaBlueshield
+  - WFMeridianLoadoutClothingHeadNanotrasenConsultant
+  - WFMeridianLoadoutClothingHeadPlaybunnyearsHop
+  - WFMeridianLoadoutClothingHeadSoftBlueshield
+  # WOLFGATE END
 
 - type: loadoutGroup
   id: HoPJumpsuit
@@ -152,6 +312,54 @@
   loadouts:
   - HoPJumpsuit
   - HoPJumpskirt
+  # WOLFGATE(MeridianClothing) START: Meridian Rift clothing, written by Tools/_WF/MeridianClothing/port.py
+  - WFMeridianLoadoutClothingUnderAkulaWetsuitJobCommand
+  - WFMeridianLoadoutClothingUnderCostumeCaptain
+  - WFMeridianLoadoutClothingUnderCostumeCaptainSkirt
+  - WFMeridianLoadoutClothingUnderCostumeHeadOfPersonnel
+  - WFMeridianLoadoutClothingUnderCostumeHeadOfPersonnelSkirt
+  - WFMeridianLoadoutClothingUnderCostumeNriCaptain
+  - WFMeridianLoadoutClothingUnderImperialskirtvestBlueshield
+  - WFMeridianLoadoutClothingUnderImperialvestBlueshield
+  - WFMeridianLoadoutClothingUnderRankBlueshield
+  - WFMeridianLoadoutClothingUnderRankBlueshieldConsult
+  - WFMeridianLoadoutClothingUnderRankBlueshieldConsultSkirt
+  - WFMeridianLoadoutClothingUnderRankBlueshieldFormal
+  - WFMeridianLoadoutClothingUnderRankBlueshieldRussian
+  - WFMeridianLoadoutClothingUnderRankBlueshieldSkirt
+  - WFMeridianLoadoutClothingUnderRankBlueshieldTurtleneck
+  - WFMeridianLoadoutClothingUnderRankBlueshieldTurtleneckSkirt
+  - WFMeridianLoadoutClothingUnderRankBridgeOfficer
+  - WFMeridianLoadoutClothingUnderRankBridgeOfficerSkirt
+  - WFMeridianLoadoutClothingUnderRankBridgeOfficerTurtle
+  - WFMeridianLoadoutClothingUnderRankBridgeOfficerTurtleSkirt
+  - WFMeridianLoadoutClothingUnderRankCaptainBunnysuit
+  - WFMeridianLoadoutClothingUnderRankCaptainNovaBlack
+  - WFMeridianLoadoutClothingUnderRankCaptainNovaKilt
+  - WFMeridianLoadoutClothingUnderRankCaptainNovaPilot
+  - WFMeridianLoadoutClothingUnderRankCaptainNovaPilotSkirt
+  - WFMeridianLoadoutClothingUnderRankCaptainNovaUtility
+  - WFMeridianLoadoutClothingUnderRankCaptainRoyal
+  - WFMeridianLoadoutClothingUnderRankCivilianHeadOfPersonnelNovaParade
+  - WFMeridianLoadoutClothingUnderRankCivilianHeadOfPersonnelNovaParadeFemale
+  - WFMeridianLoadoutClothingUnderRankCivilianHeadOfPersonnelNovaTurtleneck
+  - WFMeridianLoadoutClothingUnderRankCivilianHeadOfPersonnelNovaTurtleneckSkirt
+  - WFMeridianLoadoutClothingUnderRankCivilianHeadOfPersonnelSkirt
+  - WFMeridianLoadoutClothingUnderRankNanotrasenConsultant
+  - WFMeridianLoadoutClothingUnderRankNanotrasenConsultantSkirt
+  - WFMeridianLoadoutClothingUnderRankSecurityHeadOfSecurity
+  - WFMeridianLoadoutClothingUnderRankSecurityHeadOfSecurityBunnysuit
+  - WFMeridianLoadoutClothingUnderRankSecurityHeadOfSecurityNova
+  - WFMeridianLoadoutClothingUnderRankSecurityHeadOfSecurityNovaAltSkirt
+  - WFMeridianLoadoutClothingUnderRankSecurityHeadOfSecurityNovaBlue
+  - WFMeridianLoadoutClothingUnderRankSecurityHeadOfSecurityNovaFormal
+  - WFMeridianLoadoutClothingUnderRankSecurityHeadOfSecurityNovaFormalBlue
+  - WFMeridianLoadoutClothingUnderRankSecurityHeadOfSecurityNovaParadeFemale
+  - WFMeridianLoadoutClothingUnderTrekCommand
+  - WFMeridianLoadoutClothingUnderTrekCommandEnt
+  - WFMeridianLoadoutClothingUnderTrekCommandNext
+  - WFMeridianLoadoutClothingUnderTrekCommandVoy
+  # WOLFGATE END
 
 - type: loadoutGroup
   id: HoPNeck
@@ -160,6 +368,12 @@
   loadouts:
   - HoPCloak
   - HoPMantle
+  # WOLFGATE(MeridianClothing) START: Meridian Rift clothing, written by Tools/_WF/MeridianClothing/port.py
+  - WFMeridianLoadoutClothingNeckPauldronCaptain
+  - WFMeridianLoadoutClothingNeckPauldronCommander
+  - WFMeridianLoadoutClothingNeckTieBunnytieCaptain
+  - WFMeridianLoadoutClothingNeckTieBunnytieHop
+  # WOLFGATE END
 
 - type: loadoutGroup
   id: HoPBackpack
@@ -176,6 +390,10 @@
   minLimit: 0
   loadouts:
   - HoPWintercoat
+  # WOLFGATE(MeridianClothing) START: Meridian Rift clothing, written by Tools/_WF/MeridianClothing/port.py
+  - WFMeridianLoadoutClothingSuitHoodedWintercoatNovaBlueshield
+  - WFMeridianLoadoutClothingSuitNovaBridgeOfficerGoth
+  # WOLFGATE END
 
 # Civilian
 - type: loadoutGroup
@@ -186,6 +404,142 @@
   - GreyJumpskirt
   - AncientJumpsuit
   - RainbowJumpsuit
+  # WOLFGATE(MeridianClothing) START: Meridian Rift clothing, written by Tools/_WF/MeridianClothing/port.py
+  - WFMeridianLoadoutClothingUnderBlastwave
+  - WFMeridianLoadoutClothingUnderCamoGags
+  - WFMeridianLoadoutClothingUnderColor
+  - WFMeridianLoadoutClothingUnderColorJumpskirt
+  - WFMeridianLoadoutClothingUnderColorJumpskirtRainbow
+  - WFMeridianLoadoutClothingUnderDougDimmadome
+  - WFMeridianLoadoutClothingUnderDressEveninggown
+  - WFMeridianLoadoutClothingUnderDressNovaCountess
+  - WFMeridianLoadoutClothingUnderDressNovaFlower
+  - WFMeridianLoadoutClothingUnderDressNovaFormalPenSkirt
+  - WFMeridianLoadoutClothingUnderDressNovaGiantScarf
+  - WFMeridianLoadoutClothingUnderDressNovaJute
+  - WFMeridianLoadoutClothingUnderDressNovaMidnightGown
+  - WFMeridianLoadoutClothingUnderDressNovaPenSkirt
+  - WFMeridianLoadoutClothingUnderDressNovaPentagram
+  - WFMeridianLoadoutClothingUnderDressNovaPinktutu
+  - WFMeridianLoadoutClothingUnderDressNovaRedformal
+  - WFMeridianLoadoutClothingUnderDressNovaShortDress
+  - WFMeridianLoadoutClothingUnderDressNovaShorterDress
+  - WFMeridianLoadoutClothingUnderDressNovaSlitDress
+  - WFMeridianLoadoutClothingUnderDressNovaStrapless
+  - WFMeridianLoadoutClothingUnderDressNovaVirginKillerSweater
+  - WFMeridianLoadoutClothingUnderDressNovaWindowedDress
+  - WFMeridianLoadoutClothingUnderDressSailor
+  - WFMeridianLoadoutClothingUnderDressSkirt
+  - WFMeridianLoadoutClothingUnderDressSkirtNovaBlackSkirt
+  - WFMeridianLoadoutClothingUnderDressSkirtNovaJean
+  - WFMeridianLoadoutClothingUnderDressSkirtNovaLoincloth
+  - WFMeridianLoadoutClothingUnderDressSkirtNovaLoinclothLoinclothAlt
+  - WFMeridianLoadoutClothingUnderDressSkirtNovaLoneSkirt
+  - WFMeridianLoadoutClothingUnderDressSkirtNovaLong
+  - WFMeridianLoadoutClothingUnderDressSkirtNovaMedium
+  - WFMeridianLoadoutClothingUnderDressSkirtNovaMiniSkirt
+  - WFMeridianLoadoutClothingUnderDressSkirtNovaRedSkirt
+  - WFMeridianLoadoutClothingUnderDressSkirtNovaStripedSkirt
+  - WFMeridianLoadoutClothingUnderDressSkirtNovaSwept
+  - WFMeridianLoadoutClothingUnderDressSkirtPlaid
+  - WFMeridianLoadoutClothingUnderDressSkirtPrimitiveCatgirlBodyWraps
+  - WFMeridianLoadoutClothingUnderDressSkirtPrimitiveCatgirlTailoredDress
+  - WFMeridianLoadoutClothingUnderDressSkirtPrimitiveCatgirlTunic
+  - WFMeridianLoadoutClothingUnderDressSkirtTurtleskirt
+  - WFMeridianLoadoutClothingUnderDressStriped
+  - WFMeridianLoadoutClothingUnderDressSundress
+  - WFMeridianLoadoutClothingUnderDressTango
+  - WFMeridianLoadoutClothingUnderDressWeddingDress
+  - WFMeridianLoadoutClothingUnderDressWeddingDressRibbon
+  - WFMeridianLoadoutClothingUnderEtherealTunic
+  - WFMeridianLoadoutClothingUnderFrontierColonist
+  - WFMeridianLoadoutClothingUnderGreyscaleGorkas
+  - WFMeridianLoadoutClothingUnderGreyscaleOveralls
+  - WFMeridianLoadoutClothingUnderGreyscaleOverallsSkirt
+  - WFMeridianLoadoutClothingUnderGreyscalePlaysuit
+  - WFMeridianLoadoutClothingUnderGreyscaleTurtleneck
+  - WFMeridianLoadoutClothingUnderGreyscaleTurtleneckSkirt
+  - WFMeridianLoadoutClothingUnderMiscAssistantformal
+  - WFMeridianLoadoutClothingUnderMiscBluetracksuit
+  - WFMeridianLoadoutClothingUnderMiscBouncer
+  - WFMeridianLoadoutClothingUnderMiscBurial
+  - WFMeridianLoadoutClothingUnderMiscDurathread
+  - WFMeridianLoadoutClothingUnderMiscNovaGearHarness
+  - WFMeridianLoadoutClothingUnderMiscNovaGearHarnessAdam
+  - WFMeridianLoadoutClothingUnderMiscNovaGearHarnessEve
+  - WFMeridianLoadoutClothingUnderMiscNovaMechanic
+  - WFMeridianLoadoutClothingUnderMiscNovaModskin
+  - WFMeridianLoadoutClothingUnderMiscNovaTaccas
+  - WFMeridianLoadoutClothingUnderMiscNovaUtility
+  - WFMeridianLoadoutClothingUnderMiscPatriotsuit
+  - WFMeridianLoadoutClothingUnderMiscPjBlue
+  - WFMeridianLoadoutClothingUnderMiscPjRed
+  - WFMeridianLoadoutClothingUnderMiscViceOfficer
+  - WFMeridianLoadoutClothingUnderPantsCamo
+  - WFMeridianLoadoutClothingUnderPantsJeans
+  - WFMeridianLoadoutClothingUnderPantsNovaBigPants
+  - WFMeridianLoadoutClothingUnderPantsNovaDoubleSkirtDress
+  - WFMeridianLoadoutClothingUnderPantsNovaHakama
+  - WFMeridianLoadoutClothingUnderPantsNovaJeansRipped
+  - WFMeridianLoadoutClothingUnderPantsNovaKilt
+  - WFMeridianLoadoutClothingUnderPantsNovaLoosePants
+  - WFMeridianLoadoutClothingUnderPantsNovaShortedOverall
+  - WFMeridianLoadoutClothingUnderPantsNovaVicvest
+  - WFMeridianLoadoutClothingUnderPantsNovaWideLeg
+  - WFMeridianLoadoutClothingUnderPantsNovaYoga
+  - WFMeridianLoadoutClothingUnderPantsSlacksAltar
+  - WFMeridianLoadoutClothingUnderPantsTrack
+  - WFMeridianLoadoutClothingUnderPizza
+  - WFMeridianLoadoutClothingUnderRankAzuleanOldBlood
+  - WFMeridianLoadoutClothingUnderRankAzuleanOldBloodSkirt
+  - WFMeridianLoadoutClothingUnderRankAzuleanUpstart
+  - WFMeridianLoadoutClothingUnderRankAzuleanUpstartSkirt
+  - WFMeridianLoadoutClothingUnderRankCivilianBarber
+  - WFMeridianLoadoutClothingUnderRankCivilianHopBunnysuit
+  - WFMeridianLoadoutClothingUnderRankExpeditionaryCorps
+  - WFMeridianLoadoutClothingUnderRankStationTraitHumanAi
+  - WFMeridianLoadoutClothingUnderShorts
+  - WFMeridianLoadoutClothingUnderShortsJeanshorts
+  - WFMeridianLoadoutClothingUnderShortsNovaShortershorts
+  - WFMeridianLoadoutClothingUnderShortsNovaShortsRipped
+  - WFMeridianLoadoutClothingUnderSkinsuit
+  - WFMeridianLoadoutClothingUnderSolEmt
+  - WFMeridianLoadoutClothingUnderSolPeacekeeper
+  - WFMeridianLoadoutClothingUnderSuitBeige
+  - WFMeridianLoadoutClothingUnderSuitBlack
+  - WFMeridianLoadoutClothingUnderSuitBlackReally
+  - WFMeridianLoadoutClothingUnderSuitBlackReallySkirt
+  - WFMeridianLoadoutClothingUnderSuitBlackSkirt
+  - WFMeridianLoadoutClothingUnderSuitBurgundy
+  - WFMeridianLoadoutClothingUnderSuitCharcoal
+  - WFMeridianLoadoutClothingUnderSuitCheckered
+  - WFMeridianLoadoutClothingUnderSuitNavy
+  - WFMeridianLoadoutClothingUnderSuitNovaBlackReallyCollared
+  - WFMeridianLoadoutClothingUnderSuitNovaBlackReallyCollaredSkirt
+  - WFMeridianLoadoutClothingUnderSuitNovaInferno
+  - WFMeridianLoadoutClothingUnderSuitNovaInfernoSkirt
+  - WFMeridianLoadoutClothingUnderSuitNovaPencil
+  - WFMeridianLoadoutClothingUnderSuitNovaPencilBlackReally
+  - WFMeridianLoadoutClothingUnderSuitNovaPencilCheckered
+  - WFMeridianLoadoutClothingUnderSuitNovaPencilCheckeredNoshirt
+  - WFMeridianLoadoutClothingUnderSuitNovaPencilNoshirt
+  - WFMeridianLoadoutClothingUnderSuitNovaRecolorable
+  - WFMeridianLoadoutClothingUnderSuitNovaRecolorableCasual
+  - WFMeridianLoadoutClothingUnderSuitNovaRecolorableExecutive
+  - WFMeridianLoadoutClothingUnderSuitNovaRecolorableSkirt
+  - WFMeridianLoadoutClothingUnderSuitNovaScarface
+  - WFMeridianLoadoutClothingUnderSuitRed
+  - WFMeridianLoadoutClothingUnderSuitTan
+  - WFMeridianLoadoutClothingUnderSuitTuxedo
+  - WFMeridianLoadoutClothingUnderSuitWhite
+  - WFMeridianLoadoutClothingUnderSuitWhiteSkirt
+  - WFMeridianLoadoutClothingUnderSweater
+  - WFMeridianLoadoutClothingUnderTachawaiian
+  - WFMeridianLoadoutClothingUnderTachawaiianBlue
+  - WFMeridianLoadoutClothingUnderTachawaiianGreen
+  - WFMeridianLoadoutClothingUnderTachawaiianPurple
+  - WFMeridianLoadoutClothingUnderTexas
+  # WOLFGATE END
 
 - type: loadoutGroup
   id: PassengerFace
@@ -193,6 +547,36 @@
   minLimit: 0
   loadouts:
   - PassengerFace
+  # WOLFGATE(MeridianClothing) START: Meridian Rift clothing, written by Tools/_WF/MeridianClothing/port.py
+  - WFMeridianLoadoutClothingMaskBalaclava
+  - WFMeridianLoadoutClothingMaskBalaclavaAdjustable
+  - WFMeridianLoadoutClothingMaskBalaclavaThreehole
+  - WFMeridianLoadoutClothingMaskBalaclavaThreeholeGreen
+  - WFMeridianLoadoutClothingMaskBandana
+  - WFMeridianLoadoutClothingMaskBandanaSkull
+  - WFMeridianLoadoutClothingMaskBandanaStriped
+  - WFMeridianLoadoutClothingMaskFacescarfRogue
+  - WFMeridianLoadoutClothingMaskFloortilebalaclava
+  - WFMeridianLoadoutClothingMaskGondola
+  - WFMeridianLoadoutClothingMaskKitsune
+  - WFMeridianLoadoutClothingMaskLuchador
+  - WFMeridianLoadoutClothingMaskLuchadorRudos
+  - WFMeridianLoadoutClothingMaskLuchadorTecnicos
+  - WFMeridianLoadoutClothingMaskMadnessMask
+  - WFMeridianLoadoutClothingMaskMasquerade
+  - WFMeridianLoadoutClothingMaskMasqueradeFeathered
+  - WFMeridianLoadoutClothingMaskMasqueradeTwoColors
+  - WFMeridianLoadoutClothingMaskMasqueradeTwoColorsFeathered
+  - WFMeridianLoadoutClothingMaskMummy
+  - WFMeridianLoadoutClothingMaskMuzzleTape
+  - WFMeridianLoadoutClothingMaskMuzzleTapePointy
+  - WFMeridianLoadoutClothingMaskNobreath
+  - WFMeridianLoadoutClothingMaskPaper
+  - WFMeridianLoadoutClothingMaskRebellion
+  - WFMeridianLoadoutClothingMaskRussianBalaclava
+  - WFMeridianLoadoutClothingMaskScarecrow
+  - WFMeridianLoadoutClothingMaskWhistleMinigame
+  # WOLFGATE END
 
 - type: loadoutGroup
   id: PassengerGloves
@@ -200,6 +584,51 @@
   minLimit: 0
   loadouts:
   - PassengerGloves
+  # WOLFGATE(MeridianClothing) START: Meridian Rift clothing, written by Tools/_WF/MeridianClothing/port.py
+  - WFMeridianLoadoutClothingGlovesBoxing
+  - WFMeridianLoadoutClothingGlovesBoxingBlue
+  - WFMeridianLoadoutClothingGlovesBoxingGolden
+  - WFMeridianLoadoutClothingGlovesBoxingGreen
+  - WFMeridianLoadoutClothingGlovesBoxingYellow
+  - WFMeridianLoadoutClothingGlovesBracer
+  - WFMeridianLoadoutClothingGlovesBracerWraps
+  - WFMeridianLoadoutClothingGlovesColorBlackExpeditionaryCorps
+  - WFMeridianLoadoutClothingGlovesColorPlasmaman
+  - WFMeridianLoadoutClothingGlovesColorPlasmamanBlack
+  - WFMeridianLoadoutClothingGlovesColorPlasmamanJanny
+  - WFMeridianLoadoutClothingGlovesColorPlasmamanPlasmanitrile
+  - WFMeridianLoadoutClothingGlovesColorPlasmamanPrototype
+  - WFMeridianLoadoutClothingGlovesColorPlasmamanRadio
+  - WFMeridianLoadoutClothingGlovesColorPlasmamanRobot
+  - WFMeridianLoadoutClothingGlovesColorPlasmamanWhite
+  - WFMeridianLoadoutClothingGlovesColorRainbow
+  - WFMeridianLoadoutClothingGlovesDesigner
+  - WFMeridianLoadoutClothingGlovesDivineArcher
+  - WFMeridianLoadoutClothingGlovesEvening
+  - WFMeridianLoadoutClothingGlovesFingerlessPrimitiveCatgirlArmwraps
+  - WFMeridianLoadoutClothingGlovesFingerlessPrimitiveCatgirlGauntlets
+  - WFMeridianLoadoutClothingGlovesFingerlessPunchMitts
+  - WFMeridianLoadoutClothingGlovesFishing
+  - WFMeridianLoadoutClothingGlovesForgingPlateGloves
+  - WFMeridianLoadoutClothingGlovesFrontierColonist
+  - WFMeridianLoadoutClothingGlovesKim
+  - WFMeridianLoadoutClothingGlovesLatexNitrileExpeditionaryCorps
+  - WFMeridianLoadoutClothingGlovesLatexNitrileLong
+  - WFMeridianLoadoutClothingGlovesLatexNitrileNtrauma
+  - WFMeridianLoadoutClothingGlovesPlate
+  - WFMeridianLoadoutClothingGlovesPlateBlue
+  - WFMeridianLoadoutClothingGlovesRadio
+  - WFMeridianLoadoutClothingGlovesRecolorableFingerless
+  - WFMeridianLoadoutClothingGlovesRecolorableFingerlessLong
+  - WFMeridianLoadoutClothingGlovesRecolorableLong
+  - WFMeridianLoadoutClothingGlovesRingDiamond
+  - WFMeridianLoadoutClothingGlovesTackler
+  - WFMeridianLoadoutClothingGlovesTacklerDolphin
+  - WFMeridianLoadoutClothingGlovesTacklerFootball
+  - WFMeridianLoadoutClothingGlovesTacklerRocket
+  - WFMeridianLoadoutClothingGlovesTheSleepingCarp
+  - WFMeridianLoadoutClothingGlovesTinkerer
+  # WOLFGATE END
 
 - type: loadoutGroup
   id: CommonBackpack
@@ -215,6 +644,137 @@
   minLimit: 0
   loadouts:
   - Mantle
+  # WOLFGATE(MeridianClothing) START: Meridian Rift clothing, written by Tools/_WF/MeridianClothing/port.py
+  - WFMeridianLoadoutClothingAccessoryAntiSecPin
+  - WFMeridianLoadoutClothingAccessoryArmbandEngine
+  - WFMeridianLoadoutClothingAccessoryArmbandMed
+  - WFMeridianLoadoutClothingAccessoryArmbandMedblue
+  - WFMeridianLoadoutClothingAccessoryBadge
+  - WFMeridianLoadoutClothingAccessoryBadgeHolo
+  - WFMeridianLoadoutClothingAccessoryBadgeHoloBlue
+  - WFMeridianLoadoutClothingAccessoryBadgeHoloCord
+  - WFMeridianLoadoutClothingAccessoryBadgeOld
+  - WFMeridianLoadoutClothingAccessoryBadgeSheriff
+  - WFMeridianLoadoutClothingAccessoryChaps
+  - WFMeridianLoadoutClothingAccessoryDeafPin
+  - WFMeridianLoadoutClothingAccessoryDebtPayerPin
+  - WFMeridianLoadoutClothingAccessoryDogtag
+  - WFMeridianLoadoutClothingAccessoryGreenPin
+  - WFMeridianLoadoutClothingAccessoryKheiralCuffs
+  - WFMeridianLoadoutClothingAccessoryMedal
+  - WFMeridianLoadoutClothingAccessoryMedalBronzeHeart
+  - WFMeridianLoadoutClothingAccessoryMedalGold
+  - WFMeridianLoadoutClothingAccessoryMedalGoldOrdom
+  - WFMeridianLoadoutClothingAccessoryMedalMedMedal
+  - WFMeridianLoadoutClothingAccessoryMedalMedMedal2
+  - WFMeridianLoadoutClothingAccessoryMedalNova
+  - WFMeridianLoadoutClothingAccessoryMedalPlasma
+  - WFMeridianLoadoutClothingAccessoryMedalRibbon
+  - WFMeridianLoadoutClothingAccessoryMedalSilver
+  - WFMeridianLoadoutClothingAccessoryMedalSilverElderAtmosian
+  - WFMeridianLoadoutClothingAccessoryMedalSilverEmergencyServices
+  - WFMeridianLoadoutClothingAccessoryNovaAccMedalCircle
+  - WFMeridianLoadoutClothingAccessoryNovaAccMedalCircleBarRibbon
+  - WFMeridianLoadoutClothingAccessoryNovaAccMedalCircleHollow
+  - WFMeridianLoadoutClothingAccessoryNovaAccMedalCircleHollowBarRibbon
+  - WFMeridianLoadoutClothingAccessoryNovaAccMedalCrown
+  - WFMeridianLoadoutClothingAccessoryNovaAccMedalCrownBarRibbon
+  - WFMeridianLoadoutClothingAccessoryNovaAccMedalCrownHollow
+  - WFMeridianLoadoutClothingAccessoryNovaAccMedalCrownHollowBarRibbon
+  - WFMeridianLoadoutClothingAccessoryNovaAccMedalDogtags
+  - WFMeridianLoadoutClothingAccessoryNovaAccMedalGlowcrystal
+  - WFMeridianLoadoutClothingAccessoryNovaAccMedalHeart
+  - WFMeridianLoadoutClothingAccessoryNovaAccMedalHeartBarRibbon
+  - WFMeridianLoadoutClothingAccessoryNovaAccMedalHeartSpecial
+  - WFMeridianLoadoutClothingAccessoryNovaAccMedalHeartSpecialBarRibbon
+  - WFMeridianLoadoutClothingAccessoryNovaAccMedalNeckpin
+  - WFMeridianLoadoutClothingAccessoryNovaAccMedalNeckpinInterdyne
+  - WFMeridianLoadoutClothingAccessoryNovaAccMedalNeckpinPorttarkon
+  - WFMeridianLoadoutClothingAccessoryNovaAccMedalRankpin
+  - WFMeridianLoadoutClothingAccessoryNovaAccMedalRankpinTwoBar
+  - WFMeridianLoadoutClothingAccessoryNovaAccMedalShield
+  - WFMeridianLoadoutClothingAccessoryNovaAccMedalShieldBarRibbon
+  - WFMeridianLoadoutClothingAccessoryNovaAccMedalShieldHollow
+  - WFMeridianLoadoutClothingAccessoryNovaRibbon
+  - WFMeridianLoadoutClothingAccessoryNovaRibbonRibbonArrup
+  - WFMeridianLoadoutClothingAccessoryNovaRibbonRibbonDual
+  - WFMeridianLoadoutClothingAccessoryNovaRibbonRibbonFlat
+  - WFMeridianLoadoutClothingAccessoryNovaRibbonRibbonLine
+  - WFMeridianLoadoutClothingAccessoryNovaRibbonRibbonSlash
+  - WFMeridianLoadoutClothingAccessoryNovaRibbonRibbonTwotone
+  - WFMeridianLoadoutClothingAccessoryPandoraHope
+  - WFMeridianLoadoutClothingAccessoryPressBadge
+  - WFMeridianLoadoutClothingAccessoryPride
+  - WFMeridianLoadoutClothingAccessorySkilt
+  - WFMeridianLoadoutClothingAccessorySkullcodpiece
+  - WFMeridianLoadoutClothingAccessorySpyBug
+  - WFMeridianLoadoutClothingAccessorySweatervest
+  - WFMeridianLoadoutClothingAccessoryTalisman
+  - WFMeridianLoadoutClothingAccessoryVaporizer
+  - WFMeridianLoadoutClothingAccessoryVestSheriff
+  - WFMeridianLoadoutClothingAccessoryWaistcoat
+  - WFMeridianLoadoutClothingAccessoryWebbing
+  - WFMeridianLoadoutClothingAccessoryWebbingPilot
+  - WFMeridianLoadoutClothingAccessoryWebbingPouch
+  - WFMeridianLoadoutClothingAccessoryWebbingPouchBlack
+  - WFMeridianLoadoutClothingAccessoryWebbingVest
+  - WFMeridianLoadoutClothingNeckBeads
+  - WFMeridianLoadoutClothingNeckBowtieGreen
+  - WFMeridianLoadoutClothingNeckBowtieRainbow
+  - WFMeridianLoadoutClothingNeckCloak
+  - WFMeridianLoadoutClothingNeckCloakAdmiral
+  - WFMeridianLoadoutClothingNeckCloakFleetAdmiral
+  - WFMeridianLoadoutClothingNeckCloakHeraldCloak
+  - WFMeridianLoadoutClothingNeckCloakSkillRewardArcheology
+  - WFMeridianLoadoutClothingNeckCloakSkillRewardCleaning
+  - WFMeridianLoadoutClothingNeckCloakSkillRewardGaming
+  - WFMeridianLoadoutClothingNeckCloakSkillRewardPlaying
+  - WFMeridianLoadoutClothingNeckCloakSkillRewardPrimitive
+  - WFMeridianLoadoutClothingNeckCloakSkillRewardProduction
+  - WFMeridianLoadoutClothingNeckCloakTribalmantle
+  - WFMeridianLoadoutClothingNeckCloakWolfCoat
+  - WFMeridianLoadoutClothingNeckCollarCowbell
+  - WFMeridianLoadoutClothingNeckCollarReagentClothing
+  - WFMeridianLoadoutClothingNeckEldritchAmulet
+  - WFMeridianLoadoutClothingNeckFaceScarf
+  - WFMeridianLoadoutClothingNeckGreyscaled
+  - WFMeridianLoadoutClothingNeckGreyscaledMatroncloak
+  - WFMeridianLoadoutClothingNeckGreyscaledSeecloak
+  - WFMeridianLoadoutClothingNeckGreyscaledXylixcloak
+  - WFMeridianLoadoutClothingNeckInfinityScarf
+  - WFMeridianLoadoutClothingNeckLargeScarf
+  - WFMeridianLoadoutClothingNeckLinkScryer
+  - WFMeridianLoadoutClothingNeckLongCape
+  - WFMeridianLoadoutClothingNeckMantleBsmantle
+  - WFMeridianLoadoutClothingNeckMantleCapmantle
+  - WFMeridianLoadoutClothingNeckMantleCemantle
+  - WFMeridianLoadoutClothingNeckMantleCmomantle
+  - WFMeridianLoadoutClothingNeckMantleHopmantle
+  - WFMeridianLoadoutClothingNeckMantleHosmantle
+  - WFMeridianLoadoutClothingNeckMantleRdmantle
+  - WFMeridianLoadoutClothingNeckMantleRecolorable
+  - WFMeridianLoadoutClothingNeckMantleRegal
+  - WFMeridianLoadoutClothingNeckMoonAmulet
+  - WFMeridianLoadoutClothingNeckNecklaceMementoMori
+  - WFMeridianLoadoutClothingNeckNecklaceTranslator
+  - WFMeridianLoadoutClothingNeckNecklaceTranslatorHearthkin
+  - WFMeridianLoadoutClothingNeckPauldron
+  - WFMeridianLoadoutClothingNeckPetcollar
+  - WFMeridianLoadoutClothingNeckPetcollarWearableCyber
+  - WFMeridianLoadoutClothingNeckPillowTag
+  - WFMeridianLoadoutClothingNeckRangerPoncho
+  - WFMeridianLoadoutClothingNeckRobeCape
+  - WFMeridianLoadoutClothingNeckScarf
+  - WFMeridianLoadoutClothingNeckTesharianMantle
+  - WFMeridianLoadoutClothingNeckTie
+  - WFMeridianLoadoutClothingNeckTieDisco
+  - WFMeridianLoadoutClothingNeckTieHorrible
+  - WFMeridianLoadoutClothingNeckWarriorCape
+  - WFMeridianLoadoutClothingNeckWideCape
+  - WFMeridianLoadoutClothingNeckWreath
+  - WFMeridianLoadoutClothingNeckWreathIcewing
+  - WFMeridianLoadoutClothingNeckWreathMagmawing
+  # WOLFGATE END
 
 - type: loadoutGroup
   id: PassengerOuterClothing
@@ -222,6 +782,150 @@
   minLimit: 0
   loadouts:
   - PassengerWintercoat
+  # WOLFGATE(MeridianClothing) START: Meridian Rift clothing, written by Tools/_WF/MeridianClothing/port.py
+  - WFMeridianLoadoutClothingSuitApronOveralls
+  - WFMeridianLoadoutClothingSuitApronOverallsLoneskirt
+  - WFMeridianLoadoutClothingSuitApronWaders
+  - WFMeridianLoadoutClothingSuitAshPlates
+  - WFMeridianLoadoutClothingSuitAshPlatesDecorated
+  - WFMeridianLoadoutClothingSuitAshwalkermantle
+  - WFMeridianLoadoutClothingSuitAshwalkermantleCape
+  - WFMeridianLoadoutClothingSuitAutumn
+  - WFMeridianLoadoutClothingSuitBigJacket
+  - WFMeridianLoadoutClothingSuitBlackfurrich
+  - WFMeridianLoadoutClothingSuitBlastwave
+  - WFMeridianLoadoutClothingSuitBluetag
+  - WFMeridianLoadoutClothingSuitBritishOfficer
+  - WFMeridianLoadoutClothingSuitBrownbattlecoat
+  - WFMeridianLoadoutClothingSuitBrownfurrich
+  - WFMeridianLoadoutClothingSuitBrownfurrichCream
+  - WFMeridianLoadoutClothingSuitBrownfurrichWhite
+  - WFMeridianLoadoutClothingSuitCorgisuitEn
+  - WFMeridianLoadoutClothingSuitCossack
+  - WFMeridianLoadoutClothingSuitCropJacket
+  - WFMeridianLoadoutClothingSuitCropJacketLong
+  - WFMeridianLoadoutClothingSuitCropJacketShortsleeve
+  - WFMeridianLoadoutClothingSuitCropJacketShortsleeveLong
+  - WFMeridianLoadoutClothingSuitCropJacketSleeveless
+  - WFMeridianLoadoutClothingSuitCropJacketSleevelessLong
+  - WFMeridianLoadoutClothingSuitDaggerMantle
+  - WFMeridianLoadoutClothingSuitDuster
+  - WFMeridianLoadoutClothingSuitDutchjacketsr
+  - WFMeridianLoadoutClothingSuitFallsparka
+  - WFMeridianLoadoutClothingSuitFlakjack
+  - WFMeridianLoadoutClothingSuitFrenchtrench
+  - WFMeridianLoadoutClothingSuitFrontierColonistFlak
+  - WFMeridianLoadoutClothingSuitGautumn
+  - WFMeridianLoadoutClothingSuitHazardvest
+  - WFMeridianLoadoutClothingSuitHazardvestPress
+  - WFMeridianLoadoutClothingSuitHeartSweater
+  - WFMeridianLoadoutClothingSuitHoodedAblative
+  - WFMeridianLoadoutClothingSuitHoodedBeeCostume
+  - WFMeridianLoadoutClothingSuitHoodedBerserker
+  - WFMeridianLoadoutClothingSuitHoodedBerserkerGatsu
+  - WFMeridianLoadoutClothingSuitHoodedCarpCostumeSpaceproof
+  - WFMeridianLoadoutClothingSuitHoodedCloakDrake
+  - WFMeridianLoadoutClothingSuitHoodedCloakGodslayer
+  - WFMeridianLoadoutClothingSuitHoodedEtherealRaincoat
+  - WFMeridianLoadoutClothingSuitHoodedFlashsuit
+  - WFMeridianLoadoutClothingSuitHoodedHostileEnvironment
+  - WFMeridianLoadoutClothingSuitHoodedIanCostume
+  - WFMeridianLoadoutClothingSuitHoodedLeather
+  - WFMeridianLoadoutClothingSuitHoodedSeva
+  - WFMeridianLoadoutClothingSuitHoodedSharkCostume
+  - WFMeridianLoadoutClothingSuitHoodedShorkCostume
+  - WFMeridianLoadoutClothingSuitHoodedWintercoatCustom
+  - WFMeridianLoadoutClothingSuitHoodedWintercoatEva
+  - WFMeridianLoadoutClothingSuitHoodedWintercoatNova
+  - WFMeridianLoadoutClothingSuitHoodedWintercoatNovaChristmas
+  - WFMeridianLoadoutClothingSuitHoodedWintercoatNovaChristmasGreen
+  - WFMeridianLoadoutClothingSuitHoodedWintercoatNovaNarsie
+  - WFMeridianLoadoutClothingSuitHoodedWintercoatNovaRatvar
+  - WFMeridianLoadoutClothingSuitHoodedWintercoatPullover
+  - WFMeridianLoadoutClothingSuitHoodedWintercoatZipup
+  - WFMeridianLoadoutClothingSuitJacketBlazer
+  - WFMeridianLoadoutClothingSuitJacketBomber
+  - WFMeridianLoadoutClothingSuitJacketCapjacket
+  - WFMeridianLoadoutClothingSuitJacketCroptop
+  - WFMeridianLoadoutClothingSuitJacketFancy
+  - WFMeridianLoadoutClothingSuitJacketFrontierColonist
+  - WFMeridianLoadoutClothingSuitJacketFrontierColonistShort
+  - WFMeridianLoadoutClothingSuitJacketHaori
+  - WFMeridianLoadoutClothingSuitJacketHenchmenCoat
+  - WFMeridianLoadoutClothingSuitJacketLeatherColourable
+  - WFMeridianLoadoutClothingSuitJacketLettermanSyndie
+  - WFMeridianLoadoutClothingSuitJacketLongRobe
+  - WFMeridianLoadoutClothingSuitJacketMiljacket
+  - WFMeridianLoadoutClothingSuitJacketOversized
+  - WFMeridianLoadoutClothingSuitJacketPrimitiveCatgirlCoat
+  - WFMeridianLoadoutClothingSuitJacketPuffer
+  - WFMeridianLoadoutClothingSuitJacketPufferVest
+  - WFMeridianLoadoutClothingSuitJacketStraightJacket
+  - WFMeridianLoadoutClothingSuitJacketTailcoat
+  - WFMeridianLoadoutClothingSuitJacketTailcoatBritish
+  - WFMeridianLoadoutClothingSuitJacketTailcoatCommunist
+  - WFMeridianLoadoutClothingSuitJacketTailcoatMagician
+  - WFMeridianLoadoutClothingSuitJacketTailcoatPlasmaman
+  - WFMeridianLoadoutClothingSuitJacketTailcoatUsa
+  - WFMeridianLoadoutClothingSuitKimjacket
+  - WFMeridianLoadoutClothingSuitKoreacoat
+  - WFMeridianLoadoutClothingSuitModernwintercoatthing
+  - WFMeridianLoadoutClothingSuitMothcoat
+  - WFMeridianLoadoutClothingSuitMothcoatWinter
+  - WFMeridianLoadoutClothingSuitMush
+  - WFMeridianLoadoutClothingSuitNovaFurredTrenchcoat
+  - WFMeridianLoadoutClothingSuitNovaOvercoat
+  - WFMeridianLoadoutClothingSuitNovaSweater
+  - WFMeridianLoadoutClothingSuitNovaSweaterBow
+  - WFMeridianLoadoutClothingSuitPillowSuit
+  - WFMeridianLoadoutClothingSuitPizzaleader
+  - WFMeridianLoadoutClothingSuitRedtag
+  - WFMeridianLoadoutClothingSuitTailoredJacket
+  - WFMeridianLoadoutClothingSuitTailoredJacketShort
+  - WFMeridianLoadoutClothingSuitTexas
+  - WFMeridianLoadoutClothingSuitToggleDeckard
+  - WFMeridianLoadoutClothingSuitToggleJacketCroptopBomberJacket
+  - WFMeridianLoadoutClothingSuitToggleJacketCroptopBomberJacketBadge
+  - WFMeridianLoadoutClothingSuitToggleJacketCroptopBomberJacketPlain
+  - WFMeridianLoadoutClothingSuitToggleJacketCroptopBomberJacketStripe
+  - WFMeridianLoadoutClothingSuitToggleJacketNovaCardigan
+  - WFMeridianLoadoutClothingSuitToggleJacketNovaColorableBomber
+  - WFMeridianLoadoutClothingSuitToggleJacketNovaColorableBomberTcomm
+  - WFMeridianLoadoutClothingSuitToggleJacketNovaCorrectionsOfficer
+  - WFMeridianLoadoutClothingSuitToggleJacketNovaFlannel
+  - WFMeridianLoadoutClothingSuitToggleJacketNovaFlannelAqua
+  - WFMeridianLoadoutClothingSuitToggleJacketNovaFlannelBrown
+  - WFMeridianLoadoutClothingSuitToggleJacketNovaFlannelGags
+  - WFMeridianLoadoutClothingSuitToggleJacketNovaHoodie
+  - WFMeridianLoadoutClothingSuitToggleJacketNovaHoodieBranded
+  - WFMeridianLoadoutClothingSuitToggleJacketNovaHoodieBrandedCti
+  - WFMeridianLoadoutClothingSuitToggleJacketNovaHoodieBrandedMu
+  - WFMeridianLoadoutClothingSuitToggleJacketNovaHoodieBrandedNrti
+  - WFMeridianLoadoutClothingSuitToggleJacketNovaHoodieBrandedSmw
+  - WFMeridianLoadoutClothingSuitToggleJacketNovaHoodieTrim
+  - WFMeridianLoadoutClothingSuitToggleJacketNovaHoodieTrimAlt
+  - WFMeridianLoadoutClothingSuitToggleJacketSweater
+  - WFMeridianLoadoutClothingSuitToggleJacketTrenchcoat
+  - WFMeridianLoadoutClothingSuitToggleOwlwings
+  - WFMeridianLoadoutClothingSuitToggleOwlwingsGriffinwings
+  - WFMeridianLoadoutClothingSuitTogglePeacoat
+  - WFMeridianLoadoutClothingSuitToggleSuspenders
+  - WFMeridianLoadoutClothingSuitToggleTrackjacket
+  - WFMeridianLoadoutClothingSuitTrenchblack
+  - WFMeridianLoadoutClothingSuitTrenchbrown
+  - WFMeridianLoadoutClothingSuitUrban
+  - WFMeridianLoadoutClothingSuitUtilityBeekeeperSuit
+  - WFMeridianLoadoutClothingSuitUtilityFire
+  - WFMeridianLoadoutClothingSuitUtilityFireCeTailcoat
+  - WFMeridianLoadoutClothingSuitUtilityFireFirefighter
+  - WFMeridianLoadoutClothingSuitUtilityFireHeavy
+  - WFMeridianLoadoutClothingSuitVarsity
+  - WFMeridianLoadoutClothingSuitVictoriantailcoatbutler
+  - WFMeridianLoadoutClothingSuitWarmCoat
+  - WFMeridianLoadoutClothingSuitWarmSweater
+  - WFMeridianLoadoutClothingSuitWoolcoat
+  - WFMeridianLoadoutClothingSuitWornshirt
+  # WOLFGATE END
 
 - type: loadoutGroup
   id: PassengerShoes
@@ -229,6 +933,74 @@
   loadouts:
   - BlackShoes
   - WinterBoots
+  # WOLFGATE(MeridianClothing) START: Meridian Rift clothing, written by Tools/_WF/MeridianClothing/port.py
+  - WFMeridianLoadoutClothingShoesBhopRocket
+  - WFMeridianLoadoutClothingShoesBhopRocketJet
+  - WFMeridianLoadoutClothingShoesBoneGreaves
+  - WFMeridianLoadoutClothingShoesBronze
+  - WFMeridianLoadoutClothingShoesColorableLaceups
+  - WFMeridianLoadoutClothingShoesColorableSandals
+  - WFMeridianLoadoutClothingShoesDiscoshoes
+  - WFMeridianLoadoutClothingShoesDivineArcher
+  - WFMeridianLoadoutClothingShoesFancyHeels
+  - WFMeridianLoadoutClothingShoesFancyHeelsSandals
+  - WFMeridianLoadoutClothingShoesForgingPlateBoots
+  - WFMeridianLoadoutClothingShoesGaloshesDry
+  - WFMeridianLoadoutClothingShoesGaloshesHeeled
+  - WFMeridianLoadoutClothingShoesGlow
+  - WFMeridianLoadoutClothingShoesGreavesOfTheProphet
+  - WFMeridianLoadoutClothingShoesGriffin
+  - WFMeridianLoadoutClothingShoesHighHeels
+  - WFMeridianLoadoutClothingShoesJackbootsArmadyne
+  - WFMeridianLoadoutClothingShoesJackbootsAshwalker
+  - WFMeridianLoadoutClothingShoesJackbootsAshwalkerLegate
+  - WFMeridianLoadoutClothingShoesJackbootsBlack
+  - WFMeridianLoadoutClothingShoesJackbootsDuckboots
+  - WFMeridianLoadoutClothingShoesJackbootsFloortile
+  - WFMeridianLoadoutClothingShoesJackbootsFrontierColonist
+  - WFMeridianLoadoutClothingShoesJackbootsGogoBoots
+  - WFMeridianLoadoutClothingShoesJackbootsKim
+  - WFMeridianLoadoutClothingShoesJackbootsKnee
+  - WFMeridianLoadoutClothingShoesJackbootsKneeRecolorable
+  - WFMeridianLoadoutClothingShoesJackbootsRecolorable
+  - WFMeridianLoadoutClothingShoesJackbootsTimbs
+  - WFMeridianLoadoutClothingShoesJackbootsToeless
+  - WFMeridianLoadoutClothingShoesJackbros
+  - WFMeridianLoadoutClothingShoesJungleboots
+  - WFMeridianLoadoutClothingShoesKindleKicks
+  - WFMeridianLoadoutClothingShoesPlate
+  - WFMeridianLoadoutClothingShoesPlateBlue
+  - WFMeridianLoadoutClothingShoesRoman
+  - WFMeridianLoadoutClothingShoesRussian
+  - WFMeridianLoadoutClothingShoesSaints
+  - WFMeridianLoadoutClothingShoesSandalAlt
+  - WFMeridianLoadoutClothingShoesSingerb
+  - WFMeridianLoadoutClothingShoesSingerr
+  - WFMeridianLoadoutClothingShoesSingery
+  - WFMeridianLoadoutClothingShoesSneakersBlackRogue
+  - WFMeridianLoadoutClothingShoesSneakersMarisa
+  - WFMeridianLoadoutClothingShoesSneakersRainbow
+  - WFMeridianLoadoutClothingShoesSportBoots
+  - WFMeridianLoadoutClothingShoesSports
+  - WFMeridianLoadoutClothingShoesSwagshoes
+  - WFMeridianLoadoutClothingShoesWheelys
+  - WFMeridianLoadoutClothingShoesWheelysSkishoes
+  - WFMeridianLoadoutClothingShoesWinterbootsChristmas
+  - WFMeridianLoadoutClothingShoesWinterbootsIceBoots
+  - WFMeridianLoadoutClothingShoesWinterbootsIceBootsEva
+  - WFMeridianLoadoutClothingShoesWinterbootsIceBootsPrimitiveCatgirlBoots
+  - WFMeridianLoadoutClothingShoesWorkbootsBlack
+  - WFMeridianLoadoutClothingShoesWorkbootsToeless
+  - WFMeridianLoadoutClothingShoesWraps
+  - WFMeridianLoadoutClothingShoesWrapsAshwalker
+  - WFMeridianLoadoutClothingShoesWrapsAshwalkerMundanewraps
+  - WFMeridianLoadoutClothingShoesWrapsAshwalkerTribalwraps
+  - WFMeridianLoadoutClothingShoesWrapsBlue
+  - WFMeridianLoadoutClothingShoesWrapsCloth
+  - WFMeridianLoadoutClothingShoesWrapsColourable
+  - WFMeridianLoadoutClothingShoesWrapsRed
+  - WFMeridianLoadoutClothingShoesWrapsSilver
+  # WOLFGATE END
 
 - type: loadoutGroup
   id: BartenderHead
@@ -237,6 +1009,9 @@
   loadouts:
   - BartenderHead
   - BartenderBowler
+  # WOLFGATE(MeridianClothing) START: Meridian Rift clothing, written by Tools/_WF/MeridianClothing/port.py
+  - WFMeridianLoadoutClothingHeadPlaybunnyearsBartender
+  # WOLFGATE END
 
 - type: loadoutGroup
   id: BartenderJumpsuit
@@ -245,6 +1020,12 @@
   - BartenderJumpsuit
   - BartenderJumpskirt
   - BartenderJumpsuitPurple
+  # WOLFGATE(MeridianClothing) START: Meridian Rift clothing, written by Tools/_WF/MeridianClothing/port.py
+  - WFMeridianLoadoutClothingUnderRankCivilianBartenderBunnysuit
+  - WFMeridianLoadoutClothingUnderRankCivilianCookBunnysuit
+  - WFMeridianLoadoutClothingUnderRankCivilianCookjorts
+  - WFMeridianLoadoutClothingUnderSuitWaiter
+  # WOLFGATE END
 
 - type: loadoutGroup
   id: BartenderOuterClothing
@@ -254,6 +1035,10 @@
   - BartenderVest
   - BartenderApron
   - BartenderWintercoat
+  # WOLFGATE(MeridianClothing) START: Meridian Rift clothing, written by Tools/_WF/MeridianClothing/port.py
+  - WFMeridianLoadoutClothingSuitHoodedWintercoatNovaBartender
+  - WFMeridianLoadoutClothingSuitJacketTailcoatBartender
+  # WOLFGATE END
 
 - type: loadoutGroup
   id: ChefHead
@@ -261,6 +1046,10 @@
   minLimit: 0
   loadouts:
   - ChefHead
+  # WOLFGATE(MeridianClothing) START: Meridian Rift clothing, written by Tools/_WF/MeridianClothing/port.py
+  - WFMeridianLoadoutClothingHeadCollectableChef
+  - WFMeridianLoadoutClothingHeadPlaybunnyearsCook
+  # WOLFGATE END
 
 - type: loadoutGroup
   id: ChefMask
@@ -275,6 +1064,10 @@
   loadouts:
   - ChefJumpsuit
   - ChefJumpskirt
+  # WOLFGATE(MeridianClothing) START: Meridian Rift clothing, written by Tools/_WF/MeridianClothing/port.py
+  - WFMeridianLoadoutClothingUnderRankCivilianCookBunnysuit
+  - WFMeridianLoadoutClothingUnderRankCivilianCookjorts
+  # WOLFGATE END
 
 - type: loadoutGroup
   id: ChefOuterClothing
@@ -284,6 +1077,12 @@
   - ChefApron
   - ChefJacket
   - ChefWintercoat
+  # WOLFGATE(MeridianClothing) START: Meridian Rift clothing, written by Tools/_WF/MeridianClothing/port.py
+  - WFMeridianLoadoutClothingSuitApronChef
+  - WFMeridianLoadoutClothingSuitApronChefColorableApron
+  - WFMeridianLoadoutClothingSuitJacketTailcoatCook
+  - WFMeridianLoadoutClothingSuitToggleChef
+  # WOLFGATE END
 
 - type: loadoutGroup
   id: LibrarianJumpsuit
@@ -293,6 +1092,13 @@
   - LibrarianJumpskirt
   - CuratorJumpsuit
   - CuratorJumpskirt
+  # WOLFGATE(MeridianClothing) START: Meridian Rift clothing, written by Tools/_WF/MeridianClothing/port.py
+  - WFMeridianLoadoutClothingUnderRankCivilianCuratorBunnysuitGreen
+  - WFMeridianLoadoutClothingUnderRankCivilianCuratorBunnysuitRed
+  - WFMeridianLoadoutClothingUnderRankCivilianCuratorBunnysuitTeal
+  - WFMeridianLoadoutClothingUnderRankCivilianCuratorSkirt
+  - WFMeridianLoadoutClothingUnderRankCivilianCuratorTreasureHunter
+  # WOLFGATE END
 
 - type: loadoutGroup
   id: LawyerJumpsuit
@@ -308,6 +1114,22 @@
   - LawyerJumpskirtRed
   - LawyerJumpsuitGood
   - LawyerJumpskirtGood
+  # WOLFGATE(MeridianClothing) START: Meridian Rift clothing, written by Tools/_WF/MeridianClothing/port.py
+  - WFMeridianLoadoutClothingUnderRankCivilianLawyerBlack
+  - WFMeridianLoadoutClothingUnderRankCivilianLawyerBlackSkirt
+  - WFMeridianLoadoutClothingUnderRankCivilianLawyerBlue
+  - WFMeridianLoadoutClothingUnderRankCivilianLawyerBlueSkirt
+  - WFMeridianLoadoutClothingUnderRankCivilianLawyerBunnysuitBlack
+  - WFMeridianLoadoutClothingUnderRankCivilianLawyerBunnysuitBlue
+  - WFMeridianLoadoutClothingUnderRankCivilianLawyerBunnysuitGood
+  - WFMeridianLoadoutClothingUnderRankCivilianLawyerBunnysuitRed
+  - WFMeridianLoadoutClothingUnderRankCivilianLawyerGalaxyRedSkirt
+  - WFMeridianLoadoutClothingUnderRankCivilianLawyerGalaxySkirt
+  - WFMeridianLoadoutClothingUnderRankCivilianLawyerPurpsuit
+  - WFMeridianLoadoutClothingUnderRankCivilianLawyerPurpsuitSkirt
+  - WFMeridianLoadoutClothingUnderRankCivilianLawyerRed
+  - WFMeridianLoadoutClothingUnderRankCivilianLawyerRedSkirt
+  # WOLFGATE END
 
 - type: loadoutGroup
   id: LawyerNeck
@@ -315,6 +1137,12 @@
   minLimit: 0
   loadouts:
   - LawyerNeck
+  # WOLFGATE(MeridianClothing) START: Meridian Rift clothing, written by Tools/_WF/MeridianClothing/port.py
+  - WFMeridianLoadoutClothingNeckTieBunnytieLawyerBlack
+  - WFMeridianLoadoutClothingNeckTieBunnytieLawyerBlue
+  - WFMeridianLoadoutClothingNeckTieBunnytieLawyerGood
+  - WFMeridianLoadoutClothingNeckTieBunnytieLawyerRed
+  # WOLFGATE END
 
 - type: loadoutGroup
   id: ChaplainHead
@@ -326,6 +1154,18 @@
   - ChaplainPlagueHat
   - ChaplainWitchHat
   - ChaplainWitchHatAlt
+  # WOLFGATE(MeridianClothing) START: Meridian Rift clothing, written by Tools/_WF/MeridianClothing/port.py
+  - WFMeridianLoadoutClothingHeadChaplainHabitVeil
+  - WFMeridianLoadoutClothingHeadChaplainMedievaljewhat
+  - WFMeridianLoadoutClothingHeadChaplainNunHood
+  - WFMeridianLoadoutClothingHeadChaplainTaqiyahRed
+  - WFMeridianLoadoutClothingHeadChaplainTaqiyahWhite
+  - WFMeridianLoadoutClothingHeadHoodedChaplainHood
+  - WFMeridianLoadoutClothingHeadHoodedChaplainHoodDivineArcher
+  - WFMeridianLoadoutClothingHeadHoodedChaplainHoodLeader
+  - WFMeridianLoadoutClothingHeadHoodedMonkhabit
+  - WFMeridianLoadoutClothingHeadPlaybunnyearsChaplain
+  # WOLFGATE END
 
 - type: loadoutGroup
   id: ChaplainMask
@@ -342,6 +1182,10 @@
   - ChaplainJumpskirt
   - ChaplainRobesLight
   - ChaplainRobesDark
+  # WOLFGATE(MeridianClothing) START: Meridian Rift clothing, written by Tools/_WF/MeridianClothing/port.py
+  - WFMeridianLoadoutClothingUnderRankCivilianChaplainBunnysuit
+  - WFMeridianLoadoutClothingUnderRankCivilianChaplainDivineArcher
+  # WOLFGATE END
 
 - type: loadoutGroup
   id: ChaplainOuterClothing
@@ -352,6 +1196,24 @@
   - ChaplainNunRobe
   - ChaplainBlackHoodie
   - ChaplainHoodie
+  # WOLFGATE(MeridianClothing) START: Meridian Rift clothing, written by Tools/_WF/MeridianClothing/port.py
+  - WFMeridianLoadoutClothingSuitChaplainsuitArmorAdept
+  - WFMeridianLoadoutClothingSuitChaplainsuitArmorAncient
+  - WFMeridianLoadoutClothingSuitChaplainsuitArmorClock
+  - WFMeridianLoadoutClothingSuitChaplainsuitArmorCrusaderBlue
+  - WFMeridianLoadoutClothingSuitChaplainsuitArmorStudentuni
+  - WFMeridianLoadoutClothingSuitChaplainsuitArmorTemplar
+  - WFMeridianLoadoutClothingSuitChaplainsuitArmorTemplarGeneric
+  - WFMeridianLoadoutClothingSuitChaplainsuitHabit
+  - WFMeridianLoadoutClothingSuitChaplainsuitHolidaypriest
+  - WFMeridianLoadoutClothingSuitChaplainsuitMonkrobeeast
+  - WFMeridianLoadoutClothingSuitChaplainsuitShrinehand
+  - WFMeridianLoadoutClothingSuitHoodedChaplainHoodie
+  - WFMeridianLoadoutClothingSuitHoodedChaplainHoodieDivineArcher
+  - WFMeridianLoadoutClothingSuitHoodedChaplainHoodieLeader
+  - WFMeridianLoadoutClothingSuitHoodedChaplainsuitMonkhabit
+  - WFMeridianLoadoutClothingSuitJacketTailcoatChaplain
+  # WOLFGATE END
 
 - type: loadoutGroup
   id: ChaplainNeck
@@ -359,6 +1221,10 @@
   minLimit: 0
   loadouts:
   - ChaplainNeck
+  # WOLFGATE(MeridianClothing) START: Meridian Rift clothing, written by Tools/_WF/MeridianClothing/port.py
+  - WFMeridianLoadoutClothingNeckChaplain
+  - WFMeridianLoadoutClothingNeckChaplainBlack
+  # WOLFGATE END
 
 - type: loadoutGroup
   id: JanitorHead
@@ -366,6 +1232,13 @@
   minLimit: 0
   loadouts:
   - JanitorHead
+  # WOLFGATE(MeridianClothing) START: Meridian Rift clothing, written by Tools/_WF/MeridianClothing/port.py
+  - WFMeridianLoadoutClothingHeadCostumeMaidHeadband
+  - WFMeridianLoadoutClothingHeadCostumeNovaMaid
+  - WFMeridianLoadoutClothingHeadHoodedWinterhoodJanitor
+  - WFMeridianLoadoutClothingHeadMaidHeadband
+  - WFMeridianLoadoutClothingHeadPlaybunnyearsJanitor
+  # WOLFGATE END
 
 - type: loadoutGroup
   id: JanitorJumpsuit
@@ -373,6 +1246,14 @@
   loadouts:
   - JanitorJumpsuit
   - JanitorJumpskirt
+  # WOLFGATE(MeridianClothing) START: Meridian Rift clothing, written by Tools/_WF/MeridianClothing/port.py
+  - WFMeridianLoadoutClothingUnderCostumeMaid
+  - WFMeridianLoadoutClothingUnderCostumeNovaMaidUniform
+  - WFMeridianLoadoutClothingUnderCostumeNovaMaidUniformAlt
+  - WFMeridianLoadoutClothingUnderMaidCostume
+  - WFMeridianLoadoutClothingUnderRankCivilianJanitor
+  - WFMeridianLoadoutClothingUnderRankCivilianJanitorBunnysuit
+  # WOLFGATE END
 
 - type: loadoutGroup
   id: JanitorGloves
@@ -382,6 +1263,9 @@
   - JanitorRubberGloves
   - OrangeGloves
   - PurpleGloves
+  # WOLFGATE(MeridianClothing) START: Meridian Rift clothing, written by Tools/_WF/MeridianClothing/port.py
+  - WFMeridianLoadoutClothingGlovesMaidArmCovers
+  # WOLFGATE END
 
 - type: loadoutGroup
   id: JanitorOuterClothing
@@ -389,6 +1273,10 @@
   minLimit: 0
   loadouts:
   - JanitorWintercoat
+  # WOLFGATE(MeridianClothing) START: Meridian Rift clothing, written by Tools/_WF/MeridianClothing/port.py
+  - WFMeridianLoadoutClothingSuitHoodedWintercoatJanitor
+  - WFMeridianLoadoutClothingSuitJacketTailcoatJanitor
+  # WOLFGATE END
 
 - type: loadoutGroup
   id: JanitorPlunger
@@ -404,6 +1292,10 @@
   loadouts:
   - BotanistHead
   - BotanistBandana
+  # WOLFGATE(MeridianClothing) START: Meridian Rift clothing, written by Tools/_WF/MeridianClothing/port.py
+  - WFMeridianLoadoutClothingHeadHoodedWinterhoodHydro
+  - WFMeridianLoadoutClothingHeadPlaybunnyearsBotanist
+  # WOLFGATE END
 
 - type: loadoutGroup
   id: BotanistJumpsuit
@@ -412,6 +1304,9 @@
   - BotanistJumpsuit
   - BotanistJumpskirt
   - BotanistOveralls
+  # WOLFGATE(MeridianClothing) START: Meridian Rift clothing, written by Tools/_WF/MeridianClothing/port.py
+  - WFMeridianLoadoutClothingUnderRankCivilianHydroponicsBunnysuit
+  # WOLFGATE END
 
 - type: loadoutGroup
   id: BotanistBackpack
@@ -428,6 +1323,9 @@
   loadouts:
   - BotanistApron
   - BotanistWintercoat
+  # WOLFGATE(MeridianClothing) START: Meridian Rift clothing, written by Tools/_WF/MeridianClothing/port.py
+  - WFMeridianLoadoutClothingSuitJacketTailcoatBotanist
+  # WOLFGATE END
 
 - type: loadoutGroup
   id: ClownHead
@@ -436,6 +1334,10 @@
   loadouts:
   - JesterHat
   - JesterAltHat
+  # WOLFGATE(MeridianClothing) START: Meridian Rift clothing, written by Tools/_WF/MeridianClothing/port.py
+  - WFMeridianLoadoutClothingHeadBeretClown
+  - WFMeridianLoadoutClothingHeadSoftMime
+  # WOLFGATE END
 
 - type: loadoutGroup
   id: ClownJumpsuit
@@ -445,6 +1347,20 @@
   - ClownSkirt
   - JesterSuit
   - JesterAltSuit
+  # WOLFGATE(MeridianClothing) START: Meridian Rift clothing, written by Tools/_WF/MeridianClothing/port.py
+  - WFMeridianLoadoutClothingUnderRankCivilianClownBlue
+  - WFMeridianLoadoutClothingUnderRankCivilianClownGreen
+  - WFMeridianLoadoutClothingUnderRankCivilianClownJester
+  - WFMeridianLoadoutClothingUnderRankCivilianClownJesteralt
+  - WFMeridianLoadoutClothingUnderRankCivilianClownOrange
+  - WFMeridianLoadoutClothingUnderRankCivilianClownPinkClownOutfit
+  - WFMeridianLoadoutClothingUnderRankCivilianClownPurple
+  - WFMeridianLoadoutClothingUnderRankCivilianClownRainbow
+  - WFMeridianLoadoutClothingUnderRankCivilianClownSexy
+  - WFMeridianLoadoutClothingUnderRankCivilianClownYellow
+  - WFMeridianLoadoutClothingUnderRankCivilianMime
+  - WFMeridianLoadoutClothingUnderRankCivilianMimeSkirt
+  # WOLFGATE END
 
 - type: loadoutGroup
   id: ClownBackpack
@@ -468,6 +1384,14 @@
   loadouts:
   - ClownShoes
   - JesterShoes
+  # WOLFGATE(MeridianClothing) START: Meridian Rift clothing, written by Tools/_WF/MeridianClothing/port.py
+  - WFMeridianLoadoutClothingShoesClownShoesBananaShoes
+  - WFMeridianLoadoutClothingShoesClownShoesHeeled
+  - WFMeridianLoadoutClothingShoesClownShoesJester
+  - WFMeridianLoadoutClothingShoesClownShoesMeownShoes
+  - WFMeridianLoadoutClothingShoesClownShoesMoffers
+  - WFMeridianLoadoutClothingShoesClownShoesPink
+  # WOLFGATE END
 
 - type: loadoutGroup
   id: SurvivalClown
@@ -489,6 +1413,10 @@
   - MimeHead
   - MimeFrenchBeret
   - MimeCap
+  # WOLFGATE(MeridianClothing) START: Meridian Rift clothing, written by Tools/_WF/MeridianClothing/port.py
+  - WFMeridianLoadoutClothingHeadBeretClown
+  - WFMeridianLoadoutClothingHeadSoftMime
+  # WOLFGATE END
 
 - type: loadoutGroup
   id: MimeMask
@@ -504,6 +1432,20 @@
   loadouts:
   - MimeJumpsuit
   - MimeJumpskirt
+  # WOLFGATE(MeridianClothing) START: Meridian Rift clothing, written by Tools/_WF/MeridianClothing/port.py
+  - WFMeridianLoadoutClothingUnderRankCivilianClownBlue
+  - WFMeridianLoadoutClothingUnderRankCivilianClownGreen
+  - WFMeridianLoadoutClothingUnderRankCivilianClownJester
+  - WFMeridianLoadoutClothingUnderRankCivilianClownJesteralt
+  - WFMeridianLoadoutClothingUnderRankCivilianClownOrange
+  - WFMeridianLoadoutClothingUnderRankCivilianClownPinkClownOutfit
+  - WFMeridianLoadoutClothingUnderRankCivilianClownPurple
+  - WFMeridianLoadoutClothingUnderRankCivilianClownRainbow
+  - WFMeridianLoadoutClothingUnderRankCivilianClownSexy
+  - WFMeridianLoadoutClothingUnderRankCivilianClownYellow
+  - WFMeridianLoadoutClothingUnderRankCivilianMime
+  - WFMeridianLoadoutClothingUnderRankCivilianMimeSkirt
+  # WOLFGATE END
 
 - type: loadoutGroup
   id: MimeBackpack
@@ -545,6 +1487,142 @@
   loadouts:
   - MusicianJumpsuit
   - MusicianJumpskirt
+  # WOLFGATE(MeridianClothing) START: Meridian Rift clothing, written by Tools/_WF/MeridianClothing/port.py
+  - WFMeridianLoadoutClothingUnderBlastwave
+  - WFMeridianLoadoutClothingUnderCamoGags
+  - WFMeridianLoadoutClothingUnderColor
+  - WFMeridianLoadoutClothingUnderColorJumpskirt
+  - WFMeridianLoadoutClothingUnderColorJumpskirtRainbow
+  - WFMeridianLoadoutClothingUnderDougDimmadome
+  - WFMeridianLoadoutClothingUnderDressEveninggown
+  - WFMeridianLoadoutClothingUnderDressNovaCountess
+  - WFMeridianLoadoutClothingUnderDressNovaFlower
+  - WFMeridianLoadoutClothingUnderDressNovaFormalPenSkirt
+  - WFMeridianLoadoutClothingUnderDressNovaGiantScarf
+  - WFMeridianLoadoutClothingUnderDressNovaJute
+  - WFMeridianLoadoutClothingUnderDressNovaMidnightGown
+  - WFMeridianLoadoutClothingUnderDressNovaPenSkirt
+  - WFMeridianLoadoutClothingUnderDressNovaPentagram
+  - WFMeridianLoadoutClothingUnderDressNovaPinktutu
+  - WFMeridianLoadoutClothingUnderDressNovaRedformal
+  - WFMeridianLoadoutClothingUnderDressNovaShortDress
+  - WFMeridianLoadoutClothingUnderDressNovaShorterDress
+  - WFMeridianLoadoutClothingUnderDressNovaSlitDress
+  - WFMeridianLoadoutClothingUnderDressNovaStrapless
+  - WFMeridianLoadoutClothingUnderDressNovaVirginKillerSweater
+  - WFMeridianLoadoutClothingUnderDressNovaWindowedDress
+  - WFMeridianLoadoutClothingUnderDressSailor
+  - WFMeridianLoadoutClothingUnderDressSkirt
+  - WFMeridianLoadoutClothingUnderDressSkirtNovaBlackSkirt
+  - WFMeridianLoadoutClothingUnderDressSkirtNovaJean
+  - WFMeridianLoadoutClothingUnderDressSkirtNovaLoincloth
+  - WFMeridianLoadoutClothingUnderDressSkirtNovaLoinclothLoinclothAlt
+  - WFMeridianLoadoutClothingUnderDressSkirtNovaLoneSkirt
+  - WFMeridianLoadoutClothingUnderDressSkirtNovaLong
+  - WFMeridianLoadoutClothingUnderDressSkirtNovaMedium
+  - WFMeridianLoadoutClothingUnderDressSkirtNovaMiniSkirt
+  - WFMeridianLoadoutClothingUnderDressSkirtNovaRedSkirt
+  - WFMeridianLoadoutClothingUnderDressSkirtNovaStripedSkirt
+  - WFMeridianLoadoutClothingUnderDressSkirtNovaSwept
+  - WFMeridianLoadoutClothingUnderDressSkirtPlaid
+  - WFMeridianLoadoutClothingUnderDressSkirtPrimitiveCatgirlBodyWraps
+  - WFMeridianLoadoutClothingUnderDressSkirtPrimitiveCatgirlTailoredDress
+  - WFMeridianLoadoutClothingUnderDressSkirtPrimitiveCatgirlTunic
+  - WFMeridianLoadoutClothingUnderDressSkirtTurtleskirt
+  - WFMeridianLoadoutClothingUnderDressStriped
+  - WFMeridianLoadoutClothingUnderDressSundress
+  - WFMeridianLoadoutClothingUnderDressTango
+  - WFMeridianLoadoutClothingUnderDressWeddingDress
+  - WFMeridianLoadoutClothingUnderDressWeddingDressRibbon
+  - WFMeridianLoadoutClothingUnderEtherealTunic
+  - WFMeridianLoadoutClothingUnderFrontierColonist
+  - WFMeridianLoadoutClothingUnderGreyscaleGorkas
+  - WFMeridianLoadoutClothingUnderGreyscaleOveralls
+  - WFMeridianLoadoutClothingUnderGreyscaleOverallsSkirt
+  - WFMeridianLoadoutClothingUnderGreyscalePlaysuit
+  - WFMeridianLoadoutClothingUnderGreyscaleTurtleneck
+  - WFMeridianLoadoutClothingUnderGreyscaleTurtleneckSkirt
+  - WFMeridianLoadoutClothingUnderMiscAssistantformal
+  - WFMeridianLoadoutClothingUnderMiscBluetracksuit
+  - WFMeridianLoadoutClothingUnderMiscBouncer
+  - WFMeridianLoadoutClothingUnderMiscBurial
+  - WFMeridianLoadoutClothingUnderMiscDurathread
+  - WFMeridianLoadoutClothingUnderMiscNovaGearHarness
+  - WFMeridianLoadoutClothingUnderMiscNovaGearHarnessAdam
+  - WFMeridianLoadoutClothingUnderMiscNovaGearHarnessEve
+  - WFMeridianLoadoutClothingUnderMiscNovaMechanic
+  - WFMeridianLoadoutClothingUnderMiscNovaModskin
+  - WFMeridianLoadoutClothingUnderMiscNovaTaccas
+  - WFMeridianLoadoutClothingUnderMiscNovaUtility
+  - WFMeridianLoadoutClothingUnderMiscPatriotsuit
+  - WFMeridianLoadoutClothingUnderMiscPjBlue
+  - WFMeridianLoadoutClothingUnderMiscPjRed
+  - WFMeridianLoadoutClothingUnderMiscViceOfficer
+  - WFMeridianLoadoutClothingUnderPantsCamo
+  - WFMeridianLoadoutClothingUnderPantsJeans
+  - WFMeridianLoadoutClothingUnderPantsNovaBigPants
+  - WFMeridianLoadoutClothingUnderPantsNovaDoubleSkirtDress
+  - WFMeridianLoadoutClothingUnderPantsNovaHakama
+  - WFMeridianLoadoutClothingUnderPantsNovaJeansRipped
+  - WFMeridianLoadoutClothingUnderPantsNovaKilt
+  - WFMeridianLoadoutClothingUnderPantsNovaLoosePants
+  - WFMeridianLoadoutClothingUnderPantsNovaShortedOverall
+  - WFMeridianLoadoutClothingUnderPantsNovaVicvest
+  - WFMeridianLoadoutClothingUnderPantsNovaWideLeg
+  - WFMeridianLoadoutClothingUnderPantsNovaYoga
+  - WFMeridianLoadoutClothingUnderPantsSlacksAltar
+  - WFMeridianLoadoutClothingUnderPantsTrack
+  - WFMeridianLoadoutClothingUnderPizza
+  - WFMeridianLoadoutClothingUnderRankAzuleanOldBlood
+  - WFMeridianLoadoutClothingUnderRankAzuleanOldBloodSkirt
+  - WFMeridianLoadoutClothingUnderRankAzuleanUpstart
+  - WFMeridianLoadoutClothingUnderRankAzuleanUpstartSkirt
+  - WFMeridianLoadoutClothingUnderRankCivilianBarber
+  - WFMeridianLoadoutClothingUnderRankCivilianHopBunnysuit
+  - WFMeridianLoadoutClothingUnderRankExpeditionaryCorps
+  - WFMeridianLoadoutClothingUnderRankStationTraitHumanAi
+  - WFMeridianLoadoutClothingUnderShorts
+  - WFMeridianLoadoutClothingUnderShortsJeanshorts
+  - WFMeridianLoadoutClothingUnderShortsNovaShortershorts
+  - WFMeridianLoadoutClothingUnderShortsNovaShortsRipped
+  - WFMeridianLoadoutClothingUnderSkinsuit
+  - WFMeridianLoadoutClothingUnderSolEmt
+  - WFMeridianLoadoutClothingUnderSolPeacekeeper
+  - WFMeridianLoadoutClothingUnderSuitBeige
+  - WFMeridianLoadoutClothingUnderSuitBlack
+  - WFMeridianLoadoutClothingUnderSuitBlackReally
+  - WFMeridianLoadoutClothingUnderSuitBlackReallySkirt
+  - WFMeridianLoadoutClothingUnderSuitBlackSkirt
+  - WFMeridianLoadoutClothingUnderSuitBurgundy
+  - WFMeridianLoadoutClothingUnderSuitCharcoal
+  - WFMeridianLoadoutClothingUnderSuitCheckered
+  - WFMeridianLoadoutClothingUnderSuitNavy
+  - WFMeridianLoadoutClothingUnderSuitNovaBlackReallyCollared
+  - WFMeridianLoadoutClothingUnderSuitNovaBlackReallyCollaredSkirt
+  - WFMeridianLoadoutClothingUnderSuitNovaInferno
+  - WFMeridianLoadoutClothingUnderSuitNovaInfernoSkirt
+  - WFMeridianLoadoutClothingUnderSuitNovaPencil
+  - WFMeridianLoadoutClothingUnderSuitNovaPencilBlackReally
+  - WFMeridianLoadoutClothingUnderSuitNovaPencilCheckered
+  - WFMeridianLoadoutClothingUnderSuitNovaPencilCheckeredNoshirt
+  - WFMeridianLoadoutClothingUnderSuitNovaPencilNoshirt
+  - WFMeridianLoadoutClothingUnderSuitNovaRecolorable
+  - WFMeridianLoadoutClothingUnderSuitNovaRecolorableCasual
+  - WFMeridianLoadoutClothingUnderSuitNovaRecolorableExecutive
+  - WFMeridianLoadoutClothingUnderSuitNovaRecolorableSkirt
+  - WFMeridianLoadoutClothingUnderSuitNovaScarface
+  - WFMeridianLoadoutClothingUnderSuitRed
+  - WFMeridianLoadoutClothingUnderSuitTan
+  - WFMeridianLoadoutClothingUnderSuitTuxedo
+  - WFMeridianLoadoutClothingUnderSuitWhite
+  - WFMeridianLoadoutClothingUnderSuitWhiteSkirt
+  - WFMeridianLoadoutClothingUnderSweater
+  - WFMeridianLoadoutClothingUnderTachawaiian
+  - WFMeridianLoadoutClothingUnderTachawaiianBlue
+  - WFMeridianLoadoutClothingUnderTachawaiianGreen
+  - WFMeridianLoadoutClothingUnderTachawaiianPurple
+  - WFMeridianLoadoutClothingUnderTexas
+  # WOLFGATE END
 
 - type: loadoutGroup
   id: MusicianOuterClothing
@@ -552,6 +1630,150 @@
   minLimit: 0
   loadouts:
   - MusicianWintercoat
+  # WOLFGATE(MeridianClothing) START: Meridian Rift clothing, written by Tools/_WF/MeridianClothing/port.py
+  - WFMeridianLoadoutClothingSuitApronOveralls
+  - WFMeridianLoadoutClothingSuitApronOverallsLoneskirt
+  - WFMeridianLoadoutClothingSuitApronWaders
+  - WFMeridianLoadoutClothingSuitAshPlates
+  - WFMeridianLoadoutClothingSuitAshPlatesDecorated
+  - WFMeridianLoadoutClothingSuitAshwalkermantle
+  - WFMeridianLoadoutClothingSuitAshwalkermantleCape
+  - WFMeridianLoadoutClothingSuitAutumn
+  - WFMeridianLoadoutClothingSuitBigJacket
+  - WFMeridianLoadoutClothingSuitBlackfurrich
+  - WFMeridianLoadoutClothingSuitBlastwave
+  - WFMeridianLoadoutClothingSuitBluetag
+  - WFMeridianLoadoutClothingSuitBritishOfficer
+  - WFMeridianLoadoutClothingSuitBrownbattlecoat
+  - WFMeridianLoadoutClothingSuitBrownfurrich
+  - WFMeridianLoadoutClothingSuitBrownfurrichCream
+  - WFMeridianLoadoutClothingSuitBrownfurrichWhite
+  - WFMeridianLoadoutClothingSuitCorgisuitEn
+  - WFMeridianLoadoutClothingSuitCossack
+  - WFMeridianLoadoutClothingSuitCropJacket
+  - WFMeridianLoadoutClothingSuitCropJacketLong
+  - WFMeridianLoadoutClothingSuitCropJacketShortsleeve
+  - WFMeridianLoadoutClothingSuitCropJacketShortsleeveLong
+  - WFMeridianLoadoutClothingSuitCropJacketSleeveless
+  - WFMeridianLoadoutClothingSuitCropJacketSleevelessLong
+  - WFMeridianLoadoutClothingSuitDaggerMantle
+  - WFMeridianLoadoutClothingSuitDuster
+  - WFMeridianLoadoutClothingSuitDutchjacketsr
+  - WFMeridianLoadoutClothingSuitFallsparka
+  - WFMeridianLoadoutClothingSuitFlakjack
+  - WFMeridianLoadoutClothingSuitFrenchtrench
+  - WFMeridianLoadoutClothingSuitFrontierColonistFlak
+  - WFMeridianLoadoutClothingSuitGautumn
+  - WFMeridianLoadoutClothingSuitHazardvest
+  - WFMeridianLoadoutClothingSuitHazardvestPress
+  - WFMeridianLoadoutClothingSuitHeartSweater
+  - WFMeridianLoadoutClothingSuitHoodedAblative
+  - WFMeridianLoadoutClothingSuitHoodedBeeCostume
+  - WFMeridianLoadoutClothingSuitHoodedBerserker
+  - WFMeridianLoadoutClothingSuitHoodedBerserkerGatsu
+  - WFMeridianLoadoutClothingSuitHoodedCarpCostumeSpaceproof
+  - WFMeridianLoadoutClothingSuitHoodedCloakDrake
+  - WFMeridianLoadoutClothingSuitHoodedCloakGodslayer
+  - WFMeridianLoadoutClothingSuitHoodedEtherealRaincoat
+  - WFMeridianLoadoutClothingSuitHoodedFlashsuit
+  - WFMeridianLoadoutClothingSuitHoodedHostileEnvironment
+  - WFMeridianLoadoutClothingSuitHoodedIanCostume
+  - WFMeridianLoadoutClothingSuitHoodedLeather
+  - WFMeridianLoadoutClothingSuitHoodedSeva
+  - WFMeridianLoadoutClothingSuitHoodedSharkCostume
+  - WFMeridianLoadoutClothingSuitHoodedShorkCostume
+  - WFMeridianLoadoutClothingSuitHoodedWintercoatCustom
+  - WFMeridianLoadoutClothingSuitHoodedWintercoatEva
+  - WFMeridianLoadoutClothingSuitHoodedWintercoatNova
+  - WFMeridianLoadoutClothingSuitHoodedWintercoatNovaChristmas
+  - WFMeridianLoadoutClothingSuitHoodedWintercoatNovaChristmasGreen
+  - WFMeridianLoadoutClothingSuitHoodedWintercoatNovaNarsie
+  - WFMeridianLoadoutClothingSuitHoodedWintercoatNovaRatvar
+  - WFMeridianLoadoutClothingSuitHoodedWintercoatPullover
+  - WFMeridianLoadoutClothingSuitHoodedWintercoatZipup
+  - WFMeridianLoadoutClothingSuitJacketBlazer
+  - WFMeridianLoadoutClothingSuitJacketBomber
+  - WFMeridianLoadoutClothingSuitJacketCapjacket
+  - WFMeridianLoadoutClothingSuitJacketCroptop
+  - WFMeridianLoadoutClothingSuitJacketFancy
+  - WFMeridianLoadoutClothingSuitJacketFrontierColonist
+  - WFMeridianLoadoutClothingSuitJacketFrontierColonistShort
+  - WFMeridianLoadoutClothingSuitJacketHaori
+  - WFMeridianLoadoutClothingSuitJacketHenchmenCoat
+  - WFMeridianLoadoutClothingSuitJacketLeatherColourable
+  - WFMeridianLoadoutClothingSuitJacketLettermanSyndie
+  - WFMeridianLoadoutClothingSuitJacketLongRobe
+  - WFMeridianLoadoutClothingSuitJacketMiljacket
+  - WFMeridianLoadoutClothingSuitJacketOversized
+  - WFMeridianLoadoutClothingSuitJacketPrimitiveCatgirlCoat
+  - WFMeridianLoadoutClothingSuitJacketPuffer
+  - WFMeridianLoadoutClothingSuitJacketPufferVest
+  - WFMeridianLoadoutClothingSuitJacketStraightJacket
+  - WFMeridianLoadoutClothingSuitJacketTailcoat
+  - WFMeridianLoadoutClothingSuitJacketTailcoatBritish
+  - WFMeridianLoadoutClothingSuitJacketTailcoatCommunist
+  - WFMeridianLoadoutClothingSuitJacketTailcoatMagician
+  - WFMeridianLoadoutClothingSuitJacketTailcoatPlasmaman
+  - WFMeridianLoadoutClothingSuitJacketTailcoatUsa
+  - WFMeridianLoadoutClothingSuitKimjacket
+  - WFMeridianLoadoutClothingSuitKoreacoat
+  - WFMeridianLoadoutClothingSuitModernwintercoatthing
+  - WFMeridianLoadoutClothingSuitMothcoat
+  - WFMeridianLoadoutClothingSuitMothcoatWinter
+  - WFMeridianLoadoutClothingSuitMush
+  - WFMeridianLoadoutClothingSuitNovaFurredTrenchcoat
+  - WFMeridianLoadoutClothingSuitNovaOvercoat
+  - WFMeridianLoadoutClothingSuitNovaSweater
+  - WFMeridianLoadoutClothingSuitNovaSweaterBow
+  - WFMeridianLoadoutClothingSuitPillowSuit
+  - WFMeridianLoadoutClothingSuitPizzaleader
+  - WFMeridianLoadoutClothingSuitRedtag
+  - WFMeridianLoadoutClothingSuitTailoredJacket
+  - WFMeridianLoadoutClothingSuitTailoredJacketShort
+  - WFMeridianLoadoutClothingSuitTexas
+  - WFMeridianLoadoutClothingSuitToggleDeckard
+  - WFMeridianLoadoutClothingSuitToggleJacketCroptopBomberJacket
+  - WFMeridianLoadoutClothingSuitToggleJacketCroptopBomberJacketBadge
+  - WFMeridianLoadoutClothingSuitToggleJacketCroptopBomberJacketPlain
+  - WFMeridianLoadoutClothingSuitToggleJacketCroptopBomberJacketStripe
+  - WFMeridianLoadoutClothingSuitToggleJacketNovaCardigan
+  - WFMeridianLoadoutClothingSuitToggleJacketNovaColorableBomber
+  - WFMeridianLoadoutClothingSuitToggleJacketNovaColorableBomberTcomm
+  - WFMeridianLoadoutClothingSuitToggleJacketNovaCorrectionsOfficer
+  - WFMeridianLoadoutClothingSuitToggleJacketNovaFlannel
+  - WFMeridianLoadoutClothingSuitToggleJacketNovaFlannelAqua
+  - WFMeridianLoadoutClothingSuitToggleJacketNovaFlannelBrown
+  - WFMeridianLoadoutClothingSuitToggleJacketNovaFlannelGags
+  - WFMeridianLoadoutClothingSuitToggleJacketNovaHoodie
+  - WFMeridianLoadoutClothingSuitToggleJacketNovaHoodieBranded
+  - WFMeridianLoadoutClothingSuitToggleJacketNovaHoodieBrandedCti
+  - WFMeridianLoadoutClothingSuitToggleJacketNovaHoodieBrandedMu
+  - WFMeridianLoadoutClothingSuitToggleJacketNovaHoodieBrandedNrti
+  - WFMeridianLoadoutClothingSuitToggleJacketNovaHoodieBrandedSmw
+  - WFMeridianLoadoutClothingSuitToggleJacketNovaHoodieTrim
+  - WFMeridianLoadoutClothingSuitToggleJacketNovaHoodieTrimAlt
+  - WFMeridianLoadoutClothingSuitToggleJacketSweater
+  - WFMeridianLoadoutClothingSuitToggleJacketTrenchcoat
+  - WFMeridianLoadoutClothingSuitToggleOwlwings
+  - WFMeridianLoadoutClothingSuitToggleOwlwingsGriffinwings
+  - WFMeridianLoadoutClothingSuitTogglePeacoat
+  - WFMeridianLoadoutClothingSuitToggleSuspenders
+  - WFMeridianLoadoutClothingSuitToggleTrackjacket
+  - WFMeridianLoadoutClothingSuitTrenchblack
+  - WFMeridianLoadoutClothingSuitTrenchbrown
+  - WFMeridianLoadoutClothingSuitUrban
+  - WFMeridianLoadoutClothingSuitUtilityBeekeeperSuit
+  - WFMeridianLoadoutClothingSuitUtilityFire
+  - WFMeridianLoadoutClothingSuitUtilityFireCeTailcoat
+  - WFMeridianLoadoutClothingSuitUtilityFireFirefighter
+  - WFMeridianLoadoutClothingSuitUtilityFireHeavy
+  - WFMeridianLoadoutClothingSuitVarsity
+  - WFMeridianLoadoutClothingSuitVictoriantailcoatbutler
+  - WFMeridianLoadoutClothingSuitWarmCoat
+  - WFMeridianLoadoutClothingSuitWarmSweater
+  - WFMeridianLoadoutClothingSuitWoolcoat
+  - WFMeridianLoadoutClothingSuitWornshirt
+  # WOLFGATE END
 
 - type: loadoutGroup
   id: Instruments
@@ -596,6 +1818,16 @@
   loadouts:
   - QuartermasterHead
   - QuartermasterBeret
+  # WOLFGATE(MeridianClothing) START: Meridian Rift clothing, written by Tools/_WF/MeridianClothing/port.py
+  - WFMeridianLoadoutClothingHeadHoodedExplorer
+  - WFMeridianLoadoutClothingHeadHoodedWinterhoodCargo
+  - WFMeridianLoadoutClothingHeadHoodedWinterhoodCargoQm
+  - WFMeridianLoadoutClothingHeadHoodedWinterhoodMiner
+  - WFMeridianLoadoutClothingHeadPlaybunnyearsBitrunner
+  - WFMeridianLoadoutClothingHeadPlaybunnyearsCargo
+  - WFMeridianLoadoutClothingHeadPlaybunnyearsMiner
+  - WFMeridianLoadoutClothingHeadPlaybunnyearsQuartermaster
+  # WOLFGATE END
 
 - type: loadoutGroup
   id: QuartermasterJumpsuit
@@ -606,6 +1838,37 @@
   - QuartermasterTurtleneck
   - QuartermasterTurtleneckSkirt
   - QuartermasterFormalSuit
+  # WOLFGATE(MeridianClothing) START: Meridian Rift clothing, written by Tools/_WF/MeridianClothing/port.py
+  - WFMeridianLoadoutClothingUnderAkulaWetsuitJobCargo
+  - WFMeridianLoadoutClothingUnderImperialQuartermaster
+  - WFMeridianLoadoutClothingUnderImperialskirtQuartermaster
+  - WFMeridianLoadoutClothingUnderRankCargoBitrunner
+  - WFMeridianLoadoutClothingUnderRankCargoBitrunnerBunnysuit
+  - WFMeridianLoadoutClothingUnderRankCargoCargoBunnysuit
+  - WFMeridianLoadoutClothingUnderRankCargoMiner
+  - WFMeridianLoadoutClothingUnderRankCargoMinerBunnysuit
+  - WFMeridianLoadoutClothingUnderRankCargoQm
+  - WFMeridianLoadoutClothingUnderRankCargoQmNova
+  - WFMeridianLoadoutClothingUnderRankCargoQmNovaCasual
+  - WFMeridianLoadoutClothingUnderRankCargoQmNovaFormal
+  - WFMeridianLoadoutClothingUnderRankCargoQmNovaFormalSkirt
+  - WFMeridianLoadoutClothingUnderRankCargoQmNovaGorka
+  - WFMeridianLoadoutClothingUnderRankCargoQmNovaTurtleneck
+  - WFMeridianLoadoutClothingUnderRankCargoQmNovaTurtleneckSkirt
+  - WFMeridianLoadoutClothingUnderRankCargoQmSkirt
+  - WFMeridianLoadoutClothingUnderRankCargoQuartermasterBunnysuit
+  - WFMeridianLoadoutClothingUnderRankCargoTech
+  - WFMeridianLoadoutClothingUnderRankCargoTechAlt
+  - WFMeridianLoadoutClothingUnderRankCargoTechNovaCasualman
+  - WFMeridianLoadoutClothingUnderRankCargoTechNovaEvil
+  - WFMeridianLoadoutClothingUnderRankCargoTechNovaGorka
+  - WFMeridianLoadoutClothingUnderRankCargoTechNovaLong
+  - WFMeridianLoadoutClothingUnderRankCargoTechNovaTurtleneck
+  - WFMeridianLoadoutClothingUnderRankCargoTechNovaTurtleneckSkirt
+  - WFMeridianLoadoutClothingUnderRankCargoTechNovaUtility
+  - WFMeridianLoadoutClothingUnderRankCargoTechSkirt
+  - WFMeridianLoadoutClothingUnderRankCargoTechSkirtAlt
+  # WOLFGATE END
 
 - type: loadoutGroup
   id: QuartermasterNeck
@@ -614,6 +1877,13 @@
   loadouts:
   - QuartermasterCloak
   - QuartermasterMantle
+  # WOLFGATE(MeridianClothing) START: Meridian Rift clothing, written by Tools/_WF/MeridianClothing/port.py
+  - WFMeridianLoadoutClothingAccessoryArmbandCargo
+  - WFMeridianLoadoutClothingNeckMantleQm
+  - WFMeridianLoadoutClothingNeckTieBunnytieBitrunner
+  - WFMeridianLoadoutClothingNeckTieBunnytieCargo
+  - WFMeridianLoadoutClothingNeckTieBunnytieMiner
+  # WOLFGATE END
 
 - type: loadoutGroup
   id: QuartermasterOuterClothing
@@ -621,6 +1891,15 @@
   minLimit: 0
   loadouts:
   - QuartermasterWintercoat
+  # WOLFGATE(MeridianClothing) START: Meridian Rift clothing, written by Tools/_WF/MeridianClothing/port.py
+  - WFMeridianLoadoutClothingSuitHoodedExplorer
+  - WFMeridianLoadoutClothingSuitJacketQuartermaster
+  - WFMeridianLoadoutClothingSuitJacketTailcoatBitrunner
+  - WFMeridianLoadoutClothingSuitJacketTailcoatCargo
+  - WFMeridianLoadoutClothingSuitJacketTailcoatMiner
+  - WFMeridianLoadoutClothingSuitJacketTailcoatQuartermaster
+  - WFMeridianLoadoutClothingSuitToggleCargoTech
+  # WOLFGATE END
 
 - type: loadoutGroup
   id: QuartermasterShoes
@@ -628,6 +1907,9 @@
   loadouts:
   - BrownShoes
   - CargoWinterBoots
+  # WOLFGATE(MeridianClothing) START: Meridian Rift clothing, written by Tools/_WF/MeridianClothing/port.py
+  - WFMeridianLoadoutClothingShoesWorkbootsMiningHeeled
+  # WOLFGATE END
 
 - type: loadoutGroup
   id: CargoTechnicianHead
@@ -635,6 +1917,16 @@
   minLimit: 0
   loadouts:
   - CargoTechnicianHead
+  # WOLFGATE(MeridianClothing) START: Meridian Rift clothing, written by Tools/_WF/MeridianClothing/port.py
+  - WFMeridianLoadoutClothingHeadHoodedExplorer
+  - WFMeridianLoadoutClothingHeadHoodedWinterhoodCargo
+  - WFMeridianLoadoutClothingHeadHoodedWinterhoodCargoQm
+  - WFMeridianLoadoutClothingHeadHoodedWinterhoodMiner
+  - WFMeridianLoadoutClothingHeadPlaybunnyearsBitrunner
+  - WFMeridianLoadoutClothingHeadPlaybunnyearsCargo
+  - WFMeridianLoadoutClothingHeadPlaybunnyearsMiner
+  - WFMeridianLoadoutClothingHeadPlaybunnyearsQuartermaster
+  # WOLFGATE END
 
 - type: loadoutGroup
   id: CargoTechnicianJumpsuit
@@ -642,6 +1934,37 @@
   loadouts:
   - CargoTechnicianJumpsuit
   - CargoTechnicianJumpskirt
+  # WOLFGATE(MeridianClothing) START: Meridian Rift clothing, written by Tools/_WF/MeridianClothing/port.py
+  - WFMeridianLoadoutClothingUnderAkulaWetsuitJobCargo
+  - WFMeridianLoadoutClothingUnderImperialQuartermaster
+  - WFMeridianLoadoutClothingUnderImperialskirtQuartermaster
+  - WFMeridianLoadoutClothingUnderRankCargoBitrunner
+  - WFMeridianLoadoutClothingUnderRankCargoBitrunnerBunnysuit
+  - WFMeridianLoadoutClothingUnderRankCargoCargoBunnysuit
+  - WFMeridianLoadoutClothingUnderRankCargoMiner
+  - WFMeridianLoadoutClothingUnderRankCargoMinerBunnysuit
+  - WFMeridianLoadoutClothingUnderRankCargoQm
+  - WFMeridianLoadoutClothingUnderRankCargoQmNova
+  - WFMeridianLoadoutClothingUnderRankCargoQmNovaCasual
+  - WFMeridianLoadoutClothingUnderRankCargoQmNovaFormal
+  - WFMeridianLoadoutClothingUnderRankCargoQmNovaFormalSkirt
+  - WFMeridianLoadoutClothingUnderRankCargoQmNovaGorka
+  - WFMeridianLoadoutClothingUnderRankCargoQmNovaTurtleneck
+  - WFMeridianLoadoutClothingUnderRankCargoQmNovaTurtleneckSkirt
+  - WFMeridianLoadoutClothingUnderRankCargoQmSkirt
+  - WFMeridianLoadoutClothingUnderRankCargoQuartermasterBunnysuit
+  - WFMeridianLoadoutClothingUnderRankCargoTech
+  - WFMeridianLoadoutClothingUnderRankCargoTechAlt
+  - WFMeridianLoadoutClothingUnderRankCargoTechNovaCasualman
+  - WFMeridianLoadoutClothingUnderRankCargoTechNovaEvil
+  - WFMeridianLoadoutClothingUnderRankCargoTechNovaGorka
+  - WFMeridianLoadoutClothingUnderRankCargoTechNovaLong
+  - WFMeridianLoadoutClothingUnderRankCargoTechNovaTurtleneck
+  - WFMeridianLoadoutClothingUnderRankCargoTechNovaTurtleneckSkirt
+  - WFMeridianLoadoutClothingUnderRankCargoTechNovaUtility
+  - WFMeridianLoadoutClothingUnderRankCargoTechSkirt
+  - WFMeridianLoadoutClothingUnderRankCargoTechSkirtAlt
+  # WOLFGATE END
 
 - type: loadoutGroup
   id: CargoTechnicianBackpack
@@ -657,6 +1980,15 @@
   minLimit: 0
   loadouts:
   - CargoTechnicianWintercoat
+  # WOLFGATE(MeridianClothing) START: Meridian Rift clothing, written by Tools/_WF/MeridianClothing/port.py
+  - WFMeridianLoadoutClothingSuitHoodedExplorer
+  - WFMeridianLoadoutClothingSuitJacketQuartermaster
+  - WFMeridianLoadoutClothingSuitJacketTailcoatBitrunner
+  - WFMeridianLoadoutClothingSuitJacketTailcoatCargo
+  - WFMeridianLoadoutClothingSuitJacketTailcoatMiner
+  - WFMeridianLoadoutClothingSuitJacketTailcoatQuartermaster
+  - WFMeridianLoadoutClothingSuitToggleCargoTech
+  # WOLFGATE END
 
 - type: loadoutGroup
   id: CargoTechnicianShoes
@@ -664,6 +1996,9 @@
   loadouts:
   - BlackShoes
   - CargoWinterBoots
+  # WOLFGATE(MeridianClothing) START: Meridian Rift clothing, written by Tools/_WF/MeridianClothing/port.py
+  - WFMeridianLoadoutClothingShoesWorkbootsMiningHeeled
+  # WOLFGATE END
 
 - type: loadoutGroup
   id: SalvageSpecialistBackpack
@@ -679,6 +2014,15 @@
   minLimit: 0
   loadouts:
   - SalvageSpecialistWintercoat
+  # WOLFGATE(MeridianClothing) START: Meridian Rift clothing, written by Tools/_WF/MeridianClothing/port.py
+  - WFMeridianLoadoutClothingSuitHoodedExplorer
+  - WFMeridianLoadoutClothingSuitJacketQuartermaster
+  - WFMeridianLoadoutClothingSuitJacketTailcoatBitrunner
+  - WFMeridianLoadoutClothingSuitJacketTailcoatCargo
+  - WFMeridianLoadoutClothingSuitJacketTailcoatMiner
+  - WFMeridianLoadoutClothingSuitJacketTailcoatQuartermaster
+  - WFMeridianLoadoutClothingSuitToggleCargoTech
+  # WOLFGATE END
 
 - type: loadoutGroup
   id: SalvageSpecialistShoes
@@ -686,6 +2030,9 @@
   loadouts:
   - SalvageBoots
   - CargoWinterBoots
+  # WOLFGATE(MeridianClothing) START: Meridian Rift clothing, written by Tools/_WF/MeridianClothing/port.py
+  - WFMeridianLoadoutClothingShoesWorkbootsMiningHeeled
+  # WOLFGATE END
 
 # Engineering
 - type: loadoutGroup
@@ -695,6 +2042,21 @@
   loadouts:
   - ChiefEngineerHead
   - ChiefEngineerBeret
+  # WOLFGATE(MeridianClothing) START: Meridian Rift clothing, written by Tools/_WF/MeridianClothing/port.py
+  - WFMeridianLoadoutClothingHeadCollectableHardhat
+  - WFMeridianLoadoutClothingHeadHoodedWinterhoodEngineering
+  - WFMeridianLoadoutClothingHeadHoodedWinterhoodEngineeringCe
+  - WFMeridianLoadoutClothingHeadPlaybunnyearsCe
+  - WFMeridianLoadoutClothingHeadPlaybunnyearsEngineer
+  - WFMeridianLoadoutClothingHeadUtilityHardhatCakehatEnergycake
+  - WFMeridianLoadoutClothingHeadUtilityHardhatDblue
+  - WFMeridianLoadoutClothingHeadUtilityHardhatOrange
+  - WFMeridianLoadoutClothingHeadUtilityHardhatPumpkinheadBlumpkin
+  - WFMeridianLoadoutClothingHeadUtilityHardhatRed
+  - WFMeridianLoadoutClothingHeadUtilityHardhatRedUpgraded
+  - WFMeridianLoadoutClothingHeadUtilityHardhatReindeer
+  - WFMeridianLoadoutClothingHeadUtilityHardhatWhite
+  # WOLFGATE END
 
 - type: loadoutGroup
   id: ChiefEngineerJumpsuit
@@ -704,6 +2066,19 @@
   - ChiefEngineerJumpskirt
   - ChiefEngineerTurtleneck
   - ChiefEngineerTurtleneckSkirt
+  # WOLFGATE(MeridianClothing) START: Meridian Rift clothing, written by Tools/_WF/MeridianClothing/port.py
+  - WFMeridianLoadoutClothingUnderAkulaWetsuitJobEngineering
+  - WFMeridianLoadoutClothingUnderCostumeNriEngineer
+  - WFMeridianLoadoutClothingUnderRankEngineeringChiefEngineerBunnysuit
+  - WFMeridianLoadoutClothingUnderRankEngineeringChiefEngineerTurtleneckSkirt
+  - WFMeridianLoadoutClothingUnderRankEngineeringEngineerBunnysuit
+  - WFMeridianLoadoutClothingUnderRankEngineeringEngineerNovaHazardChem
+  - WFMeridianLoadoutClothingUnderRankEngineeringEngineerNovaHazardChemEmt
+  - WFMeridianLoadoutClothingUnderRankEngineeringEngineerNovaTrouser
+  - WFMeridianLoadoutClothingUnderRankEngineeringEngineerNovaUtility
+  - WFMeridianLoadoutClothingUnderRankEngineeringEngineerNovaUtilityTelecomm
+  - WFMeridianLoadoutClothingUnderRankEngineeringEngineerNovaUtilityTelecommSkirt
+  # WOLFGATE END
 
 - type: loadoutGroup
   id: ChiefEngineerNeck
@@ -712,6 +2087,12 @@
   loadouts:
   - ChiefEngineerCloak
   - ChiefEngineerMantle
+  # WOLFGATE(MeridianClothing) START: Meridian Rift clothing, written by Tools/_WF/MeridianClothing/port.py
+  - WFMeridianLoadoutClothingAccessoryMedalSilverEmergencyServicesEngineering
+  - WFMeridianLoadoutClothingNeckCloakSkillRewardConstruction
+  - WFMeridianLoadoutClothingNeckTieBunnytieCe
+  - WFMeridianLoadoutClothingNeckTieBunnytieEngineer
+  # WOLFGATE END
 
 - type: loadoutGroup
   id: ChiefEngineerOuterClothing
@@ -719,6 +2100,9 @@
   minLimit: 0
   loadouts:
   - ChiefEngineerWintercoat
+  # WOLFGATE(MeridianClothing) START: Meridian Rift clothing, written by Tools/_WF/MeridianClothing/port.py
+  - WFMeridianLoadoutClothingSuitJacketTailcoatEngineer
+  # WOLFGATE END
 
 - type: loadoutGroup
   id: ChiefEngineerShoes
@@ -733,6 +2117,19 @@
   loadouts:
   - YellowJumpsuit
   - YellowJumpskirt
+  # WOLFGATE(MeridianClothing) START: Meridian Rift clothing, written by Tools/_WF/MeridianClothing/port.py
+  - WFMeridianLoadoutClothingUnderAkulaWetsuitJobEngineering
+  - WFMeridianLoadoutClothingUnderCostumeNriEngineer
+  - WFMeridianLoadoutClothingUnderRankEngineeringChiefEngineerBunnysuit
+  - WFMeridianLoadoutClothingUnderRankEngineeringChiefEngineerTurtleneckSkirt
+  - WFMeridianLoadoutClothingUnderRankEngineeringEngineerBunnysuit
+  - WFMeridianLoadoutClothingUnderRankEngineeringEngineerNovaHazardChem
+  - WFMeridianLoadoutClothingUnderRankEngineeringEngineerNovaHazardChemEmt
+  - WFMeridianLoadoutClothingUnderRankEngineeringEngineerNovaTrouser
+  - WFMeridianLoadoutClothingUnderRankEngineeringEngineerNovaUtility
+  - WFMeridianLoadoutClothingUnderRankEngineeringEngineerNovaUtilityTelecomm
+  - WFMeridianLoadoutClothingUnderRankEngineeringEngineerNovaUtilityTelecommSkirt
+  # WOLFGATE END
 
 - type: loadoutGroup
   id: StationEngineerHead
@@ -743,6 +2140,21 @@
   - StationEngineerHardhatOrange
   - StationEngineerHardhatRed
   - SeniorEngineerBeret
+  # WOLFGATE(MeridianClothing) START: Meridian Rift clothing, written by Tools/_WF/MeridianClothing/port.py
+  - WFMeridianLoadoutClothingHeadCollectableHardhat
+  - WFMeridianLoadoutClothingHeadHoodedWinterhoodEngineering
+  - WFMeridianLoadoutClothingHeadHoodedWinterhoodEngineeringCe
+  - WFMeridianLoadoutClothingHeadPlaybunnyearsCe
+  - WFMeridianLoadoutClothingHeadPlaybunnyearsEngineer
+  - WFMeridianLoadoutClothingHeadUtilityHardhatCakehatEnergycake
+  - WFMeridianLoadoutClothingHeadUtilityHardhatDblue
+  - WFMeridianLoadoutClothingHeadUtilityHardhatOrange
+  - WFMeridianLoadoutClothingHeadUtilityHardhatPumpkinheadBlumpkin
+  - WFMeridianLoadoutClothingHeadUtilityHardhatRed
+  - WFMeridianLoadoutClothingHeadUtilityHardhatRedUpgraded
+  - WFMeridianLoadoutClothingHeadUtilityHardhatReindeer
+  - WFMeridianLoadoutClothingHeadUtilityHardhatWhite
+  # WOLFGATE END
 
 - type: loadoutGroup
   id: StationEngineerJumpsuit
@@ -753,6 +2165,19 @@
   - StationEngineerHazardsuit
   - SeniorEngineerJumpsuit
   - SeniorEngineerJumpskirt
+  # WOLFGATE(MeridianClothing) START: Meridian Rift clothing, written by Tools/_WF/MeridianClothing/port.py
+  - WFMeridianLoadoutClothingUnderAkulaWetsuitJobEngineering
+  - WFMeridianLoadoutClothingUnderCostumeNriEngineer
+  - WFMeridianLoadoutClothingUnderRankEngineeringChiefEngineerBunnysuit
+  - WFMeridianLoadoutClothingUnderRankEngineeringChiefEngineerTurtleneckSkirt
+  - WFMeridianLoadoutClothingUnderRankEngineeringEngineerBunnysuit
+  - WFMeridianLoadoutClothingUnderRankEngineeringEngineerNovaHazardChem
+  - WFMeridianLoadoutClothingUnderRankEngineeringEngineerNovaHazardChemEmt
+  - WFMeridianLoadoutClothingUnderRankEngineeringEngineerNovaTrouser
+  - WFMeridianLoadoutClothingUnderRankEngineeringEngineerNovaUtility
+  - WFMeridianLoadoutClothingUnderRankEngineeringEngineerNovaUtilityTelecomm
+  - WFMeridianLoadoutClothingUnderRankEngineeringEngineerNovaUtilityTelecommSkirt
+  # WOLFGATE END
 
 - type: loadoutGroup
   id: StationEngineerBackpack
@@ -769,6 +2194,9 @@
   loadouts:
   - StationEngineerOuterVest
   - StationEngineerWintercoat
+  # WOLFGATE(MeridianClothing) START: Meridian Rift clothing, written by Tools/_WF/MeridianClothing/port.py
+  - WFMeridianLoadoutClothingSuitJacketTailcoatEngineer
+  # WOLFGATE END
 
 - type: loadoutGroup
   id: StationEngineerShoes
@@ -791,6 +2219,21 @@
   - AtmosphericTechnicianJumpsuit
   - AtmosphericTechnicianJumpskirt
   - AtmosphericTechnicianJumpsuitCasual
+  # WOLFGATE(MeridianClothing) START: Meridian Rift clothing, written by Tools/_WF/MeridianClothing/port.py
+  - WFMeridianLoadoutClothingUnderAkulaWetsuitJobEngineering
+  - WFMeridianLoadoutClothingUnderCostumeNriEngineer
+  - WFMeridianLoadoutClothingUnderRankEngineeringAtmosTechBunnysuit
+  - WFMeridianLoadoutClothingUnderRankEngineeringAtmosphericTechnicianNovaUtilityAdvanced
+  - WFMeridianLoadoutClothingUnderRankEngineeringChiefEngineerBunnysuit
+  - WFMeridianLoadoutClothingUnderRankEngineeringChiefEngineerTurtleneckSkirt
+  - WFMeridianLoadoutClothingUnderRankEngineeringEngineerBunnysuit
+  - WFMeridianLoadoutClothingUnderRankEngineeringEngineerNovaHazardChem
+  - WFMeridianLoadoutClothingUnderRankEngineeringEngineerNovaHazardChemEmt
+  - WFMeridianLoadoutClothingUnderRankEngineeringEngineerNovaTrouser
+  - WFMeridianLoadoutClothingUnderRankEngineeringEngineerNovaUtility
+  - WFMeridianLoadoutClothingUnderRankEngineeringEngineerNovaUtilityTelecomm
+  - WFMeridianLoadoutClothingUnderRankEngineeringEngineerNovaUtilityTelecommSkirt
+  # WOLFGATE END
 
 - type: loadoutGroup
   id: AtmosphericTechnicianOuterClothing
@@ -798,6 +2241,12 @@
   minLimit: 0
   loadouts:
   - AtmosphericTechnicianWintercoat
+  # WOLFGATE(MeridianClothing) START: Meridian Rift clothing, written by Tools/_WF/MeridianClothing/port.py
+  - WFMeridianLoadoutClothingSuitAtmosOveralls
+  - WFMeridianLoadoutClothingSuitJacketTailcoatEngineer
+  - WFMeridianLoadoutClothingSuitUtilityFireAtmos
+  - WFMeridianLoadoutClothingSuitUtilityFireAtmosTechTailcoat
+  # WOLFGATE END
 
 - type: loadoutGroup
   id: AtmosphericTechnicianBackpack
@@ -833,6 +2282,11 @@
   minLimit: 0
   loadouts:
   - ResearchDirectorBeret
+  # WOLFGATE(MeridianClothing) START: Meridian Rift clothing, written by Tools/_WF/MeridianClothing/port.py
+  - WFMeridianLoadoutClothingHeadHoodedWinterhoodScienceRd
+  - WFMeridianLoadoutClothingHeadPlaybunnyearsRd
+  - WFMeridianLoadoutClothingHeadPlaybunnyearsScientist
+  # WOLFGATE END
 
 - type: loadoutGroup
   id: ResearchDirectorNeck
@@ -841,6 +2295,10 @@
   loadouts:
   - ResearchDirectorMantle
   - ResearchDirectorCloak
+  # WOLFGATE(MeridianClothing) START: Meridian Rift clothing, written by Tools/_WF/MeridianClothing/port.py
+  - WFMeridianLoadoutClothingAccessoryArmbandScience
+  - WFMeridianLoadoutClothingNeckTieBunnytieScientist
+  # WOLFGATE END
 
 - type: loadoutGroup
   id: ResearchDirectorJumpsuit
@@ -848,6 +2306,18 @@
   loadouts:
   - ResearchDirectorJumpsuit
   - ResearchDirectorJumpskirt
+  # WOLFGATE(MeridianClothing) START: Meridian Rift clothing, written by Tools/_WF/MeridianClothing/port.py
+  - WFMeridianLoadoutClothingUnderAkulaWetsuitJobScience
+  - WFMeridianLoadoutClothingUnderRankRndResearchDirector
+  - WFMeridianLoadoutClothingUnderRankRndResearchDirectorBunnysuit
+  - WFMeridianLoadoutClothingUnderRankRndResearchDirectorSkirt
+  - WFMeridianLoadoutClothingUnderRankRndResearchDirectorTurtleneckSkirt
+  - WFMeridianLoadoutClothingUnderRankRndScientist
+  - WFMeridianLoadoutClothingUnderRankRndScientistBunnysuit
+  - WFMeridianLoadoutClothingUnderRankRndScientistNovaHlscience
+  - WFMeridianLoadoutClothingUnderRankRndScientistNovaUtility
+  - WFMeridianLoadoutClothingUnderRankRndScientistSkirt
+  # WOLFGATE END
 
 - type: loadoutGroup
   id: ResearchDirectorOuterClothing
@@ -872,6 +2342,13 @@
   - RoboticistCap
   - SkullBandana
   - ScientificBeret
+  # WOLFGATE(MeridianClothing) START: Meridian Rift clothing, written by Tools/_WF/MeridianClothing/port.py
+  - WFMeridianLoadoutClothingHeadHoodedWinterhoodScienceRd
+  - WFMeridianLoadoutClothingHeadHoodedWinterhoodScienceRobotics
+  - WFMeridianLoadoutClothingHeadPlaybunnyearsRd
+  - WFMeridianLoadoutClothingHeadPlaybunnyearsRoboticist
+  - WFMeridianLoadoutClothingHeadPlaybunnyearsScientist
+  # WOLFGATE END
 
 - type: loadoutGroup
   id: ScientistNeck
@@ -879,6 +2356,11 @@
   minLimit: 0
   loadouts:
   - ScientistTie
+  # WOLFGATE(MeridianClothing) START: Meridian Rift clothing, written by Tools/_WF/MeridianClothing/port.py
+  - WFMeridianLoadoutClothingAccessoryArmbandScience
+  - WFMeridianLoadoutClothingNeckTieBunnytieRoboticist
+  - WFMeridianLoadoutClothingNeckTieBunnytieScientist
+  # WOLFGATE END
 
 - type: loadoutGroup
   id: ScientistJumpsuit
@@ -890,6 +2372,21 @@
   - RoboticistJumpskirt
   - SeniorResearcherJumpsuit
   - SeniorResearcherJumpskirt
+  # WOLFGATE(MeridianClothing) START: Meridian Rift clothing, written by Tools/_WF/MeridianClothing/port.py
+  - WFMeridianLoadoutClothingUnderAkulaWetsuitJobScience
+  - WFMeridianLoadoutClothingUnderRankRndResearchDirector
+  - WFMeridianLoadoutClothingUnderRankRndResearchDirectorBunnysuit
+  - WFMeridianLoadoutClothingUnderRankRndResearchDirectorSkirt
+  - WFMeridianLoadoutClothingUnderRankRndResearchDirectorTurtleneckSkirt
+  - WFMeridianLoadoutClothingUnderRankRndRoboticist
+  - WFMeridianLoadoutClothingUnderRankRndRoboticistSkirt
+  - WFMeridianLoadoutClothingUnderRankRndScientist
+  - WFMeridianLoadoutClothingUnderRankRndScientistBunnysuit
+  - WFMeridianLoadoutClothingUnderRankRndScientistNovaHlscience
+  - WFMeridianLoadoutClothingUnderRankRndScientistNovaUtility
+  - WFMeridianLoadoutClothingUnderRankRndScientistRoboticistBunnysuit
+  - WFMeridianLoadoutClothingUnderRankRndScientistSkirt
+  # WOLFGATE END
 
 - type: loadoutGroup
   id: ScientistBackpack
@@ -927,6 +2424,9 @@
   - LatexGloves
   - PurpleGloves
   - RobohandsGloves
+  # WOLFGATE(MeridianClothing) START: Meridian Rift clothing, written by Tools/_WF/MeridianClothing/port.py
+  - WFMeridianLoadoutClothingGlovesColorPlasmamanResearchDirector
+  # WOLFGATE END
 
 - type: loadoutGroup
   id: ScientistPDA
@@ -941,6 +2441,18 @@
   loadouts:
   - WhiteJumpsuit
   - WhiteJumpskirt
+  # WOLFGATE(MeridianClothing) START: Meridian Rift clothing, written by Tools/_WF/MeridianClothing/port.py
+  - WFMeridianLoadoutClothingUnderAkulaWetsuitJobScience
+  - WFMeridianLoadoutClothingUnderRankRndResearchDirector
+  - WFMeridianLoadoutClothingUnderRankRndResearchDirectorBunnysuit
+  - WFMeridianLoadoutClothingUnderRankRndResearchDirectorSkirt
+  - WFMeridianLoadoutClothingUnderRankRndResearchDirectorTurtleneckSkirt
+  - WFMeridianLoadoutClothingUnderRankRndScientist
+  - WFMeridianLoadoutClothingUnderRankRndScientistBunnysuit
+  - WFMeridianLoadoutClothingUnderRankRndScientistNovaHlscience
+  - WFMeridianLoadoutClothingUnderRankRndScientistNovaUtility
+  - WFMeridianLoadoutClothingUnderRankRndScientistSkirt
+  # WOLFGATE END
 
 # Security
 - type: loadoutGroup
@@ -950,6 +2462,27 @@
   loadouts:
   - HeadofSecurityHead
   - HeadofSecurityBeret
+  # WOLFGATE(MeridianClothing) START: Meridian Rift clothing, written by Tools/_WF/MeridianClothing/port.py
+  - WFMeridianLoadoutClothingHeadBeretSecArmadyne
+  - WFMeridianLoadoutClothingHeadBeretSecNavyofficer
+  - WFMeridianLoadoutClothingHeadBeretSecNavywarden
+  - WFMeridianLoadoutClothingHeadBlastwaveOfficer
+  - WFMeridianLoadoutClothingHeadCollectableHos
+  - WFMeridianLoadoutClothingHeadCollectablePolice
+  - WFMeridianLoadoutClothingHeadHatsHosShako
+  - WFMeridianLoadoutClothingHeadHatsWardenDrill
+  - WFMeridianLoadoutClothingHeadHatsWardenPolicePatrol
+  - WFMeridianLoadoutClothingHeadHatsWardenRed
+  - WFMeridianLoadoutClothingHeadHoodedWinterhoodSecurity
+  - WFMeridianLoadoutClothingHeadPlaybunnyearsBrigPhys
+  - WFMeridianLoadoutClothingHeadPlaybunnyearsHos
+  - WFMeridianLoadoutClothingHeadPlaybunnyearsSecurity
+  - WFMeridianLoadoutClothingHeadPlaybunnyearsSecurityAssistant
+  - WFMeridianLoadoutClothingHeadPlaybunnyearsWarden
+  - WFMeridianLoadoutClothingHeadSecurityCapCargo
+  - WFMeridianLoadoutClothingHeadSecurityGarrison
+  - WFMeridianLoadoutClothingHeadUtilityBombHoodSecurity
+  # WOLFGATE END
 
 - type: loadoutGroup
   id: HeadofSecurityJumpsuit
@@ -961,6 +2494,44 @@
   - HeadofSecurityTurtleneckSkirt
   - HeadofSecurityFormalSuit
   - HeadofSecurityFormalSkirt
+  # WOLFGATE(MeridianClothing) START: Meridian Rift clothing, written by Tools/_WF/MeridianClothing/port.py
+  - WFMeridianLoadoutClothingUnderAkulaWetsuitJobSecurity
+  - WFMeridianLoadoutClothingUnderRankSecurityArmadyne
+  - WFMeridianLoadoutClothingUnderRankSecurityArmadyneTactical
+  - WFMeridianLoadoutClothingUnderRankSecurityBrigPhysBunnysuit
+  - WFMeridianLoadoutClothingUnderRankSecurityConstable
+  - WFMeridianLoadoutClothingUnderRankSecurityCorrectionsOfficerSweater
+  - WFMeridianLoadoutClothingUnderRankSecurityCorrectionsOfficerSweaterSkirt
+  - WFMeridianLoadoutClothingUnderRankSecurityNovaDepgagPantsuit
+  - WFMeridianLoadoutClothingUnderRankSecurityNovaDressCargo
+  - WFMeridianLoadoutClothingUnderRankSecurityNovaFormal
+  - WFMeridianLoadoutClothingUnderRankSecurityNovaMiniskirt
+  - WFMeridianLoadoutClothingUnderRankSecurityNovaPlainskirtCargo
+  - WFMeridianLoadoutClothingUnderRankSecurityNovaShortsCargo
+  - WFMeridianLoadoutClothingUnderRankSecurityNovaSkirtCargo
+  - WFMeridianLoadoutClothingUnderRankSecurityNovaTrousers
+  - WFMeridianLoadoutClothingUnderRankSecurityNovaTurtleneckCargo
+  - WFMeridianLoadoutClothingUnderRankSecurityNovaUniform
+  - WFMeridianLoadoutClothingUnderRankSecurityNovaUtility
+  - WFMeridianLoadoutClothingUnderRankSecurityOfficer
+  - WFMeridianLoadoutClothingUnderRankSecurityOfficerBeatcop
+  - WFMeridianLoadoutClothingUnderRankSecurityOfficerBlueshirtNovaBouncer
+  - WFMeridianLoadoutClothingUnderRankSecurityOfficerBlueshirtNovaCustomsAgent
+  - WFMeridianLoadoutClothingUnderRankSecurityOfficerBlueshirtNovaEngineeringGuard
+  - WFMeridianLoadoutClothingUnderRankSecurityOfficerBlueshirtNovaOrderly
+  - WFMeridianLoadoutClothingUnderRankSecurityOfficerSpacepol
+  - WFMeridianLoadoutClothingUnderRankSecurityPrisonerBunnysuit
+  - WFMeridianLoadoutClothingUnderRankSecuritySecurityAssistantBunnysuit
+  - WFMeridianLoadoutClothingUnderRankSecuritySecurityBunnysuit
+  - WFMeridianLoadoutClothingUnderRankSecurityWarden
+  - WFMeridianLoadoutClothingUnderRankSecurityWardenBunnysuit
+  - WFMeridianLoadoutClothingUnderRankSecurityWardenNova
+  - WFMeridianLoadoutClothingUnderRankSecurityWardenNovaBlue
+  - WFMeridianLoadoutClothingUnderRankSecurityWardenNovaSuit
+  - WFMeridianLoadoutClothingUnderRankSecurityWardenNovaSuitBlue
+  - WFMeridianLoadoutClothingUnderSolfedOfficer
+  - WFMeridianLoadoutClothingUnderSolfedOfficerLowrnk
+  # WOLFGATE END
 
 - type: loadoutGroup
   id: HeadofSecurityNeck
@@ -969,6 +2540,16 @@
   loadouts:
   - HeadofSecurityCloak
   - HeadofSecurityMantle
+  # WOLFGATE(MeridianClothing) START: Meridian Rift clothing, written by Tools/_WF/MeridianClothing/port.py
+  - WFMeridianLoadoutClothingAccessoryBadgeHoloWarden
+  - WFMeridianLoadoutClothingNeckSecurityCapeArmplate
+  - WFMeridianLoadoutClothingNeckSecurityCapeArmplateCapedEngineer
+  - WFMeridianLoadoutClothingNeckSecurityCapeShoulder
+  - WFMeridianLoadoutClothingNeckSecurityCapeTarkon
+  - WFMeridianLoadoutClothingNeckTieBunnytieBrigPhys
+  - WFMeridianLoadoutClothingNeckTieBunnytieSecurity
+  - WFMeridianLoadoutClothingNeckTieBunnytieSecurityAssistant
+  # WOLFGATE END
 
 - type: loadoutGroup
   id: HeadofSecurityOuterClothing
@@ -976,6 +2557,20 @@
   loadouts:
   - HeadofSecurityCoat
   - HeadofSecurityWinterCoat
+  # WOLFGATE(MeridianClothing) START: Meridian Rift clothing, written by Tools/_WF/MeridianClothing/port.py
+  - WFMeridianLoadoutClothingSuitFedcoatModernSec
+  - WFMeridianLoadoutClothingSuitHoodedWintercoatSecurity
+  - WFMeridianLoadoutClothingSuitHoodedWintercoatSecurityDepgagBomber
+  - WFMeridianLoadoutClothingSuitHoodedWintercoatSecurityDepgagCargo
+  - WFMeridianLoadoutClothingSuitHoodedWintercoatSecurityDepgagDepgagVestedJacketCargo
+  - WFMeridianLoadoutClothingSuitJacketHosBlue
+  - WFMeridianLoadoutClothingSuitJacketHosTan
+  - WFMeridianLoadoutClothingSuitJacketOfficerBlue
+  - WFMeridianLoadoutClothingSuitJacketOfficerTan
+  - WFMeridianLoadoutClothingSuitJacketWardenBlue
+  - WFMeridianLoadoutClothingSuitJacketWardenTan
+  - WFMeridianLoadoutClothingSuitToggleLabcoatNovaSecurityMedicDoctorTailcoat
+  # WOLFGATE END
 
 - type: loadoutGroup
   id: WardenHead
@@ -984,6 +2579,27 @@
   loadouts:
   - WardenHead
   - WardenBeret
+  # WOLFGATE(MeridianClothing) START: Meridian Rift clothing, written by Tools/_WF/MeridianClothing/port.py
+  - WFMeridianLoadoutClothingHeadBeretSecArmadyne
+  - WFMeridianLoadoutClothingHeadBeretSecNavyofficer
+  - WFMeridianLoadoutClothingHeadBeretSecNavywarden
+  - WFMeridianLoadoutClothingHeadBlastwaveOfficer
+  - WFMeridianLoadoutClothingHeadCollectableHos
+  - WFMeridianLoadoutClothingHeadCollectablePolice
+  - WFMeridianLoadoutClothingHeadHatsHosShako
+  - WFMeridianLoadoutClothingHeadHatsWardenDrill
+  - WFMeridianLoadoutClothingHeadHatsWardenPolicePatrol
+  - WFMeridianLoadoutClothingHeadHatsWardenRed
+  - WFMeridianLoadoutClothingHeadHoodedWinterhoodSecurity
+  - WFMeridianLoadoutClothingHeadPlaybunnyearsBrigPhys
+  - WFMeridianLoadoutClothingHeadPlaybunnyearsHos
+  - WFMeridianLoadoutClothingHeadPlaybunnyearsSecurity
+  - WFMeridianLoadoutClothingHeadPlaybunnyearsSecurityAssistant
+  - WFMeridianLoadoutClothingHeadPlaybunnyearsWarden
+  - WFMeridianLoadoutClothingHeadSecurityCapCargo
+  - WFMeridianLoadoutClothingHeadSecurityGarrison
+  - WFMeridianLoadoutClothingHeadUtilityBombHoodSecurity
+  # WOLFGATE END
 
 - type: loadoutGroup
   id: WardenJumpsuit
@@ -991,6 +2607,44 @@
   loadouts:
   - WardenJumpsuit
   - WardenJumpskirt
+  # WOLFGATE(MeridianClothing) START: Meridian Rift clothing, written by Tools/_WF/MeridianClothing/port.py
+  - WFMeridianLoadoutClothingUnderAkulaWetsuitJobSecurity
+  - WFMeridianLoadoutClothingUnderRankSecurityArmadyne
+  - WFMeridianLoadoutClothingUnderRankSecurityArmadyneTactical
+  - WFMeridianLoadoutClothingUnderRankSecurityBrigPhysBunnysuit
+  - WFMeridianLoadoutClothingUnderRankSecurityConstable
+  - WFMeridianLoadoutClothingUnderRankSecurityCorrectionsOfficerSweater
+  - WFMeridianLoadoutClothingUnderRankSecurityCorrectionsOfficerSweaterSkirt
+  - WFMeridianLoadoutClothingUnderRankSecurityNovaDepgagPantsuit
+  - WFMeridianLoadoutClothingUnderRankSecurityNovaDressCargo
+  - WFMeridianLoadoutClothingUnderRankSecurityNovaFormal
+  - WFMeridianLoadoutClothingUnderRankSecurityNovaMiniskirt
+  - WFMeridianLoadoutClothingUnderRankSecurityNovaPlainskirtCargo
+  - WFMeridianLoadoutClothingUnderRankSecurityNovaShortsCargo
+  - WFMeridianLoadoutClothingUnderRankSecurityNovaSkirtCargo
+  - WFMeridianLoadoutClothingUnderRankSecurityNovaTrousers
+  - WFMeridianLoadoutClothingUnderRankSecurityNovaTurtleneckCargo
+  - WFMeridianLoadoutClothingUnderRankSecurityNovaUniform
+  - WFMeridianLoadoutClothingUnderRankSecurityNovaUtility
+  - WFMeridianLoadoutClothingUnderRankSecurityOfficer
+  - WFMeridianLoadoutClothingUnderRankSecurityOfficerBeatcop
+  - WFMeridianLoadoutClothingUnderRankSecurityOfficerBlueshirtNovaBouncer
+  - WFMeridianLoadoutClothingUnderRankSecurityOfficerBlueshirtNovaCustomsAgent
+  - WFMeridianLoadoutClothingUnderRankSecurityOfficerBlueshirtNovaEngineeringGuard
+  - WFMeridianLoadoutClothingUnderRankSecurityOfficerBlueshirtNovaOrderly
+  - WFMeridianLoadoutClothingUnderRankSecurityOfficerSpacepol
+  - WFMeridianLoadoutClothingUnderRankSecurityPrisonerBunnysuit
+  - WFMeridianLoadoutClothingUnderRankSecuritySecurityAssistantBunnysuit
+  - WFMeridianLoadoutClothingUnderRankSecuritySecurityBunnysuit
+  - WFMeridianLoadoutClothingUnderRankSecurityWarden
+  - WFMeridianLoadoutClothingUnderRankSecurityWardenBunnysuit
+  - WFMeridianLoadoutClothingUnderRankSecurityWardenNova
+  - WFMeridianLoadoutClothingUnderRankSecurityWardenNovaBlue
+  - WFMeridianLoadoutClothingUnderRankSecurityWardenNovaSuit
+  - WFMeridianLoadoutClothingUnderRankSecurityWardenNovaSuitBlue
+  - WFMeridianLoadoutClothingUnderSolfedOfficer
+  - WFMeridianLoadoutClothingUnderSolfedOfficerLowrnk
+  # WOLFGATE END
 
 - type: loadoutGroup
   id: WardenOuterClothing
@@ -998,6 +2652,20 @@
   loadouts:
   - WardenCoat
   - WardenArmoredWinterCoat
+  # WOLFGATE(MeridianClothing) START: Meridian Rift clothing, written by Tools/_WF/MeridianClothing/port.py
+  - WFMeridianLoadoutClothingSuitFedcoatModernSec
+  - WFMeridianLoadoutClothingSuitHoodedWintercoatSecurity
+  - WFMeridianLoadoutClothingSuitHoodedWintercoatSecurityDepgagBomber
+  - WFMeridianLoadoutClothingSuitHoodedWintercoatSecurityDepgagCargo
+  - WFMeridianLoadoutClothingSuitHoodedWintercoatSecurityDepgagDepgagVestedJacketCargo
+  - WFMeridianLoadoutClothingSuitJacketHosBlue
+  - WFMeridianLoadoutClothingSuitJacketHosTan
+  - WFMeridianLoadoutClothingSuitJacketOfficerBlue
+  - WFMeridianLoadoutClothingSuitJacketOfficerTan
+  - WFMeridianLoadoutClothingSuitJacketWardenBlue
+  - WFMeridianLoadoutClothingSuitJacketWardenTan
+  - WFMeridianLoadoutClothingSuitToggleLabcoatNovaSecurityMedicDoctorTailcoat
+  # WOLFGATE END
 
 - type: loadoutGroup
   id: SecurityHead
@@ -1008,6 +2676,27 @@
   - SecurityBeret
   - SecurityHat
   - TrooperHat
+  # WOLFGATE(MeridianClothing) START: Meridian Rift clothing, written by Tools/_WF/MeridianClothing/port.py
+  - WFMeridianLoadoutClothingHeadBeretSecArmadyne
+  - WFMeridianLoadoutClothingHeadBeretSecNavyofficer
+  - WFMeridianLoadoutClothingHeadBeretSecNavywarden
+  - WFMeridianLoadoutClothingHeadBlastwaveOfficer
+  - WFMeridianLoadoutClothingHeadCollectableHos
+  - WFMeridianLoadoutClothingHeadCollectablePolice
+  - WFMeridianLoadoutClothingHeadHatsHosShako
+  - WFMeridianLoadoutClothingHeadHatsWardenDrill
+  - WFMeridianLoadoutClothingHeadHatsWardenPolicePatrol
+  - WFMeridianLoadoutClothingHeadHatsWardenRed
+  - WFMeridianLoadoutClothingHeadHoodedWinterhoodSecurity
+  - WFMeridianLoadoutClothingHeadPlaybunnyearsBrigPhys
+  - WFMeridianLoadoutClothingHeadPlaybunnyearsHos
+  - WFMeridianLoadoutClothingHeadPlaybunnyearsSecurity
+  - WFMeridianLoadoutClothingHeadPlaybunnyearsSecurityAssistant
+  - WFMeridianLoadoutClothingHeadPlaybunnyearsWarden
+  - WFMeridianLoadoutClothingHeadSecurityCapCargo
+  - WFMeridianLoadoutClothingHeadSecurityGarrison
+  - WFMeridianLoadoutClothingHeadUtilityBombHoodSecurity
+  # WOLFGATE END
 
 - type: loadoutGroup
   id: SecurityJumpsuit
@@ -1020,6 +2709,44 @@
   - SeniorOfficerJumpsuit
   - SeniorOfficerJumpskirt
   - TrooperUniform
+  # WOLFGATE(MeridianClothing) START: Meridian Rift clothing, written by Tools/_WF/MeridianClothing/port.py
+  - WFMeridianLoadoutClothingUnderAkulaWetsuitJobSecurity
+  - WFMeridianLoadoutClothingUnderRankSecurityArmadyne
+  - WFMeridianLoadoutClothingUnderRankSecurityArmadyneTactical
+  - WFMeridianLoadoutClothingUnderRankSecurityBrigPhysBunnysuit
+  - WFMeridianLoadoutClothingUnderRankSecurityConstable
+  - WFMeridianLoadoutClothingUnderRankSecurityCorrectionsOfficerSweater
+  - WFMeridianLoadoutClothingUnderRankSecurityCorrectionsOfficerSweaterSkirt
+  - WFMeridianLoadoutClothingUnderRankSecurityNovaDepgagPantsuit
+  - WFMeridianLoadoutClothingUnderRankSecurityNovaDressCargo
+  - WFMeridianLoadoutClothingUnderRankSecurityNovaFormal
+  - WFMeridianLoadoutClothingUnderRankSecurityNovaMiniskirt
+  - WFMeridianLoadoutClothingUnderRankSecurityNovaPlainskirtCargo
+  - WFMeridianLoadoutClothingUnderRankSecurityNovaShortsCargo
+  - WFMeridianLoadoutClothingUnderRankSecurityNovaSkirtCargo
+  - WFMeridianLoadoutClothingUnderRankSecurityNovaTrousers
+  - WFMeridianLoadoutClothingUnderRankSecurityNovaTurtleneckCargo
+  - WFMeridianLoadoutClothingUnderRankSecurityNovaUniform
+  - WFMeridianLoadoutClothingUnderRankSecurityNovaUtility
+  - WFMeridianLoadoutClothingUnderRankSecurityOfficer
+  - WFMeridianLoadoutClothingUnderRankSecurityOfficerBeatcop
+  - WFMeridianLoadoutClothingUnderRankSecurityOfficerBlueshirtNovaBouncer
+  - WFMeridianLoadoutClothingUnderRankSecurityOfficerBlueshirtNovaCustomsAgent
+  - WFMeridianLoadoutClothingUnderRankSecurityOfficerBlueshirtNovaEngineeringGuard
+  - WFMeridianLoadoutClothingUnderRankSecurityOfficerBlueshirtNovaOrderly
+  - WFMeridianLoadoutClothingUnderRankSecurityOfficerSpacepol
+  - WFMeridianLoadoutClothingUnderRankSecurityPrisonerBunnysuit
+  - WFMeridianLoadoutClothingUnderRankSecuritySecurityAssistantBunnysuit
+  - WFMeridianLoadoutClothingUnderRankSecuritySecurityBunnysuit
+  - WFMeridianLoadoutClothingUnderRankSecurityWarden
+  - WFMeridianLoadoutClothingUnderRankSecurityWardenBunnysuit
+  - WFMeridianLoadoutClothingUnderRankSecurityWardenNova
+  - WFMeridianLoadoutClothingUnderRankSecurityWardenNovaBlue
+  - WFMeridianLoadoutClothingUnderRankSecurityWardenNovaSuit
+  - WFMeridianLoadoutClothingUnderRankSecurityWardenNovaSuitBlue
+  - WFMeridianLoadoutClothingUnderSolfedOfficer
+  - WFMeridianLoadoutClothingUnderSolfedOfficerLowrnk
+  # WOLFGATE END
 
 - type: loadoutGroup
   id: SecurityBackpack
@@ -1043,6 +2770,20 @@
   - ArmorVest
   - ArmorVestSlim
   - SecurityOfficerWintercoat
+  # WOLFGATE(MeridianClothing) START: Meridian Rift clothing, written by Tools/_WF/MeridianClothing/port.py
+  - WFMeridianLoadoutClothingSuitFedcoatModernSec
+  - WFMeridianLoadoutClothingSuitHoodedWintercoatSecurity
+  - WFMeridianLoadoutClothingSuitHoodedWintercoatSecurityDepgagBomber
+  - WFMeridianLoadoutClothingSuitHoodedWintercoatSecurityDepgagCargo
+  - WFMeridianLoadoutClothingSuitHoodedWintercoatSecurityDepgagDepgagVestedJacketCargo
+  - WFMeridianLoadoutClothingSuitJacketHosBlue
+  - WFMeridianLoadoutClothingSuitJacketHosTan
+  - WFMeridianLoadoutClothingSuitJacketOfficerBlue
+  - WFMeridianLoadoutClothingSuitJacketOfficerTan
+  - WFMeridianLoadoutClothingSuitJacketWardenBlue
+  - WFMeridianLoadoutClothingSuitJacketWardenTan
+  - WFMeridianLoadoutClothingSuitToggleLabcoatNovaSecurityMedicDoctorTailcoat
+  # WOLFGATE END
 
 - type: loadoutGroup
   id: SecurityShoes
@@ -1050,6 +2791,9 @@
   loadouts:
   - JackBoots
   - SecurityWinterBoots
+  # WOLFGATE(MeridianClothing) START: Meridian Rift clothing, written by Tools/_WF/MeridianClothing/port.py
+  - WFMeridianLoadoutClothingShoesJackbootsPeacekeeper
+  # WOLFGATE END
 
 - type: loadoutGroup
   id: SecurityPDA
@@ -1065,6 +2809,12 @@
   loadouts:
   - DetectiveFedora
   - DetectiveFedoraGrey
+  # WOLFGATE(MeridianClothing) START: Meridian Rift clothing, written by Tools/_WF/MeridianClothing/port.py
+  - WFMeridianLoadoutClothingHeadFedoraDetHat
+  - WFMeridianLoadoutClothingHeadFedoraDetHatCybergoggles
+  - WFMeridianLoadoutClothingHeadPlaybunnyearsDetective
+  - WFMeridianLoadoutClothingHeadPlaybunnyearsDetectiveNoir
+  # WOLFGATE END
 
 - type: loadoutGroup
   id: DetectiveNeck
@@ -1072,6 +2822,11 @@
   minLimit: 0
   loadouts:
   - DetectiveTie
+  # WOLFGATE(MeridianClothing) START: Meridian Rift clothing, written by Tools/_WF/MeridianClothing/port.py
+  - WFMeridianLoadoutClothingAccessoryBadgeHoloDetective
+  - WFMeridianLoadoutClothingNeckTieBunnytieDetective
+  - WFMeridianLoadoutClothingNeckTieDetective
+  # WOLFGATE END
 
 - type: loadoutGroup
   id: DetectiveJumpsuit
@@ -1081,6 +2836,14 @@
   - DetectiveJumpskirt
   - NoirJumpsuit
   - NoirJumpskirt
+  # WOLFGATE(MeridianClothing) START: Meridian Rift clothing, written by Tools/_WF/MeridianClothing/port.py
+  - WFMeridianLoadoutClothingUnderRankSecurityDetectiveBunnysuit
+  - WFMeridianLoadoutClothingUnderRankSecurityDetectiveBunnysuitNoir
+  - WFMeridianLoadoutClothingUnderRankSecurityDetectiveCowboy
+  - WFMeridianLoadoutClothingUnderRankSecurityDetectiveDisco
+  - WFMeridianLoadoutClothingUnderRankSecurityDetectiveKim
+  - WFMeridianLoadoutClothingUnderRankSecurityDetectiveRunner
+  # WOLFGATE END
 
 - type: loadoutGroup
   id: DetectiveOuterClothing
@@ -1089,6 +2852,12 @@
   - DetectiveArmorVest
   - DetectiveCoat
   - DetectiveCoatGrey
+  # WOLFGATE(MeridianClothing) START: Meridian Rift clothing, written by Tools/_WF/MeridianClothing/port.py
+  - WFMeridianLoadoutClothingSuitJacketDetSuit
+  - WFMeridianLoadoutClothingSuitJacketDetSuitNoir
+  - WFMeridianLoadoutClothingSuitJacketDetSuitTailcoat
+  - WFMeridianLoadoutClothingSuitJacketDetSuitTailcoatNoir
+  # WOLFGATE END
 
 - type: loadoutGroup
   id: SecurityCadetJumpsuit
@@ -1096,6 +2865,44 @@
   loadouts:
   - RedJumpsuit
   - RedJumpskirt
+  # WOLFGATE(MeridianClothing) START: Meridian Rift clothing, written by Tools/_WF/MeridianClothing/port.py
+  - WFMeridianLoadoutClothingUnderAkulaWetsuitJobSecurity
+  - WFMeridianLoadoutClothingUnderRankSecurityArmadyne
+  - WFMeridianLoadoutClothingUnderRankSecurityArmadyneTactical
+  - WFMeridianLoadoutClothingUnderRankSecurityBrigPhysBunnysuit
+  - WFMeridianLoadoutClothingUnderRankSecurityConstable
+  - WFMeridianLoadoutClothingUnderRankSecurityCorrectionsOfficerSweater
+  - WFMeridianLoadoutClothingUnderRankSecurityCorrectionsOfficerSweaterSkirt
+  - WFMeridianLoadoutClothingUnderRankSecurityNovaDepgagPantsuit
+  - WFMeridianLoadoutClothingUnderRankSecurityNovaDressCargo
+  - WFMeridianLoadoutClothingUnderRankSecurityNovaFormal
+  - WFMeridianLoadoutClothingUnderRankSecurityNovaMiniskirt
+  - WFMeridianLoadoutClothingUnderRankSecurityNovaPlainskirtCargo
+  - WFMeridianLoadoutClothingUnderRankSecurityNovaShortsCargo
+  - WFMeridianLoadoutClothingUnderRankSecurityNovaSkirtCargo
+  - WFMeridianLoadoutClothingUnderRankSecurityNovaTrousers
+  - WFMeridianLoadoutClothingUnderRankSecurityNovaTurtleneckCargo
+  - WFMeridianLoadoutClothingUnderRankSecurityNovaUniform
+  - WFMeridianLoadoutClothingUnderRankSecurityNovaUtility
+  - WFMeridianLoadoutClothingUnderRankSecurityOfficer
+  - WFMeridianLoadoutClothingUnderRankSecurityOfficerBeatcop
+  - WFMeridianLoadoutClothingUnderRankSecurityOfficerBlueshirtNovaBouncer
+  - WFMeridianLoadoutClothingUnderRankSecurityOfficerBlueshirtNovaCustomsAgent
+  - WFMeridianLoadoutClothingUnderRankSecurityOfficerBlueshirtNovaEngineeringGuard
+  - WFMeridianLoadoutClothingUnderRankSecurityOfficerBlueshirtNovaOrderly
+  - WFMeridianLoadoutClothingUnderRankSecurityOfficerSpacepol
+  - WFMeridianLoadoutClothingUnderRankSecurityPrisonerBunnysuit
+  - WFMeridianLoadoutClothingUnderRankSecuritySecurityAssistantBunnysuit
+  - WFMeridianLoadoutClothingUnderRankSecuritySecurityBunnysuit
+  - WFMeridianLoadoutClothingUnderRankSecurityWarden
+  - WFMeridianLoadoutClothingUnderRankSecurityWardenBunnysuit
+  - WFMeridianLoadoutClothingUnderRankSecurityWardenNova
+  - WFMeridianLoadoutClothingUnderRankSecurityWardenNovaBlue
+  - WFMeridianLoadoutClothingUnderRankSecurityWardenNovaSuit
+  - WFMeridianLoadoutClothingUnderRankSecurityWardenNovaSuitBlue
+  - WFMeridianLoadoutClothingUnderSolfedOfficer
+  - WFMeridianLoadoutClothingUnderSolfedOfficerLowrnk
+  # WOLFGATE END
 
 - type: loadoutGroup
   id: SurvivalSecurity
@@ -1124,6 +2931,21 @@
   loadouts:
   - ChiefMedicalOfficerBeret
   - CMOMedicalHeadMirror
+  # WOLFGATE(MeridianClothing) START: Meridian Rift clothing, written by Tools/_WF/MeridianClothing/port.py
+  - WFMeridianLoadoutClothingHeadBeretMedical
+  - WFMeridianLoadoutClothingHeadCostumeNursehat
+  - WFMeridianLoadoutClothingHeadHoodedWinterhoodMedical
+  - WFMeridianLoadoutClothingHeadHoodedWinterhoodMedicalCmo
+  - WFMeridianLoadoutClothingHeadHoodedWinterhoodMedicalCoroner
+  - WFMeridianLoadoutClothingHeadHoodedWinterhoodMedicalParamedic
+  - WFMeridianLoadoutClothingHeadHoodedWinterhoodMedicalViro
+  - WFMeridianLoadoutClothingHeadPlaybunnyearsCmo
+  - WFMeridianLoadoutClothingHeadPlaybunnyearsCoroner
+  - WFMeridianLoadoutClothingHeadPlaybunnyearsDoctor
+  - WFMeridianLoadoutClothingHeadPlaybunnyearsParamedic
+  - WFMeridianLoadoutClothingHeadPlaybunnyearsPsychologist
+  - WFMeridianLoadoutClothingHeadUtilitySurgerycapCmo
+  # WOLFGATE END
 
 - type: loadoutGroup
   id: ChiefMedicalOfficerJumpsuit
@@ -1133,6 +2955,29 @@
   - ChiefMedicalOfficerJumpskirt
   - ChiefMedicalOfficerTurtleneckJumpsuit
   - ChiefMedicalOfficerTurtleneckJumpskirt
+  # WOLFGATE(MeridianClothing) START: Meridian Rift clothing, written by Tools/_WF/MeridianClothing/port.py
+  - WFMeridianLoadoutClothingUnderAkulaWetsuitJobMedical
+  - WFMeridianLoadoutClothingUnderMiscPsyche
+  - WFMeridianLoadoutClothingUnderRankCivilianPsychologistBunnysuit
+  - WFMeridianLoadoutClothingUnderRankMedicalChiefMedicalOfficerScrubs
+  - WFMeridianLoadoutClothingUnderRankMedicalChiefMedicalOfficerTurtleneck
+  - WFMeridianLoadoutClothingUnderRankMedicalChiefMedicalOfficerTurtleneckSkirt
+  - WFMeridianLoadoutClothingUnderRankMedicalCmoBunnysuit
+  - WFMeridianLoadoutClothingUnderRankMedicalCoroner
+  - WFMeridianLoadoutClothingUnderRankMedicalCoronerBunnysuit
+  - WFMeridianLoadoutClothingUnderRankMedicalCoronerSkirt
+  - WFMeridianLoadoutClothingUnderRankMedicalDoctorBunnysuit
+  - WFMeridianLoadoutClothingUnderRankMedicalDoctorNovaUtility
+  - WFMeridianLoadoutClothingUnderRankMedicalDoctorNurse
+  - WFMeridianLoadoutClothingUnderRankMedicalDoctorNurseSeriouser
+  - WFMeridianLoadoutClothingUnderRankMedicalParamedicBunnysuit
+  - WFMeridianLoadoutClothingUnderRankMedicalPathologistBunnysuit
+  - WFMeridianLoadoutClothingUnderRankMedicalScrubsBlue
+  - WFMeridianLoadoutClothingUnderRankMedicalScrubsCoroner
+  - WFMeridianLoadoutClothingUnderRankMedicalScrubsGreen
+  - WFMeridianLoadoutClothingUnderRankMedicalScrubsNova
+  - WFMeridianLoadoutClothingUnderRankMedicalScrubsNovaRed
+  # WOLFGATE END
 
 - type: loadoutGroup
   id: ChiefMedicalOfficerOuterClothing
@@ -1141,6 +2986,30 @@
   loadouts:
   - ChiefMedicalOfficerLabCoat
   - ChiefMedicalOfficerWintercoat
+  # WOLFGATE(MeridianClothing) START: Meridian Rift clothing, written by Tools/_WF/MeridianClothing/port.py
+  - WFMeridianLoadoutClothingSuitApronSurgical
+  - WFMeridianLoadoutClothingSuitHoodedWintercoatMedicalCoroner
+  - WFMeridianLoadoutClothingSuitJacketFrontierColonistMedical
+  - WFMeridianLoadoutClothingSuitJacketTailcoatPsychologist
+  - WFMeridianLoadoutClothingSuitToggleLabcoat
+  - WFMeridianLoadoutClothingSuitToggleLabcoatCmoDoctorTailcoat
+  - WFMeridianLoadoutClothingSuitToggleLabcoatCoronerDoctorTailcoat
+  - WFMeridianLoadoutClothingSuitToggleLabcoatDoctorTailcoat
+  - WFMeridianLoadoutClothingSuitToggleLabcoatMad
+  - WFMeridianLoadoutClothingSuitToggleLabcoatNovaFancy
+  - WFMeridianLoadoutClothingSuitToggleLabcoatNovaHighvis
+  - WFMeridianLoadoutClothingSuitToggleLabcoatNovaInterdyneLabcoatBlack
+  - WFMeridianLoadoutClothingSuitToggleLabcoatNovaInterdyneLabcoatWhite
+  - WFMeridianLoadoutClothingSuitToggleLabcoatNovaLalunevest
+  - WFMeridianLoadoutClothingSuitToggleLabcoatNovaSurgicalGown
+  - WFMeridianLoadoutClothingSuitToggleLabcoatNovaSurgicalGownHardlight
+  - WFMeridianLoadoutClothingSuitToggleLabcoatParamedic
+  - WFMeridianLoadoutClothingSuitToggleLabcoatParamedicDoctorTailcoat
+  - WFMeridianLoadoutClothingSuitToggleLabcoatResearchDirector
+  - WFMeridianLoadoutClothingSuitToggleLabcoatResearchDirectorTailcoat
+  - WFMeridianLoadoutClothingSuitToggleLabcoatRoboticistDoctorTailcoat
+  - WFMeridianLoadoutClothingSuitToggleLabcoatScienceDoctorTailcoat
+  # WOLFGATE END
 
 - type: loadoutGroup
   id: ChiefMedicalOfficerNeck
@@ -1149,6 +3018,13 @@
   loadouts:
   - ChiefMedicalOfficerCloak
   - ChiefMedicalOfficerMantle
+  # WOLFGATE(MeridianClothing) START: Meridian Rift clothing, written by Tools/_WF/MeridianClothing/port.py
+  - WFMeridianLoadoutClothingAccessoryMedalSilverEmergencyServicesMedical
+  - WFMeridianLoadoutClothingNeckTieBunnytieCmo
+  - WFMeridianLoadoutClothingNeckTieBunnytieCoroner
+  - WFMeridianLoadoutClothingNeckTieBunnytieDoctor
+  - WFMeridianLoadoutClothingNeckTieBunnytieParamedic
+  # WOLFGATE END
 
 - type: loadoutGroup
   id: ChiefMedicalOfficerShoes
@@ -1169,6 +3045,21 @@
   - GreenSurgeryCap
   - PurpleSurgeryCap
   - NurseHat
+  # WOLFGATE(MeridianClothing) START: Meridian Rift clothing, written by Tools/_WF/MeridianClothing/port.py
+  - WFMeridianLoadoutClothingHeadBeretMedical
+  - WFMeridianLoadoutClothingHeadCostumeNursehat
+  - WFMeridianLoadoutClothingHeadHoodedWinterhoodMedical
+  - WFMeridianLoadoutClothingHeadHoodedWinterhoodMedicalCmo
+  - WFMeridianLoadoutClothingHeadHoodedWinterhoodMedicalCoroner
+  - WFMeridianLoadoutClothingHeadHoodedWinterhoodMedicalParamedic
+  - WFMeridianLoadoutClothingHeadHoodedWinterhoodMedicalViro
+  - WFMeridianLoadoutClothingHeadPlaybunnyearsCmo
+  - WFMeridianLoadoutClothingHeadPlaybunnyearsCoroner
+  - WFMeridianLoadoutClothingHeadPlaybunnyearsDoctor
+  - WFMeridianLoadoutClothingHeadPlaybunnyearsParamedic
+  - WFMeridianLoadoutClothingHeadPlaybunnyearsPsychologist
+  - WFMeridianLoadoutClothingHeadUtilitySurgerycapCmo
+  # WOLFGATE END
 
 - type: loadoutGroup
   id: MedicalDoctorJumpsuit
@@ -1181,6 +3072,29 @@
   - MedicalBlueScrubs
   - MedicalGreenScrubs
   - MedicalPurpleScrubs
+  # WOLFGATE(MeridianClothing) START: Meridian Rift clothing, written by Tools/_WF/MeridianClothing/port.py
+  - WFMeridianLoadoutClothingUnderAkulaWetsuitJobMedical
+  - WFMeridianLoadoutClothingUnderMiscPsyche
+  - WFMeridianLoadoutClothingUnderRankCivilianPsychologistBunnysuit
+  - WFMeridianLoadoutClothingUnderRankMedicalChiefMedicalOfficerScrubs
+  - WFMeridianLoadoutClothingUnderRankMedicalChiefMedicalOfficerTurtleneck
+  - WFMeridianLoadoutClothingUnderRankMedicalChiefMedicalOfficerTurtleneckSkirt
+  - WFMeridianLoadoutClothingUnderRankMedicalCmoBunnysuit
+  - WFMeridianLoadoutClothingUnderRankMedicalCoroner
+  - WFMeridianLoadoutClothingUnderRankMedicalCoronerBunnysuit
+  - WFMeridianLoadoutClothingUnderRankMedicalCoronerSkirt
+  - WFMeridianLoadoutClothingUnderRankMedicalDoctorBunnysuit
+  - WFMeridianLoadoutClothingUnderRankMedicalDoctorNovaUtility
+  - WFMeridianLoadoutClothingUnderRankMedicalDoctorNurse
+  - WFMeridianLoadoutClothingUnderRankMedicalDoctorNurseSeriouser
+  - WFMeridianLoadoutClothingUnderRankMedicalParamedicBunnysuit
+  - WFMeridianLoadoutClothingUnderRankMedicalPathologistBunnysuit
+  - WFMeridianLoadoutClothingUnderRankMedicalScrubsBlue
+  - WFMeridianLoadoutClothingUnderRankMedicalScrubsCoroner
+  - WFMeridianLoadoutClothingUnderRankMedicalScrubsGreen
+  - WFMeridianLoadoutClothingUnderRankMedicalScrubsNova
+  - WFMeridianLoadoutClothingUnderRankMedicalScrubsNovaRed
+  # WOLFGATE END
 
 - type: loadoutGroup
   id: MedicalDoctorOuterClothing
@@ -1190,6 +3104,30 @@
   - RegularLabCoat
   - MedicalDoctorWintercoat
   - SeniorPhysicianLabCoat
+  # WOLFGATE(MeridianClothing) START: Meridian Rift clothing, written by Tools/_WF/MeridianClothing/port.py
+  - WFMeridianLoadoutClothingSuitApronSurgical
+  - WFMeridianLoadoutClothingSuitHoodedWintercoatMedicalCoroner
+  - WFMeridianLoadoutClothingSuitJacketFrontierColonistMedical
+  - WFMeridianLoadoutClothingSuitJacketTailcoatPsychologist
+  - WFMeridianLoadoutClothingSuitToggleLabcoat
+  - WFMeridianLoadoutClothingSuitToggleLabcoatCmoDoctorTailcoat
+  - WFMeridianLoadoutClothingSuitToggleLabcoatCoronerDoctorTailcoat
+  - WFMeridianLoadoutClothingSuitToggleLabcoatDoctorTailcoat
+  - WFMeridianLoadoutClothingSuitToggleLabcoatMad
+  - WFMeridianLoadoutClothingSuitToggleLabcoatNovaFancy
+  - WFMeridianLoadoutClothingSuitToggleLabcoatNovaHighvis
+  - WFMeridianLoadoutClothingSuitToggleLabcoatNovaInterdyneLabcoatBlack
+  - WFMeridianLoadoutClothingSuitToggleLabcoatNovaInterdyneLabcoatWhite
+  - WFMeridianLoadoutClothingSuitToggleLabcoatNovaLalunevest
+  - WFMeridianLoadoutClothingSuitToggleLabcoatNovaSurgicalGown
+  - WFMeridianLoadoutClothingSuitToggleLabcoatNovaSurgicalGownHardlight
+  - WFMeridianLoadoutClothingSuitToggleLabcoatParamedic
+  - WFMeridianLoadoutClothingSuitToggleLabcoatParamedicDoctorTailcoat
+  - WFMeridianLoadoutClothingSuitToggleLabcoatResearchDirector
+  - WFMeridianLoadoutClothingSuitToggleLabcoatResearchDirectorTailcoat
+  - WFMeridianLoadoutClothingSuitToggleLabcoatRoboticistDoctorTailcoat
+  - WFMeridianLoadoutClothingSuitToggleLabcoatScienceDoctorTailcoat
+  # WOLFGATE END
 
 - type: loadoutGroup
   id: MedicalBackpack
@@ -1220,6 +3158,9 @@
   loadouts:
   - LatexGloves
   - NitrileGloves
+  # WOLFGATE(MeridianClothing) START: Meridian Rift clothing, written by Tools/_WF/MeridianClothing/port.py
+  - WFMeridianLoadoutClothingGlovesLatexCoroner
+  # WOLFGATE END
 
 - type: loadoutGroup
   id: MedicalMask
@@ -1227,6 +3168,9 @@
   minLimit: 0
   loadouts:
   - SterileMask
+  # WOLFGATE(MeridianClothing) START: Meridian Rift clothing, written by Tools/_WF/MeridianClothing/port.py
+  - WFMeridianLoadoutClothingMaskSurgicalGreyscale
+  # WOLFGATE END
 
 - type: loadoutGroup
   id: MedicalInternJumpsuit
@@ -1234,6 +3178,29 @@
   loadouts:
   - WhiteJumpsuit
   - WhiteJumpskirt
+  # WOLFGATE(MeridianClothing) START: Meridian Rift clothing, written by Tools/_WF/MeridianClothing/port.py
+  - WFMeridianLoadoutClothingUnderAkulaWetsuitJobMedical
+  - WFMeridianLoadoutClothingUnderMiscPsyche
+  - WFMeridianLoadoutClothingUnderRankCivilianPsychologistBunnysuit
+  - WFMeridianLoadoutClothingUnderRankMedicalChiefMedicalOfficerScrubs
+  - WFMeridianLoadoutClothingUnderRankMedicalChiefMedicalOfficerTurtleneck
+  - WFMeridianLoadoutClothingUnderRankMedicalChiefMedicalOfficerTurtleneckSkirt
+  - WFMeridianLoadoutClothingUnderRankMedicalCmoBunnysuit
+  - WFMeridianLoadoutClothingUnderRankMedicalCoroner
+  - WFMeridianLoadoutClothingUnderRankMedicalCoronerBunnysuit
+  - WFMeridianLoadoutClothingUnderRankMedicalCoronerSkirt
+  - WFMeridianLoadoutClothingUnderRankMedicalDoctorBunnysuit
+  - WFMeridianLoadoutClothingUnderRankMedicalDoctorNovaUtility
+  - WFMeridianLoadoutClothingUnderRankMedicalDoctorNurse
+  - WFMeridianLoadoutClothingUnderRankMedicalDoctorNurseSeriouser
+  - WFMeridianLoadoutClothingUnderRankMedicalParamedicBunnysuit
+  - WFMeridianLoadoutClothingUnderRankMedicalPathologistBunnysuit
+  - WFMeridianLoadoutClothingUnderRankMedicalScrubsBlue
+  - WFMeridianLoadoutClothingUnderRankMedicalScrubsCoroner
+  - WFMeridianLoadoutClothingUnderRankMedicalScrubsGreen
+  - WFMeridianLoadoutClothingUnderRankMedicalScrubsNova
+  - WFMeridianLoadoutClothingUnderRankMedicalScrubsNovaRed
+  # WOLFGATE END
 
 - type: loadoutGroup
   id: ChemistJumpsuit
@@ -1241,6 +3208,32 @@
   loadouts:
   - ChemistJumpsuit
   - ChemistJumpskirt
+  # WOLFGATE(MeridianClothing) START: Meridian Rift clothing, written by Tools/_WF/MeridianClothing/port.py
+  - WFMeridianLoadoutClothingUnderAkulaWetsuitJobMedical
+  - WFMeridianLoadoutClothingUnderMiscPsyche
+  - WFMeridianLoadoutClothingUnderRankCivilianPsychologistBunnysuit
+  - WFMeridianLoadoutClothingUnderRankMedicalChemistBunnysuit
+  - WFMeridianLoadoutClothingUnderRankMedicalChemistNovaFormal
+  - WFMeridianLoadoutClothingUnderRankMedicalChemistNovaFormalSkirt
+  - WFMeridianLoadoutClothingUnderRankMedicalChiefMedicalOfficerScrubs
+  - WFMeridianLoadoutClothingUnderRankMedicalChiefMedicalOfficerTurtleneck
+  - WFMeridianLoadoutClothingUnderRankMedicalChiefMedicalOfficerTurtleneckSkirt
+  - WFMeridianLoadoutClothingUnderRankMedicalCmoBunnysuit
+  - WFMeridianLoadoutClothingUnderRankMedicalCoroner
+  - WFMeridianLoadoutClothingUnderRankMedicalCoronerBunnysuit
+  - WFMeridianLoadoutClothingUnderRankMedicalCoronerSkirt
+  - WFMeridianLoadoutClothingUnderRankMedicalDoctorBunnysuit
+  - WFMeridianLoadoutClothingUnderRankMedicalDoctorNovaUtility
+  - WFMeridianLoadoutClothingUnderRankMedicalDoctorNurse
+  - WFMeridianLoadoutClothingUnderRankMedicalDoctorNurseSeriouser
+  - WFMeridianLoadoutClothingUnderRankMedicalParamedicBunnysuit
+  - WFMeridianLoadoutClothingUnderRankMedicalPathologistBunnysuit
+  - WFMeridianLoadoutClothingUnderRankMedicalScrubsBlue
+  - WFMeridianLoadoutClothingUnderRankMedicalScrubsCoroner
+  - WFMeridianLoadoutClothingUnderRankMedicalScrubsGreen
+  - WFMeridianLoadoutClothingUnderRankMedicalScrubsNova
+  - WFMeridianLoadoutClothingUnderRankMedicalScrubsNovaRed
+  # WOLFGATE END
 
 - type: loadoutGroup
   id: ChemistOuterClothing
@@ -1250,6 +3243,31 @@
   - RegularLabCoat
   - ChemistLabCoat
   - ChemistWintercoat
+  # WOLFGATE(MeridianClothing) START: Meridian Rift clothing, written by Tools/_WF/MeridianClothing/port.py
+  - WFMeridianLoadoutClothingSuitApronSurgical
+  - WFMeridianLoadoutClothingSuitHoodedWintercoatMedicalCoroner
+  - WFMeridianLoadoutClothingSuitJacketFrontierColonistMedical
+  - WFMeridianLoadoutClothingSuitJacketTailcoatPsychologist
+  - WFMeridianLoadoutClothingSuitToggleLabcoat
+  - WFMeridianLoadoutClothingSuitToggleLabcoatChemistDoctorTailcoat
+  - WFMeridianLoadoutClothingSuitToggleLabcoatCmoDoctorTailcoat
+  - WFMeridianLoadoutClothingSuitToggleLabcoatCoronerDoctorTailcoat
+  - WFMeridianLoadoutClothingSuitToggleLabcoatDoctorTailcoat
+  - WFMeridianLoadoutClothingSuitToggleLabcoatMad
+  - WFMeridianLoadoutClothingSuitToggleLabcoatNovaFancy
+  - WFMeridianLoadoutClothingSuitToggleLabcoatNovaHighvis
+  - WFMeridianLoadoutClothingSuitToggleLabcoatNovaInterdyneLabcoatBlack
+  - WFMeridianLoadoutClothingSuitToggleLabcoatNovaInterdyneLabcoatWhite
+  - WFMeridianLoadoutClothingSuitToggleLabcoatNovaLalunevest
+  - WFMeridianLoadoutClothingSuitToggleLabcoatNovaSurgicalGown
+  - WFMeridianLoadoutClothingSuitToggleLabcoatNovaSurgicalGownHardlight
+  - WFMeridianLoadoutClothingSuitToggleLabcoatParamedic
+  - WFMeridianLoadoutClothingSuitToggleLabcoatParamedicDoctorTailcoat
+  - WFMeridianLoadoutClothingSuitToggleLabcoatResearchDirector
+  - WFMeridianLoadoutClothingSuitToggleLabcoatResearchDirectorTailcoat
+  - WFMeridianLoadoutClothingSuitToggleLabcoatRoboticistDoctorTailcoat
+  - WFMeridianLoadoutClothingSuitToggleLabcoatScienceDoctorTailcoat
+  # WOLFGATE END
 
 - type: loadoutGroup
   id: ChemistBackpack
@@ -1265,6 +3283,21 @@
   minLimit: 0
   loadouts:
   - ParamedicHead
+  # WOLFGATE(MeridianClothing) START: Meridian Rift clothing, written by Tools/_WF/MeridianClothing/port.py
+  - WFMeridianLoadoutClothingHeadBeretMedical
+  - WFMeridianLoadoutClothingHeadCostumeNursehat
+  - WFMeridianLoadoutClothingHeadHoodedWinterhoodMedical
+  - WFMeridianLoadoutClothingHeadHoodedWinterhoodMedicalCmo
+  - WFMeridianLoadoutClothingHeadHoodedWinterhoodMedicalCoroner
+  - WFMeridianLoadoutClothingHeadHoodedWinterhoodMedicalParamedic
+  - WFMeridianLoadoutClothingHeadHoodedWinterhoodMedicalViro
+  - WFMeridianLoadoutClothingHeadPlaybunnyearsCmo
+  - WFMeridianLoadoutClothingHeadPlaybunnyearsCoroner
+  - WFMeridianLoadoutClothingHeadPlaybunnyearsDoctor
+  - WFMeridianLoadoutClothingHeadPlaybunnyearsParamedic
+  - WFMeridianLoadoutClothingHeadPlaybunnyearsPsychologist
+  - WFMeridianLoadoutClothingHeadUtilitySurgerycapCmo
+  # WOLFGATE END
 
 - type: loadoutGroup
   id: ParamedicJumpsuit
@@ -1272,6 +3305,29 @@
   loadouts:
   - ParamedicJumpsuit
   - ParamedicJumpskirt
+  # WOLFGATE(MeridianClothing) START: Meridian Rift clothing, written by Tools/_WF/MeridianClothing/port.py
+  - WFMeridianLoadoutClothingUnderAkulaWetsuitJobMedical
+  - WFMeridianLoadoutClothingUnderMiscPsyche
+  - WFMeridianLoadoutClothingUnderRankCivilianPsychologistBunnysuit
+  - WFMeridianLoadoutClothingUnderRankMedicalChiefMedicalOfficerScrubs
+  - WFMeridianLoadoutClothingUnderRankMedicalChiefMedicalOfficerTurtleneck
+  - WFMeridianLoadoutClothingUnderRankMedicalChiefMedicalOfficerTurtleneckSkirt
+  - WFMeridianLoadoutClothingUnderRankMedicalCmoBunnysuit
+  - WFMeridianLoadoutClothingUnderRankMedicalCoroner
+  - WFMeridianLoadoutClothingUnderRankMedicalCoronerBunnysuit
+  - WFMeridianLoadoutClothingUnderRankMedicalCoronerSkirt
+  - WFMeridianLoadoutClothingUnderRankMedicalDoctorBunnysuit
+  - WFMeridianLoadoutClothingUnderRankMedicalDoctorNovaUtility
+  - WFMeridianLoadoutClothingUnderRankMedicalDoctorNurse
+  - WFMeridianLoadoutClothingUnderRankMedicalDoctorNurseSeriouser
+  - WFMeridianLoadoutClothingUnderRankMedicalParamedicBunnysuit
+  - WFMeridianLoadoutClothingUnderRankMedicalPathologistBunnysuit
+  - WFMeridianLoadoutClothingUnderRankMedicalScrubsBlue
+  - WFMeridianLoadoutClothingUnderRankMedicalScrubsCoroner
+  - WFMeridianLoadoutClothingUnderRankMedicalScrubsGreen
+  - WFMeridianLoadoutClothingUnderRankMedicalScrubsNova
+  - WFMeridianLoadoutClothingUnderRankMedicalScrubsNovaRed
+  # WOLFGATE END
 
 - type: loadoutGroup
   id: ParamedicOuterClothing
@@ -1280,6 +3336,30 @@
   loadouts:
   - ParamedicWindbreaker
   - ParamedicWintercoat
+  # WOLFGATE(MeridianClothing) START: Meridian Rift clothing, written by Tools/_WF/MeridianClothing/port.py
+  - WFMeridianLoadoutClothingSuitApronSurgical
+  - WFMeridianLoadoutClothingSuitHoodedWintercoatMedicalCoroner
+  - WFMeridianLoadoutClothingSuitJacketFrontierColonistMedical
+  - WFMeridianLoadoutClothingSuitJacketTailcoatPsychologist
+  - WFMeridianLoadoutClothingSuitToggleLabcoat
+  - WFMeridianLoadoutClothingSuitToggleLabcoatCmoDoctorTailcoat
+  - WFMeridianLoadoutClothingSuitToggleLabcoatCoronerDoctorTailcoat
+  - WFMeridianLoadoutClothingSuitToggleLabcoatDoctorTailcoat
+  - WFMeridianLoadoutClothingSuitToggleLabcoatMad
+  - WFMeridianLoadoutClothingSuitToggleLabcoatNovaFancy
+  - WFMeridianLoadoutClothingSuitToggleLabcoatNovaHighvis
+  - WFMeridianLoadoutClothingSuitToggleLabcoatNovaInterdyneLabcoatBlack
+  - WFMeridianLoadoutClothingSuitToggleLabcoatNovaInterdyneLabcoatWhite
+  - WFMeridianLoadoutClothingSuitToggleLabcoatNovaLalunevest
+  - WFMeridianLoadoutClothingSuitToggleLabcoatNovaSurgicalGown
+  - WFMeridianLoadoutClothingSuitToggleLabcoatNovaSurgicalGownHardlight
+  - WFMeridianLoadoutClothingSuitToggleLabcoatParamedic
+  - WFMeridianLoadoutClothingSuitToggleLabcoatParamedicDoctorTailcoat
+  - WFMeridianLoadoutClothingSuitToggleLabcoatResearchDirector
+  - WFMeridianLoadoutClothingSuitToggleLabcoatResearchDirectorTailcoat
+  - WFMeridianLoadoutClothingSuitToggleLabcoatRoboticistDoctorTailcoat
+  - WFMeridianLoadoutClothingSuitToggleLabcoatScienceDoctorTailcoat
+  # WOLFGATE END
 
 - type: loadoutGroup
   id: ParamedicShoes
@@ -1307,6 +3387,142 @@
   loadouts:
   - ReporterJumpsuit
   - JournalistJumpsuit
+  # WOLFGATE(MeridianClothing) START: Meridian Rift clothing, written by Tools/_WF/MeridianClothing/port.py
+  - WFMeridianLoadoutClothingUnderBlastwave
+  - WFMeridianLoadoutClothingUnderCamoGags
+  - WFMeridianLoadoutClothingUnderColor
+  - WFMeridianLoadoutClothingUnderColorJumpskirt
+  - WFMeridianLoadoutClothingUnderColorJumpskirtRainbow
+  - WFMeridianLoadoutClothingUnderDougDimmadome
+  - WFMeridianLoadoutClothingUnderDressEveninggown
+  - WFMeridianLoadoutClothingUnderDressNovaCountess
+  - WFMeridianLoadoutClothingUnderDressNovaFlower
+  - WFMeridianLoadoutClothingUnderDressNovaFormalPenSkirt
+  - WFMeridianLoadoutClothingUnderDressNovaGiantScarf
+  - WFMeridianLoadoutClothingUnderDressNovaJute
+  - WFMeridianLoadoutClothingUnderDressNovaMidnightGown
+  - WFMeridianLoadoutClothingUnderDressNovaPenSkirt
+  - WFMeridianLoadoutClothingUnderDressNovaPentagram
+  - WFMeridianLoadoutClothingUnderDressNovaPinktutu
+  - WFMeridianLoadoutClothingUnderDressNovaRedformal
+  - WFMeridianLoadoutClothingUnderDressNovaShortDress
+  - WFMeridianLoadoutClothingUnderDressNovaShorterDress
+  - WFMeridianLoadoutClothingUnderDressNovaSlitDress
+  - WFMeridianLoadoutClothingUnderDressNovaStrapless
+  - WFMeridianLoadoutClothingUnderDressNovaVirginKillerSweater
+  - WFMeridianLoadoutClothingUnderDressNovaWindowedDress
+  - WFMeridianLoadoutClothingUnderDressSailor
+  - WFMeridianLoadoutClothingUnderDressSkirt
+  - WFMeridianLoadoutClothingUnderDressSkirtNovaBlackSkirt
+  - WFMeridianLoadoutClothingUnderDressSkirtNovaJean
+  - WFMeridianLoadoutClothingUnderDressSkirtNovaLoincloth
+  - WFMeridianLoadoutClothingUnderDressSkirtNovaLoinclothLoinclothAlt
+  - WFMeridianLoadoutClothingUnderDressSkirtNovaLoneSkirt
+  - WFMeridianLoadoutClothingUnderDressSkirtNovaLong
+  - WFMeridianLoadoutClothingUnderDressSkirtNovaMedium
+  - WFMeridianLoadoutClothingUnderDressSkirtNovaMiniSkirt
+  - WFMeridianLoadoutClothingUnderDressSkirtNovaRedSkirt
+  - WFMeridianLoadoutClothingUnderDressSkirtNovaStripedSkirt
+  - WFMeridianLoadoutClothingUnderDressSkirtNovaSwept
+  - WFMeridianLoadoutClothingUnderDressSkirtPlaid
+  - WFMeridianLoadoutClothingUnderDressSkirtPrimitiveCatgirlBodyWraps
+  - WFMeridianLoadoutClothingUnderDressSkirtPrimitiveCatgirlTailoredDress
+  - WFMeridianLoadoutClothingUnderDressSkirtPrimitiveCatgirlTunic
+  - WFMeridianLoadoutClothingUnderDressSkirtTurtleskirt
+  - WFMeridianLoadoutClothingUnderDressStriped
+  - WFMeridianLoadoutClothingUnderDressSundress
+  - WFMeridianLoadoutClothingUnderDressTango
+  - WFMeridianLoadoutClothingUnderDressWeddingDress
+  - WFMeridianLoadoutClothingUnderDressWeddingDressRibbon
+  - WFMeridianLoadoutClothingUnderEtherealTunic
+  - WFMeridianLoadoutClothingUnderFrontierColonist
+  - WFMeridianLoadoutClothingUnderGreyscaleGorkas
+  - WFMeridianLoadoutClothingUnderGreyscaleOveralls
+  - WFMeridianLoadoutClothingUnderGreyscaleOverallsSkirt
+  - WFMeridianLoadoutClothingUnderGreyscalePlaysuit
+  - WFMeridianLoadoutClothingUnderGreyscaleTurtleneck
+  - WFMeridianLoadoutClothingUnderGreyscaleTurtleneckSkirt
+  - WFMeridianLoadoutClothingUnderMiscAssistantformal
+  - WFMeridianLoadoutClothingUnderMiscBluetracksuit
+  - WFMeridianLoadoutClothingUnderMiscBouncer
+  - WFMeridianLoadoutClothingUnderMiscBurial
+  - WFMeridianLoadoutClothingUnderMiscDurathread
+  - WFMeridianLoadoutClothingUnderMiscNovaGearHarness
+  - WFMeridianLoadoutClothingUnderMiscNovaGearHarnessAdam
+  - WFMeridianLoadoutClothingUnderMiscNovaGearHarnessEve
+  - WFMeridianLoadoutClothingUnderMiscNovaMechanic
+  - WFMeridianLoadoutClothingUnderMiscNovaModskin
+  - WFMeridianLoadoutClothingUnderMiscNovaTaccas
+  - WFMeridianLoadoutClothingUnderMiscNovaUtility
+  - WFMeridianLoadoutClothingUnderMiscPatriotsuit
+  - WFMeridianLoadoutClothingUnderMiscPjBlue
+  - WFMeridianLoadoutClothingUnderMiscPjRed
+  - WFMeridianLoadoutClothingUnderMiscViceOfficer
+  - WFMeridianLoadoutClothingUnderPantsCamo
+  - WFMeridianLoadoutClothingUnderPantsJeans
+  - WFMeridianLoadoutClothingUnderPantsNovaBigPants
+  - WFMeridianLoadoutClothingUnderPantsNovaDoubleSkirtDress
+  - WFMeridianLoadoutClothingUnderPantsNovaHakama
+  - WFMeridianLoadoutClothingUnderPantsNovaJeansRipped
+  - WFMeridianLoadoutClothingUnderPantsNovaKilt
+  - WFMeridianLoadoutClothingUnderPantsNovaLoosePants
+  - WFMeridianLoadoutClothingUnderPantsNovaShortedOverall
+  - WFMeridianLoadoutClothingUnderPantsNovaVicvest
+  - WFMeridianLoadoutClothingUnderPantsNovaWideLeg
+  - WFMeridianLoadoutClothingUnderPantsNovaYoga
+  - WFMeridianLoadoutClothingUnderPantsSlacksAltar
+  - WFMeridianLoadoutClothingUnderPantsTrack
+  - WFMeridianLoadoutClothingUnderPizza
+  - WFMeridianLoadoutClothingUnderRankAzuleanOldBlood
+  - WFMeridianLoadoutClothingUnderRankAzuleanOldBloodSkirt
+  - WFMeridianLoadoutClothingUnderRankAzuleanUpstart
+  - WFMeridianLoadoutClothingUnderRankAzuleanUpstartSkirt
+  - WFMeridianLoadoutClothingUnderRankCivilianBarber
+  - WFMeridianLoadoutClothingUnderRankCivilianHopBunnysuit
+  - WFMeridianLoadoutClothingUnderRankExpeditionaryCorps
+  - WFMeridianLoadoutClothingUnderRankStationTraitHumanAi
+  - WFMeridianLoadoutClothingUnderShorts
+  - WFMeridianLoadoutClothingUnderShortsJeanshorts
+  - WFMeridianLoadoutClothingUnderShortsNovaShortershorts
+  - WFMeridianLoadoutClothingUnderShortsNovaShortsRipped
+  - WFMeridianLoadoutClothingUnderSkinsuit
+  - WFMeridianLoadoutClothingUnderSolEmt
+  - WFMeridianLoadoutClothingUnderSolPeacekeeper
+  - WFMeridianLoadoutClothingUnderSuitBeige
+  - WFMeridianLoadoutClothingUnderSuitBlack
+  - WFMeridianLoadoutClothingUnderSuitBlackReally
+  - WFMeridianLoadoutClothingUnderSuitBlackReallySkirt
+  - WFMeridianLoadoutClothingUnderSuitBlackSkirt
+  - WFMeridianLoadoutClothingUnderSuitBurgundy
+  - WFMeridianLoadoutClothingUnderSuitCharcoal
+  - WFMeridianLoadoutClothingUnderSuitCheckered
+  - WFMeridianLoadoutClothingUnderSuitNavy
+  - WFMeridianLoadoutClothingUnderSuitNovaBlackReallyCollared
+  - WFMeridianLoadoutClothingUnderSuitNovaBlackReallyCollaredSkirt
+  - WFMeridianLoadoutClothingUnderSuitNovaInferno
+  - WFMeridianLoadoutClothingUnderSuitNovaInfernoSkirt
+  - WFMeridianLoadoutClothingUnderSuitNovaPencil
+  - WFMeridianLoadoutClothingUnderSuitNovaPencilBlackReally
+  - WFMeridianLoadoutClothingUnderSuitNovaPencilCheckered
+  - WFMeridianLoadoutClothingUnderSuitNovaPencilCheckeredNoshirt
+  - WFMeridianLoadoutClothingUnderSuitNovaPencilNoshirt
+  - WFMeridianLoadoutClothingUnderSuitNovaRecolorable
+  - WFMeridianLoadoutClothingUnderSuitNovaRecolorableCasual
+  - WFMeridianLoadoutClothingUnderSuitNovaRecolorableExecutive
+  - WFMeridianLoadoutClothingUnderSuitNovaRecolorableSkirt
+  - WFMeridianLoadoutClothingUnderSuitNovaScarface
+  - WFMeridianLoadoutClothingUnderSuitRed
+  - WFMeridianLoadoutClothingUnderSuitTan
+  - WFMeridianLoadoutClothingUnderSuitTuxedo
+  - WFMeridianLoadoutClothingUnderSuitWhite
+  - WFMeridianLoadoutClothingUnderSuitWhiteSkirt
+  - WFMeridianLoadoutClothingUnderSweater
+  - WFMeridianLoadoutClothingUnderTachawaiian
+  - WFMeridianLoadoutClothingUnderTachawaiianBlue
+  - WFMeridianLoadoutClothingUnderTachawaiianGreen
+  - WFMeridianLoadoutClothingUnderTachawaiianPurple
+  - WFMeridianLoadoutClothingUnderTexas
+  # WOLFGATE END
 
 - type: loadoutGroup
   id: PsychologistJumpsuit
@@ -1314,6 +3530,29 @@
   loadouts:
   - PsychologistJumpsuit
   - PsychologistJumpskirt
+  # WOLFGATE(MeridianClothing) START: Meridian Rift clothing, written by Tools/_WF/MeridianClothing/port.py
+  - WFMeridianLoadoutClothingUnderAkulaWetsuitJobMedical
+  - WFMeridianLoadoutClothingUnderMiscPsyche
+  - WFMeridianLoadoutClothingUnderRankCivilianPsychologistBunnysuit
+  - WFMeridianLoadoutClothingUnderRankMedicalChiefMedicalOfficerScrubs
+  - WFMeridianLoadoutClothingUnderRankMedicalChiefMedicalOfficerTurtleneck
+  - WFMeridianLoadoutClothingUnderRankMedicalChiefMedicalOfficerTurtleneckSkirt
+  - WFMeridianLoadoutClothingUnderRankMedicalCmoBunnysuit
+  - WFMeridianLoadoutClothingUnderRankMedicalCoroner
+  - WFMeridianLoadoutClothingUnderRankMedicalCoronerBunnysuit
+  - WFMeridianLoadoutClothingUnderRankMedicalCoronerSkirt
+  - WFMeridianLoadoutClothingUnderRankMedicalDoctorBunnysuit
+  - WFMeridianLoadoutClothingUnderRankMedicalDoctorNovaUtility
+  - WFMeridianLoadoutClothingUnderRankMedicalDoctorNurse
+  - WFMeridianLoadoutClothingUnderRankMedicalDoctorNurseSeriouser
+  - WFMeridianLoadoutClothingUnderRankMedicalParamedicBunnysuit
+  - WFMeridianLoadoutClothingUnderRankMedicalPathologistBunnysuit
+  - WFMeridianLoadoutClothingUnderRankMedicalScrubsBlue
+  - WFMeridianLoadoutClothingUnderRankMedicalScrubsCoroner
+  - WFMeridianLoadoutClothingUnderRankMedicalScrubsGreen
+  - WFMeridianLoadoutClothingUnderRankMedicalScrubsNova
+  - WFMeridianLoadoutClothingUnderRankMedicalScrubsNovaRed
+  # WOLFGATE END
 
 - type: loadoutGroup
   id: BoxerJumpsuit
@@ -1321,6 +3560,142 @@
   loadouts:
   - BoxerShorts
   - BoxerShortsWithTop
+  # WOLFGATE(MeridianClothing) START: Meridian Rift clothing, written by Tools/_WF/MeridianClothing/port.py
+  - WFMeridianLoadoutClothingUnderBlastwave
+  - WFMeridianLoadoutClothingUnderCamoGags
+  - WFMeridianLoadoutClothingUnderColor
+  - WFMeridianLoadoutClothingUnderColorJumpskirt
+  - WFMeridianLoadoutClothingUnderColorJumpskirtRainbow
+  - WFMeridianLoadoutClothingUnderDougDimmadome
+  - WFMeridianLoadoutClothingUnderDressEveninggown
+  - WFMeridianLoadoutClothingUnderDressNovaCountess
+  - WFMeridianLoadoutClothingUnderDressNovaFlower
+  - WFMeridianLoadoutClothingUnderDressNovaFormalPenSkirt
+  - WFMeridianLoadoutClothingUnderDressNovaGiantScarf
+  - WFMeridianLoadoutClothingUnderDressNovaJute
+  - WFMeridianLoadoutClothingUnderDressNovaMidnightGown
+  - WFMeridianLoadoutClothingUnderDressNovaPenSkirt
+  - WFMeridianLoadoutClothingUnderDressNovaPentagram
+  - WFMeridianLoadoutClothingUnderDressNovaPinktutu
+  - WFMeridianLoadoutClothingUnderDressNovaRedformal
+  - WFMeridianLoadoutClothingUnderDressNovaShortDress
+  - WFMeridianLoadoutClothingUnderDressNovaShorterDress
+  - WFMeridianLoadoutClothingUnderDressNovaSlitDress
+  - WFMeridianLoadoutClothingUnderDressNovaStrapless
+  - WFMeridianLoadoutClothingUnderDressNovaVirginKillerSweater
+  - WFMeridianLoadoutClothingUnderDressNovaWindowedDress
+  - WFMeridianLoadoutClothingUnderDressSailor
+  - WFMeridianLoadoutClothingUnderDressSkirt
+  - WFMeridianLoadoutClothingUnderDressSkirtNovaBlackSkirt
+  - WFMeridianLoadoutClothingUnderDressSkirtNovaJean
+  - WFMeridianLoadoutClothingUnderDressSkirtNovaLoincloth
+  - WFMeridianLoadoutClothingUnderDressSkirtNovaLoinclothLoinclothAlt
+  - WFMeridianLoadoutClothingUnderDressSkirtNovaLoneSkirt
+  - WFMeridianLoadoutClothingUnderDressSkirtNovaLong
+  - WFMeridianLoadoutClothingUnderDressSkirtNovaMedium
+  - WFMeridianLoadoutClothingUnderDressSkirtNovaMiniSkirt
+  - WFMeridianLoadoutClothingUnderDressSkirtNovaRedSkirt
+  - WFMeridianLoadoutClothingUnderDressSkirtNovaStripedSkirt
+  - WFMeridianLoadoutClothingUnderDressSkirtNovaSwept
+  - WFMeridianLoadoutClothingUnderDressSkirtPlaid
+  - WFMeridianLoadoutClothingUnderDressSkirtPrimitiveCatgirlBodyWraps
+  - WFMeridianLoadoutClothingUnderDressSkirtPrimitiveCatgirlTailoredDress
+  - WFMeridianLoadoutClothingUnderDressSkirtPrimitiveCatgirlTunic
+  - WFMeridianLoadoutClothingUnderDressSkirtTurtleskirt
+  - WFMeridianLoadoutClothingUnderDressStriped
+  - WFMeridianLoadoutClothingUnderDressSundress
+  - WFMeridianLoadoutClothingUnderDressTango
+  - WFMeridianLoadoutClothingUnderDressWeddingDress
+  - WFMeridianLoadoutClothingUnderDressWeddingDressRibbon
+  - WFMeridianLoadoutClothingUnderEtherealTunic
+  - WFMeridianLoadoutClothingUnderFrontierColonist
+  - WFMeridianLoadoutClothingUnderGreyscaleGorkas
+  - WFMeridianLoadoutClothingUnderGreyscaleOveralls
+  - WFMeridianLoadoutClothingUnderGreyscaleOverallsSkirt
+  - WFMeridianLoadoutClothingUnderGreyscalePlaysuit
+  - WFMeridianLoadoutClothingUnderGreyscaleTurtleneck
+  - WFMeridianLoadoutClothingUnderGreyscaleTurtleneckSkirt
+  - WFMeridianLoadoutClothingUnderMiscAssistantformal
+  - WFMeridianLoadoutClothingUnderMiscBluetracksuit
+  - WFMeridianLoadoutClothingUnderMiscBouncer
+  - WFMeridianLoadoutClothingUnderMiscBurial
+  - WFMeridianLoadoutClothingUnderMiscDurathread
+  - WFMeridianLoadoutClothingUnderMiscNovaGearHarness
+  - WFMeridianLoadoutClothingUnderMiscNovaGearHarnessAdam
+  - WFMeridianLoadoutClothingUnderMiscNovaGearHarnessEve
+  - WFMeridianLoadoutClothingUnderMiscNovaMechanic
+  - WFMeridianLoadoutClothingUnderMiscNovaModskin
+  - WFMeridianLoadoutClothingUnderMiscNovaTaccas
+  - WFMeridianLoadoutClothingUnderMiscNovaUtility
+  - WFMeridianLoadoutClothingUnderMiscPatriotsuit
+  - WFMeridianLoadoutClothingUnderMiscPjBlue
+  - WFMeridianLoadoutClothingUnderMiscPjRed
+  - WFMeridianLoadoutClothingUnderMiscViceOfficer
+  - WFMeridianLoadoutClothingUnderPantsCamo
+  - WFMeridianLoadoutClothingUnderPantsJeans
+  - WFMeridianLoadoutClothingUnderPantsNovaBigPants
+  - WFMeridianLoadoutClothingUnderPantsNovaDoubleSkirtDress
+  - WFMeridianLoadoutClothingUnderPantsNovaHakama
+  - WFMeridianLoadoutClothingUnderPantsNovaJeansRipped
+  - WFMeridianLoadoutClothingUnderPantsNovaKilt
+  - WFMeridianLoadoutClothingUnderPantsNovaLoosePants
+  - WFMeridianLoadoutClothingUnderPantsNovaShortedOverall
+  - WFMeridianLoadoutClothingUnderPantsNovaVicvest
+  - WFMeridianLoadoutClothingUnderPantsNovaWideLeg
+  - WFMeridianLoadoutClothingUnderPantsNovaYoga
+  - WFMeridianLoadoutClothingUnderPantsSlacksAltar
+  - WFMeridianLoadoutClothingUnderPantsTrack
+  - WFMeridianLoadoutClothingUnderPizza
+  - WFMeridianLoadoutClothingUnderRankAzuleanOldBlood
+  - WFMeridianLoadoutClothingUnderRankAzuleanOldBloodSkirt
+  - WFMeridianLoadoutClothingUnderRankAzuleanUpstart
+  - WFMeridianLoadoutClothingUnderRankAzuleanUpstartSkirt
+  - WFMeridianLoadoutClothingUnderRankCivilianBarber
+  - WFMeridianLoadoutClothingUnderRankCivilianHopBunnysuit
+  - WFMeridianLoadoutClothingUnderRankExpeditionaryCorps
+  - WFMeridianLoadoutClothingUnderRankStationTraitHumanAi
+  - WFMeridianLoadoutClothingUnderShorts
+  - WFMeridianLoadoutClothingUnderShortsJeanshorts
+  - WFMeridianLoadoutClothingUnderShortsNovaShortershorts
+  - WFMeridianLoadoutClothingUnderShortsNovaShortsRipped
+  - WFMeridianLoadoutClothingUnderSkinsuit
+  - WFMeridianLoadoutClothingUnderSolEmt
+  - WFMeridianLoadoutClothingUnderSolPeacekeeper
+  - WFMeridianLoadoutClothingUnderSuitBeige
+  - WFMeridianLoadoutClothingUnderSuitBlack
+  - WFMeridianLoadoutClothingUnderSuitBlackReally
+  - WFMeridianLoadoutClothingUnderSuitBlackReallySkirt
+  - WFMeridianLoadoutClothingUnderSuitBlackSkirt
+  - WFMeridianLoadoutClothingUnderSuitBurgundy
+  - WFMeridianLoadoutClothingUnderSuitCharcoal
+  - WFMeridianLoadoutClothingUnderSuitCheckered
+  - WFMeridianLoadoutClothingUnderSuitNavy
+  - WFMeridianLoadoutClothingUnderSuitNovaBlackReallyCollared
+  - WFMeridianLoadoutClothingUnderSuitNovaBlackReallyCollaredSkirt
+  - WFMeridianLoadoutClothingUnderSuitNovaInferno
+  - WFMeridianLoadoutClothingUnderSuitNovaInfernoSkirt
+  - WFMeridianLoadoutClothingUnderSuitNovaPencil
+  - WFMeridianLoadoutClothingUnderSuitNovaPencilBlackReally
+  - WFMeridianLoadoutClothingUnderSuitNovaPencilCheckered
+  - WFMeridianLoadoutClothingUnderSuitNovaPencilCheckeredNoshirt
+  - WFMeridianLoadoutClothingUnderSuitNovaPencilNoshirt
+  - WFMeridianLoadoutClothingUnderSuitNovaRecolorable
+  - WFMeridianLoadoutClothingUnderSuitNovaRecolorableCasual
+  - WFMeridianLoadoutClothingUnderSuitNovaRecolorableExecutive
+  - WFMeridianLoadoutClothingUnderSuitNovaRecolorableSkirt
+  - WFMeridianLoadoutClothingUnderSuitNovaScarface
+  - WFMeridianLoadoutClothingUnderSuitRed
+  - WFMeridianLoadoutClothingUnderSuitTan
+  - WFMeridianLoadoutClothingUnderSuitTuxedo
+  - WFMeridianLoadoutClothingUnderSuitWhite
+  - WFMeridianLoadoutClothingUnderSuitWhiteSkirt
+  - WFMeridianLoadoutClothingUnderSweater
+  - WFMeridianLoadoutClothingUnderTachawaiian
+  - WFMeridianLoadoutClothingUnderTachawaiianBlue
+  - WFMeridianLoadoutClothingUnderTachawaiianGreen
+  - WFMeridianLoadoutClothingUnderTachawaiianPurple
+  - WFMeridianLoadoutClothingUnderTexas
+  # WOLFGATE END
 
 - type: loadoutGroup
   id: BoxerGloves
@@ -1330,6 +3705,51 @@
   - BlueBoxingGloves
   - GreenBoxingGloves
   - YellowBoxingGloves
+  # WOLFGATE(MeridianClothing) START: Meridian Rift clothing, written by Tools/_WF/MeridianClothing/port.py
+  - WFMeridianLoadoutClothingGlovesBoxing
+  - WFMeridianLoadoutClothingGlovesBoxingBlue
+  - WFMeridianLoadoutClothingGlovesBoxingGolden
+  - WFMeridianLoadoutClothingGlovesBoxingGreen
+  - WFMeridianLoadoutClothingGlovesBoxingYellow
+  - WFMeridianLoadoutClothingGlovesBracer
+  - WFMeridianLoadoutClothingGlovesBracerWraps
+  - WFMeridianLoadoutClothingGlovesColorBlackExpeditionaryCorps
+  - WFMeridianLoadoutClothingGlovesColorPlasmaman
+  - WFMeridianLoadoutClothingGlovesColorPlasmamanBlack
+  - WFMeridianLoadoutClothingGlovesColorPlasmamanJanny
+  - WFMeridianLoadoutClothingGlovesColorPlasmamanPlasmanitrile
+  - WFMeridianLoadoutClothingGlovesColorPlasmamanPrototype
+  - WFMeridianLoadoutClothingGlovesColorPlasmamanRadio
+  - WFMeridianLoadoutClothingGlovesColorPlasmamanRobot
+  - WFMeridianLoadoutClothingGlovesColorPlasmamanWhite
+  - WFMeridianLoadoutClothingGlovesColorRainbow
+  - WFMeridianLoadoutClothingGlovesDesigner
+  - WFMeridianLoadoutClothingGlovesDivineArcher
+  - WFMeridianLoadoutClothingGlovesEvening
+  - WFMeridianLoadoutClothingGlovesFingerlessPrimitiveCatgirlArmwraps
+  - WFMeridianLoadoutClothingGlovesFingerlessPrimitiveCatgirlGauntlets
+  - WFMeridianLoadoutClothingGlovesFingerlessPunchMitts
+  - WFMeridianLoadoutClothingGlovesFishing
+  - WFMeridianLoadoutClothingGlovesForgingPlateGloves
+  - WFMeridianLoadoutClothingGlovesFrontierColonist
+  - WFMeridianLoadoutClothingGlovesKim
+  - WFMeridianLoadoutClothingGlovesLatexNitrileExpeditionaryCorps
+  - WFMeridianLoadoutClothingGlovesLatexNitrileLong
+  - WFMeridianLoadoutClothingGlovesLatexNitrileNtrauma
+  - WFMeridianLoadoutClothingGlovesPlate
+  - WFMeridianLoadoutClothingGlovesPlateBlue
+  - WFMeridianLoadoutClothingGlovesRadio
+  - WFMeridianLoadoutClothingGlovesRecolorableFingerless
+  - WFMeridianLoadoutClothingGlovesRecolorableFingerlessLong
+  - WFMeridianLoadoutClothingGlovesRecolorableLong
+  - WFMeridianLoadoutClothingGlovesRingDiamond
+  - WFMeridianLoadoutClothingGlovesTackler
+  - WFMeridianLoadoutClothingGlovesTacklerDolphin
+  - WFMeridianLoadoutClothingGlovesTacklerFootball
+  - WFMeridianLoadoutClothingGlovesTacklerRocket
+  - WFMeridianLoadoutClothingGlovesTheSleepingCarp
+  - WFMeridianLoadoutClothingGlovesTinkerer
+  # WOLFGATE END
 
 # Other
 - type: loadoutGroup
