@@ -3420,3 +3420,10 @@ Entries:
   id: 100243
   time: '2026-10-26T06:53:16.0000000+00:00'
   url: https://github.com/VanguardControl/Wolfgate/pull/372
+- author: Balls2zawall
+  changes:
+    - type: Tweak
+      message: The TSF Seax now has reverse thrust
+  id: 100244
+  time: '2026-10-26T09:50:16.0000000+00:00'
+  url: https://github.com/VanguardControl/Wolfgate/pull/375
