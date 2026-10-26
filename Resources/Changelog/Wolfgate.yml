@@ -3499,3 +3499,18 @@ Entries:
   id: 100248
   time: '2026-10-26T21:16:44.0000000+00:00'
   url: https://github.com/VanguardControl/Wolfgate/pull/374
+- author: Happyowl93
+  changes:
+    - type: Add
+      message: The ASF Lantern Post has been redesigned.
+    - type: Tweak
+      message: The ASFN Guardian has been improved
+    - type: Tweak
+      message: >-
+        The ASF Type-12 Hummingbird fires every 0.8 seconds instead of every
+        2.5.
+    - type: Tweak
+      message: ASF modsuits have new sprites, night vision helmets and voidboots.
+  id: 100249
+  time: '2026-10-26T22:16:40.0000000+00:00'
+  url: https://github.com/VanguardControl/Wolfgate/pull/381
