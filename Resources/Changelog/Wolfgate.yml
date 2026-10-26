@@ -3490,3 +3490,12 @@ Entries:
   id: 100247
   time: '2026-10-26T21:04:41.0000000+00:00'
   url: https://github.com/VanguardControl/Wolfgate/pull/379
+- author: Balls2zawall
+  changes:
+    - type: Tweak
+      message: >-
+        Removed dark corners from the Stellar Blessing, and brought the rest of
+        it up to new standards.
+  id: 100248
+  time: '2026-10-26T21:16:44.0000000+00:00'
+  url: https://github.com/VanguardControl/Wolfgate/pull/374
