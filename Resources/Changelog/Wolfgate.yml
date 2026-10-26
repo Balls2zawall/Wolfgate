@@ -3410,3 +3410,13 @@ Entries:
   id: 100242
   time: '2026-10-26T05:17:29.0000000+00:00'
   url: https://github.com/VanguardControl/Wolfgate/pull/367
+- author: Gandalf2k15
+  changes:
+    - type: Add
+      message: >-
+        Added nine traits from Meridian Rift: Deaf, Pseudobulbar Affect,
+        Illuminated, Fragility, Rad Fiend, Hardened Soles, and Canine, Feline
+        and Avian speech traits.
+  id: 100243
+  time: '2026-10-26T06:53:16.0000000+00:00'
+  url: https://github.com/VanguardControl/Wolfgate/pull/372
