@@ -3649,3 +3649,22 @@ Entries:
   id: 100255
   time: '2026-10-27T02:29:13.0000000+00:00'
   url: https://github.com/VanguardControl/Wolfgate/pull/383
+- author: Gandalf2k15
+  changes:
+    - type: Add
+      message: >-
+        Players under 8 hours get a learner plate over their head and a line
+        when examined.
+    - type: Add
+      message: Ships owned by new players show (L) after their name on radar and hails.
+    - type: Add
+      message: New players can hide their tag in Options > Extra.
+    - type: Add
+      message: 'Conflict Rule 6: go easy on new players.'
+    - type: Add
+      message: >-
+        New players get a welcome popup on join, and first-hour players are told
+        to join a crew first.
+  id: 100256
+  time: '2026-10-27T02:38:47.0000000+00:00'
+  url: https://github.com/VanguardControl/Wolfgate/pull/385
