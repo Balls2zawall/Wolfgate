@@ -3543,3 +3543,14 @@ Entries:
   id: 100250
   time: '2026-10-26T22:21:41.0000000+00:00'
   url: https://github.com/VanguardControl/Wolfgate/pull/382
+- author: Gandalf2k15
+  changes:
+    - type: Fix
+      message: Guns rebuilt at a drydock work on their hardpoints again.
+    - type: Tweak
+      message: Tranexamic acid and other coagulants slow bleeding much more.
+    - type: Fix
+      message: ADS crews no longer freeze to death on their own ships.
+  id: 100251
+  time: '2026-10-27T00:27:04.0000000+00:00'
+  url: https://github.com/VanguardControl/Wolfgate/pull/384
