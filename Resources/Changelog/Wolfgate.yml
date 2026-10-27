@@ -3561,3 +3561,22 @@ Entries:
   id: 100252
   time: '2026-10-27T00:56:04.0000000+00:00'
   url: https://github.com/VanguardControl/Wolfgate/pull/386
+- author: Gandalf2k15
+  changes:
+    - type: Add
+      message: >-
+        Examining someone shows an ID card with their photo, ID check, status,
+        wounds, worn items and description instead of spamming chat.
+    - type: Add
+      message: >-
+        Characters can write an adult description in the Anatomy tab, shown
+        behind a heart on the examine card to consenting adults.
+    - type: Add
+      message: You are told in chat when someone looks you over.
+    - type: Add
+      message: Height and width in the character editor can be typed as a percentage.
+    - type: Fix
+      message: The headshot link window no longer stretches with long links.
+  id: 100253
+  time: '2026-10-27T01:31:26.0000000+00:00'
+  url: https://github.com/VanguardControl/Wolfgate/pull/380
