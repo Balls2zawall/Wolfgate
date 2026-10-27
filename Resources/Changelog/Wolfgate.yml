@@ -3580,3 +3580,32 @@ Entries:
   id: 100253
   time: '2026-10-27T01:31:26.0000000+00:00'
   url: https://github.com/VanguardControl/Wolfgate/pull/380
+- author: Gandalf2k15
+  changes:
+    - type: Tweak
+      message: >-
+        Organs that get shot or burned to nothing now stay in the body as failed
+        organs. Open the ribcage and heal them in place, no spare needed.
+    - type: Tweak
+      message: Body parts now have a damage cap. No more 1800 burn on one person!
+    - type: Tweak
+      message: >-
+        Cuts, stabs, gunshots and bruises no longer pile up on a part. They get
+        worse instead, and a limb torn up badly enough comes off.
+    - type: Tweak
+      message: Heads no longer come off from piled-up damage.
+    - type: Tweak
+      message: >-
+        The analyzer's transfusion amount now gets the patient comfortably past
+        the line where they wake up, instead of leaving them stuck right on it.
+    - type: Fix
+      message: >-
+        Surgery steps no longer show their raw text key (like
+        surgery-popup-step-...) in chat.
+    - type: Fix
+      message: >-
+        The power drill, jaws of life, omnitool and sonic screwdriver now work
+        for surgery, like the tools they stand in for.
+  id: 100254
+  time: '2026-10-27T02:15:58.0000000+00:00'
+  url: https://github.com/VanguardControl/Wolfgate/pull/366
