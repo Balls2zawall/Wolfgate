@@ -3721,3 +3721,12 @@ Entries:
   id: 100260
   time: '2026-10-27T20:59:23.0000000+00:00'
   url: https://github.com/VanguardControl/Wolfgate/pull/392
+- author: Balls2zawall
+  changes:
+    - type: Add
+      message: >-
+        A new, updated version of the classic Hammerhead is available in
+        shipyards.
+  id: 100261
+  time: '2026-10-27T21:09:13.0000000+00:00'
+  url: https://github.com/VanguardControl/Wolfgate/pull/391
