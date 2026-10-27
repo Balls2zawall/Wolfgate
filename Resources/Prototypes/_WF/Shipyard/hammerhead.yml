@@ -8,7 +8,7 @@
   price: 355600 # appraised at 146455
   category: Large # 863 tiles
   group: Shipyard
-  shuttlePath: /SharedMaps/_WF/Community/hammerhead.yml
+  shuttlePath: /SharedMaps/_WF/Shipyard/Shuttles/hammerhead.yml
   guidebookPage: null
   class:
   - Science
@@ -21,7 +21,7 @@
 - type: gameMap
   id: WFHammerhead
   mapName: 'Hammerhead'
-  mapPath: /SharedMaps/_WF/Community/hammerhead.yml
+  mapPath: /SharedMaps/_WF/Shipyard/Shuttles/hammerhead.yml
   minPlayers: 0
   stations:
     WFHammerheadMk2:
