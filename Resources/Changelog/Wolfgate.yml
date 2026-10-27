@@ -3668,3 +3668,20 @@ Entries:
   id: 100256
   time: '2026-10-27T02:38:47.0000000+00:00'
   url: https://github.com/VanguardControl/Wolfgate/pull/385
+- author: Gandalf2k15
+  changes:
+    - type: Fix
+      message: >-
+        Halcyon and Caelestinus cargo chutes now buy exactly what their
+        manifests list.
+    - type: Fix
+      message: Hidden markings stay hidden for players who meet you later.
+    - type: Tweak
+      message: >-
+        Vagrants can use service job names and Mercenary as their custom job
+        title.
+    - type: Tweak
+      message: Custom chat fonts are now about the same size.
+  id: 100257
+  time: '2026-10-27T04:21:40.0000000+00:00'
+  url: https://github.com/VanguardControl/Wolfgate/pull/389
