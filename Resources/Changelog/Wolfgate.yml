@@ -3767,3 +3767,24 @@ Entries:
   id: 100262
   time: '2026-10-27T23:13:23.0000000+00:00'
   url: https://github.com/VanguardControl/Wolfgate/pull/378
+- author: Gandalf2k15
+  changes:
+    - type: Fix
+      message: >-
+        Platelet Factories now closes wounds as it heals, so they no longer stay
+        open once you're healed.
+    - type: Fix
+      message: Lizards warmed back up after the cold no longer keep the cold slowdown.
+    - type: Fix
+      message: A ship's AI can open its own ship's locked doors.
+    - type: Fix
+      message: >-
+        Boarding a Reaver stronghold and knocking out its power now pays the
+        stronghold bounty.
+    - type: Tweak
+      message: >-
+        Huge lizard claws no longer stop you from shooting, but make your aim
+        worse.
+  id: 100263
+  time: '2026-10-27T23:28:16.0000000+00:00'
+  url: https://github.com/VanguardControl/Wolfgate/pull/396
