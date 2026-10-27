@@ -3554,3 +3554,10 @@ Entries:
   id: 100251
   time: '2026-10-27T00:27:04.0000000+00:00'
   url: https://github.com/VanguardControl/Wolfgate/pull/384
+- author: Gandalf2k15
+  changes:
+    - type: Tweak
+      message: Tails are optional now.
+  id: 100252
+  time: '2026-10-27T00:56:04.0000000+00:00'
+  url: https://github.com/VanguardControl/Wolfgate/pull/386
