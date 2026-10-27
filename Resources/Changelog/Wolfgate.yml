@@ -3685,3 +3685,22 @@ Entries:
   id: 100257
   time: '2026-10-27T04:21:40.0000000+00:00'
   url: https://github.com/VanguardControl/Wolfgate/pull/389
+- author: Gandalf2k15
+  changes:
+    - type: Tweak
+      message: >-
+        Big ship battles should lag the server less: small shell blasts are
+        cheaper, nearby blasts merge and tiny hull scraps are removed.
+    - type: Tweak
+      message: NPC ships hold off from joining while a big battle is raging nearby.
+    - type: Fix
+      message: >-
+        Fleet battles spawned by admins wait for a player to come near before
+        the sides open fire.
+    - type: Fix
+      message: >-
+        Asteroids and wrecks no longer get pulled into planet orbit and fall
+        onto planets.
+  id: 100258
+  time: '2026-10-27T04:22:03.0000000+00:00'
+  url: https://github.com/VanguardControl/Wolfgate/pull/387
