@@ -274,6 +274,9 @@ unmarked:
   - path: Resources/Maps/_Mono/POI/pdvhelios.yml
     module: null
     reason: Helios mapping fixes for lighting, wallmounts and small layout tweaks.
+  - path: Resources/Maps/_Mono/POI/Dungeons/zvezda.yml
+    module: null
+    reason: Zvezda lighting re-work and power generation.
   - path: Resources/Textures/Tiles/exoborg.png
     module: Xenoborgs
     reason: Exoborg floor tile redrawn.
