@@ -3965,3 +3965,10 @@ Entries:
   id: 100268
   time: '2026-10-28T08:01:15.0000000+00:00'
   url: https://github.com/VanguardControl/Wolfgate/pull/394
+- author: Gandalf2k15
+  changes:
+    - type: Fix
+      message: Consent Off and On buttons work again after reopening Game Options.
+  id: 100269
+  time: '2026-10-28T21:57:38.0000000+00:00'
+  url: https://github.com/VanguardControl/Wolfgate/pull/403
