@@ -3938,3 +3938,30 @@ Entries:
   id: 100267
   time: '2026-10-28T01:13:15.0000000+00:00'
   url: https://github.com/VanguardControl/Wolfgate/pull/399
+- author: Happyowl93
+  changes:
+    - type: Add
+      message: >-
+        Xenoarchaeology rework: artifacts are now node graphs. Perform the
+        listed triggers to unlock nodes, then read and extract research points
+        from the analysis console.
+    - type: Add
+      message: >-
+        New artifact triggers (microwave, offerings, shock, exhaustion,
+        particles, lasers) and effects (lamps, plus BZ, healium, nitrium and
+        pluoxium gas).
+    - type: Add
+      message: >-
+        Artifact glue, made from space glue and artifexium, restores artifact
+        node durability.
+    - type: Add
+      message: >-
+        New guidebook pages for xenoarchaeology, the analysis console and
+        unlocking nodes.
+    - type: Remove
+      message: The traversal distorter and printed artifact reports.
+    - type: Tweak
+      message: Artifexium now starts unlocking an artifact instead of activating it.
+  id: 100268
+  time: '2026-10-28T08:01:15.0000000+00:00'
+  url: https://github.com/VanguardControl/Wolfgate/pull/394
