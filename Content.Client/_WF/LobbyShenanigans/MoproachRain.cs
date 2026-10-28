@@ -13,7 +13,7 @@ namespace Content.Client._WF.LobbyShenanigans;
 /// Moproaches tumble in from the top of the screen and pile up at the bottom. Players can pick one up, drag it about
 /// to shove the others and throw it. The oldest fade away once the pile is full.
 /// </summary>
-public sealed class MoproachRain : LobbyShenanigan
+public sealed class MoproachRain : LobbyShenanigan, ILobbyShovable
 {
     private const float Scale = 2f;
     private const int PerPress = 12;
@@ -93,6 +93,8 @@ public sealed class MoproachRain : LobbyShenanigan
     }
 
     public override void Drag(Vector2 pos, float dt) => _pile.Drag(pos, dt);
+
+    public void Shove(Vector2 at, float radius, Vector2 velocity) => _pile.Shove(at, radius, velocity);
 
     public override void Release() => _pile.Release();
 

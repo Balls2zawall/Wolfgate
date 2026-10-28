@@ -1,5 +1,6 @@
 using System.Numerics;
 using Content.Shared._WF.LobbyShenanigans;
+using System.Collections.Generic;
 using Robust.Client.Graphics;
 
 namespace Content.Client._WF.LobbyShenanigans;
@@ -12,6 +13,9 @@ public abstract class LobbyShenanigan
 {
     /// <summary>One of <see cref="LobbyShenaniganIds"/>, which also names its Fluent strings.</summary>
     public abstract string Id { get; }
+
+    /// <summary>Every shenanigan on the layer, this one too, so one can play with what another shows.</summary>
+    public IReadOnlyList<LobbyShenanigan> All { get; internal set; } = Array.Empty<LobbyShenanigan>();
 
     /// <summary>The server set it off.</summary>
     public abstract void Trigger(Vector2 bounds, float scale);
@@ -40,4 +44,11 @@ public abstract class LobbyShenanigan
     public virtual void Release()
     {
     }
+}
+
+/// <summary>A shenanigan whose pieces get knocked aside by something passing through, such as a carp.</summary>
+public interface ILobbyShovable
+{
+    /// <summary>Pushes whatever is within <paramref name="radius"/> of <paramref name="at"/> out of the way, along with <paramref name="velocity"/>.</summary>
+    void Shove(Vector2 at, float radius, Vector2 velocity);
 }

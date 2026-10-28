@@ -6,8 +6,9 @@ namespace Content.Shared._WF.LobbyShenanigans;
 public static class LobbyShenaniganIds
 {
     public const string MoproachRain = "moproach-rain";
+    public const string CarpMigration = "carp-migration";
 
-    public static readonly string[] All = [MoproachRain];
+    public static readonly string[] All = [MoproachRain, CarpMigration];
 
     /// <summary>Fluent ID of a shenanigan's name; its tooltip adds -tooltip.</summary>
     public static string Name(string id) => $"wf-lobby-shenanigans-{id}";

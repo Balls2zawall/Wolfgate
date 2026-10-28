@@ -36,6 +36,8 @@ public sealed class LobbyShenanigansLayer : Control
         Shenanigans = _reflection.GetAllChildren<LobbyShenanigan>()
             .Select(t => _factory.CreateInstance<LobbyShenanigan>(t))
             .ToList();
+        foreach (var shenanigan in Shenanigans)
+            shenanigan.All = Shenanigans;
     }
 
     private void OnTriggered(string id)

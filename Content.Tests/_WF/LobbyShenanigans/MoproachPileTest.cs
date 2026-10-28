@@ -82,4 +82,15 @@ public sealed class MoproachPileTest
             pile.Step(1f / 60f, Bounds);
         Assert.That(held.Pos.Y, Is.GreaterThan(Bounds.Y - held.Radius * 8), "and falls back down");
     }
+
+    [Test]
+    public void SomethingSwimmingThroughKnocksThemAside()
+    {
+        var pile = Drop(20);
+        var target = pile.Bodies[5];
+        var at = target.Pos + new Vector2(-5, 0);
+        pile.Shove(at, 30, new Vector2(200, 0));
+        Assert.That((target.Pos - at).Length(), Is.EqualTo(30 + target.Radius).Within(0.01f), "pushed out to the edge");
+        Assert.That(target.Vel.X, Is.GreaterThan(200f), "and sent on the way the swimmer was going");
+    }
 }

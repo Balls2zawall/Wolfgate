@@ -75,6 +75,26 @@ public sealed class MoproachPile
         Held = null;
     }
 
+    /// <summary>Knocks every body within <paramref name="radius"/> of <paramref name="at"/> out to its edge and sends it off with some of <paramref name="velocity"/>.</summary>
+    public void Shove(Vector2 at, float radius, Vector2 velocity)
+    {
+        foreach (var body in Bodies)
+        {
+            if (body == Held)
+                continue;
+            var d = body.Pos - at;
+            var reach = radius + body.Radius;
+            var dist = d.Length();
+            if (dist >= reach)
+                continue;
+            // Straight on, it goes up and over.
+            var n = dist > 0.0001f ? d / dist : new Vector2(0, -1);
+            body.Pos = at + n * reach;
+            body.Vel += n * 250f + velocity * 0.8f;
+            body.Spin += (n.X >= 0 ? 1 : -1) * 6f;
+        }
+    }
+
     public void Remove(Body body)
     {
         Bodies.Remove(body);
