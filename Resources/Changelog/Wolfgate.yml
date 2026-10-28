@@ -3900,3 +3900,13 @@ Entries:
   id: 100264
   time: '2026-10-27T23:31:09.0000000+00:00'
   url: https://github.com/VanguardControl/Wolfgate/pull/351
+- author: Gandalf2k15
+  changes:
+    - type: Add
+      message: >-
+        Added SOOC, a subtle LOOC that only the people right next to you and
+        admins can see. Use the SOOC channel, start a line with &, or type
+        /sooc.
+  id: 100265
+  time: '2026-10-28T00:06:44.0000000+00:00'
+  url: https://github.com/VanguardControl/Wolfgate/pull/398
