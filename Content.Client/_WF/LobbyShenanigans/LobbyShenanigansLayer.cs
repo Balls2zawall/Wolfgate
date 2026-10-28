@@ -23,6 +23,7 @@ public sealed class LobbyShenanigansLayer : Control
     private const float MaxFrame = 0.1f;
 
     public readonly List<LobbyShenanigan> Shenanigans;
+    private LobbyShenanigansSystem? _system;
 
     public LobbyShenanigansLayer()
     {
@@ -42,13 +43,17 @@ public sealed class LobbyShenanigansLayer : Control
     protected override void EnteredTree()
     {
         base.EnteredTree();
-        _systems.GetEntitySystem<LobbyShenanigansSystem>().Triggered += OnTriggered;
+        if (_systems.TryGetEntitySystem(out _system))
+            _system.Triggered += OnTriggered;
     }
 
+    // Kept from entering: on a disconnect the entity systems are gone before the lobby leaves the screen.
     protected override void ExitedTree()
     {
         base.ExitedTree();
-        _systems.GetEntitySystem<LobbyShenanigansSystem>().Triggered -= OnTriggered;
+        if (_system != null)
+            _system.Triggered -= OnTriggered;
+        _system = null;
     }
 
     protected override void FrameUpdate(FrameEventArgs args)
