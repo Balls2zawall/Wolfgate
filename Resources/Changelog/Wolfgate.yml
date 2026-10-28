@@ -3910,3 +3910,22 @@ Entries:
   id: 100265
   time: '2026-10-28T00:06:44.0000000+00:00'
   url: https://github.com/VanguardControl/Wolfgate/pull/398
+- author: Gandalf2k15
+  changes:
+    - type: Add
+      message: >-
+        Added xenobiology: breed slimes through five tiers of mutations, grind
+        them into extracts and inject those for reagents, items and worse.
+    - type: Add
+      message: >-
+        Added the xenovac, the slime grinder, the slime scanner and the
+        xenobiological bounty console, which pays research points for extracts.
+    - type: Add
+      message: >-
+        Added the Xenobiology research, a xenobiology starter crate in cargo,
+        and slime gear and grey slimes at John Wolfgate and the Wolfgate vendor.
+    - type: Add
+      message: Slimes and amanita jelly now jiggle.
+  id: 100266
+  time: '2026-10-28T00:43:35.0000000+00:00'
+  url: https://github.com/VanguardControl/Wolfgate/pull/395
