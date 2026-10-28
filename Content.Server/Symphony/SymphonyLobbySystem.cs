@@ -62,7 +62,7 @@ public sealed partial class SymphonyLobbySystem : EntitySystem
     /// <summary>POST {"message", "color"}: a server announcement in everyone's chat, as the update notice is sent.</summary>
     public const string AnnouncePath = "/symphony/announce";
 
-    /// <summary>POST {"trigger": id}: sets a lobby shenanigan off for every client. The only way one is set off.</summary>
+    /// <summary>POST {"trigger": id} sets a lobby shenanigan off for every client, the only way one is; {"clear": true} takes them all away.</summary>
     public const string ShenanigansPath = "/symphony/lobby/shenanigans";
 
     private const int MaxNoticeTitle = 120;
@@ -204,17 +204,25 @@ public sealed partial class SymphonyLobbySystem : EntitySystem
         {
             body = null;
         }
-        if (body?.Trigger is not { } id || !LobbyShenaniganIds.All.Contains(id))
+        var clear = body?.Clear == true;
+        var id = body?.Trigger;
+        if (body == null || clear == (id != null) || (id != null && !LobbyShenaniganIds.All.Contains(id)))
         {
-            await context.RespondAsync($"expected {{\"trigger\": \"{string.Join("|", LobbyShenaniganIds.All)}\"}}", HttpStatusCode.BadRequest);
+            await context.RespondAsync($"expected {{\"trigger\": \"{string.Join("|", LobbyShenaniganIds.All)}\"}} or {{\"clear\": true}}", HttpStatusCode.BadRequest);
             return;
         }
         var outcome = await _tasks.OnMainThread(() =>
         {
-            _shenanigans.Trigger(id, out var inLobby);
+            var inLobby = 0;
+            if (clear)
+                inLobby = _shenanigans.Clear();
+            else
+                _shenanigans.Trigger(id!, out inLobby);
             return new ApplyResponse { SymphonyModule = SharedSymphony.ModuleVersion, Players = _players.PlayerCount, InLobby = inLobby };
         });
-        Log.Info($"{body.Actor ?? "The panel"} set off {id} for everyone ({outcome.InLobby} in the lobby)");
+        Log.Info(clear
+            ? $"{body.Actor ?? "The panel"} cleared the lobby shenanigans ({outcome.InLobby} in the lobby)"
+            : $"{body.Actor ?? "The panel"} set off {id} for everyone ({outcome.InLobby} in the lobby)");
         await context.RespondJsonAsync(outcome);
     }
 
@@ -676,6 +684,7 @@ public sealed partial class SymphonyLobbySystem : EntitySystem
     private sealed class ShenaniganBody
     {
         [JsonPropertyName("trigger")] public string? Trigger { get; set; }
+        [JsonPropertyName("clear")] public bool? Clear { get; set; }
         [JsonPropertyName("actor")] public string? Actor { get; set; }
     }
 

@@ -7,7 +7,7 @@ using Robust.Server.Player;
 namespace Content.Server._WF.LobbyShenanigans;
 
 /// <summary>
-/// Sets a lobby shenanigan off for every client. Called only by the SSymphony panel's endpoint, behind the admin API
+/// Sets a lobby shenanigan off for every client, or clears them all. Called only by the SSymphony panel's endpoint, behind the admin API
 /// token; clients have no way to ask for one.
 /// </summary>
 public sealed class LobbyShenanigansSystem : EntitySystem
@@ -21,8 +21,20 @@ public sealed class LobbyShenanigansSystem : EntitySystem
         inLobby = 0;
         if (!LobbyShenaniganIds.All.Contains(id))
             return false;
-        inLobby = _players.Sessions.Count(s => !_ticker.PlayerGameStatuses.TryGetValue(s.UserId, out var status) || status != PlayerGameStatus.JoinedGame);
+        inLobby = InLobby();
         RaiseNetworkEvent(new LobbyShenaniganTriggerEvent(id));
         return true;
+    }
+
+    /// <summary>Takes away whatever the shenanigans show, on every client, and counts those in the lobby.</summary>
+    public int Clear()
+    {
+        RaiseNetworkEvent(new LobbyShenaniganClearEvent());
+        return InLobby();
+    }
+
+    private int InLobby()
+    {
+        return _players.Sessions.Count(s => !_ticker.PlayerGameStatuses.TryGetValue(s.UserId, out var status) || status != PlayerGameStatus.JoinedGame);
     }
 }

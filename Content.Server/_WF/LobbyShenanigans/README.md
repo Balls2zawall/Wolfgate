@@ -2,7 +2,8 @@
 
 A bit of fun over the lobby, set off for every client from the SSymphony panel's Lobby page and nowhere else: the
 panel posts to `/symphony/lobby/shenanigans` (behind the admin API token), which calls `LobbyShenanigansSystem`.
-The first is Moproach rain: moproaches tumble in from the top and pile up at the bottom with simple physics.
+The panel can also clear them all. The first is Moproach rain: moproaches tumble in from the top and pile up at the
+bottom with simple physics, and players can pick one up, drag it about to shove the rest, and throw it.
 
 A new one is a subclass of `LobbyShenanigan` with its ID in `LobbyShenaniganIds` and Fluent strings for its name
 and description; `LobbyShenanigansLayer` finds it by reflection and the panel lists it.

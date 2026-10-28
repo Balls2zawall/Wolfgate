@@ -10,8 +10,8 @@ using Robust.Shared.Maths;
 namespace Content.Client._WF.LobbyShenanigans;
 
 /// <summary>
-/// Moproaches tumble in from the top of the screen and pile up at the bottom. The oldest fade away once the pile
-/// is full.
+/// Moproaches tumble in from the top of the screen and pile up at the bottom. Players can pick one up, drag it about
+/// to shove the others and throw it. The oldest fade away once the pile is full.
 /// </summary>
 public sealed class MoproachRain : LobbyShenanigan
 {
@@ -59,7 +59,7 @@ public sealed class MoproachRain : LobbyShenanigan
         var over = _pile.Bodies.Count - _fading.Count - MaxBodies;
         for (var i = 0; over > 0 && i < _pile.Bodies.Count; i++)
         {
-            if (_fading.TryAdd(_pile.Bodies[i], FadeSeconds))
+            if (_pile.Bodies[i] != _pile.Held && _fading.TryAdd(_pile.Bodies[i], FadeSeconds))
                 over--;
         }
         foreach (var body in new List<MoproachPile.Body>(_fading.Keys))
@@ -67,12 +67,34 @@ public sealed class MoproachRain : LobbyShenanigan
             if ((_fading[body] -= dt) > 0)
                 continue;
             _fading.Remove(body);
-            _pile.Bodies.Remove(body);
+            _pile.Remove(body);
         }
 
         if (_pile.Bodies.Count > 0)
             _pile.Step(dt, bounds, scale);
     }
+
+    public override void Clear()
+    {
+        _queued = 0;
+        _pile.Release();
+        foreach (var body in _pile.Bodies)
+            _fading.TryAdd(body, FadeSeconds);
+    }
+
+    public override bool HitTest(Vector2 pos) => _pile.At(pos) is { } body && !_fading.ContainsKey(body);
+
+    public override bool TryGrab(Vector2 pos)
+    {
+        if (_pile.At(pos) is not { } body || _fading.ContainsKey(body))
+            return false;
+        _pile.Grab(body, pos);
+        return true;
+    }
+
+    public override void Drag(Vector2 pos, float dt) => _pile.Drag(pos, dt);
+
+    public override void Release() => _pile.Release();
 
     private void Spawn(Vector2 bounds, float scale)
     {

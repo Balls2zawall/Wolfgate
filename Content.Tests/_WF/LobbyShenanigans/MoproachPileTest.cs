@@ -55,4 +55,31 @@ public sealed class MoproachPileTest
             Assert.That((a.Pos - b.Pos).Length(), Is.GreaterThan((a.Radius + b.Radius) * 0.8f), "no deep overlaps");
         }
     }
+
+    [Test]
+    public void AHeldOneFollowsTheMouseShovesTheRestAndFliesWhenLetGo()
+    {
+        var pile = Drop(20);
+        var held = pile.Bodies[0];
+        pile.Grab(held, held.Pos);
+        var start = held.Pos;
+        for (var i = 1; i <= 30; i++)
+        {
+            pile.Drag(start + new Vector2(0, -10f * i), 1f / 60f);
+            pile.Step(1f / 60f, Bounds);
+        }
+        Assert.That(held.Pos.Y, Is.EqualTo(start.Y - 300).Within(1f), "it stays where the mouse put it");
+        foreach (var other in pile.Bodies)
+        {
+            if (other != held)
+                Assert.That((other.Pos - held.Pos).Length(), Is.GreaterThan((other.Radius + held.Radius) * 0.95f), "the others are shoved aside");
+        }
+
+        pile.Release();
+        Assert.That(held.Vel.Y, Is.LessThan(-300f), "thrown upwards the way it was dragged");
+        Assert.That(pile.Held, Is.Null);
+        for (var t = 0f; t < 6f; t += 1f / 60f)
+            pile.Step(1f / 60f, Bounds);
+        Assert.That(held.Pos.Y, Is.GreaterThan(Bounds.Y - held.Radius * 8), "and falls back down");
+    }
 }

@@ -19,3 +19,7 @@ public sealed class LobbyShenaniganTriggerEvent(string id) : EntityEventArgs
 {
     public string Id = id;
 }
+
+/// <summary>Everything the shenanigans show goes, on every client, from the SSymphony panel.</summary>
+[Serializable, NetSerializable]
+public sealed class LobbyShenaniganClearEvent : EntityEventArgs;

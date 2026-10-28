@@ -21,4 +21,23 @@ public abstract class LobbyShenanigan
 
     /// <summary>Draws in the layer's pixels.</summary>
     public abstract void Draw(DrawingHandleScreen handle, float scale);
+
+    /// <summary>Staff cleared the lobby: everything it shows goes.</summary>
+    public abstract void Clear();
+
+    /// <summary>Whether something it shows is under <paramref name="pos"/>, in the layer's pixels; the layer takes clicks only there.</summary>
+    public virtual bool HitTest(Vector2 pos) => false;
+
+    /// <summary>Picks up what is under <paramref name="pos"/>; false when there is nothing to pick up.</summary>
+    public virtual bool TryGrab(Vector2 pos) => false;
+
+    /// <summary>The mouse moved to <paramref name="pos"/> while holding what was picked up.</summary>
+    public virtual void Drag(Vector2 pos, float dt)
+    {
+    }
+
+    /// <summary>The mouse button came up.</summary>
+    public virtual void Release()
+    {
+    }
 }
