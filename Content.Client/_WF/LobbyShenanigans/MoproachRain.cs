@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Numerics;
+using Content.Shared._WF.LobbyShenanigans;
 using Robust.Client.Graphics;
 using Robust.Client.ResourceManagement;
 using Robust.Shared.Graphics.RSI;
@@ -27,8 +28,7 @@ public sealed class MoproachRain : LobbyShenanigan
     private int _queued;
     private float _spawnIn;
 
-    public override string Name => "wf-lobby-shenanigans-moproach-rain";
-    public override string Description => "wf-lobby-shenanigans-moproach-rain-tooltip";
+    public override string Id => LobbyShenaniganIds.MoproachRain;
 
     public MoproachRain()
     {

@@ -10,12 +10,14 @@ using Robust.Shared.Timing;
 namespace Content.Client._WF.LobbyShenanigans;
 
 /// <summary>
-/// Covers the lobby and runs every <see cref="LobbyShenanigan"/> over it. Never takes a click.
+/// Covers the lobby and runs every <see cref="LobbyShenanigan"/> over it when the server sets one off. Never takes
+/// a click.
 /// </summary>
 public sealed class LobbyShenanigansLayer : Control
 {
     [Dependency] private IReflectionManager _reflection = default!;
     [Dependency] private IDynamicTypeFactory _factory = default!;
+    [Dependency] private IEntitySystemManager _systems = default!;
 
     // A long hitch would otherwise be simulated all at once.
     private const float MaxFrame = 0.1f;
@@ -28,11 +30,26 @@ public sealed class LobbyShenanigansLayer : Control
         MouseFilter = MouseFilterMode.Ignore;
         Shenanigans = _reflection.GetAllChildren<LobbyShenanigan>()
             .Select(t => _factory.CreateInstance<LobbyShenanigan>(t))
-            .OrderBy(s => s.Order)
             .ToList();
     }
 
-    public void Trigger(LobbyShenanigan shenanigan) => shenanigan.Trigger(PixelSize, UIScale);
+    private void OnTriggered(string id)
+    {
+        if (Shenanigans.FirstOrDefault(s => s.Id == id) is { } shenanigan)
+            shenanigan.Trigger(PixelSize, UIScale);
+    }
+
+    protected override void EnteredTree()
+    {
+        base.EnteredTree();
+        _systems.GetEntitySystem<LobbyShenanigansSystem>().Triggered += OnTriggered;
+    }
+
+    protected override void ExitedTree()
+    {
+        base.ExitedTree();
+        _systems.GetEntitySystem<LobbyShenanigansSystem>().Triggered -= OnTriggered;
+    }
 
     protected override void FrameUpdate(FrameEventArgs args)
     {
