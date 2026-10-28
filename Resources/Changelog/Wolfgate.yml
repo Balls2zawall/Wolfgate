@@ -3972,3 +3972,14 @@ Entries:
   id: 100269
   time: '2026-10-28T21:57:38.0000000+00:00'
   url: https://github.com/VanguardControl/Wolfgate/pull/403
+- author: Happyowl93
+  changes:
+    - type: Tweak
+      message: >-
+        The Arribane and Phaeron now come with M12 Prospector mining lasers, and
+        the Rosetta with an M40 Prospector.
+    - type: Fix
+      message: The Carabela's drydock bay now has a light.
+  id: 100270
+  time: '2026-10-28T22:33:33.0000000+00:00'
+  url: https://github.com/VanguardControl/Wolfgate/pull/401
