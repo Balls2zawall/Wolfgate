@@ -4181,3 +4181,14 @@ Entries:
   id: 100279
   time: '2026-10-29T22:55:54.0000000+00:00'
   url: https://github.com/VanguardControl/Wolfgate/pull/413
+- author: Gandalf2k15
+  changes:
+    - type: Add
+      message: Earl Grey tea, served hot from the hot drinks vendor.
+    - type: Add
+      message: Pilots very rarely say "Engage." when they start an FTL jump.
+    - type: Add
+      message: Livingston's aquarium, home of a lionfish named Livingston.
+  id: 100280
+  time: '2026-10-29T22:56:26.0000000+00:00'
+  url: https://github.com/VanguardControl/Wolfgate/pull/415
