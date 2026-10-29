@@ -4,7 +4,7 @@ meta:
   engineVersion: 291.0.0
   forkId: ""
   forkVersion: ""
-  time: 10/29/2026 08:43:23
+  time: 10/29/2026 23:54:05
   entityCount: 557
 maps: []
 grids:
@@ -463,7 +463,7 @@ entities:
     - type: IFF
       flags: IsPlayerShuttle
       color: '#FFFFFFFF'
-      address: ' 294A-5434'
+      address: ' 1DEB-EB44'
     - type: ShipRepairData
       entityPalette:
       - WallPlastitanium
@@ -565,13 +565,13 @@ entities:
           nextUid: 74
           entities:
             0:
-              originalEntity: 448
+              originalEntity: 449
               localPosition: 1.5,1.5
             1:
-              originalEntity: 447
+              originalEntity: 448
               localPosition: 2.5,1.5
             2:
-              originalEntity: 444
+              originalEntity: 445
               localPosition: 2.5,0.5
             3:
               rotation: 3.141592653589793 rad
@@ -584,18 +584,18 @@ entities:
               originalEntity: 256
               localPosition: 1.5,0.5
             5:
-              originalEntity: 457
+              originalEntity: 458
               localPosition: 4.5,2.5
             6:
-              originalEntity: 460
+              originalEntity: 461
               localPosition: 3.5,2.5
             7:
               rotation: 3.141592653589793 rad
               protoIndex: 2
-              originalEntity: 431
+              originalEntity: 432
               localPosition: 4.5,0.5
             8:
-              originalEntity: 451
+              originalEntity: 452
               localPosition: 1.5,2.5
             9:
               rotation: 3.141592653589793 rad
@@ -603,7 +603,7 @@ entities:
               originalEntity: 12
               localPosition: 0.5,2.5
             10:
-              originalEntity: 454
+              originalEntity: 455
               localPosition: 2.5,2.5
             11:
               rotation: 3.141592653589793 rad
@@ -616,7 +616,7 @@ entities:
               originalEntity: 259
               localPosition: 2.5,3.5
             13:
-              originalEntity: 453
+              originalEntity: 454
               localPosition: 0.5,4.5
             14:
               rotation: 3.141592653589793 rad
@@ -634,7 +634,7 @@ entities:
               originalEntity: 416
               localPosition: 4.5,4.5
             17:
-              originalEntity: 455
+              originalEntity: 456
               localPosition: 2.5,4.5
             18:
               protoIndex: 46
@@ -918,16 +918,16 @@ entities:
           nextUid: 78
           entities:
             0:
-              originalEntity: 488
+              originalEntity: 489
               localPosition: 4.5,9.5
             1:
-              originalEntity: 459
+              originalEntity: 460
               localPosition: 4.5,5.5
             2:
-              originalEntity: 480
+              originalEntity: 481
               localPosition: 2.5,6.5
             3:
-              originalEntity: 456
+              originalEntity: 457
               localPosition: 2.5,5.5
             4:
               rotation: 1.5707963267948966 rad
@@ -945,7 +945,7 @@ entities:
               originalEntity: 13
               localPosition: 4.5,6.5
             7:
-              originalEntity: 483
+              originalEntity: 484
               localPosition: 4.5,8.5
             8:
               rotation: -1.5707963267948966 rad
@@ -964,7 +964,7 @@ entities:
               localPosition: 0.5,9.5
             11:
               rotation: 3.141592653589793 rad
-              originalEntity: 531
+              originalEntity: 532
               localPosition: 0.5,8.5
             12:
               rotation: -1.5707963267948966 rad
@@ -982,10 +982,10 @@ entities:
               originalEntity: 10
               localPosition: 1.5,8.5
             15:
-              originalEntity: 481
+              originalEntity: 482
               localPosition: 2.5,7.5
             16:
-              originalEntity: 482
+              originalEntity: 483
               localPosition: 2.5,8.5
             17:
               rotation: 3.141592653589793 rad
@@ -1286,34 +1286,34 @@ entities:
           entities:
             0:
               protoIndex: 1
-              originalEntity: 536
+              originalEntity: 537
               localPosition: 4.5,11.5
             1:
-              originalEntity: 487
+              originalEntity: 488
               localPosition: 4.5,10.5
             2:
-              originalEntity: 489
+              originalEntity: 490
               localPosition: 2.5,10.5
             3:
-              originalEntity: 462
+              originalEntity: 463
               localPosition: 2.5,11.5
             4:
               rotation: 3.141592653589793 rad
               protoIndex: 14
-              originalEntity: 551
+              originalEntity: 552
               localPosition: 3.5,11.5
             5:
-              originalEntity: 439
+              originalEntity: 440
               localPosition: 3.5,10.5
             6:
               rotation: 1.5707963267948966 rad
               protoIndex: 32
-              originalEntity: 430
+              originalEntity: 431
               localPosition: 1.5,11.5
             7:
               rotation: 1.5707963267948966 rad
               protoIndex: 32
-              originalEntity: 429
+              originalEntity: 430
               localPosition: 1.5,12.5
             8:
               protoIndex: 31
@@ -1461,45 +1461,45 @@ entities:
             0:
               rotation: 3.141592653589793 rad
               protoIndex: 1
-              originalEntity: 541
+              originalEntity: 542
               localPosition: 6.5,1.5
             1:
-              originalEntity: 491
+              originalEntity: 492
               localPosition: 6.5,2.5
             2:
-              originalEntity: 490
+              originalEntity: 491
               localPosition: 5.5,2.5
             3:
               rotation: 3.141592653589793 rad
-              originalEntity: 508
+              originalEntity: 509
               localPosition: 5.5,1.5
             4:
               rotation: 3.141592653589793 rad
-              originalEntity: 507
+              originalEntity: 508
               localPosition: 5.5,0.5
             5:
               rotation: 1.5707963267948966 rad
-              originalEntity: 527
+              originalEntity: 528
               localPosition: 7.5,4.5
             6:
               protoIndex: 10
-              originalEntity: 553
+              originalEntity: 554
               localPosition: 8.5,3.5
             7:
               rotation: 1.5707963267948966 rad
-              originalEntity: 526
+              originalEntity: 527
               localPosition: 8.5,4.5
             8:
               rotation: 3.141592653589793 rad
-              originalEntity: 528
+              originalEntity: 529
               localPosition: 9.5,4.5
             9:
               rotation: 3.141592653589793 rad
               protoIndex: 1
-              originalEntity: 547
+              originalEntity: 548
               localPosition: 7.5,2.5
             10:
-              originalEntity: 530
+              originalEntity: 531
               localPosition: 7.5,3.5
             11:
               rotation: -1.5707963267948966 rad
@@ -1582,7 +1582,7 @@ entities:
           nextUid: 43
           entities:
             0:
-              originalEntity: 493
+              originalEntity: 494
               localPosition: 6.5,6.5
             1:
               rotation: 1.5707963267948966 rad
@@ -1605,38 +1605,38 @@ entities:
               originalEntity: 355
               localPosition: 7.5,6.5
             5:
-              originalEntity: 495
+              originalEntity: 496
               localPosition: 6.5,8.5
             6:
-              originalEntity: 494
+              originalEntity: 495
               localPosition: 6.5,7.5
             7:
-              originalEntity: 506
+              originalEntity: 507
               localPosition: 7.5,8.5
             8:
               rotation: -1.5707963267948966 rad
-              originalEntity: 514
+              originalEntity: 515
               localPosition: 7.5,7.5
             9:
               rotation: -1.5707963267948966 rad
-              originalEntity: 513
+              originalEntity: 514
               localPosition: 8.5,7.5
             10:
               rotation: 1.5707963267948966 rad
-              originalEntity: 520
+              originalEntity: 521
               localPosition: 9.5,6.5
             11:
               rotation: 1.5707963267948966 rad
-              originalEntity: 519
+              originalEntity: 520
               localPosition: 9.5,5.5
             12:
               rotation: -1.5707963267948966 rad
-              originalEntity: 512
+              originalEntity: 513
               localPosition: 9.5,7.5
             13:
               rotation: 3.141592653589793 rad
               protoIndex: 12
-              originalEntity: 550
+              originalEntity: 551
               localPosition: 9.5,8.5
             14:
               rotation: 3.141592653589793 rad
@@ -1644,16 +1644,16 @@ entities:
               originalEntity: 400
               localPosition: 8.5,8.5
             15:
-              originalEntity: 505
+              originalEntity: 506
               localPosition: 7.5,9.5
             16:
-              originalEntity: 496
+              originalEntity: 497
               localPosition: 5.5,8.5
             17:
-              originalEntity: 492
+              originalEntity: 493
               localPosition: 6.5,5.5
             18:
-              originalEntity: 458
+              originalEntity: 459
               localPosition: 5.5,5.5
             19:
               protoIndex: 30
@@ -1716,7 +1716,7 @@ entities:
               localPosition: 5.5,5.5
             33:
               protoIndex: 62
-              originalEntity: 425
+              originalEntity: 426
               localPosition: 5.5,5.5
             34:
               protoIndex: 61
@@ -1790,14 +1790,14 @@ entities:
             0:
               rotation: -1.5707963267948966 rad
               protoIndex: 1
-              originalEntity: 534
+              originalEntity: 535
               localPosition: 7.5,11.5
             1:
-              originalEntity: 504
+              originalEntity: 505
               localPosition: 7.5,10.5
             2:
               protoIndex: 2
-              originalEntity: 434
+              originalEntity: 435
               localPosition: 5.5,10.5
             3:
               rotation: -1.5707963267948966 rad
@@ -1841,7 +1841,7 @@ entities:
             0:
               rotation: 3.141592653589793 rad
               protoIndex: 1
-              originalEntity: 544
+              originalEntity: 545
               localPosition: 10.5,4.5
         2,1:
           tiles:
@@ -1875,21 +1875,21 @@ entities:
             0:
               rotation: -1.5707963267948966 rad
               protoIndex: 9
-              originalEntity: 438
+              originalEntity: 439
               localPosition: 10.5,6.5
             1:
               rotation: -1.5707963267948966 rad
               protoIndex: 9
-              originalEntity: 437
+              originalEntity: 438
               localPosition: 10.5,5.5
             2:
               rotation: 3.141592653589793 rad
               protoIndex: 1
-              originalEntity: 543
+              originalEntity: 544
               localPosition: 11.5,7.5
             3:
               rotation: -1.5707963267948966 rad
-              originalEntity: 511
+              originalEntity: 512
               localPosition: 10.5,7.5
             4:
               protoIndex: 44
@@ -1941,14 +1941,14 @@ entities:
             0:
               rotation: 3.141592653589793 rad
               protoIndex: 1
-              originalEntity: 533
+              originalEntity: 534
               localPosition: 2.5,-1.5
             1:
               rotation: 3.141592653589793 rad
-              originalEntity: 442
+              originalEntity: 443
               localPosition: 2.5,-0.5
             2:
-              originalEntity: 441
+              originalEntity: 442
               localPosition: 1.5,-1.5
             3:
               protoIndex: 5
@@ -1957,11 +1957,11 @@ entities:
             4:
               rotation: 3.141592653589793 rad
               protoIndex: 6
-              originalEntity: 7
+              originalEntity: invalid
               localPosition: 0.5,-1.5
             5:
               protoIndex: 3
-              originalEntity: 427
+              originalEntity: 428
               localPosition: 1.5,-0.5
         1,-1:
           tiles:
@@ -1995,7 +1995,7 @@ entities:
             0:
               rotation: 3.141592653589793 rad
               protoIndex: 1
-              originalEntity: 539
+              originalEntity: 540
               localPosition: 5.5,-0.5
         -1,-1:
           tiles:
@@ -2029,20 +2029,20 @@ entities:
             0:
               rotation: 1.5707963267948966 rad
               protoIndex: 1
-              originalEntity: 538
+              originalEntity: 539
               localPosition: -4.5,-0.5
             1:
               rotation: 1.5707963267948966 rad
               protoIndex: 1
-              originalEntity: 532
+              originalEntity: 533
               localPosition: -1.5,-1.5
             2:
               rotation: 3.141592653589793 rad
-              originalEntity: 443
+              originalEntity: 444
               localPosition: -1.5,-0.5
             3:
               protoIndex: 3
-              originalEntity: 426
+              originalEntity: 427
               localPosition: -0.5,-0.5
             4:
               rotation: 3.141592653589793 rad
@@ -2050,7 +2050,7 @@ entities:
               originalEntity: 404
               localPosition: -0.5,-0.5
             5:
-              originalEntity: 440
+              originalEntity: 441
               localPosition: -0.5,-1.5
         -3,0:
           tiles:
@@ -2112,7 +2112,7 @@ entities:
             0:
               rotation: 1.5707963267948966 rad
               protoIndex: 1
-              originalEntity: 542
+              originalEntity: 543
               localPosition: -10.5,7.5
         -2,0:
           tiles:
@@ -2144,47 +2144,47 @@ entities:
           nextUid: 12
           entities:
             0:
-              originalEntity: 470
+              originalEntity: 471
               localPosition: -5.5,3.5
             1:
               rotation: 1.5707963267948966 rad
               protoIndex: 1
-              originalEntity: 540
+              originalEntity: 541
               localPosition: -5.5,1.5
             2:
-              originalEntity: 469
+              originalEntity: 470
               localPosition: -5.5,2.5
             3:
               rotation: 1.5707963267948966 rad
               protoIndex: 1
-              originalEntity: 545
+              originalEntity: 546
               localPosition: -9.5,4.5
             4:
               rotation: 3.141592653589793 rad
-              originalEntity: 523
+              originalEntity: 524
               localPosition: -8.5,4.5
             5:
               rotation: 1.5707963267948966 rad
               protoIndex: 1
-              originalEntity: 546
+              originalEntity: 547
               localPosition: -6.5,2.5
             6:
               protoIndex: 10
-              originalEntity: 554
+              originalEntity: 555
               localPosition: -7.5,3.5
             7:
-              originalEntity: 529
+              originalEntity: 530
               localPosition: -6.5,3.5
             8:
               rotation: 1.5707963267948966 rad
-              originalEntity: 525
+              originalEntity: 526
               localPosition: -6.5,4.5
             9:
               rotation: 1.5707963267948966 rad
-              originalEntity: 524
+              originalEntity: 525
               localPosition: -7.5,4.5
             10:
-              originalEntity: 473
+              originalEntity: 474
               localPosition: -5.5,4.5
             11:
               protoIndex: 56
@@ -2221,21 +2221,21 @@ entities:
           entities:
             0:
               rotation: 1.5707963267948966 rad
-              originalEntity: 522
+              originalEntity: 523
               localPosition: -8.5,6.5
             1:
               rotation: 1.5707963267948966 rad
-              originalEntity: 521
+              originalEntity: 522
               localPosition: -8.5,5.5
             2:
               rotation: 1.5707963267948966 rad
               protoIndex: 9
-              originalEntity: 436
+              originalEntity: 437
               localPosition: -9.5,5.5
             3:
               rotation: 1.5707963267948966 rad
               protoIndex: 9
-              originalEntity: 435
+              originalEntity: 436
               localPosition: -9.5,6.5
             4:
               rotation: 1.5707963267948966 rad
@@ -2260,23 +2260,23 @@ entities:
             8:
               rotation: 3.141592653589793 rad
               protoIndex: 12
-              originalEntity: 549
+              originalEntity: 550
               localPosition: -8.5,8.5
             9:
               rotation: -1.5707963267948966 rad
-              originalEntity: 517
+              originalEntity: 518
               localPosition: -8.5,7.5
             10:
               rotation: -1.5707963267948966 rad
-              originalEntity: 518
+              originalEntity: 519
               localPosition: -9.5,7.5
             11:
               rotation: -1.5707963267948966 rad
-              originalEntity: 515
+              originalEntity: 516
               localPosition: -6.5,7.5
             12:
               rotation: -1.5707963267948966 rad
-              originalEntity: 516
+              originalEntity: 517
               localPosition: -7.5,7.5
             13:
               rotation: 3.141592653589793 rad
@@ -2284,22 +2284,22 @@ entities:
               originalEntity: 401
               localPosition: -7.5,8.5
             14:
-              originalEntity: 479
+              originalEntity: 480
               localPosition: -5.5,8.5
             15:
-              originalEntity: 503
+              originalEntity: 504
               localPosition: -6.5,8.5
             16:
-              originalEntity: 502
+              originalEntity: 503
               localPosition: -6.5,9.5
             17:
-              originalEntity: 472
+              originalEntity: 473
               localPosition: -5.5,5.5
             18:
-              originalEntity: 474
+              originalEntity: 475
               localPosition: -5.5,7.5
             19:
-              originalEntity: 471
+              originalEntity: 472
               localPosition: -5.5,6.5
             20:
               protoIndex: 55
@@ -2408,14 +2408,14 @@ entities:
           entities:
             0:
               protoIndex: 2
-              originalEntity: 433
+              originalEntity: 434
               localPosition: -5.5,10.5
             1:
               protoIndex: 1
-              originalEntity: 535
+              originalEntity: 536
               localPosition: -6.5,11.5
             2:
-              originalEntity: 501
+              originalEntity: 502
               localPosition: -6.5,10.5
             3:
               rotation: -1.5707963267948966 rad
@@ -2452,35 +2452,35 @@ entities:
           nextUid: 49
           entities:
             0:
-              originalEntity: 466
+              originalEntity: 467
               localPosition: -2.5,2.5
             1:
-              originalEntity: 467
+              originalEntity: 468
               localPosition: -3.5,2.5
             2:
-              originalEntity: 468
+              originalEntity: 469
               localPosition: -4.5,2.5
             3:
               rotation: 3.141592653589793 rad
-              originalEntity: 510
+              originalEntity: 511
               localPosition: -4.5,1.5
             4:
               rotation: 3.141592653589793 rad
-              originalEntity: 509
+              originalEntity: 510
               localPosition: -4.5,0.5
             5:
-              originalEntity: 449
+              originalEntity: 450
               localPosition: -0.5,1.5
             6:
-              originalEntity: 446
+              originalEntity: 447
               localPosition: -1.5,1.5
             7:
               rotation: 3.141592653589793 rad
               protoIndex: 2
-              originalEntity: 432
+              originalEntity: 433
               localPosition: -2.5,0.5
             8:
-              originalEntity: 445
+              originalEntity: 446
               localPosition: -1.5,0.5
             9:
               rotation: 1.5707963267948966 rad
@@ -2508,10 +2508,10 @@ entities:
               originalEntity: 240
               localPosition: -3.5,4.5
             14:
-              originalEntity: 461
+              originalEntity: 462
               localPosition: -1.5,2.5
             15:
-              originalEntity: 450
+              originalEntity: 451
               localPosition: -0.5,2.5
             16:
               rotation: -1.5707963267948966 rad
@@ -2519,7 +2519,7 @@ entities:
               originalEntity: 11
               localPosition: -0.5,3.5
             17:
-              originalEntity: 452
+              originalEntity: 453
               localPosition: -0.5,4.5
             18:
               rotation: -1.5707963267948966 rad
@@ -2692,16 +2692,16 @@ entities:
           nextUid: 55
           entities:
             0:
-              originalEntity: 476
+              originalEntity: 477
               localPosition: -2.5,8.5
             1:
-              originalEntity: 478
+              originalEntity: 479
               localPosition: -4.5,8.5
             2:
-              originalEntity: 477
+              originalEntity: 478
               localPosition: -3.5,8.5
             3:
-              originalEntity: 500
+              originalEntity: 501
               localPosition: -3.5,9.5
             4:
               rotation: 1.5707963267948966 rad
@@ -2740,7 +2740,7 @@ entities:
               originalEntity: 239
               localPosition: -3.5,5.5
             12:
-              originalEntity: 486
+              originalEntity: 487
               localPosition: -0.5,5.5
             13:
               rotation: 3.141592653589793 rad
@@ -2755,19 +2755,19 @@ entities:
             15:
               rotation: 1.5707963267948966 rad
               protoIndex: 26
-              originalEntity: 555
+              originalEntity: 556
               localPosition: -0.5,7.5
             16:
-              originalEntity: 485
+              originalEntity: 486
               localPosition: -0.5,6.5
             17:
-              originalEntity: 464
+              originalEntity: 465
               localPosition: -1.5,6.5
             18:
-              originalEntity: 475
+              originalEntity: 476
               localPosition: -1.5,8.5
             19:
-              originalEntity: 465
+              originalEntity: 466
               localPosition: -1.5,7.5
             20:
               rotation: 1.5707963267948966 rad
@@ -2784,7 +2784,7 @@ entities:
               originalEntity: 350
               localPosition: -2.5,9.5
             23:
-              originalEntity: 484
+              originalEntity: 485
               localPosition: -0.5,8.5
             24:
               protoIndex: 41
@@ -2953,24 +2953,24 @@ entities:
             0:
               rotation: 3.141592653589793 rad
               protoIndex: 14
-              originalEntity: 552
+              originalEntity: 553
               localPosition: -2.5,11.5
             1:
               rotation: -1.5707963267948966 rad
               protoIndex: 1
-              originalEntity: 537
+              originalEntity: 538
               localPosition: -3.5,11.5
             2:
-              originalEntity: 499
+              originalEntity: 500
               localPosition: -3.5,10.5
             3:
-              originalEntity: 498
+              originalEntity: 499
               localPosition: -2.5,10.5
             4:
-              originalEntity: 497
+              originalEntity: 498
               localPosition: -1.5,10.5
             5:
-              originalEntity: 463
+              originalEntity: 464
               localPosition: -1.5,11.5
             6:
               protoIndex: 37
@@ -2989,7 +2989,7 @@ entities:
             9:
               rotation: 1.5707963267948966 rad
               protoIndex: 32
-              originalEntity: 428
+              originalEntity: 429
               localPosition: -0.5,12.5
             10:
               protoIndex: 31
@@ -3109,7 +3109,6 @@ entities:
     components:
     - type: Transform
       parent: 1
-      rot: 3.141592653589793 rad
       pos: 0.5,-1.5
 - proto: AirlockUnderground
   entities:
@@ -4544,7 +4543,7 @@ entities:
       parent: 1
       pos: -0.5,12.5
     - type: FaxMachine
-      name: Excelsior
+      name: UBM Excelsior -491
 - proto: FireAlarm
   entities:
   - uid: 264
@@ -4671,6 +4670,9 @@ entities:
     - type: Transform
       parent: 1
       pos: 1.5,6.5
+    - type: GasMixer
+      inletTwoConcentration: 0.21
+      inletOneConcentration: 0.79
     - type: AtmosPipeColor
       color: '#0055CCFF'
 - proto: GasPassiveVent
@@ -5555,6 +5557,9 @@ entities:
     - type: Transform
       parent: 1
       pos: 0.5,6.5
+      anchored: True
+    - type: Physics
+      bodyType: Static
 - proto: OxygenCanister
   entities:
   - uid: 385
@@ -5562,6 +5567,9 @@ entities:
     - type: Transform
       parent: 1
       pos: 0.5,5.5
+      anchored: True
+    - type: Physics
+      bodyType: Static
 - proto: PaintingOlympia
   entities:
   - uid: 386
@@ -5632,11 +5640,15 @@ entities:
     - type: Transform
       parent: 1
       pos: 6.5,3.5
+    - type: FuelGenerator
+      targetPower: 50000
   - uid: 397
     components:
     - type: Transform
       parent: 1
       pos: 6.5,4.5
+    - type: FuelGenerator
+      targetPower: 50000
 - proto: Poweredlight
   entities:
   - uid: 398
@@ -5844,7 +5856,7 @@ entities:
       pos: -1.5,4.5
 - proto: SpawnPointLatejoin
   entities:
-  - uid: 556
+  - uid: 425
     components:
     - type: Transform
       parent: 1
@@ -5855,7 +5867,7 @@ entities:
     mapInit: true
     components:
     - type: MetaData
-      name: Excelsior
+      name: UBM Excelsior -491
     - type: ExtraShuttleInformation
       vessel: WFUBMExcelsior
     - type: StationData
@@ -5874,38 +5886,38 @@ entities:
         prefixCreator: 14
 - proto: SubstationWallBasic
   entities:
-  - uid: 425
+  - uid: 426
     components:
     - type: Transform
       parent: 1
       pos: 5.5,5.5
 - proto: SuitStorageEVAMercenary
   entities:
-  - uid: 426
+  - uid: 427
     components:
     - type: Transform
       parent: 1
       pos: -0.5,-0.5
-  - uid: 427
+  - uid: 428
     components:
     - type: Transform
       parent: 1
       pos: 1.5,-0.5
 - proto: TableReinforced
   entities:
-  - uid: 428
-    components:
-    - type: Transform
-      parent: 1
-      rot: 1.5707963267948966 rad
-      pos: -0.5,12.5
   - uid: 429
     components:
     - type: Transform
       parent: 1
       rot: 1.5707963267948966 rad
-      pos: 1.5,12.5
+      pos: -0.5,12.5
   - uid: 430
+    components:
+    - type: Transform
+      parent: 1
+      rot: 1.5707963267948966 rad
+      pos: 1.5,12.5
+  - uid: 431
     components:
     - type: Transform
       parent: 1
@@ -5913,49 +5925,49 @@ entities:
       pos: 1.5,11.5
 - proto: ThrusterLargeRogue
   entities:
-  - uid: 431
-    components:
-    - type: Transform
-      parent: 1
-      rot: 3.141592653589793 rad
-      pos: 4.5,0.5
   - uid: 432
     components:
     - type: Transform
       parent: 1
       rot: 3.141592653589793 rad
-      pos: -2.5,0.5
+      pos: 4.5,0.5
   - uid: 433
     components:
     - type: Transform
       parent: 1
-      pos: -5.5,10.5
+      rot: 3.141592653589793 rad
+      pos: -2.5,0.5
   - uid: 434
+    components:
+    - type: Transform
+      parent: 1
+      pos: -5.5,10.5
+  - uid: 435
     components:
     - type: Transform
       parent: 1
       pos: 5.5,10.5
 - proto: ThrusterRogue
   entities:
-  - uid: 435
-    components:
-    - type: Transform
-      parent: 1
-      rot: 1.5707963267948966 rad
-      pos: -9.5,6.5
   - uid: 436
     components:
     - type: Transform
       parent: 1
       rot: 1.5707963267948966 rad
-      pos: -9.5,5.5
+      pos: -9.5,6.5
   - uid: 437
+    components:
+    - type: Transform
+      parent: 1
+      rot: 1.5707963267948966 rad
+      pos: -9.5,5.5
+  - uid: 438
     components:
     - type: Transform
       parent: 1
       rot: -1.5707963267948966 rad
       pos: 10.5,5.5
-  - uid: 438
+  - uid: 439
     components:
     - type: Transform
       parent: 1
@@ -5963,491 +5975,491 @@ entities:
       pos: 10.5,6.5
 - proto: WallPlastitanium
   entities:
-  - uid: 439
-    components:
-    - type: Transform
-      parent: 1
-      pos: 3.5,10.5
   - uid: 440
     components:
     - type: Transform
       parent: 1
-      pos: -0.5,-1.5
+      pos: 3.5,10.5
   - uid: 441
     components:
     - type: Transform
       parent: 1
-      pos: 1.5,-1.5
+      pos: -0.5,-1.5
   - uid: 442
     components:
     - type: Transform
       parent: 1
-      rot: 3.141592653589793 rad
-      pos: 2.5,-0.5
+      pos: 1.5,-1.5
   - uid: 443
     components:
     - type: Transform
       parent: 1
       rot: 3.141592653589793 rad
-      pos: -1.5,-0.5
+      pos: 2.5,-0.5
   - uid: 444
     components:
     - type: Transform
       parent: 1
-      pos: 2.5,0.5
+      rot: 3.141592653589793 rad
+      pos: -1.5,-0.5
   - uid: 445
     components:
     - type: Transform
       parent: 1
-      pos: -1.5,0.5
+      pos: 2.5,0.5
   - uid: 446
     components:
     - type: Transform
       parent: 1
-      pos: -1.5,1.5
+      pos: -1.5,0.5
   - uid: 447
     components:
     - type: Transform
       parent: 1
-      pos: 2.5,1.5
+      pos: -1.5,1.5
   - uid: 448
     components:
     - type: Transform
       parent: 1
-      pos: 1.5,1.5
+      pos: 2.5,1.5
   - uid: 449
     components:
     - type: Transform
       parent: 1
-      pos: -0.5,1.5
+      pos: 1.5,1.5
   - uid: 450
     components:
     - type: Transform
       parent: 1
-      pos: -0.5,2.5
+      pos: -0.5,1.5
   - uid: 451
     components:
     - type: Transform
       parent: 1
-      pos: 1.5,2.5
+      pos: -0.5,2.5
   - uid: 452
     components:
     - type: Transform
       parent: 1
-      pos: -0.5,4.5
+      pos: 1.5,2.5
   - uid: 453
     components:
     - type: Transform
       parent: 1
-      pos: 0.5,4.5
+      pos: -0.5,4.5
   - uid: 454
     components:
     - type: Transform
       parent: 1
-      pos: 2.5,2.5
+      pos: 0.5,4.5
   - uid: 455
     components:
     - type: Transform
       parent: 1
-      pos: 2.5,4.5
+      pos: 2.5,2.5
   - uid: 456
     components:
     - type: Transform
       parent: 1
-      pos: 2.5,5.5
+      pos: 2.5,4.5
   - uid: 457
     components:
     - type: Transform
       parent: 1
-      pos: 4.5,2.5
+      pos: 2.5,5.5
   - uid: 458
     components:
     - type: Transform
       parent: 1
-      pos: 5.5,5.5
+      pos: 4.5,2.5
   - uid: 459
     components:
     - type: Transform
       parent: 1
-      pos: 4.5,5.5
+      pos: 5.5,5.5
   - uid: 460
     components:
     - type: Transform
       parent: 1
-      pos: 3.5,2.5
+      pos: 4.5,5.5
   - uid: 461
     components:
     - type: Transform
       parent: 1
-      pos: -1.5,2.5
+      pos: 3.5,2.5
   - uid: 462
     components:
     - type: Transform
       parent: 1
-      pos: 2.5,11.5
+      pos: -1.5,2.5
   - uid: 463
     components:
     - type: Transform
       parent: 1
-      pos: -1.5,11.5
+      pos: 2.5,11.5
   - uid: 464
     components:
     - type: Transform
       parent: 1
-      pos: -1.5,6.5
+      pos: -1.5,11.5
   - uid: 465
     components:
     - type: Transform
       parent: 1
-      pos: -1.5,7.5
+      pos: -1.5,6.5
   - uid: 466
     components:
     - type: Transform
       parent: 1
-      pos: -2.5,2.5
+      pos: -1.5,7.5
   - uid: 467
     components:
     - type: Transform
       parent: 1
-      pos: -3.5,2.5
+      pos: -2.5,2.5
   - uid: 468
     components:
     - type: Transform
       parent: 1
-      pos: -4.5,2.5
+      pos: -3.5,2.5
   - uid: 469
     components:
     - type: Transform
       parent: 1
-      pos: -5.5,2.5
+      pos: -4.5,2.5
   - uid: 470
     components:
     - type: Transform
       parent: 1
-      pos: -5.5,3.5
+      pos: -5.5,2.5
   - uid: 471
     components:
     - type: Transform
       parent: 1
-      pos: -5.5,6.5
+      pos: -5.5,3.5
   - uid: 472
     components:
     - type: Transform
       parent: 1
-      pos: -5.5,5.5
+      pos: -5.5,6.5
   - uid: 473
     components:
     - type: Transform
       parent: 1
-      pos: -5.5,4.5
+      pos: -5.5,5.5
   - uid: 474
     components:
     - type: Transform
       parent: 1
-      pos: -5.5,7.5
+      pos: -5.5,4.5
   - uid: 475
     components:
     - type: Transform
       parent: 1
-      pos: -1.5,8.5
+      pos: -5.5,7.5
   - uid: 476
     components:
     - type: Transform
       parent: 1
-      pos: -2.5,8.5
+      pos: -1.5,8.5
   - uid: 477
     components:
     - type: Transform
       parent: 1
-      pos: -3.5,8.5
+      pos: -2.5,8.5
   - uid: 478
     components:
     - type: Transform
       parent: 1
-      pos: -4.5,8.5
+      pos: -3.5,8.5
   - uid: 479
     components:
     - type: Transform
       parent: 1
-      pos: -5.5,8.5
+      pos: -4.5,8.5
   - uid: 480
     components:
     - type: Transform
       parent: 1
-      pos: 2.5,6.5
+      pos: -5.5,8.5
   - uid: 481
     components:
     - type: Transform
       parent: 1
-      pos: 2.5,7.5
+      pos: 2.5,6.5
   - uid: 482
     components:
     - type: Transform
       parent: 1
-      pos: 2.5,8.5
+      pos: 2.5,7.5
   - uid: 483
     components:
     - type: Transform
       parent: 1
-      pos: 4.5,8.5
+      pos: 2.5,8.5
   - uid: 484
     components:
     - type: Transform
       parent: 1
-      pos: -0.5,8.5
+      pos: 4.5,8.5
   - uid: 485
     components:
     - type: Transform
       parent: 1
-      pos: -0.5,6.5
+      pos: -0.5,8.5
   - uid: 486
     components:
     - type: Transform
       parent: 1
-      pos: -0.5,5.5
+      pos: -0.5,6.5
   - uid: 487
     components:
     - type: Transform
       parent: 1
-      pos: 4.5,10.5
+      pos: -0.5,5.5
   - uid: 488
     components:
     - type: Transform
       parent: 1
-      pos: 4.5,9.5
+      pos: 4.5,10.5
   - uid: 489
     components:
     - type: Transform
       parent: 1
-      pos: 2.5,10.5
+      pos: 4.5,9.5
   - uid: 490
     components:
     - type: Transform
       parent: 1
-      pos: 5.5,2.5
+      pos: 2.5,10.5
   - uid: 491
     components:
     - type: Transform
       parent: 1
-      pos: 6.5,2.5
+      pos: 5.5,2.5
   - uid: 492
     components:
     - type: Transform
       parent: 1
-      pos: 6.5,5.5
+      pos: 6.5,2.5
   - uid: 493
     components:
     - type: Transform
       parent: 1
-      pos: 6.5,6.5
+      pos: 6.5,5.5
   - uid: 494
     components:
     - type: Transform
       parent: 1
-      pos: 6.5,7.5
+      pos: 6.5,6.5
   - uid: 495
     components:
     - type: Transform
       parent: 1
-      pos: 6.5,8.5
+      pos: 6.5,7.5
   - uid: 496
     components:
     - type: Transform
       parent: 1
-      pos: 5.5,8.5
+      pos: 6.5,8.5
   - uid: 497
     components:
     - type: Transform
       parent: 1
-      pos: -1.5,10.5
+      pos: 5.5,8.5
   - uid: 498
     components:
     - type: Transform
       parent: 1
-      pos: -2.5,10.5
+      pos: -1.5,10.5
   - uid: 499
     components:
     - type: Transform
       parent: 1
-      pos: -3.5,10.5
+      pos: -2.5,10.5
   - uid: 500
     components:
     - type: Transform
       parent: 1
-      pos: -3.5,9.5
+      pos: -3.5,10.5
   - uid: 501
     components:
     - type: Transform
       parent: 1
-      pos: -6.5,10.5
+      pos: -3.5,9.5
   - uid: 502
     components:
     - type: Transform
       parent: 1
-      pos: -6.5,9.5
+      pos: -6.5,10.5
   - uid: 503
     components:
     - type: Transform
       parent: 1
-      pos: -6.5,8.5
+      pos: -6.5,9.5
   - uid: 504
     components:
     - type: Transform
       parent: 1
-      pos: 7.5,10.5
+      pos: -6.5,8.5
   - uid: 505
     components:
     - type: Transform
       parent: 1
-      pos: 7.5,9.5
+      pos: 7.5,10.5
   - uid: 506
     components:
     - type: Transform
       parent: 1
-      pos: 7.5,8.5
+      pos: 7.5,9.5
   - uid: 507
     components:
     - type: Transform
       parent: 1
-      rot: 3.141592653589793 rad
-      pos: 5.5,0.5
+      pos: 7.5,8.5
   - uid: 508
     components:
     - type: Transform
       parent: 1
       rot: 3.141592653589793 rad
-      pos: 5.5,1.5
+      pos: 5.5,0.5
   - uid: 509
     components:
     - type: Transform
       parent: 1
       rot: 3.141592653589793 rad
-      pos: -4.5,0.5
+      pos: 5.5,1.5
   - uid: 510
     components:
     - type: Transform
       parent: 1
       rot: 3.141592653589793 rad
-      pos: -4.5,1.5
+      pos: -4.5,0.5
   - uid: 511
     components:
     - type: Transform
       parent: 1
-      rot: -1.5707963267948966 rad
-      pos: 10.5,7.5
+      rot: 3.141592653589793 rad
+      pos: -4.5,1.5
   - uid: 512
     components:
     - type: Transform
       parent: 1
       rot: -1.5707963267948966 rad
-      pos: 9.5,7.5
+      pos: 10.5,7.5
   - uid: 513
     components:
     - type: Transform
       parent: 1
       rot: -1.5707963267948966 rad
-      pos: 8.5,7.5
+      pos: 9.5,7.5
   - uid: 514
     components:
     - type: Transform
       parent: 1
       rot: -1.5707963267948966 rad
-      pos: 7.5,7.5
+      pos: 8.5,7.5
   - uid: 515
     components:
     - type: Transform
       parent: 1
       rot: -1.5707963267948966 rad
-      pos: -6.5,7.5
+      pos: 7.5,7.5
   - uid: 516
     components:
     - type: Transform
       parent: 1
       rot: -1.5707963267948966 rad
-      pos: -7.5,7.5
+      pos: -6.5,7.5
   - uid: 517
     components:
     - type: Transform
       parent: 1
       rot: -1.5707963267948966 rad
-      pos: -8.5,7.5
+      pos: -7.5,7.5
   - uid: 518
     components:
     - type: Transform
       parent: 1
       rot: -1.5707963267948966 rad
-      pos: -9.5,7.5
+      pos: -8.5,7.5
   - uid: 519
     components:
     - type: Transform
       parent: 1
-      rot: 1.5707963267948966 rad
-      pos: 9.5,5.5
+      rot: -1.5707963267948966 rad
+      pos: -9.5,7.5
   - uid: 520
     components:
     - type: Transform
       parent: 1
       rot: 1.5707963267948966 rad
-      pos: 9.5,6.5
+      pos: 9.5,5.5
   - uid: 521
     components:
     - type: Transform
       parent: 1
       rot: 1.5707963267948966 rad
-      pos: -8.5,5.5
+      pos: 9.5,6.5
   - uid: 522
     components:
     - type: Transform
       parent: 1
       rot: 1.5707963267948966 rad
-      pos: -8.5,6.5
+      pos: -8.5,5.5
   - uid: 523
+    components:
+    - type: Transform
+      parent: 1
+      rot: 1.5707963267948966 rad
+      pos: -8.5,6.5
+  - uid: 524
     components:
     - type: Transform
       parent: 1
       rot: 3.141592653589793 rad
       pos: -8.5,4.5
-  - uid: 524
-    components:
-    - type: Transform
-      parent: 1
-      rot: 1.5707963267948966 rad
-      pos: -7.5,4.5
   - uid: 525
     components:
     - type: Transform
       parent: 1
       rot: 1.5707963267948966 rad
-      pos: -6.5,4.5
+      pos: -7.5,4.5
   - uid: 526
     components:
     - type: Transform
       parent: 1
       rot: 1.5707963267948966 rad
-      pos: 8.5,4.5
+      pos: -6.5,4.5
   - uid: 527
     components:
     - type: Transform
       parent: 1
       rot: 1.5707963267948966 rad
-      pos: 7.5,4.5
+      pos: 8.5,4.5
   - uid: 528
+    components:
+    - type: Transform
+      parent: 1
+      rot: 1.5707963267948966 rad
+      pos: 7.5,4.5
+  - uid: 529
     components:
     - type: Transform
       parent: 1
       rot: 3.141592653589793 rad
       pos: 9.5,4.5
-  - uid: 529
-    components:
-    - type: Transform
-      parent: 1
-      pos: -6.5,3.5
   - uid: 530
     components:
     - type: Transform
       parent: 1
-      pos: 7.5,3.5
+      pos: -6.5,3.5
   - uid: 531
+    components:
+    - type: Transform
+      parent: 1
+      pos: 7.5,3.5
+  - uid: 532
     components:
     - type: Transform
       parent: 1
@@ -6455,95 +6467,95 @@ entities:
       pos: 0.5,8.5
 - proto: WallPlastitaniumDiagonal
   entities:
-  - uid: 532
+  - uid: 533
     components:
     - type: Transform
       parent: 1
       rot: 1.5707963267948966 rad
       pos: -1.5,-1.5
-  - uid: 533
+  - uid: 534
     components:
     - type: Transform
       parent: 1
       rot: 3.141592653589793 rad
       pos: 2.5,-1.5
-  - uid: 534
+  - uid: 535
     components:
     - type: Transform
       parent: 1
       rot: -1.5707963267948966 rad
       pos: 7.5,11.5
-  - uid: 535
-    components:
-    - type: Transform
-      parent: 1
-      pos: -6.5,11.5
   - uid: 536
     components:
     - type: Transform
       parent: 1
-      pos: 4.5,11.5
+      pos: -6.5,11.5
   - uid: 537
+    components:
+    - type: Transform
+      parent: 1
+      pos: 4.5,11.5
+  - uid: 538
     components:
     - type: Transform
       parent: 1
       rot: -1.5707963267948966 rad
       pos: -3.5,11.5
-  - uid: 538
+  - uid: 539
     components:
     - type: Transform
       parent: 1
       rot: 1.5707963267948966 rad
       pos: -4.5,-0.5
-  - uid: 539
+  - uid: 540
     components:
     - type: Transform
       parent: 1
       rot: 3.141592653589793 rad
       pos: 5.5,-0.5
-  - uid: 540
+  - uid: 541
     components:
     - type: Transform
       parent: 1
       rot: 1.5707963267948966 rad
       pos: -5.5,1.5
-  - uid: 541
+  - uid: 542
     components:
     - type: Transform
       parent: 1
       rot: 3.141592653589793 rad
       pos: 6.5,1.5
-  - uid: 542
+  - uid: 543
     components:
     - type: Transform
       parent: 1
       rot: 1.5707963267948966 rad
       pos: -10.5,7.5
-  - uid: 543
-    components:
-    - type: Transform
-      parent: 1
-      rot: 3.141592653589793 rad
-      pos: 11.5,7.5
   - uid: 544
     components:
     - type: Transform
       parent: 1
       rot: 3.141592653589793 rad
-      pos: 10.5,4.5
+      pos: 11.5,7.5
   - uid: 545
     components:
     - type: Transform
       parent: 1
-      rot: 1.5707963267948966 rad
-      pos: -9.5,4.5
+      rot: 3.141592653589793 rad
+      pos: 10.5,4.5
   - uid: 546
     components:
     - type: Transform
       parent: 1
       rot: 1.5707963267948966 rad
-      pos: -6.5,2.5
+      pos: -9.5,4.5
   - uid: 547
+    components:
+    - type: Transform
+      parent: 1
+      rot: 1.5707963267948966 rad
+      pos: -6.5,2.5
+  - uid: 548
     components:
     - type: Transform
       parent: 1
@@ -6551,7 +6563,7 @@ entities:
       pos: 7.5,2.5
 - proto: WarpPoint
   entities:
-  - uid: 548
+  - uid: 549
     components:
     - type: Transform
       parent: 1
@@ -6561,13 +6573,13 @@ entities:
       location: UBM Excelsior
 - proto: WeaponTurretAC-35
   entities:
-  - uid: 549
+  - uid: 550
     components:
     - type: Transform
       parent: 1
       rot: 3.141592653589793 rad
       pos: -8.5,8.5
-  - uid: 550
+  - uid: 551
     components:
     - type: Transform
       parent: 1
@@ -6575,13 +6587,13 @@ entities:
       pos: 9.5,8.5
 - proto: WeaponTurretAdderScattercannon
   entities:
-  - uid: 551
+  - uid: 552
     components:
     - type: Transform
       parent: 1
       rot: 3.141592653589793 rad
       pos: 3.5,11.5
-  - uid: 552
+  - uid: 553
     components:
     - type: Transform
       parent: 1
@@ -6589,19 +6601,19 @@ entities:
       pos: -2.5,11.5
 - proto: WeaponTurretFlare
   entities:
-  - uid: 553
+  - uid: 554
     components:
     - type: Transform
       parent: 1
       pos: 8.5,3.5
-  - uid: 554
+  - uid: 555
     components:
     - type: Transform
       parent: 1
       pos: -7.5,3.5
 - proto: WindoorPlasma
   entities:
-  - uid: 555
+  - uid: 556
     components:
     - type: Transform
       parent: 1
