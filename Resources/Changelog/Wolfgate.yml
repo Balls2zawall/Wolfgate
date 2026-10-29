@@ -3983,3 +3983,12 @@ Entries:
   id: 100270
   time: '2026-10-28T22:33:33.0000000+00:00'
   url: https://github.com/VanguardControl/Wolfgate/pull/401
+- author: Balls2zawall
+  changes:
+    - type: Fix
+      message: Fixed the hammerhead's autoloader not being linked.
+    - type: Fix
+      message: fixed the hammerhead not having a manufacturer name in the shipyard.
+  id: 100271
+  time: '2026-10-29T02:16:08.0000000+00:00'
+  url: https://github.com/VanguardControl/Wolfgate/pull/405
