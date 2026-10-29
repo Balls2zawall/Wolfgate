@@ -4174,3 +4174,10 @@ Entries:
   id: 100278
   time: '2026-10-29T18:36:19.0000000+00:00'
   url: https://github.com/VanguardControl/Wolfgate/pull/410
+- author: Gandalf2k15
+  changes:
+    - type: Tweak
+      message: Fixed licence credits on a number of sprites and sounds.
+  id: 100279
+  time: '2026-10-29T22:55:54.0000000+00:00'
+  url: https://github.com/VanguardControl/Wolfgate/pull/413
