@@ -4007,3 +4007,32 @@ Entries:
   id: 100272
   time: '2026-10-29T05:35:50.0000000+00:00'
   url: https://github.com/VanguardControl/Wolfgate/pull/400
+- author: Gandalf2k15
+  changes:
+    - type: Fix
+      message: >-
+        Fires no longer stop burning for a moment when something burns to
+        pieces.
+    - type: Fix
+      message: >-
+        Pirate ships no longer spawn with their guns offline for the first few
+        seconds.
+    - type: Tweak
+      message: >-
+        Reduced server lag from pirate ship refits, gravity changes, space wind
+        and shuttle movement.
+    - type: Tweak
+      message: >-
+        Reduced lag from asteroid fields, mining and ore magnets. Far-off
+        asteroids still show on radar.
+    - type: Tweak
+      message: >-
+        Reduced lag from buying ships, drydock shipbreaking, ships landed on
+        planets and planet water.
+    - type: Tweak
+      message: >-
+        The client now buffers a little more network state by default, so server
+        hitches are smoother.
+  id: 100273
+  time: '2026-10-29T06:05:50.0000000+00:00'
+  url: https://github.com/VanguardControl/Wolfgate/pull/397
