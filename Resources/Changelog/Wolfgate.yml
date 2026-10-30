@@ -4256,3 +4256,10 @@ Entries:
   id: 100285
   time: '2026-10-30T19:50:49.0000000+00:00'
   url: https://github.com/VanguardControl/Wolfgate/pull/421
+- author: Gandalf2k15
+  changes:
+    - type: Tweak
+      message: The server should lag less during busy rounds.
+  id: 100286
+  time: '2026-10-30T20:20:48.0000000+00:00'
+  url: https://github.com/VanguardControl/Wolfgate/pull/420
