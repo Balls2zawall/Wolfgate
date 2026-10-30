@@ -4192,3 +4192,12 @@ Entries:
   id: 100280
   time: '2026-10-29T22:56:26.0000000+00:00'
   url: https://github.com/VanguardControl/Wolfgate/pull/415
+- author: Happyowl93
+  changes:
+    - type: Fix
+      message: >-
+        The drydock now rebuilds thrusters and guns that floated away after the
+        floor under them was destroyed.
+  id: 100281
+  time: '2026-10-30T00:02:43.0000000+00:00'
+  url: https://github.com/VanguardControl/Wolfgate/pull/416
