@@ -4263,3 +4263,14 @@ Entries:
   id: 100286
   time: '2026-10-30T20:20:48.0000000+00:00'
   url: https://github.com/VanguardControl/Wolfgate/pull/420
+- author: Balls2zawall
+  changes:
+    - type: Tweak
+      message: Updated the Ample's mining pulsers to prospecting lasers
+    - type: Tweak
+      message: >-
+        Lengthened the MClass mining shuttle carrier by 2 tiles, so it can now
+        hold 2 Antlions if so desired
+  id: 100287
+  time: '2026-10-30T20:20:56.0000000+00:00'
+  url: https://github.com/VanguardControl/Wolfgate/pull/423
