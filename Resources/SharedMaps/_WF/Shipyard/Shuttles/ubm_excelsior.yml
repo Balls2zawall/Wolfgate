@@ -463,7 +463,7 @@ entities:
     - type: IFF
       flags: IsPlayerShuttle
       color: '#FFFFFFFF'
-      address: ' 1DEB-EB44'
+      address: ' 294A-5434'
     - type: StationMember
       station: 557
     - type: NavMap
