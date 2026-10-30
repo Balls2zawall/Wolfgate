@@ -4236,3 +4236,10 @@ Entries:
   id: 100283
   time: '2026-10-30T00:42:21.0000000+00:00'
   url: https://github.com/VanguardControl/Wolfgate/pull/417
+- author: Balls2zawall
+  changes:
+    - type: Fix
+      message: Fixed the distro and docking port on the UBM Excelsior
+  id: 100284
+  time: '2026-10-30T00:56:57.0000000+00:00'
+  url: https://github.com/VanguardControl/Wolfgate/pull/418
