@@ -5609,3 +5609,12 @@ Entries:
   id: 100348
   time: '2026-11-04T22:50:27.0000000+00:00'
   url: https://github.com/VanguardControl/Wolfgate/pull/494
+- author: Happyowl93
+  changes:
+    - type: Add
+      message: >-
+        Added the retro arcade, a cabinet that plays your own Neo Geo and CPS2
+        MAME ROMs, alone or with a second player.
+  id: 100349
+  time: '2026-11-04T22:55:58.0000000+00:00'
+  url: https://github.com/VanguardControl/Wolfgate/pull/490
