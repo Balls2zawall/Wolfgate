@@ -92,3 +92,10 @@ wf-remade-scrawl-27 = JOIN THE SONG JOIN THE SONG JOIN THE SONG
 wf-remade-scrawl-28 = THE STONE WAKES
 wf-remade-scrawl-29 = NOTHING LEAVES
 wf-remade-scrawl-30 = CRESCENDO
+
+wf-remade-torment-name = Torment
+wf-remade-torment-description = They see and hear everything a Crescendo stone does to a crewman beside it, wherever they are. Nobody else does.
+wf-remade-torment-end-name = End torment
+wf-remade-torment-end-description = Lifts the torment.
+wf-remade-lockdown-smite-name = Biohazard lockdown
+wf-remade-lockdown-smite-description = Bolts the powered doors within 9 m of them for a minute and sounds the biohazard alarm. For other lengths, use wf_remade lockdown.

@@ -20,9 +20,12 @@ using Robust.Shared.Player;
 namespace Content.Server._WF.Remade.Limbs;
 
 /// <summary>Raised on a mob when one of its limbs comes off.</summary>
-public sealed class WFRemadeLimbSeveredEvent(string limb) : EntityEventArgs
+public sealed class WFRemadeLimbSeveredEvent(string limb, EntityUid? item = null) : EntityEventArgs
 {
     public readonly string Limb = limb;
+
+    /// <summary>The severed limb left on the floor, if it left one.</summary>
+    public readonly EntityUid? Item = item;
 }
 
 /// <summary>
@@ -173,14 +176,18 @@ public sealed partial class WFRemadeLimbsSystem : SharedWFRemadeLimbsSystem
         var name = string.IsNullOrEmpty(limb.Name.Id) ? limb.Id : Loc.GetString(limb.Name.Id);
         var coordinates = _transform.GetMoverCoordinates(ent);
 
-        if (limb.Lying != null)
+        EntityUid? dropped = null;
+        if ((limb.Dropped ?? limb.Lying) is { } droppedState)
         {
             var item = Spawn(comp.Item, coordinates.Offset(new Vector2(_random.NextFloat(-0.4f, 0.4f), _random.NextFloat(-0.4f, 0.4f))));
             var severed = EnsureComp<WFSeveredLimbComponent>(item);
             severed.Rsi = comp.Rsi;
-            severed.State = limb.Lying;
+            severed.State = droppedState;
+            severed.Source = ent;
+            severed.Limb = limb.Id;
             Dirty(item, severed);
             _metaData.SetEntityName(item, Loc.GetString("wf-remade-limb-severed-name", ("limb", name)));
+            dropped = item;
         }
 
         if (comp.Blood > 0f)
@@ -194,7 +201,7 @@ public sealed partial class WFRemadeLimbsSystem : SharedWFRemadeLimbsSystem
 
         _movement.RefreshMovementSpeedModifiers(ent);
         RefreshVision(ent);
-        RaiseLocalEvent(ent, new WFRemadeLimbSeveredEvent(limb.Id));
+        RaiseLocalEvent(ent, new WFRemadeLimbSeveredEvent(limb.Id, dropped));
 
         if (limb.Loss > 0f && _proto.TryIndex(comp.LossType, out var lossType))
         {

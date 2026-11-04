@@ -152,10 +152,12 @@ public sealed class WFRemadeSliceTest
         var server = pair.Server;
         var map = await pair.CreateTestMap();
         var entMan = server.EntMan;
+        EntityUid limb = default;
 
         await server.WaitPost(() =>
         {
             var remade = entMan.SpawnEntity("WFRemadeSlasher", map.GridCoords);
+            limb = entMan.SpawnEntity("WFRemadeSeveredLimb", map.GridCoords);
             entMan.System<WFRemadeDirectorSystem>().Enlist(remade, null);
             entMan.System<Content.Server.Body.Systems.BodySystem>().GibBody(remade, gibOrgans: true);
         });
@@ -165,6 +167,7 @@ public sealed class WFRemadeSliceTest
         {
             Assert.That(entMan.EntityQuery<Content.Shared.Body.Organ.OrganComponent>().Any(), Is.False, "a gibbed Remade spilled organs.");
             Assert.That(entMan.EntityQuery<Content.Shared.Body.Part.BodyPartComponent>().Any(), Is.False, "a gibbed Remade spilled body parts.");
+            Assert.That(entMan.Deleted(limb) || entMan.IsQueuedForDeletion(limb), Is.False, "a severed limb on the floor went with the gib.");
         });
         await pair.CleanReturnAsync();
     }

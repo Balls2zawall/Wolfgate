@@ -1,6 +1,7 @@
 using Content.Server._WF.Remade.Conversion;
 using Content.Server._WF.Remade.Counterplay;
 using Content.Server._WF.Remade.Director;
+using Content.Server._WF.Remade.Torment;
 using Content.Server._WF.Remade.Monolith;
 using Content.Shared._WF.Remade;
 using Content.Shared._WF.Remade.Betrayal;
@@ -213,6 +214,12 @@ public sealed partial class WFBetrayalScoreSystem : EntitySystem
                     layers = count;
                     gain = reach;
                 }
+            }
+
+            if (HasComp<WFTormentedComponent>(uid))
+            {
+                layers = WFBetrayalMath.ScoreLayers(WFMonolithMath.MaxResonance);
+                gain = 1f;
             }
 
             // Only what changes is worth a packet, but a playing score needs renewing before its hold runs out.

@@ -814,6 +814,106 @@
       hitSound:
         path: /Audio/Weapons/slash.ogg
 
+# Mender: the hunter's body, bleached. It doesn't grow limbs back; down with three off, it drags the severed ones back onto
+# itself with tentacles and gets up once whole. Burn a limb, blow it apart, or carry it out of reach and it stays down.
+
+- type: entity
+  parent: WFRemadeHunter
+  id: WFRemadeMender
+  components:
+  - type: Sprite
+    drawdepth: Mobs
+    sprite: _WF/Remade/Mobs/mender.rsi
+    noRot: true
+    offset: 0,0.5
+    layers:
+    - map: [ "l_leg" ]
+      state: hunter_l_leg
+    - map: [ "r_leg" ]
+      state: hunter_r_leg
+    - map: [ "chest" ]
+      state: hunter_chest
+    - map: [ "l_arm" ]
+      state: hunter_l_arm
+    - map: [ "r_arm" ]
+      state: hunter_r_arm
+    - map: [ "head" ]
+      state: hunter_head
+    - map: [ "eyes" ]
+      state: eyes
+      shader: unshaded
+    - map: [ "dead" ]
+      state: full
+      rotation: 90
+      offset: 0,-0.3
+      visible: false
+  # Heals as it walks, but grows nothing back: what comes off has to be dragged back on.
+  - type: WFRegen
+    healPerSecond: 2
+    heatFactor: 0.33
+    limbInterval: 100000
+  - type: WFRises
+    riseDelay: 15
+    burnKill: 0.5
+    collapseSevered: 3
+    riseHealth: 0.6
+    regrow: 0
+    burnDown: 100
+    riseSound:
+      collection: WFRemadeUndyingRegen
+  - type: WFReclaim
+  - type: WFRemadeLimbs
+    rsi: _WF/Remade/Mobs/mender.rsi
+    floors: { Melee: 0.2, Speed: 0.2, Sight: 0.4 }
+    limbs:
+    - id: l_leg
+      name: wf-remade-limb-leg-left
+      health: 60
+      weight: 1.5
+      loss: 20
+      zones: [ LeftLeg, LeftFoot ]
+      provides: { Speed: 0.5 }
+      dropped: l_leg_lying
+    - id: r_leg
+      name: wf-remade-limb-leg-right
+      health: 60
+      weight: 1.5
+      loss: 20
+      zones: [ RightLeg, RightFoot ]
+      provides: { Speed: 0.5 }
+      dropped: r_leg_lying
+    - id: chest
+      health: 250
+      weight: 3
+      scale: 0.5
+      severable: false
+      zones: [ Torso, Groin ]
+    - id: l_arm
+      name: wf-remade-limb-blade-left
+      health: 50
+      weight: 1.5
+      loss: 16
+      zones: [ LeftArm, LeftHand ]
+      provides: { Melee: 0.5 }
+      dropped: l_arm_lying
+    - id: r_arm
+      name: wf-remade-limb-blade-right
+      health: 50
+      weight: 1.5
+      loss: 16
+      zones: [ RightArm, RightHand ]
+      provides: { Melee: 0.5 }
+      dropped: r_arm_lying
+    - id: head
+      name: wf-remade-limb-head
+      layers: [ head, eyes ]
+      health: 60
+      weight: 1
+      loss: 35
+      zones: [ Head ]
+      provides: { Voice: 1, Sight: 1 }
+      dropped: head_lying
+
 # Divider and its parts
 
 - type: entity
@@ -1706,6 +1806,14 @@
   cost: 400
   minStage: Rapture
   spawnWeight: 0.8
+  maxAlive: 1
+
+- type: wfRemadeMob
+  id: WFRemadeMender
+  entity: WFRemadeMender
+  cost: 420
+  minStage: Rapture
+  spawnWeight: 0.5
   maxAlive: 1
 
 - type: wfRemadeMob

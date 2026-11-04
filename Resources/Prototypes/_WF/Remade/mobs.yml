@@ -125,6 +125,40 @@
     size: Large
   - type: TimedDespawn
     lifetime: 600
+  # Burn a severed limb to ash, or blow it apart: a mender can't take back what is gone.
+  - type: Damageable
+    damageContainer: Biological
+  - type: Flammable
+    fireSpread: true
+    alwaysCombustible: true
+    canExtinguish: true
+    damage:
+      types:
+        Heat: 4
+  - type: Appearance
+  - type: FireVisuals
+    sprite: Effects/fire.rsi
+    normalState: fire
+  - type: Destructible
+    thresholds:
+    - trigger:
+        !type:DamageTypeTrigger
+        damageType: Heat
+        damage: 20
+      behaviors:
+      - !type:SpawnEntitiesBehavior
+        spawn:
+          Ash:
+            min: 1
+            max: 1
+      - !type:DoActsBehavior
+        acts: [ "Destruction" ]
+    - trigger:
+        !type:DamageTrigger
+        damage: 80
+      behaviors:
+      - !type:DoActsBehavior
+        acts: [ "Destruction" ]
 
 - type: entity
   parent: WFRemadeBase

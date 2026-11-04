@@ -3,6 +3,7 @@ using System.Numerics;
 using Content.Server._WF.Remade.Conversion;
 using Content.Server._WF.Remade.Corruption;
 using Content.Server._WF.Remade.Director;
+using Content.Server._WF.Remade.Torment;
 using Content.Server._WF.Remade.Gifts;
 using Content.Server._WF.Remade.Monolith;
 using Content.Server.Chat.Managers;
@@ -188,6 +189,18 @@ public sealed partial class WFDreadSystem : EntitySystem
                     distance = away;
                     sameMap = same;
                 }
+            }
+
+            // An admin's torment: the whole Crescendo, wherever they are.
+            if (HasComp<WFTormentedComponent>(uid))
+            {
+                influence = 1f;
+                heard = 1f;
+                stage = WFMonolithStage.Crescendo;
+                distance = 0f;
+                sameMap = true;
+                shardInfluence = 0f;
+                stress = Math.Max(stress, WFTormentedComponent.Stress);
             }
 
             var subject = EnsureComp<WFDreadSubjectComponent>(uid);

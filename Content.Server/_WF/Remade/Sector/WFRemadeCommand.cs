@@ -6,6 +6,7 @@ using Content.Server._WF.Remade.Monolith;
 using Content.Shared._WF.Remade;
 using Content.Shared._WF.Remade.Sector;
 using Content.Shared.Administration;
+using Robust.Server.Player;
 using Robust.Shared.Console;
 using Robust.Shared.Map;
 using Robust.Shared.Prototypes;
@@ -23,11 +24,13 @@ public sealed partial class WFRemadeCommand : LocalizedEntityCommands
     [Dependency] private WFRemadeClearSystem _clear = default!;
     [Dependency] private WFRemadeDirectorSystem _director = default!;
     [Dependency] private IGameTiming _timing = default!;
+    [Dependency] private IPlayerManager _players = default!;
 
     /// <summary>How far from the admin a site placed with "here" lies, in metres.</summary>
     private const float HereOffset = 400f;
 
-    private static readonly string[] Subcommands = { "spawn", "resonance", "status", "clear", "outbreak" };
+    private static readonly string[] Subcommands = { "spawn", "resonance", "status", "clear", "outbreak", "lockdown" };
+    private const float LockdownDefaultSeconds = 60f;
 
     public override string Command => "wf_remade";
 
@@ -50,6 +53,9 @@ public sealed partial class WFRemadeCommand : LocalizedEntityCommands
             case "outbreak" when args.Length is 1 or 2:
                 Outbreak(shell, args);
                 break;
+            case "lockdown" when args.Length is >= 2 and <= 4:
+                Lockdown(shell, args);
+                break;
             default:
                 shell.WriteLine(Help);
                 break;
@@ -68,6 +74,9 @@ public sealed partial class WFRemadeCommand : LocalizedEntityCommands
             2 when args[0] == "resonance" => CompletionResult.FromHint(Loc.GetString("cmd-wf_remade-hint-value")),
             3 when args[0] == "resonance" => CompletionResult.FromHint(Loc.GetString("cmd-wf_remade-hint-scion")),
             2 when args[0] == "outbreak" => CompletionResult.FromHint(Loc.GetString("cmd-wf_remade-hint-scion")),
+            2 when args[0] == "lockdown" => CompletionResult.FromHintOptions(CompletionHelper.SessionNames(players: _players), Loc.GetString("cmd-wf_remade-hint-target")),
+            3 when args[0] == "lockdown" => CompletionResult.FromHint(Loc.GetString("cmd-wf_remade-hint-seconds")),
+            4 when args[0] == "lockdown" => CompletionResult.FromHint(Loc.GetString("cmd-wf_remade-hint-range")),
             _ => CompletionResult.Empty,
         };
     }
@@ -115,6 +124,35 @@ public sealed partial class WFRemadeCommand : LocalizedEntityCommands
         }
 
         shell.WriteLine(Loc.GetString("cmd-wf_remade-spawned", ("site", site.ID), ("encounter", EntityManager.GetNetEntity(encounter).ToString())));
+    }
+
+    /// <summary>lockdown target [seconds] [range]: bolts the powered doors round a player or entity and sounds the biohazard alarm.</summary>
+    private void Lockdown(IConsoleShell shell, string[] args)
+    {
+        EntityUid? target = null;
+        if (NetEntity.TryParse(args[1], out var net) && EntityManager.TryGetEntity(net, out var parsed))
+            target = parsed;
+        else if (_players.TryGetSessionByUsername(args[1], out var session))
+            target = session.AttachedEntity;
+
+        if (target is not { } uid || EntityManager.Deleted(uid))
+        {
+            shell.WriteError(Loc.GetString("cmd-wf_remade-no-target", ("target", args[1])));
+            return;
+        }
+
+        var seconds = LockdownDefaultSeconds;
+        var range = WFRemadeDirectorSystem.LockdownRange;
+        if (args.Length >= 3 && (!float.TryParse(args[2], NumberStyles.Float, CultureInfo.InvariantCulture, out seconds) || seconds <= 0f)
+            || args.Length >= 4 && (!float.TryParse(args[3], NumberStyles.Float, CultureInfo.InvariantCulture, out range) || range <= 0f))
+        {
+            shell.WriteError(Loc.GetString("cmd-wf_remade-bad-lockdown"));
+            return;
+        }
+
+        var bolted = _director.Lockdown(uid, seconds, range);
+        shell.WriteLine(Loc.GetString(bolted > 0 ? "cmd-wf_remade-locked-down" : "cmd-wf_remade-lockdown-none",
+            ("count", bolted), ("seconds", (int) seconds)));
     }
 
     /// <summary>outbreak [scion]: breaks out on another crewed ship now, as a stone at the Crescendo does.</summary>

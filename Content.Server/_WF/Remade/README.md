@@ -169,6 +169,17 @@ near the focus (from Harvest, sometimes with a Remade behind it), scraping that 
 someone is watching, and lights stuttering before each wave. Each stage climb plays a sting to every player in the round, at most one
 per 45 s; the stings are mixed by `Tools/_WF/Remade/make_stage_stings.py` from a tgstation checkout.
 
+The mender (`WFRemadeMender`, `WFReclaimSystem`, `mender.rsi` from `Tools/_WF/Remade/make_mender.py`) is a bleached hunter that
+grows nothing back. Its limbs fly a few metres when they come off, and with three off it goes down. After 3 s thin tentacles
+(`WFReclaimTentacleOverlay`, client) reach out to every severed limb within 6 m and drag it back at about a metre a second; each knits
+back on, and once whole it gets up. A limb burnt to ash or blown apart, or held or carried out of reach for 8 s, leaves it down for
+good, as does burning the body while it lies there. Severed limbs of any Remade now burn. It is a rare Rapture elite, one at a time.
+
+The torment smite (`Torment/`) is an admin toggle under Smite on any mob: the player gets every whisper, glimpse, voice, warp, false
+sense, mind trick, the bed and the full score as if a Crescendo stone stood beside them, wherever they are, and nobody else does.
+Biohazard lockdown, beside it under Smite or `wf_remade lockdown <player or uid> [seconds] [range]`, bolts the powered doors round them
+(9 m, a minute by default) under the biohazard alarm, the Director's lockdown with no stone needed.
+
 Outbreaks, splinters and clearing (`Outbreaks/`, `splinter.yml`, `Sector/WFRemadeClearSystem.cs`). A stone at the Crescendo breaks
 out on another crewed ship every two to three and a half minutes: two or three hoppers and slashers come out of an unseen vent near
 someone aboard, and a shard of the stone roots there, so the dead aboard turn too. It all goes with the stone. `WFMonolithSplinter`
@@ -277,6 +288,8 @@ does on its own. `wf_remade outbreak [uid]` forces an outbreak.
 - [`Content.Server/_WF/Remade/Elites/WFFlingOnHitComponent.cs`](Elites/WFFlingOnHitComponent.cs)
 - [`Content.Server/_WF/Remade/Elites/WFReanimateHasteComponent.cs`](Elites/WFReanimateHasteComponent.cs)
 - [`Content.Server/_WF/Remade/Elites/WFReanimateHasteSystem.cs`](Elites/WFReanimateHasteSystem.cs)
+- [`Content.Server/_WF/Remade/Elites/WFReclaimComponent.cs`](Elites/WFReclaimComponent.cs)
+- [`Content.Server/_WF/Remade/Elites/WFReclaimSystem.cs`](Elites/WFReclaimSystem.cs)
 - [`Content.Server/_WF/Remade/Elites/WFRegenComponent.cs`](Elites/WFRegenComponent.cs)
 - [`Content.Server/_WF/Remade/Elites/WFRegenSystem.cs`](Elites/WFRegenSystem.cs)
 - [`Content.Server/_WF/Remade/Elites/WFRemadeLimbsSystem.Regrow.cs`](Elites/WFRemadeLimbsSystem.Regrow.cs)
@@ -341,6 +354,8 @@ does on its own. `wf_remade outbreak [uid]` forces an outbreak.
 - [`Content.Server/_WF/Remade/Structures/WFMawSystem.cs`](Structures/WFMawSystem.cs)
 - [`Content.Server/_WF/Remade/Structures/WFNestSystem.cs`](Structures/WFNestSystem.cs)
 - [`Content.Server/_WF/Remade/Structures/WFSnareSystem.cs`](Structures/WFSnareSystem.cs)
+- [`Content.Server/_WF/Remade/Torment/WFTormentedComponent.cs`](Torment/WFTormentedComponent.cs)
+- [`Content.Server/_WF/Remade/Torment/WFTormentSystem.cs`](Torment/WFTormentSystem.cs)
 - [`Content.Server/_WF/Remade/Variants/WFStuckBreakerComponent.cs`](Variants/WFStuckBreakerComponent.cs)
 - [`Content.Server/_WF/Remade/Variants/WFStuckBreakerSystem.cs`](Variants/WFStuckBreakerSystem.cs)
 - [`Content.Server/_WF/Remade/Vents/WFAbilitySystem.Ambush.cs`](Vents/WFAbilitySystem.Ambush.cs)
@@ -392,6 +407,8 @@ does on its own. `wf_remade outbreak [uid]` forces an outbreak.
 - [`Content.Client/_WF/Remade/Dread/WFDreadOverlay.cs`](../../../Content.Client/_WF/Remade/Dread/WFDreadOverlay.cs)
 - [`Content.Client/_WF/Remade/Dread/WFDreadVisionSystem.cs`](../../../Content.Client/_WF/Remade/Dread/WFDreadVisionSystem.cs)
 - [`Content.Client/_WF/Remade/Dread/WFRemadeClearSystem.cs`](../../../Content.Client/_WF/Remade/Dread/WFRemadeClearSystem.cs)
+- [`Content.Client/_WF/Remade/Limbs/WFReclaimTentacleOverlay.cs`](../../../Content.Client/_WF/Remade/Limbs/WFReclaimTentacleOverlay.cs)
+- [`Content.Client/_WF/Remade/Limbs/WFReclaimTentacleSystem.cs`](../../../Content.Client/_WF/Remade/Limbs/WFReclaimTentacleSystem.cs)
 - [`Content.Client/_WF/Remade/Limbs/WFRemadeLimbVisualizerSystem.cs`](../../../Content.Client/_WF/Remade/Limbs/WFRemadeLimbVisualizerSystem.cs)
 - [`Content.Client/_WF/Remade/Signals/WFSignalHud.cs`](../../../Content.Client/_WF/Remade/Signals/WFSignalHud.cs)
 - [`Content.Client/_WF/Remade/Signals/WFSignalOverlay.cs`](../../../Content.Client/_WF/Remade/Signals/WFSignalOverlay.cs)
@@ -418,6 +435,7 @@ does on its own. `wf_remade outbreak [uid]` forces an outbreak.
 - [`Content.IntegrationTests/Tests/_WF/Remade/EnvironmentTest.cs`](../../../Content.IntegrationTests/Tests/_WF/Remade/EnvironmentTest.cs)
 - [`Content.IntegrationTests/Tests/_WF/Remade/GiftsTest.cs`](../../../Content.IntegrationTests/Tests/_WF/Remade/GiftsTest.cs)
 - [`Content.IntegrationTests/Tests/_WF/Remade/LimbsTest.cs`](../../../Content.IntegrationTests/Tests/_WF/Remade/LimbsTest.cs)
+- [`Content.IntegrationTests/Tests/_WF/Remade/MenderTest.cs`](../../../Content.IntegrationTests/Tests/_WF/Remade/MenderTest.cs)
 - [`Content.IntegrationTests/Tests/_WF/Remade/OmensTest.cs`](../../../Content.IntegrationTests/Tests/_WF/Remade/OmensTest.cs)
 - [`Content.IntegrationTests/Tests/_WF/Remade/OpenItemsTest.cs`](../../../Content.IntegrationTests/Tests/_WF/Remade/OpenItemsTest.cs)
 - [`Content.IntegrationTests/Tests/_WF/Remade/OutbreakTest.cs`](../../../Content.IntegrationTests/Tests/_WF/Remade/OutbreakTest.cs)
@@ -425,6 +443,7 @@ does on its own. `wf_remade outbreak [uid]` forces an outbreak.
 - [`Content.IntegrationTests/Tests/_WF/Remade/SectorTest.cs`](../../../Content.IntegrationTests/Tests/_WF/Remade/SectorTest.cs)
 - [`Content.IntegrationTests/Tests/_WF/Remade/SignalsTest.cs`](../../../Content.IntegrationTests/Tests/_WF/Remade/SignalsTest.cs)
 - [`Content.IntegrationTests/Tests/_WF/Remade/StructuresTest.cs`](../../../Content.IntegrationTests/Tests/_WF/Remade/StructuresTest.cs)
+- [`Content.IntegrationTests/Tests/_WF/Remade/TormentTest.cs`](../../../Content.IntegrationTests/Tests/_WF/Remade/TormentTest.cs)
 - [`Content.IntegrationTests/Tests/_WF/Remade/VariantsTest.cs`](../../../Content.IntegrationTests/Tests/_WF/Remade/VariantsTest.cs)
 - [`Content.IntegrationTests/Tests/_WF/Remade/WardTest.cs`](../../../Content.IntegrationTests/Tests/_WF/Remade/WardTest.cs)
 - [`Content.IntegrationTests/Tests/_WF/Remade/WFRemadeDirectorTest.cs`](../../../Content.IntegrationTests/Tests/_WF/Remade/WFRemadeDirectorTest.cs)
@@ -506,6 +525,7 @@ does on its own. `wf_remade outbreak [uid]` forces an outbreak.
 - [`Resources/Textures/_WF/Remade/Mobs/leaper_enhanced.rsi/`](../../../Resources/Textures/_WF/Remade/Mobs/leaper_enhanced.rsi/)
 - [`Resources/Textures/_WF/Remade/Mobs/lurker.rsi/`](../../../Resources/Textures/_WF/Remade/Mobs/lurker.rsi/)
 - [`Resources/Textures/_WF/Remade/Mobs/lurker_malo.rsi/`](../../../Resources/Textures/_WF/Remade/Mobs/lurker_malo.rsi/)
+- [`Resources/Textures/_WF/Remade/Mobs/mender.rsi/`](../../../Resources/Textures/_WF/Remade/Mobs/mender.rsi/)
 - [`Resources/Textures/_WF/Remade/Mobs/puker.rsi/`](../../../Resources/Textures/_WF/Remade/Mobs/puker.rsi/)
 - [`Resources/Textures/_WF/Remade/Mobs/puker_flayed.rsi/`](../../../Resources/Textures/_WF/Remade/Mobs/puker_flayed.rsi/)
 - [`Resources/Textures/_WF/Remade/Mobs/slasher.rsi/`](../../../Resources/Textures/_WF/Remade/Mobs/slasher.rsi/)
@@ -1132,6 +1152,7 @@ does on its own. `wf_remade outbreak [uid]` forces an outbreak.
 
 ### Tools
 
+- [`Tools/_WF/Remade/make_mender.py`](../../../Tools/_WF/Remade/make_mender.py)
 - [`Tools/_WF/Remade/make_stage_stings.py`](../../../Tools/_WF/Remade/make_stage_stings.py)
 - [`Tools/_WF/Remade/port_assets.py`](../../../Tools/_WF/Remade/port_assets.py)
 - [`Tools/_WF/Remade/port_betrayal.py`](../../../Tools/_WF/Remade/port_betrayal.py)

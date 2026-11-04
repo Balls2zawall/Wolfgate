@@ -109,7 +109,17 @@ public sealed class OutbreakTest
             monoliths.NextSting = TimeSpan.FromHours(10);
             stings = monoliths.StingsPlayed;
             splinter = entMan.SpawnEntity("WFMonolithSplinter", At(map, 0, 0));
-            entMan.GetComponent<WFRemadeDirectorComponent>(splinter).BuildUp = false;
+
+            // Its Director plans nothing, so no Remade comes for the crewman this test watches.
+            var director = entMan.GetComponent<WFRemadeDirectorComponent>(splinter);
+            var far = server.ResolveDependency<IGameTiming>().CurTime + TimeSpan.FromHours(1);
+            director.BuildUp = false;
+            director.PhaseEnd = far;
+            director.NextAmbush = far;
+            director.NextStalker = far;
+            director.NextCloset = far;
+            director.NextDread = far;
+            director.NextBuild = far;
             entMan.GetComponent<WFMonolithComponent>(splinter).Resonance = 78f;
         });
 
@@ -132,6 +142,7 @@ public sealed class OutbreakTest
         await server.WaitAssertion(() =>
         {
             var subject = entMan.GetComponent<WFDreadSubjectComponent>(crewman);
+            Assert.That(entMan.System<Content.Shared.Mobs.Systems.MobStateSystem>().IsAlive(crewman), Is.True, "the crewman died, so the sweep skipped them.");
             var xform = entMan.GetComponent<TransformComponent>(crewman);
             Assert.That(subject.Level, Is.Zero, $"the splinter's dread reached another ship: crewman on {xform.GridUid} at "
                 + $"{entMan.System<SharedTransformSystem>().GetWorldPosition(crewman)}, splinter on {entMan.GetComponent<TransformComponent>(splinter).GridUid}, ship {ship.Owner}.");

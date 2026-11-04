@@ -85,6 +85,10 @@ public sealed partial class WFRemadeLimb
     [DataField]
     public string? Lying;
 
+    /// <summary>The sprite state of the severed limb only, when the dead mob draws from one whole sprite. Defaults to <see cref="Lying"/>.</summary>
+    [DataField]
+    public string? Dropped;
+
     /// <summary>The sprite state of the limb growing back while the mob stands. None means nothing shows.</summary>
     [DataField]
     public string? Regen;
@@ -185,4 +189,20 @@ public sealed partial class WFSeveredLimbComponent : Component
 
     [DataField, AutoNetworkedField]
     public string State = string.Empty;
+
+    /// <summary>The mob it came off. Server only.</summary>
+    [ViewVariables]
+    public EntityUid? Source;
+
+    /// <summary>Which of its limbs this is. Server only.</summary>
+    [ViewVariables]
+    public string Limb = string.Empty;
+}
+
+/// <summary>A severed limb a mender has a tentacle on, being dragged back to it. The client draws the tentacle.</summary>
+[RegisterComponent, NetworkedComponent, AutoGenerateComponentState]
+public sealed partial class WFReclaimTentacleComponent : Component
+{
+    [AutoNetworkedField]
+    public EntityUid Puller;
 }

@@ -42,9 +42,10 @@ public sealed partial class WFRemadeDirectorSystem
     private const float DreadRange = 9f;
     private const float BlowoutRange = 12f;
     private const float MeddleRange = 10f;
-    private const float LockdownRange = 9f;
+    public const float LockdownRange = 9f;
     private const float ScrawlSpacing = 2f;
     private const float LockdownSeconds = 40f;
+    private static readonly SoundSpecifier DefaultAlarm = new SoundPathSpecifier("/Audio/_WF/Remade/monolith/alarm.ogg");
     private const float LockdownCooldown = 300f;
     private const string ScrawlProto = "WFRemadeScrawl";
     private const string RuneProto = "WFRemadeRune";
@@ -492,10 +493,16 @@ public sealed partial class WFRemadeDirectorSystem
     /// </summary>
     public int Lockdown(Entity<WFRemadeDirectorComponent> director, EntityUid around, float seconds)
     {
+        return Lockdown(around, seconds, LockdownRange, director.Comp.AlarmSound);
+    }
+
+    /// <summary>A lockdown with no stone behind it, as an admin calls one. Returns how many doors it bolted.</summary>
+    public int Lockdown(EntityUid around, float seconds, float range, SoundSpecifier? alarm = null)
+    {
         var now = _timing.CurTime;
         var bolted = 0;
         var doors = new HashSet<Entity<DoorBoltComponent>>();
-        _lookup.GetEntitiesInRange(Transform(around).Coordinates, LockdownRange, doors);
+        _lookup.GetEntitiesInRange(Transform(around).Coordinates, range, doors);
         foreach (var door in doors)
         {
             if (door.Comp.BoltsDown)
@@ -514,9 +521,9 @@ public sealed partial class WFRemadeDirectorSystem
         if (bolted == 0)
             return 0;
 
-        _alarm.Start(around, director.Comp.AlarmSound);
+        _alarm.Start(around, alarm ?? DefaultAlarm);
         var crew = new HashSet<Entity<ActorComponent>>();
-        _lookup.GetEntitiesInRange(Transform(around).Coordinates, LockdownRange + 4f, crew);
+        _lookup.GetEntitiesInRange(Transform(around).Coordinates, range + 4f, crew);
         foreach (var crewman in crew)
         {
             _popup.PopupEntity(Loc.GetString("wf-remade-lockdown"), crewman, crewman, PopupType.LargeCaution);

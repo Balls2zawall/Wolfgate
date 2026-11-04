@@ -79,3 +79,7 @@ public sealed partial class WFRisesComponent : Component
     [ViewVariables]
     public int Rises;
 }
+
+/// <summary>Raised on a downed mob when its time to rise comes. Cancel it to keep the mob down for now.</summary>
+[ByRefEvent]
+public record struct WFRiseAttemptEvent(bool Cancelled = false);

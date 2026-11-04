@@ -138,7 +138,12 @@ public sealed partial class WFRisesSystem : EntitySystem
                     _popup.PopupEntity(Loc.GetString("wf-remade-elite-held-down", ("mob", uid)), uid, PopupType.Medium);
             }
 
-            if (!held)
+            if (held)
+                continue;
+
+            var attempt = new WFRiseAttemptEvent();
+            RaiseLocalEvent(uid, ref attempt);
+            if (!attempt.Cancelled)
                 Rise((uid, comp), now);
         }
     }
@@ -197,6 +202,17 @@ public sealed partial class WFRisesSystem : EntitySystem
         // The Director forgets a Remade that dies, so count it again now it's back.
         if (TryComp<WFRemadeComponent>(ent, out var remade))
             _director.Enlist(ent, remade.Source);
+    }
+
+    /// <summary>Keeps a downed mob down for good, with a popup saying why.</summary>
+    public void EndForGood(Entity<WFRisesComponent> ent, string reason)
+    {
+        if (ent.Comp.Final)
+            return;
+
+        ent.Comp.Final = true;
+        ent.Comp.RiseAt = null;
+        _popup.PopupEntity(Loc.GetString(reason, ("mob", ent.Owner)), ent, PopupType.MediumCaution);
     }
 
     /// <summary>Whether the mob is down for now and will get back up: the Director should count it as alive.</summary>

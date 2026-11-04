@@ -1,5 +1,6 @@
 using Content.Server._WF.Remade.Conversion;
 using Content.Server._WF.Remade.Director;
+using Content.Server._WF.Remade.Torment;
 using Content.Server._WF.Remade.Monolith;
 using Content.Shared._WF.Remade;
 using Content.Shared._WF.Remade.Betrayal;
@@ -101,6 +102,13 @@ public sealed partial class WFBetrayalFearSystem : EntitySystem
                 }
             }
 
+            var tormented = HasComp<WFTormentedComponent>(uid);
+            if (tormented)
+            {
+                influence = 1f;
+                stage = WFMonolithStage.Crescendo;
+            }
+
             var subject = EnsureComp<WFBetrayalSubjectComponent>(uid);
             Drip(uid, subject, now);
             if (influence <= 0f)
@@ -110,6 +118,9 @@ public sealed partial class WFBetrayalFearSystem : EntitySystem
             }
 
             var stress = CompOrNull<WFRemadeStressComponent>(uid)?.Stress ?? 0f;
+            if (tormented)
+                stress = Math.Max(stress, WFTormentedComponent.Stress);
+
             Senses(uid, actor, subject, stage, influence, stress, influence * WFDreadMath.StressFactor(stress) * rate, now);
             Mind(uid, actor, subject, stage, influence, stress, rate, now);
         }

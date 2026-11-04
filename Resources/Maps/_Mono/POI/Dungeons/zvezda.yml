@@ -5,7 +5,7 @@ meta:
   forkId: ""
   forkVersion: ""
   time: 11/04/2026 21:47:45
-  entityCount: 11109
+  entityCount: 11110
 maps: []
 grids:
 - 1
@@ -29867,6 +29867,13 @@ entities:
       parent: 1
       rot: -1.5707963267948966 rad
       pos: 15.5,5.5
+- proto: WFVendingMachineTraderZvezda
+  entities:
+  - uid: 11110
+    components:
+    - type: Transform
+      parent: 1
+      pos: 45.5,-21.5
 - proto: filingCabinetDrawerRandom
   entities:
   - uid: 4760
