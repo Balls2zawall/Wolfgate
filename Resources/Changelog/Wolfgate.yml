@@ -6231,3 +6231,40 @@ Entries:
   id: 100382
   time: '2026-11-07T21:16:01.0000000+00:00'
   url: https://github.com/VanguardControl/Wolfgate/pull/533
+- author: Gandalf2k15
+  changes:
+    - type: Fix
+      message: MMC Corporate Liaisons can skip bounties on the Hokkaido cargo console.
+    - type: Fix
+      message: Log probes name the rider when a vehicle opens a door.
+    - type: Fix
+      message: Sign language no longer plays a speaking voice.
+    - type: Fix
+      message: Cryoxadone and other cryogenic chemicals now metabolise in Synths.
+    - type: Fix
+      message: Night vision turns off when the goggles or suit are removed.
+    - type: Fix
+      message: The character creator shows your account balance after an ATM deposit.
+    - type: Fix
+      message: >-
+        Loose crates, corpses and unbuckled crew on deck leave the planet with
+        the ship.
+    - type: Fix
+      message: >-
+        Bodies dragged into a vehicle are placed on the cabin floor, not outside
+        it.
+    - type: Fix
+      message: Drydock repairs clear crash-faulted APCs.
+    - type: Tweak
+      message: TSF contractors no longer get Federation Military Credits.
+    - type: Fix
+      message: Atmospheric technicians can now use air alarms.
+    - type: Fix
+      message: Vitae now works on the dead.
+    - type: Tweak
+      message: >-
+        Cargo adds less FTL spool time to big ships, and none within the free
+        allowance.
+  id: 100383
+  time: '2026-11-07T21:42:31.0000000+00:00'
+  url: https://github.com/VanguardControl/Wolfgate/pull/541
