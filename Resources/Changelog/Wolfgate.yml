@@ -6282,3 +6282,14 @@ Entries:
   id: 100384
   time: '2026-11-07T22:46:38.0000000+00:00'
   url: https://github.com/VanguardControl/Wolfgate/pull/537
+- author: Gandalf2k15
+  changes:
+    - type: Fix
+      message: Clearing the Remade now removes all of their corruption.
+    - type: Fix
+      message: >-
+        Fixed a rare crash when something touched the edge of a planet or
+        salvage area.
+  id: 100385
+  time: '2026-11-07T23:35:01.0000000+00:00'
+  url: https://github.com/VanguardControl/Wolfgate/pull/543
