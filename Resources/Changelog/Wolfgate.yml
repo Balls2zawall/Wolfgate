@@ -6205,3 +6205,22 @@ Entries:
   id: 100380
   time: '2026-11-07T17:31:58.0000000+00:00'
   url: https://github.com/VanguardControl/Wolfgate/pull/526
+- author: Gandalf2k15
+  changes:
+    - type: Tweak
+      message: >-
+        Your client now drops things it hasn't seen for a while instead of
+        keeping the whole sector loaded, so long sessions stay smooth.
+    - type: Tweak
+      message: >-
+        Planet terrain is only sent to players near the planet, so joining and
+        reconnecting are faster.
+    - type: Fix
+      message: >-
+        Moving on grids far from the sector's centre no longer jitters or drifts
+        off the grid's axis.
+    - type: Fix
+      message: A dropped music or download connection no longer disconnects you.
+  id: 100381
+  time: '2026-11-07T20:55:25.0000000+00:00'
+  url: https://github.com/VanguardControl/Wolfgate/pull/527
