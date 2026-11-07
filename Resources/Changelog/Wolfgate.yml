@@ -6268,3 +6268,17 @@ Entries:
   id: 100383
   time: '2026-11-07T21:42:31.0000000+00:00'
   url: https://github.com/VanguardControl/Wolfgate/pull/541
+- author: Balls2zawall
+  changes:
+    - type: Add
+      message: >-
+        Added a framework for adding non-modifiable bonus damage to melee
+        attacks
+    - type: Tweak
+      message: >-
+        After tweaking the design of the EVT-001 Sakimoto, MMC's R&D department
+        is happy to report users of the implant will notice a drastic increase
+        in damage capability.
+  id: 100384
+  time: '2026-11-07T22:46:38.0000000+00:00'
+  url: https://github.com/VanguardControl/Wolfgate/pull/537
