@@ -6317,3 +6317,20 @@ Entries:
   id: 100386
   time: '2026-11-07T23:35:35.0000000+00:00'
   url: https://github.com/VanguardControl/Wolfgate/pull/535
+- author: Gandalf2k15
+  changes:
+    - type: Fix
+      message: >-
+        The Coda's edge sits at 66 km in every direction; relay and station
+        anchors only anchor the space right round them.
+    - type: Tweak
+      message: >-
+        Anchored space now ends at 20 km, with Detune 20-34 km, Dissonance 34-50
+        km and Feedback 50-66 km, so PDV Helios sits in Detune.
+    - type: Tweak
+      message: >-
+        Scanners show the Coda as static wherever they look at it, and nothing
+        in it can be seen.
+  id: 100387
+  time: '2026-11-07T23:47:13.0000000+00:00'
+  url: https://github.com/VanguardControl/Wolfgate/pull/547
