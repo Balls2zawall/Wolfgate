@@ -6180,3 +6180,28 @@ Entries:
   id: 100379
   time: '2026-11-07T03:59:45.0000000+00:00'
   url: https://github.com/VanguardControl/Wolfgate/pull/531
+- author: DriftingSkies
+  changes:
+    - type: Add
+      message: >-
+        Added military clothing from RMC-14 for the TSF and PDV, with camouflage
+        patterns you can switch in round from the Pattern menu.
+    - type: Add
+      message: >-
+        Added ghillie suits and M68/V86 thermal cloaks that let you settle into
+        position and turn near invisible.
+    - type: Add
+      message: >-
+        Added TSFMC and Vanguard field outfitters to Halcyon and Helios
+        Fortress.
+    - type: Add
+      message: >-
+        TSF specialist armor is now available to the matching roles (Engineer,
+        Fireteam Leader, Corpsman, officers).
+    - type: Add
+      message: Added Ottoman chat ranks for the PDV, unlocked by playtime.
+    - type: Add
+      message: Added the PDV Jarrah, the Vanguard's field medic.
+  id: 100380
+  time: '2026-11-07T17:31:58.0000000+00:00'
+  url: https://github.com/VanguardControl/Wolfgate/pull/526
