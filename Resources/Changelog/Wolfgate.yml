@@ -6224,3 +6224,10 @@ Entries:
   id: 100381
   time: '2026-11-07T20:55:25.0000000+00:00'
   url: https://github.com/VanguardControl/Wolfgate/pull/527
+- author: Gandalf2k15
+  changes:
+    - type: Tweak
+      message: Coda Tweaks
+  id: 100382
+  time: '2026-11-07T21:16:01.0000000+00:00'
+  url: https://github.com/VanguardControl/Wolfgate/pull/533
