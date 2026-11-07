@@ -1,13 +1,17 @@
 using System.Numerics;
 using Content.Server._Mono.FireControl;
+using Content.Shared._Crescent.Hardpoints;
 using Content.Shared._Crescent.ShipShields;
+using Content.Shared.Construction.Components;
 using Content.Shared._WF.Announcements;
 using Content.Shared._WF.Lattice;
+using Content.Shared.Damage;
 using Content.Shared.Mobs;
 using Content.Shared.Mobs.Components;
 using Content.Shared.NPC;
 using Content.Shared.Weapons.Ranged.Components;
 using Content.Shared.Weapons.Ranged.Events;
+using Robust.Shared.Map.Components;
 using Robust.Shared.Physics.Components;
 using Robust.Shared.Player;
 
@@ -71,6 +75,78 @@ public sealed partial class WFLatticeSystem
         }
     }
 
+    /// <summary>
+    /// Something hit the station directly: it alerts the sector, calls its drones and turns its lances on the attacker at
+    /// once, shield or no shield. The attacker is the ship it hit from, or the person themselves if they are on foot.
+    /// </summary>
+    public void Provoke(EntityUid station, EntityUid? origin)
+    {
+        if (origin is not { } source
+            || Attacker(station, source) is not { } enemy
+            || !TryComp<WFLatticeAnchorStationComponent>(station, out var comp)
+            || !TryGetProfile(station, out var profile))
+            return;
+
+        var now = _timing.CurTime;
+        comp.Hostiles[enemy] = now + TimeSpan.FromSeconds(profile.HostileSeconds);
+        comp.ProvokedUntil = now + TimeSpan.FromSeconds(profile.HostileSeconds);
+        // Engaged either way, so the defence pass doesn't raise a second alarm while this one's cooldown runs.
+        var alarm = !comp.Engaged && now >= comp.NextAlert;
+        comp.Engaged = true;
+        if (alarm)
+        {
+            comp.NextAlert = now + TimeSpan.FromSeconds(profile.AlertCooldown);
+            Alert(station, comp, "wf-lattice-defence", enemy, true);
+        }
+
+        Defend(station, enemy);
+    }
+
+    /// <summary>What a station shoots back at for a hit from this source: a person on foot, or the grid it came from.</summary>
+    private EntityUid? Attacker(EntityUid station, EntityUid source)
+    {
+        if (!Exists(source))
+            return null;
+
+        var grid = Transform(source).GridUid;
+        EntityUid enemy;
+        if (grid is { } from && from != station && !HasComp<MapComponent>(from))
+            enemy = from;
+        else if (HasComp<MobStateComponent>(source))
+            enemy = source;
+        else
+            return null;
+
+        return HasComp<WFLatticeAnchorStationComponent>(enemy) ? null : enemy;
+    }
+
+    /// <summary>Every so often marks what can be damaged on each station, so builds and repairs are covered too.</summary>
+    private void MarkParts(TimeSpan now)
+    {
+        var stations = EntityQueryEnumerator<WFLatticeAnchorStationComponent, TransformComponent>();
+        while (stations.MoveNext(out _, out var comp, out var xform))
+        {
+            if (now < comp.NextMark)
+                continue;
+
+            comp.NextMark = now + TimeSpan.FromSeconds(30);
+            // Only what stands on the station itself, not the whole world.
+            var children = xform.ChildEnumerator;
+            while (children.MoveNext(out var uid))
+            {
+                if (HasComp<DamageableComponent>(uid)
+                    && !HasComp<WFLatticeAnchorComponent>(uid)
+                    && !HasComp<MobStateComponent>(uid))
+                    EnsureComp<WFLatticeStationPartComponent>(uid);
+
+                // The hardpoints and their lances can't be unbolted and carried off.
+                if (HasComp<AnchorableComponent>(uid)
+                    && (HasComp<HardpointComponent>(uid) || HasComp<WFLatticeDefenceWeaponComponent>(uid)))
+                    RemCompDeferred<AnchorableComponent>(uid);
+            }
+        }
+    }
+
     /// <summary>Announces something about a station to the sector.</summary>
     private void Alert(EntityUid station, WFLatticeAnchorStationComponent comp, string key, EntityUid? enemy, bool flash)
     {
@@ -111,6 +187,10 @@ public sealed partial class WFLatticeSystem
     /// <summary>Whether a ship still has anyone alive aboard to fight back: a player or an NPC crewman.</summary>
     private bool Crewed(EntityUid grid)
     {
+        // A person on foot is their own crew.
+        if (TryComp<MobStateComponent>(grid, out var self))
+            return self.CurrentState != MobState.Dead;
+
         var mobs = EntityQueryEnumerator<MobStateComponent, TransformComponent>();
         while (mobs.MoveNext(out var uid, out var state, out var xform))
         {
@@ -135,6 +215,7 @@ public sealed partial class WFLatticeSystem
 
         _defenceAccumulator = 0f;
         var now = _timing.CurTime;
+        MarkParts(now);
         var stations = EntityQueryEnumerator<WFLatticeAnchorStationComponent, TransformComponent>();
         while (stations.MoveNext(out var uid, out var comp, out var xform))
         {
@@ -160,8 +241,8 @@ public sealed partial class WFLatticeSystem
             if (comp.Hostiles.Count == 0 || !TryGetProfile(uid, out var profile))
                 continue;
 
-            // The shield holding means the station is not yet in danger: it waits.
-            if (!ShieldDown(uid))
+            // The shield holding means the station is not yet in danger, unless something struck it directly.
+            if (now >= comp.ProvokedUntil && !ShieldDown(uid))
             {
                 comp.Engaged = false;
                 continue;

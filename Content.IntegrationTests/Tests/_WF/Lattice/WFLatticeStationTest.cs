@@ -226,7 +226,7 @@ public sealed class WFLatticeStationTest
         var lattice = entities.System<WFLatticeSystem>();
         var transform = entities.System<SharedTransformSystem>();
 
-        EntityUid boarder = default;
+        var boarders = new System.Collections.Generic.List<EntityUid>();
         await server.WaitAssertion(() =>
         {
             lattice.Setup(map.MapUid);
@@ -238,17 +238,21 @@ public sealed class WFLatticeStationTest
                 .ToList();
             Assert.That(spires, Has.Count.EqualTo(4), "the anchor station should have its four spire turrets.");
 
-            var spire = transform.GetWorldPosition(spires[0]);
+            // One boarder by each spire, so a wall in one spire's way can't decide the test.
             var core = transform.GetWorldPosition(station.Core);
-            var at = spire + System.Numerics.Vector2.Normalize(core - spire) * 2.5f;
-            boarder = entities.SpawnEntity("MobHuman", new MapCoordinates(at, map.MapId));
+            foreach (var spireUid in spires)
+            {
+                var spire = transform.GetWorldPosition(spireUid);
+                var at = spire + System.Numerics.Vector2.Normalize(core - spire) * 2.5f;
+                boarders.Add(entities.SpawnEntity("MobHuman", new MapCoordinates(at, map.MapId)));
+            }
         });
 
         await pair.RunSeconds(8f);
         await server.WaitAssertion(() =>
         {
-            var hurt = entities.GetComponent<DamageableComponent>(boarder).TotalDamage;
-            Assert.That(hurt, Is.GreaterThan(FixedPoint2.Zero), "the spires let a boarder walk about unhurt.");
+            var hurt = boarders.Max(b => entities.GetComponent<DamageableComponent>(b).TotalDamage);
+            Assert.That(hurt, Is.GreaterThan(FixedPoint2.Zero), "the spires let every boarder walk about unhurt.");
         });
 
         await pair.CleanReturnAsync();
@@ -335,6 +339,61 @@ public sealed class WFLatticeStationTest
         await server.WaitAssertion(() =>
         {
             Assert.That(Bolts(entities), Is.Zero, "the lances kept firing at a dead ship.");
+        });
+
+        await pair.CleanReturnAsync();
+    }
+
+    /// <summary>A person on foot damaging anything on a station is answered at once, shield up or not.</summary>
+    [Test]
+    public async Task ADirectHitProvokesTheStation()
+    {
+        await using var pair = await PoolManager.GetServerClient();
+        var server = pair.Server;
+        var map = await pair.CreateTestMap();
+        var entities = server.ResolveDependency<IEntityManager>();
+        var lattice = entities.System<WFLatticeSystem>();
+        var transform = entities.System<SharedTransformSystem>();
+        var timing = server.ResolveDependency<Robust.Shared.Timing.IGameTiming>();
+
+        EntityUid station = default, vandal = default;
+        await server.WaitAssertion(() =>
+        {
+            lattice.Setup(map.MapUid);
+            station = entities.EntityQuery<WFLatticeAnchorStationComponent>().First().Owner;
+        });
+
+        await pair.RunSeconds(5f);
+        await server.WaitAssertion(() =>
+        {
+            Assert.That(lattice.ShieldDown(station), Is.False, "the station's shield never came up.");
+            var part = entities.EntityQuery<WFLatticeStationPartComponent>()
+                .Select(p => p.Owner)
+                .FirstOrDefault(uid => entities.GetComponent<TransformComponent>(uid).GridUid == station
+                                       && entities.GetComponent<MetaDataComponent>(uid).EntityPrototype?.ID.Contains("Wall") == true);
+            Assert.That(part, Is.Not.EqualTo(EntityUid.Invalid), "nothing on the station was marked.");
+            var loose = entities.EntityQuery<Content.Shared._Crescent.Hardpoints.HardpointComponent>()
+                .Count(h => entities.GetComponent<TransformComponent>(h.Owner).GridUid == station
+                            && entities.HasComponent<Content.Shared.Construction.Components.AnchorableComponent>(h.Owner));
+            Assert.That(loose, Is.Zero, "a station hardpoint can still be unwrenched.");
+
+            vandal = entities.SpawnEntity("MobHuman", new MapCoordinates(transform.GetWorldPosition(station) + new System.Numerics.Vector2(60f, 0f), map.MapId));
+            var damage = new Content.Shared.Damage.DamageSpecifier(
+                server.ResolveDependency<Robust.Shared.Prototypes.IPrototypeManager>().Index<Content.Shared.Damage.Prototypes.DamageTypePrototype>("Blunt"), 5);
+            entities.System<Content.Shared.Damage.DamageableSystem>().TryChangeDamage(part, damage, ignoreResistances: true, origin: vandal);
+            Assert.That(entities.GetComponent<Content.Shared.Damage.DamageableComponent>(part).TotalDamage > 0, Is.True, "the wall took no damage.");
+
+            var comp = entities.GetComponent<WFLatticeAnchorStationComponent>(station);
+            Assert.That(comp.Hostiles.ContainsKey(vandal), Is.True, "the station didn't take the person on foot as its attacker.");
+            Assert.That(comp.NextAlert, Is.GreaterThan(timing.CurTime), "one direct hit didn't raise the alarm.");
+        });
+
+        await pair.RunSeconds(3f);
+        await server.WaitAssertion(() =>
+        {
+            Assert.That(lattice.ShieldDown(station), Is.False);
+            Assert.That(Bolts(entities), Is.GreaterThan(0), "the lances didn't answer a direct hit while the shield held.");
+            entities.DeleteEntity(vandal);
         });
 
         await pair.CleanReturnAsync();
