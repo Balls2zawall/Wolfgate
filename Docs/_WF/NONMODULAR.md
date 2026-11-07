@@ -270,7 +270,7 @@ Standalone edits outside `_WF` that serve no module: files with an untagged `WOL
 - [`Content.Shared/_Mono/BlackFlash/BlackFlashComponent.cs`](../../Content.Shared/_Mono/BlackFlash/BlackFlashComponent.cs)
   - resolve the Black Flash damage specification type
   - document the armed action's flat damage bonus
-  - a flat 100 damage
+  - flat bonus added after melee modifiers, about 100 with a bare fist
 - [`Content.Shared/_Mono/BlackFlash/BlackFlashSystem.cs`](../../Content.Shared/_Mono/BlackFlash/BlackFlashSystem.cs): apply configured flat damage after melee modifiers
 - [`Content.Shared/_Mono/Economy/SharedCreditReceiverSystem.cs`](../../Content.Shared/_Mono/Economy/SharedCreditReceiverSystem.cs): _log was never assigned, so every log line in TryCashPayment threw a NullReferenceException
 - [`Content.Shared/_Mono/ShipGuns/ShipGunClassComponent.cs`](../../Content.Shared/_Mono/ShipGuns/ShipGunClassComponent.cs): restore the licence header removed by Kill Spdx

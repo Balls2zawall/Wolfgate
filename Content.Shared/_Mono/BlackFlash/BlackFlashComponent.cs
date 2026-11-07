@@ -28,17 +28,19 @@ public sealed partial class BlackFlashComponent : Component
     [DataField, AutoNetworkedField]
     public TimeSpan MissCooldown = TimeSpan.FromSeconds(10);
 
-// WOLFGATE START: a flat 100 damage for normal humans.
-
+    // WOLFGATE START: flat bonus added after melee modifiers, about 100 with a bare fist
+    /// <summary>
+    /// Damage the armed hit adds after melee modifier sets; armor still applies.
+    /// </summary>
     [DataField, AutoNetworkedField]
     public DamageSpecifier Damage = new()
     {
         DamageDict = new()
         {
-            { "Blunt", 95 }, // Larp is the reason! This heart still beats!!
+            { "Blunt", 95 },
         }
     };
-//WOLFGATE END
+    // WOLFGATE END
 
     [DataField, AutoNetworkedField]
     public float StaminaCost = 30f;
