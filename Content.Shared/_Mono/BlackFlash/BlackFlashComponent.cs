@@ -28,14 +28,14 @@ public sealed partial class BlackFlashComponent : Component
     [DataField, AutoNetworkedField]
     public TimeSpan MissCooldown = TimeSpan.FromSeconds(10);
 
-// WOLFGATE START: a flat 100 damage
+// WOLFGATE START: a flat 100 damage for normal humans.
 
     [DataField, AutoNetworkedField]
     public DamageSpecifier Damage = new()
     {
         DamageDict = new()
         {
-            { "Blunt", 95 },
+            { "Blunt", 95 }, // Larp is the reason! This heart still beats!!
         }
     };
 //WOLFGATE END
