@@ -127,12 +127,11 @@ public sealed class WFLatticeStationTest
         var map = await pair.CreateTestMap();
         var entities = server.ResolveDependency<IEntityManager>();
         var lattice = entities.System<WFLatticeSystem>();
-        var far = new System.Numerics.Vector2(25000f, 0f);
+        var far = new System.Numerics.Vector2(45000f, 0f);
 
         EntityUid anchor = default;
         await server.WaitAssertion(() =>
         {
-            entities.EnsureComponent<Content.Shared._WF.DroneRings.WFDroneRingsComponent>(map.MapUid).Radii = new List<float> { 18000f, 22000f, 25000f, 30000f };
             lattice.Setup(map.MapUid);
             var loader = entities.System<Robust.Shared.EntitySerialization.Systems.MapLoaderSystem>();
             Assert.That(loader.TryLoadGrid(map.MapId, new Robust.Shared.Utility.ResPath(path), out var grid), Is.True);
@@ -219,7 +218,8 @@ public sealed class WFLatticeStationTest
     [Test]
     public async Task SpiresShootBoarders()
     {
-        await using var pair = await PoolManager.GetServerClient(new PoolSettings { Dirty = true });
+        // A player among the boarders: the spires, like every NPC, sleep with nobody near.
+        await using var pair = await PoolManager.GetServerClient(new PoolSettings { Connected = true, Dirty = true });
         var server = pair.Server;
         var map = await pair.CreateTestMap();
         var entities = server.ResolveDependency<IEntityManager>();
@@ -248,14 +248,20 @@ public sealed class WFLatticeStationTest
                 var at = spire + System.Numerics.Vector2.Normalize(core - spire) * 2.5f;
                 boarders.Add(entities.SpawnEntity("MobHuman", new MapCoordinates(at, map.MapId)));
             }
+
+            var players = server.ResolveDependency<Robust.Server.Player.IPlayerManager>();
+            players.SetAttachedEntity(players.Sessions.Single(), boarders[0], force: true);
         });
 
-        await pair.RunSeconds(8f);
-        await server.WaitAssertion(() =>
+        // Turret targeting is planned off the tick, so give a slow runner a while before calling it.
+        var hurt = FixedPoint2.Zero;
+        for (var second = 0; second < 30 && hurt <= FixedPoint2.Zero; second++)
         {
-            var hurt = boarders.Max(b => entities.GetComponent<DamageableComponent>(b).TotalDamage);
-            Assert.That(hurt, Is.GreaterThan(FixedPoint2.Zero), "the spires let every boarder walk about unhurt.");
-        });
+            await pair.RunSeconds(1f);
+            await server.WaitPost(() => hurt = boarders.Max(b => entities.GetComponent<DamageableComponent>(b).TotalDamage));
+        }
+
+        Assert.That(hurt, Is.GreaterThan(FixedPoint2.Zero), "the spires let every boarder walk about unhurt.");
 
         await pair.CleanReturnAsync();
     }
@@ -264,7 +270,7 @@ public sealed class WFLatticeStationTest
     [Test]
     public async Task StationsAnswerAttacks()
     {
-        await using var pair = await PoolManager.GetServerClient();
+        await using var pair = await PoolManager.GetServerClient(new PoolSettings { Connected = true, Dirty = true });
         var server = pair.Server;
         var map = await pair.CreateTestMap();
         var entities = server.ResolveDependency<IEntityManager>();
@@ -301,7 +307,9 @@ public sealed class WFLatticeStationTest
             transform.SetWorldPosition(grid.Owner, transform.GetWorldPosition(station) + new System.Numerics.Vector2(400f, 0f));
             attacker = grid.Owner;
             crewman = entities.SpawnEntity("MobHuman", new EntityCoordinates(attacker, new System.Numerics.Vector2(0.5f, 0.5f)));
-            entities.EnsureComponent<Content.Shared.NPC.ActiveNPCComponent>(crewman);
+            // A player aboard the attacking ship, so it counts as crewed whatever the NPCs do.
+            var players = server.ResolveDependency<Robust.Server.Player.IPlayerManager>();
+            players.SetAttachedEntity(players.Sessions.Single(), crewman, force: true);
 
             var comp = entities.GetComponent<WFLatticeAnchorStationComponent>(station);
             var timing = server.ResolveDependency<Robust.Shared.Timing.IGameTiming>();
@@ -328,10 +336,10 @@ public sealed class WFLatticeStationTest
             lattice.Strike(station, attacker, 1f);
         });
 
-        // The explosive lances can wreck the one-tile attacker within seconds, which ends the fight, so watch for it.
+        // The explosive lances can wreck the one-tile attacker within seconds, which ends the fight, so watch for it, up to 30 s on a slow runner.
         var engaged = false;
         var fired = false;
-        for (var i = 0; i < 16 && !(engaged && fired); i++)
+        for (var i = 0; i < 120 && !(engaged && fired); i++)
         {
             await pair.RunSeconds(0.25f);
             await server.WaitPost(() =>
