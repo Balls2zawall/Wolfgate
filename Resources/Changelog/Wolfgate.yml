@@ -6403,3 +6403,23 @@ Entries:
   id: 100395
   time: '2026-11-08T07:26:14.0000000+00:00'
   url: https://github.com/VanguardControl/Wolfgate/pull/560
+- author: Gandalf2k15
+  changes:
+    - type: Add
+      message: More Coda Stuff
+    - type: Add
+      message: >-
+        Faction command can buy a tactical nuclear device at their station's
+        ordnance terminal, delivered by drop beacon with its own arming key.
+        Every purchase is announced.
+    - type: Tweak
+      message: >-
+        Arming a nuclear warhead sends DEFCON to 1 until it goes off or is
+        disarmed.
+    - type: Tweak
+      message: >-
+        Buying a nuclear device raises DEFCON sharply and holds it at 3 or worse
+        until it is used.
+  id: 100396
+  time: '2026-11-08T07:47:33.0000000+00:00'
+  url: https://github.com/VanguardControl/Wolfgate/pull/553
