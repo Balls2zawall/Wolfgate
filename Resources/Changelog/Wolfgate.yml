@@ -6341,3 +6341,12 @@ Entries:
   id: 100388
   time: '2026-11-08T01:55:41.0000000+00:00'
   url: https://github.com/VanguardControl/Wolfgate/pull/549
+- author: Balls2zawall
+  changes:
+    - type: Tweak
+      message: >-
+        Added more lights to Caelestinus Central, and did some other minor edits
+        to it as well
+  id: 100389
+  time: '2026-11-08T03:29:27.0000000+00:00'
+  url: https://github.com/VanguardControl/Wolfgate/pull/548
