@@ -6360,3 +6360,10 @@ Entries:
   id: 100390
   time: '2026-11-08T04:04:02.0000000+00:00'
   url: https://github.com/VanguardControl/Wolfgate/pull/554
+- author: Gandalf2k15
+  changes:
+    - type: Fix
+      message: The rules window on first join no longer shows a parser error.
+  id: 100391
+  time: '2026-11-08T04:29:54.0000000+00:00'
+  url: https://github.com/VanguardControl/Wolfgate/pull/558
