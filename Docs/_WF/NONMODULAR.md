@@ -100,6 +100,7 @@ Standalone edits outside `_WF` that serve no module: files with an untagged `WOL
 - [`Content.Packaging/ClientPackaging.cs`](../../Content.Packaging/ClientPackaging.cs): ship the licence texts and legal notes in the client zip
 - [`Content.Server/_Crescent/ShipShields/ShipShieldsSystem.Commands.cs`](../../Content.Server/_Crescent/ShipShields/ShipShieldsSystem.Commands.cs): restore the licence header removed by Kill Spdx
 - [`Content.Server/_Crescent/ShipShields/ShipShieldsSystem.Emitter.cs`](../../Content.Server/_Crescent/ShipShields/ShipShieldsSystem.Emitter.cs): restore the licence header removed by Kill Spdx
+- [`Content.Server/_ES/TileFires/ESTileFireSystem.cs`](../../Content.Server/_ES/TileFires/ESTileFireSystem.cs): a grid deleted mid-explosion has no transform left to fire
 - [`Content.Server/_FarHorizons/Power/Generation/FissionGenerator/NuclearCentrifugeComponent.cs`](../../Content.Server/_FarHorizons/Power/Generation/FissionGenerator/NuclearCentrifugeComponent.cs): relabelled MIT as in HardLight b602e8d485
 - [`Content.Server/_FarHorizons/Power/Generation/FissionGenerator/NuclearCentrifugeSystem.cs`](../../Content.Server/_FarHorizons/Power/Generation/FissionGenerator/NuclearCentrifugeSystem.cs): relabelled MIT as in HardLight b602e8d485
 - [`Content.Server/_Goobstation/Atmos/EntitySystems/GasCanisterSignalSystem.cs`](../../Content.Server/_Goobstation/Atmos/EntitySystems/GasCanisterSignalSystem.cs): restore the licence header removed by Kill Spdx
@@ -184,7 +185,9 @@ Standalone edits outside `_WF` that serve no module: files with an untagged `WOL
 - [`Content.Server/Kitchen/EntitySystems/MicrowaveSystem.cs`](../../Content.Server/Kitchen/EntitySystems/MicrowaveSystem.cs)
   - microwaves leave emags in hand
   - an emag is used on a machine, so it stays in hand instead of going in with the food
-- [`Content.Server/Lightning/LightningSystem.cs`](../../Content.Server/Lightning/LightningSystem.cs): restore the licence header removed by Kill Spdx
+- [`Content.Server/Lightning/LightningSystem.cs`](../../Content.Server/Lightning/LightningSystem.cs)
+  - restore the licence header removed by Kill Spdx
+  - call the private overload; the public one recursed forever
 - [`Content.Server/Mind/MindSystem.cs`](../../Content.Server/Mind/MindSystem.cs): a session whose data is already gone (a client torn down mid-delete) failed the asserts with a KeyNotFoundException
 - [`Content.Server/Mining/MiningSystem.cs`](../../Content.Server/Mining/MiningSystem.cs): restore the licence header removed by Kill Spdx
 - [`Content.Server/Movement/Systems/LagCompensationSystem.cs`](../../Content.Server/Movement/Systems/LagCompensationSystem.cs): restore the licence header removed by Kill Spdx
