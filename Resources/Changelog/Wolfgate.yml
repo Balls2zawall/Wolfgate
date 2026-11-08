@@ -6387,3 +6387,10 @@ Entries:
   id: 100393
   time: '2026-11-08T04:35:27.0000000+00:00'
   url: https://github.com/VanguardControl/Wolfgate/pull/555
+- author: TheSlapper
+  changes:
+    - type: Add
+      message: Photographer trait. Keep your precious memories forever.
+  id: 100394
+  time: '2026-11-08T04:53:15.0000000+00:00'
+  url: https://github.com/VanguardControl/Wolfgate/pull/550
