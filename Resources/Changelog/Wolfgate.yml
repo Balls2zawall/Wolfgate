@@ -6374,3 +6374,16 @@ Entries:
   id: 100392
   time: '2026-11-08T04:30:12.0000000+00:00'
   url: https://github.com/VanguardControl/Wolfgate/pull/556
+- author: Balls2zawall
+  changes:
+    - type: Tweak
+      message: >-
+        Marked the TSF Contractor area on Flagship Halcyon as unsafe for those
+        not affiliated with the TSF.
+    - type: Add
+      message: Gives fire extinguishers to Flagship Halcyon.
+    - type: Fix
+      message: Removed duplicated map entities on Flagship Halcyon.
+  id: 100393
+  time: '2026-11-08T04:35:27.0000000+00:00'
+  url: https://github.com/VanguardControl/Wolfgate/pull/555
