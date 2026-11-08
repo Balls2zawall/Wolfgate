@@ -6520,3 +6520,22 @@ Entries:
   id: 100401
   time: '2026-11-08T10:20:23.0000000+00:00'
   url: https://github.com/VanguardControl/Wolfgate/pull/562
+- author: Gandalf2k15
+  changes:
+    - type: Tweak
+      message: >-
+        Reaver and ADS sector alerts only show a banner for major events; the
+        rest go out on the radio or not at all.
+    - type: Tweak
+      message: Faction space entry and exit notices come less often.
+    - type: Tweak
+      message: >-
+        Lattice stations only sound the alarm when hit directly, and alert less
+        often.
+    - type: Tweak
+      message: >-
+        Wandering traders call in on the radio instead of a sector-wide
+        announcement.
+  id: 100402
+  time: '2026-11-08T10:27:16.0000000+00:00'
+  url: https://github.com/VanguardControl/Wolfgate/pull/563
