@@ -117,7 +117,9 @@ With the admin API token (`Authorization: SS14Token <admin.api_token>`). Refusal
 ## Non-modular edits
 
 - [`Content.Client/Info/LinkBanner.cs`](../../../Content.Client/Info/LinkBanner.cs): census list in the lobby footer, with the count yet to answer
-- [`Content.Client/Options/UI/EscapeMenu.xaml`](../../../Content.Client/Options/UI/EscapeMenu.xaml): census list with the count yet to answer; the census xmlns above is for it
+- [`Content.Client/Options/UI/EscapeMenu.xaml`](../../../Content.Client/Options/UI/EscapeMenu.xaml)
+  - census namespace for the Census button
+  - census list with the count yet to answer
 - [`Content.Client/UserInterface/Systems/EscapeMenu/EscapeUIController.cs`](../../../Content.Client/UserInterface/Systems/EscapeMenu/EscapeUIController.cs): census list in the game menu
 - [`Content.Server.Database/Model.cs`](../../../Content.Server.Database/Model.cs)
   - censuses from the SSymphony panel and the answers to them
