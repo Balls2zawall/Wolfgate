@@ -6513,3 +6513,10 @@ Entries:
   id: 100400
   time: '2026-11-08T09:34:03.0000000+00:00'
   url: https://github.com/VanguardControl/Wolfgate/pull/561
+- author: Gandalf2k15
+  changes:
+    - type: Add
+      message: Better placement for wolfgate UI elements
+  id: 100401
+  time: '2026-11-08T10:20:23.0000000+00:00'
+  url: https://github.com/VanguardControl/Wolfgate/pull/562
