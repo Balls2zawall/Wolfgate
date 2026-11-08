@@ -6350,3 +6350,13 @@ Entries:
   id: 100389
   time: '2026-11-08T03:29:27.0000000+00:00'
   url: https://github.com/VanguardControl/Wolfgate/pull/548
+- author: Gandalf2k15
+  changes:
+    - type: Add
+      message: >-
+        Added the boombox, a portable speaker that plays songs and YouTube
+        playlists out loud for everyone nearby. Buy it from John Wolfgate or the
+        AutoTune vendor, or take one as a loadout item.
+  id: 100390
+  time: '2026-11-08T04:04:02.0000000+00:00'
+  url: https://github.com/VanguardControl/Wolfgate/pull/554
