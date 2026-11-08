@@ -6430,3 +6430,12 @@ Entries:
   id: 100397
   time: '2026-11-08T07:54:15.0000000+00:00'
   url: https://github.com/VanguardControl/Wolfgate/pull/542
+- author: Gandalf2k15
+  changes:
+    - type: Add
+      message: >-
+        Mapping mode's key 0 is now Tools: bolt, weld, lock, open panels and
+        open doors with one click, all undoable.
+  id: 100398
+  time: '2026-11-08T08:14:35.0000000+00:00'
+  url: https://github.com/VanguardControl/Wolfgate/pull/557
