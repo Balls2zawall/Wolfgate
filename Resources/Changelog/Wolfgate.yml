@@ -6394,3 +6394,12 @@ Entries:
   id: 100394
   time: '2026-11-08T04:53:15.0000000+00:00'
   url: https://github.com/VanguardControl/Wolfgate/pull/550
+- author: Gandalf2k15
+  changes:
+    - type: Tweak
+      message: >-
+        Company fleet licences cost much less: 35 times the ship's price,
+        minimum 2,000,000.
+  id: 100395
+  time: '2026-11-08T07:26:14.0000000+00:00'
+  url: https://github.com/VanguardControl/Wolfgate/pull/560
