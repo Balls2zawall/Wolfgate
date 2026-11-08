@@ -106,6 +106,10 @@ With the admin API token (`Authorization: SS14Token <admin.api_token>`). Refusal
 - [`Content.Client/_WF/Census/CensusWindow.xaml`](../../../Content.Client/_WF/Census/CensusWindow.xaml)
 - [`Content.Client/_WF/Census/CensusWindow.xaml.cs`](../../../Content.Client/_WF/Census/CensusWindow.xaml.cs)
 
+### Integration tests
+
+- [`Content.IntegrationTests/Tests/_WF/Census/CensusTest.cs`](../../../Content.IntegrationTests/Tests/_WF/Census/CensusTest.cs)
+
 ### Localization
 
 - [`Resources/Locale/en-US/_WF/Census/census.ftl`](../../../Resources/Locale/en-US/_WF/Census/census.ftl)

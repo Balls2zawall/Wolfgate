@@ -62,21 +62,13 @@ public sealed class CensusSystem : EntitySystem
     public override void Update(float frameTime)
     {
         base.Update(frameTime);
-        if (_reloading)
+        if (_reloading || _timing.RealTime < _nextCloseCheck)
             return;
 
-        if (!_loaded)
-        {
-            _ = ReloadAsync();
-            return;
-        }
-
-        if (_timing.RealTime < _nextCloseCheck)
-            return;
-
+        // Also retries a first read that failed.
         _nextCloseCheck = _timing.RealTime + CloseCheckInterval;
         var now = DateTime.UtcNow;
-        if (_open.Any(c => c.ClosesAt <= now))
+        if (!_loaded || _open.Any(c => c.ClosesAt <= now))
             _ = ReloadAsync();
     }
 
@@ -198,8 +190,6 @@ public sealed class CensusSystem : EntitySystem
         catch (Exception e)
         {
             Log.Error($"Could not read the open censuses: {e}");
-            // Tried again at the next close check rather than every tick.
-            _loaded = true;
         }
         finally
         {
