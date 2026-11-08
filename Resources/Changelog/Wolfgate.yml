@@ -6423,3 +6423,10 @@ Entries:
   id: 100396
   time: '2026-11-08T07:47:33.0000000+00:00'
   url: https://github.com/VanguardControl/Wolfgate/pull/553
+- author: lpeapnni
+  changes:
+    - type: Add
+      message: Added basic formatting to player speech and emotes
+  id: 100397
+  time: '2026-11-08T07:54:15.0000000+00:00'
+  url: https://github.com/VanguardControl/Wolfgate/pull/542
