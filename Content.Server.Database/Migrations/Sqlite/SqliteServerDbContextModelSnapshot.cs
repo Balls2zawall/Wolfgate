@@ -1714,6 +1714,105 @@ namespace Content.Server.Database.Migrations.Sqlite
                     b.ToTable("whitelist", (string)null);
                 });
 
+            modelBuilder.Entity("Content.Server.Database.WolfgateCensus", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasColumnName("wolfgate_census_id");
+
+                    b.Property<bool>("Anonymous")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasDefaultValue(false)
+                        .HasColumnName("anonymous");
+
+                    b.Property<DateTime?>("ClosedAt")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("closed_at");
+
+                    b.Property<DateTime?>("ClosesAt")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("closes_at");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("created_at");
+
+                    b.Property<string>("CreatedBy")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT")
+                        .HasDefaultValue("")
+                        .HasColumnName("created_by");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT")
+                        .HasDefaultValue("")
+                        .HasColumnName("description");
+
+                    b.Property<DateTime?>("OpenedAt")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("opened_at");
+
+                    b.Property<string>("Questions")
+                        .IsRequired()
+                        .HasColumnType("TEXT")
+                        .HasColumnName("questions");
+
+                    b.Property<string>("State")
+                        .IsRequired()
+                        .HasColumnType("TEXT")
+                        .HasColumnName("state");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasColumnType("TEXT")
+                        .HasColumnName("title");
+
+                    b.HasKey("Id")
+                        .HasName("PK_wolfgate_census");
+
+                    b.ToTable("wolfgate_census", (string)null);
+                });
+
+            modelBuilder.Entity("Content.Server.Database.WolfgateCensusResponse", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasColumnName("wolfgate_census_response_id");
+
+                    b.Property<string>("Answers")
+                        .IsRequired()
+                        .HasColumnType("TEXT")
+                        .HasColumnName("answers");
+
+                    b.Property<int>("CensusId")
+                        .HasColumnType("INTEGER")
+                        .HasColumnName("census_id");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("created_at");
+
+                    b.Property<Guid>("PlayerUserId")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("player_user_id");
+
+                    b.HasKey("Id")
+                        .HasName("PK_wolfgate_census_response");
+
+                    b.HasIndex("CensusId");
+
+                    b.HasIndex("CensusId", "PlayerUserId")
+                        .IsUnique();
+
+                    b.ToTable("wolfgate_census_response", (string)null);
+                });
+
             modelBuilder.Entity("Content.Server.Database.WolfgateCompany", b =>
                 {
                     b.Property<int>("Id")
@@ -3078,6 +3177,18 @@ namespace Content.Server.Database.Migrations.Sqlite
                     b.Navigation("Box");
                 });
 
+            modelBuilder.Entity("Content.Server.Database.WolfgateCensusResponse", b =>
+                {
+                    b.HasOne("Content.Server.Database.WolfgateCensus", "Census")
+                        .WithMany("Responses")
+                        .HasForeignKey("CensusId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("FK_wolfgate_census_response_wolfgate_census_census_id");
+
+                    b.Navigation("Census");
+                });
+
             modelBuilder.Entity("Content.Server.Database.WolfgateCompanyApplication", b =>
                 {
                     b.HasOne("Content.Server.Database.WolfgateCompany", "Company")
@@ -3326,6 +3437,11 @@ namespace Content.Server.Database.Migrations.Sqlite
             modelBuilder.Entity("Content.Server.Database.WayfarerSafetyDepositBox", b =>
                 {
                     b.Navigation("Items");
+                });
+
+            modelBuilder.Entity("Content.Server.Database.WolfgateCensus", b =>
+                {
+                    b.Navigation("Responses");
                 });
 
             modelBuilder.Entity("Content.Server.Database.WolfgateCompany", b =>

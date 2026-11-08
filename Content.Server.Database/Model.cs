@@ -71,6 +71,10 @@ namespace Content.Server.Database
         public DbSet<WolfgateContractStanding> WolfgateContractStanding { get; set; } = null!; // WOLFGATE(Contracts): standing with contractors
         public DbSet<WolfgatePhoto> WolfgatePhoto { get; set; } = null!; // WOLFGATE(Photography): photo images by hash
         public DbSet<WolfgatePhotoAlbum> WolfgatePhotoAlbum { get; set; } = null!; // WOLFGATE(Photography): albums
+        // WOLFGATE(Census) START: censuses from the SSymphony panel and the answers to them
+        public DbSet<WolfgateCensus> WolfgateCensus { get; set; } = null!;
+        public DbSet<WolfgateCensusResponse> WolfgateCensusResponse { get; set; } = null!;
+        // WOLFGATE END
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -575,6 +579,33 @@ namespace Content.Server.Database
 
             modelBuilder.Entity<WolfgatePhotoAlbum>()
                 .HasIndex(a => a.ProfileId);
+            // WOLFGATE END
+
+            // WOLFGATE(Census) START: one answer per player and census, gone with the census
+            modelBuilder.Entity<WolfgateCensus>()
+                .Property(c => c.Description)
+                .HasDefaultValue("");
+
+            modelBuilder.Entity<WolfgateCensus>()
+                .Property(c => c.CreatedBy)
+                .HasDefaultValue("");
+
+            modelBuilder.Entity<WolfgateCensus>()
+                .Property(c => c.Anonymous)
+                .HasDefaultValue(false);
+
+            modelBuilder.Entity<WolfgateCensusResponse>()
+                .HasOne(r => r.Census)
+                .WithMany(c => c.Responses)
+                .HasForeignKey(r => r.CensusId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<WolfgateCensusResponse>()
+                .HasIndex(r => new { r.CensusId, r.PlayerUserId })
+                .IsUnique();
+
+            modelBuilder.Entity<WolfgateCensusResponse>()
+                .HasIndex(r => r.CensusId);
             // WOLFGATE END
         }
 
@@ -2225,6 +2256,64 @@ namespace Content.Server.Database
         public int RoundId { get; set; }
 
         public DateTime UpdatedAt { get; set; }
+    }
+    // WOLFGATE END
+
+    // WOLFGATE(Census) START: censuses staff set up from the SSymphony panel, and the players' answers
+    /// <summary>A census: questions put to every player once. The panel reads this table; the game writes it.</summary>
+    public class WolfgateCensus
+    {
+        [Key]
+        public int Id { get; set; }
+
+        [Required]
+        public string Title { get; set; } = null!;
+
+        [Required]
+        public string Description { get; set; } = "";
+
+        /// <summary>The questions as JSON (see the Census module README).</summary>
+        [Required]
+        public string Questions { get; set; } = null!;
+
+        /// <summary>"draft", "open" or "closed". One whose closes_at has passed counts as closed.</summary>
+        [Required]
+        public string State { get; set; } = "draft";
+
+        public bool Anonymous { get; set; }
+
+        [Required]
+        public string CreatedBy { get; set; } = "";
+
+        public DateTime CreatedAt { get; set; }
+
+        /// <summary>When it first went open.</summary>
+        public DateTime? OpenedAt { get; set; }
+
+        /// <summary>When it closes by itself, or null.</summary>
+        public DateTime? ClosesAt { get; set; }
+
+        public DateTime? ClosedAt { get; set; }
+
+        public List<WolfgateCensusResponse> Responses { get; set; } = null!;
+    }
+
+    /// <summary>One player's answers to a census.</summary>
+    public class WolfgateCensusResponse
+    {
+        [Key]
+        public int Id { get; set; }
+
+        public int CensusId { get; set; }
+        public WolfgateCensus Census { get; set; } = null!;
+
+        public Guid PlayerUserId { get; set; }
+
+        /// <summary>The answers as JSON, keyed by question id.</summary>
+        [Required]
+        public string Answers { get; set; } = null!;
+
+        public DateTime CreatedAt { get; set; }
     }
     // WOLFGATE END
 }
