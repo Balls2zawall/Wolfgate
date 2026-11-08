@@ -6367,3 +6367,10 @@ Entries:
   id: 100391
   time: '2026-11-08T04:29:54.0000000+00:00'
   url: https://github.com/VanguardControl/Wolfgate/pull/558
+- author: Balls2zawall
+  changes:
+    - type: Fix
+      message: Fixed the Comet spawning with a spaced cargo bay.
+  id: 100392
+  time: '2026-11-08T04:30:12.0000000+00:00'
+  url: https://github.com/VanguardControl/Wolfgate/pull/556
