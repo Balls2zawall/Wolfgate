@@ -6492,3 +6492,24 @@ Entries:
   id: 100399
   time: '2026-11-08T08:31:29.0000000+00:00'
   url: https://github.com/VanguardControl/Wolfgate/pull/559
+- author: Gandalf2k15
+  changes:
+    - type: Fix
+      message: >-
+        If the fast download channel can't connect, you now fall back to the
+        normal connection instead of hanging on the join screen.
+    - type: Add
+      message: >-
+        The connection screen shows whether the fast download channel connected
+        (green) or failed and fell back (red).
+    - type: Fix
+      message: >-
+        Big ships and grids being deleted no longer freeze the server for a
+        moment.
+    - type: Fix
+      message: >-
+        Generating dungeons and planet stations no longer causes short server
+        hitches.
+  id: 100400
+  time: '2026-11-08T09:34:03.0000000+00:00'
+  url: https://github.com/VanguardControl/Wolfgate/pull/561
