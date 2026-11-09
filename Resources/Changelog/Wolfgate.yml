@@ -6539,3 +6539,12 @@ Entries:
   id: 100402
   time: '2026-11-08T10:27:16.0000000+00:00'
   url: https://github.com/VanguardControl/Wolfgate/pull/563
+- author: Gandalf2k15
+  changes:
+    - type: Fix
+      message: >-
+        Consoles built on a planet's ground can no longer lift the whole planet
+        into the sky.
+  id: 100403
+  time: '2026-11-09T12:18:35.0000000+00:00'
+  url: https://github.com/VanguardControl/Wolfgate/pull/571
