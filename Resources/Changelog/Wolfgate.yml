@@ -6548,3 +6548,16 @@ Entries:
   id: 100403
   time: '2026-11-09T12:18:35.0000000+00:00'
   url: https://github.com/VanguardControl/Wolfgate/pull/571
+- author: Gandalf2k15
+  changes:
+    - type: Fix
+      message: Things thrown fast no longer pass through walls.
+    - type: Tweak
+      message: Ship collisions throw loose things and people less hard.
+    - type: Fix
+      message: >-
+        Lobby music and backgrounds are no longer downloaded again every time
+        you join.
+  id: 100404
+  time: '2026-11-09T20:45:58.0000000+00:00'
+  url: https://github.com/VanguardControl/Wolfgate/pull/574
