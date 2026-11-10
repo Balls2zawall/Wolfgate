@@ -6759,3 +6759,10 @@ Entries:
   id: 100419
   time: '2026-11-10T08:11:06.0000000+00:00'
   url: https://github.com/VanguardControl/Wolfgate/pull/585
+- author: Gandalf2k15
+  changes:
+    - type: Fix
+      message: Drydock berths are named North and South again.
+  id: 100420
+  time: '2026-11-10T12:13:21.0000000+00:00'
+  url: https://github.com/VanguardControl/Wolfgate/pull/583
