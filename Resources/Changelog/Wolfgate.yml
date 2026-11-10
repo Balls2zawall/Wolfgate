@@ -6713,3 +6713,12 @@ Entries:
   id: 100413
   time: '2026-11-10T06:47:37.0000000+00:00'
   url: https://github.com/VanguardControl/Wolfgate/pull/575
+- author: Sushiburger
+  changes:
+    - type: Add
+      message: Several new ASF themed clothing items.
+    - type: Tweak
+      message: Moved some neck items into ASF loadouts
+  id: 100414
+  time: '2026-11-10T06:49:56.0000000+00:00'
+  url: https://github.com/VanguardControl/Wolfgate/pull/567
