@@ -6607,3 +6607,14 @@ Entries:
   id: 100406
   time: '2026-11-10T05:55:19.0000000+00:00'
   url: https://github.com/VanguardControl/Wolfgate/pull/578
+- author: Happyowl93
+  changes:
+    - type: Add
+      message: >-
+        Recolourable bunnysuits, bunny ears and bunny ties are now in the
+        civilian loadouts.
+    - type: Tweak
+      message: The AutoDrobe no longer runs out of recolourable clothing.
+  id: 100407
+  time: '2026-11-10T05:55:49.0000000+00:00'
+  url: https://github.com/VanguardControl/Wolfgate/pull/576
