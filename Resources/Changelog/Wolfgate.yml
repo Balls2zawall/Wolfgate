@@ -6750,3 +6750,12 @@ Entries:
   id: 100418
   time: '2026-11-10T07:10:18.0000000+00:00'
   url: https://github.com/VanguardControl/Wolfgate/pull/582
+- author: Balls2zawall
+  changes:
+    - type: Tweak
+      message: >-
+        Moved the contract console out of the way of the cargo airlock on the
+        ASF Lantern
+  id: 100419
+  time: '2026-11-10T08:11:06.0000000+00:00'
+  url: https://github.com/VanguardControl/Wolfgate/pull/585
