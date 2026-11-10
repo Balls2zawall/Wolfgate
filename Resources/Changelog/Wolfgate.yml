@@ -6644,3 +6644,48 @@ Entries:
   id: 100410
   time: '2026-11-10T06:25:07.0000000+00:00'
   url: https://github.com/VanguardControl/Wolfgate/pull/569
+- author: DriftingSkies
+  changes:
+    - type: Add
+      message: >-
+        The Colony Council on TSFMC Industry and ASF Research on the Lantern
+        Post now post contracts on their own boards.
+    - type: Add
+      message: >-
+        Dozens of new members-only contracts for the TSF, PDV and USSP: hunts,
+        raids, rescues, blockades, ransoms, customs and more.
+    - type: Add
+      message: >-
+        Planetside contracts on every board: clear dens, recover lost gear,
+        repair relays, rescue homesteaders and more, at sites on the sector's
+        worlds. Carcinoma is never included.
+    - type: Add
+      message: >-
+        The Colonial Development Office and the USSP offer a six-stage
+        outpost-building quest worth around 600,000 thalers, paid stage by
+        stage.
+    - type: Add
+      message: >-
+        Viper Group has its own contract board in Camelot. Its work is deniable
+        and pays in ship components.
+    - type: Add
+      message: >-
+        New contract types: deploy relay buoys, hold a picket point against
+        raiders, and build with deployable kits.
+    - type: Tweak
+      message: >-
+        Supply deliveries to faction stations now go into the station's material
+        silo, or into a receiving crate only that faction can open.
+    - type: Tweak
+      message: >-
+        Ammo contracts take loaded magazines and ammo boxes instead of magazine
+        boxes.
+    - type: Tweak
+      message: Your company now takes its cut of contract pay.
+    - type: Fix
+      message: >-
+        Escorts now need the escorted ship to actually dock, and fail if it
+        surrenders.
+  id: 100411
+  time: '2026-11-10T06:31:32.0000000+00:00'
+  url: https://github.com/VanguardControl/Wolfgate/pull/540
