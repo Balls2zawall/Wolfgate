@@ -6696,3 +6696,20 @@ Entries:
   id: 100412
   time: '2026-11-10T06:41:35.0000000+00:00'
   url: https://github.com/VanguardControl/Wolfgate/pull/572
+- author: Happyowl93
+  changes:
+    - type: Fix
+      message: >-
+        Every round now has both kinds of cargo depot, so medical supplies and
+        the other goods only one kind sells can always be bought.
+    - type: Tweak
+      message: >-
+        Lathe recipes that use trade crates now name the crate they need, such
+        as "medical supplies crate" for medipens.
+    - type: Tweak
+      message: >-
+        The Market app's Materials tab now explains that it shows where to sell
+        mined materials and where to buy them, not a trade route.
+  id: 100413
+  time: '2026-11-10T06:47:37.0000000+00:00'
+  url: https://github.com/VanguardControl/Wolfgate/pull/575
