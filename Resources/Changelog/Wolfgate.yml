@@ -6625,3 +6625,13 @@ Entries:
   id: 100408
   time: '2026-11-10T06:11:10.0000000+00:00'
   url: https://github.com/VanguardControl/Wolfgate/pull/551
+- author: antanananat
+  changes:
+    - type: Tweak
+      message: >-
+        Old Welder hulls have been retrofitted to the more modern Block 2
+        configuration, featuring a mobile drydock, an upgraded engine, among
+        other changes
+  id: 100409
+  time: '2026-11-10T06:16:09.0000000+00:00'
+  url: https://github.com/VanguardControl/Wolfgate/pull/539
