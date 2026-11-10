@@ -6736,3 +6736,10 @@ Entries:
   id: 100416
   time: '2026-11-10T06:55:01.0000000+00:00'
   url: https://github.com/VanguardControl/Wolfgate/pull/580
+- author: Gandalf2k15
+  changes:
+    - type: Fix
+      message: The website now only lists the rules that are shown in-game.
+  id: 100417
+  time: '2026-11-10T06:58:33.0000000+00:00'
+  url: https://github.com/VanguardControl/Wolfgate/pull/581
