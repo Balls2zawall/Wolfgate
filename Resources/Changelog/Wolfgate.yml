@@ -6635,3 +6635,12 @@ Entries:
   id: 100409
   time: '2026-11-10T06:16:09.0000000+00:00'
   url: https://github.com/VanguardControl/Wolfgate/pull/539
+- author: Balls2zawall
+  changes:
+    - type: Add
+      message: >-
+        The beloved dwarf who runs Anvilhold has commissioned a new drydock, it
+        has less berths, but quicker turnaround time.
+  id: 100410
+  time: '2026-11-10T06:25:07.0000000+00:00'
+  url: https://github.com/VanguardControl/Wolfgate/pull/569
