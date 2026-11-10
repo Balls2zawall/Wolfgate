@@ -6799,3 +6799,12 @@ Entries:
   id: 100421
   time: '2026-11-10T15:32:04.0000000+00:00'
   url: https://github.com/VanguardControl/Wolfgate/pull/587
+- author: Balls2zawall
+  changes:
+    - type: Add
+      message: >-
+        The Judges at CC have a shiny new brig to work from! it should feel more
+        like a work space than a banquet hall now.
+  id: 100422
+  time: '2026-11-10T15:36:52.0000000+00:00'
+  url: https://github.com/VanguardControl/Wolfgate/pull/588
