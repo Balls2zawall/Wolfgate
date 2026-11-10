@@ -6618,3 +6618,10 @@ Entries:
   id: 100407
   time: '2026-11-10T05:55:49.0000000+00:00'
   url: https://github.com/VanguardControl/Wolfgate/pull/576
+- author: burgerenergy
+  changes:
+    - type: Tweak
+      message: Heavy vehicle licenses can now fit in wallets.
+  id: 100408
+  time: '2026-11-10T06:11:10.0000000+00:00'
+  url: https://github.com/VanguardControl/Wolfgate/pull/551
