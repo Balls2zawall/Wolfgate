@@ -6594,3 +6594,16 @@ Entries:
   id: 100405
   time: '2026-11-09T20:55:58.0000000+00:00'
   url: https://github.com/VanguardControl/Wolfgate/pull/573
+- author: Happyowl93
+  changes:
+    - type: Tweak
+      message: >-
+        NPC crews no longer trust a ship of theirs that boarders have taken. It
+        is hailed, then fired on, and can no longer dock with them.
+    - type: Tweak
+      message: >-
+        Boarding a Reaver ship now raises the alarm. Nearby patrols are
+        recalled, and a patrol hunts a seized Reaver ship.
+  id: 100406
+  time: '2026-11-10T05:55:19.0000000+00:00'
+  url: https://github.com/VanguardControl/Wolfgate/pull/578
