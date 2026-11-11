@@ -6817,3 +6817,10 @@ Entries:
   id: 100423
   time: '2026-11-10T21:39:40.0000000+00:00'
   url: https://github.com/VanguardControl/Wolfgate/pull/593
+- author: Balls2zawall
+  changes:
+    - type: Remove
+      message: Removed the DYRV Crucible, pending re-design.
+  id: 100424
+  time: '2026-11-11T05:34:27.0000000+00:00'
+  url: https://github.com/VanguardControl/Wolfgate/pull/594
