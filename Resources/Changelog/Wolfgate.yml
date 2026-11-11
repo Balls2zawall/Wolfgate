@@ -6914,3 +6914,10 @@ Entries:
   id: 100429
   time: '2026-11-11T18:04:10.0000000+00:00'
   url: https://github.com/VanguardControl/Wolfgate/pull/600
+- author: Happyowl93
+  changes:
+    - type: Fix
+      message: NPC ship dealers now accept a cyborg's ID card.
+  id: 100430
+  time: '2026-11-11T18:05:02.0000000+00:00'
+  url: https://github.com/VanguardControl/Wolfgate/pull/599
