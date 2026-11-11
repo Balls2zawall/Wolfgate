@@ -6835,3 +6835,12 @@ Entries:
   id: 100425
   time: '2026-11-11T06:26:16.0000000+00:00'
   url: https://github.com/VanguardControl/Wolfgate/pull/591
+- author: Happyowl93
+  changes:
+    - type: Fix
+      message: >-
+        Contract bounty targets no longer spawn right next to other players'
+        ships.
+  id: 100426
+  time: '2026-11-11T08:20:43.0000000+00:00'
+  url: https://github.com/VanguardControl/Wolfgate/pull/592
