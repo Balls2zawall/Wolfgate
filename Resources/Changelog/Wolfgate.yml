@@ -6930,3 +6930,10 @@ Entries:
   id: 100431
   time: '2026-11-11T22:11:07.0000000+00:00'
   url: https://github.com/VanguardControl/Wolfgate/pull/601
+- author: SylvaraWasTaken
+  changes:
+    - type: Add
+      message: Adds the ASF Surveyor, a proper ASF mining ship with Loreful™ design
+  id: 100432
+  time: '2026-11-11T22:13:25.0000000+00:00'
+  url: https://github.com/VanguardControl/Wolfgate/pull/586
