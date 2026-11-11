@@ -6907,3 +6907,10 @@ Entries:
   id: 100428
   time: '2026-11-11T08:22:55.0000000+00:00'
   url: https://github.com/VanguardControl/Wolfgate/pull/589
+- author: Happyowl93
+  changes:
+    - type: Fix
+      message: MD-10 parasol shield is now 30.000 credits at the flatpack vendor
+  id: 100429
+  time: '2026-11-11T18:04:10.0000000+00:00'
+  url: https://github.com/VanguardControl/Wolfgate/pull/600
