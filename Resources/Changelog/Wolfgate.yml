@@ -6937,3 +6937,12 @@ Entries:
   id: 100432
   time: '2026-11-11T22:13:25.0000000+00:00'
   url: https://github.com/VanguardControl/Wolfgate/pull/586
+- author: Gandalf2k15
+  changes:
+    - type: Tweak
+      message: >-
+        Ship autocannon shells and explosions use far less network traffic, so
+        big space battles should rubberband less.
+  id: 100433
+  time: '2026-11-11T23:22:04.0000000+00:00'
+  url: https://github.com/VanguardControl/Wolfgate/pull/603
