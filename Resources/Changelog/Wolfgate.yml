@@ -6844,3 +6844,14 @@ Entries:
   id: 100426
   time: '2026-11-11T08:20:43.0000000+00:00'
   url: https://github.com/VanguardControl/Wolfgate/pull/592
+- author: ImogenOC
+  changes:
+    - type: Fix
+      message: >-
+        Fixed a server freeze caused by whispers and radio messages containing
+        emphasis marks.
+    - type: Fix
+      message: Fixed the cargo telepad crashing the client.
+  id: 100427
+  time: '2026-11-11T08:20:58.0000000+00:00'
+  url: https://github.com/VanguardControl/Wolfgate/pull/597
