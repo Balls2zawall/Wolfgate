@@ -6946,3 +6946,10 @@ Entries:
   id: 100433
   time: '2026-11-11T23:22:04.0000000+00:00'
   url: https://github.com/VanguardControl/Wolfgate/pull/603
+- author: Gandalf2k15
+  changes:
+    - type: Fix
+      message: Fixed an air alarm test that failed at random.
+  id: 100434
+  time: '2026-11-11T23:23:25.0000000+00:00'
+  url: https://github.com/VanguardControl/Wolfgate/pull/604
