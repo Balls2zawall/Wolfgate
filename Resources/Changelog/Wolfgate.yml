@@ -6991,3 +6991,12 @@ Entries:
   id: 100438
   time: '2026-11-12T06:22:27.0000000+00:00'
   url: https://github.com/VanguardControl/Wolfgate/pull/607
+- author: DriftingSkies
+  changes:
+    - type: Fix
+      message: >-
+        The Contracts PDA app no longer freezes or shows blank contract details
+        until it is reopened.
+  id: 100439
+  time: '2026-11-12T06:44:39.0000000+00:00'
+  url: https://github.com/VanguardControl/Wolfgate/pull/611
