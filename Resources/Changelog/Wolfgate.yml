@@ -7054,3 +7054,14 @@ Entries:
   id: 100443
   time: '2026-11-12T10:16:24.0000000+00:00'
   url: https://github.com/VanguardControl/Wolfgate/pull/614
+- author: Gandalf2k15
+  changes:
+    - type: Tweak
+      message: >-
+        Players are only sent the ships and maps of the system they are in,
+        which cuts network load.
+    - type: Tweak
+      message: Removed an unused network setting from the game engine.
+  id: 100444
+  time: '2026-11-12T10:27:23.0000000+00:00'
+  url: https://github.com/VanguardControl/Wolfgate/pull/613
