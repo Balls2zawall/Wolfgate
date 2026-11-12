@@ -12,12 +12,12 @@
   access: Brig # Oddball, matches guard ID, specific enough to exclude cadets
   mapchecker_group_override: Security  # Treat this as a security vessel for mapchecker purposes
   shuttlePath: /SharedMaps/_WF/Shipyard/Shuttles/sunrise.yml
-  tags: null
+  tags:
   guidebookPage: Null
   class:
   - Civilian
   engine:
-  - Welding Fuel
+  - Welding
 
 - type: gameMap
   id: Sunrise
