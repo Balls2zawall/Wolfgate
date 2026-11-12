@@ -7033,3 +7033,14 @@ Entries:
   id: 100441
   time: '2026-11-12T10:09:32.0000000+00:00'
   url: https://github.com/VanguardControl/Wolfgate/pull/608
+- author: antanananat
+  changes:
+    - type: Tweak
+      message: >-
+        The Engineering Wing of TSFN Halcyon ordered a shipment of welders, but
+        instead they've received a whole warehouse full of TSF-ENG Welders. High
+        Command wants you to use them, soldier, so they dropped its
+        classification to T0. 
+  id: 100442
+  time: '2026-11-12T10:13:48.0000000+00:00'
+  url: https://github.com/VanguardControl/Wolfgate/pull/602
