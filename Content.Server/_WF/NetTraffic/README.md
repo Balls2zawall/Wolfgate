@@ -15,6 +15,15 @@ is no longer sent; the client engine stays stock.
   `wf.net.structure_damage_interval` seconds while it keeps being hit. The server's damage is never held back, only
   the network update.
 
+- **UI states** (`WFUiStateTrimSystem`): the engine sends every UI state stored on an entity to each player who can see
+  it, and all of them again when one changes, whether or not a window is open. Radar consoles (every cyborg and gunnery
+  console has one), shuttle consoles, gas canisters, holopads and AME controllers now only hold a state while someone
+  has the window open; the state is set as it opens. The cyborg's own window (marked `Cyborgs` in `BorgSystem`) is only
+  refreshed while open and only when its whole-percent charge changes.
+- **Repair snapshots** (`WFRepairDataNetSystem`): a ship's `ShipRepairData` (every tile and fixture, several times the
+  size of the grid) is only sent to players who hold or wear a repair tool. Picking one up sends the snapshots the
+  player was not given before. `wf.net.repair_data_tool_only`.
+
 Ops can measure the effect with the Lupine `netstats` command (`netstats start 60`, report in the log), which breaks
 sent bytes down by message, network event, component and prototype. Lupine also slows game states to every 2nd tick
 for clients on a lossy link (`net.adaptive_state_max_interval`).
@@ -26,9 +35,13 @@ for clients on a lossy link (`net.adaptive_state_max_interval`).
 
 ### Server
 
+- [`Content.Server/_WF/NetTraffic/GasCanisterSystem.NetTraffic.cs`](GasCanisterSystem.NetTraffic.cs)
+- [`Content.Server/_WF/NetTraffic/ShuttleConsoleSystem.NetTraffic.cs`](ShuttleConsoleSystem.NetTraffic.cs)
 - [`Content.Server/_WF/NetTraffic/WFNetExplosionSystem.cs`](WFNetExplosionSystem.cs)
 - [`Content.Server/_WF/NetTraffic/WFNetShellComponent.cs`](WFNetShellComponent.cs)
 - [`Content.Server/_WF/NetTraffic/WFNetShellSystem.cs`](WFNetShellSystem.cs)
+- [`Content.Server/_WF/NetTraffic/WFRepairDataNetSystem.cs`](WFRepairDataNetSystem.cs)
+- [`Content.Server/_WF/NetTraffic/WFUiStateTrimSystem.cs`](WFUiStateTrimSystem.cs)
 - [`Content.Server/_WF/NetTraffic/WFViewPointSystem.cs`](WFViewPointSystem.cs)
 
 ### Shared
@@ -46,14 +59,24 @@ for clients on a lossy link (`net.adaptive_state_max_interval`).
 ### Integration tests
 
 - [`Content.IntegrationTests/Tests/_WF/NetTraffic/WFNetTrafficTest.cs`](../../../Content.IntegrationTests/Tests/_WF/NetTraffic/WFNetTrafficTest.cs)
+- [`Content.IntegrationTests/Tests/_WF/NetTraffic/WFRepairDataNetTest.cs`](../../../Content.IntegrationTests/Tests/_WF/NetTraffic/WFRepairDataNetTest.cs)
+- [`Content.IntegrationTests/Tests/_WF/NetTraffic/WFUiStateTrimTest.cs`](../../../Content.IntegrationTests/Tests/_WF/NetTraffic/WFUiStateTrimTest.cs)
 
 ## Non-modular edits
 
+- [`Content.Server/Ame/EntitySystems/AmeControllerSystem.cs`](../../Ame/EntitySystems/AmeControllerSystem.cs): a new state goes to everyone who sees the controller; WFUiStateTrimSystem sets it on open
+- [`Content.Server/Atmos/Piping/Unary/EntitySystems/GasCanisterSystem.cs`](../../Atmos/Piping/Unary/EntitySystems/GasCanisterSystem.cs): a new state goes to everyone who sees the canister; WFUiStateTrimSystem sets it on open
 - [`Content.Server/Explosion/EntitySystems/ExplosionSystem.cs`](../../Explosion/EntitySystems/ExplosionSystem.cs)
   - the sounds go out in the explosion's message instead of as audio entities.
   - sent with the explosion's message when that is on.
   - one message per player carries the overlay and the sound they hear.
 - [`Content.Server/Explosion/EntitySystems/ExplosionSystem.Visuals.cs`](../../Explosion/EntitySystems/ExplosionSystem.Visuals.cs): with explosion messages on, the entity stays in nullspace unsent.
+- [`Content.Server/Holopad/HolopadSystem.cs`](../../Holopad/HolopadSystem.cs): a new state goes to everyone who sees the holopad; WFUiStateTrimSystem sets it on open
+- [`Content.Server/Shuttles/Systems/RadarConsoleSystem.cs`](../../Shuttles/Systems/RadarConsoleSystem.cs): a stored state is sent to everyone who sees the console, open or not
+- [`Content.Server/Shuttles/Systems/ShuttleConsoleSystem.cs`](../../Shuttles/Systems/ShuttleConsoleSystem.cs)
+  - the last pilot left, so nobody needs the helm state
+  - a stored helm state is sent to everyone who sees the console, open or not
+- [`Content.Shared/_Mono/ShipRepair/Components/ShipRepairDataComponent.cs`](../../../Content.Shared/_Mono/ShipRepair/Components/ShipRepairDataComponent.cs): WFRepairDataNetSystem sends the snapshot only to repair tool users
 - [`Content.Shared/Damage/Systems/DamageableSystem.cs`](../../../Content.Shared/Damage/Systems/DamageableSystem.cs)
   - a structure's damage is sent at most once an interval.
   - sent with the deferred damage.
