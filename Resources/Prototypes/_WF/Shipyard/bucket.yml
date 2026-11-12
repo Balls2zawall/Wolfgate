@@ -10,7 +10,6 @@
   group: Sr
   access: Janitor
   shuttlePath: /SharedMaps/_WF/Shipyard/Shuttles/bucket.yml
-  tags:
   guidebookPage: Null
   class:
   - Civilian
