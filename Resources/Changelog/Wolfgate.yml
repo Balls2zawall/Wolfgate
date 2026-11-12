@@ -7044,3 +7044,13 @@ Entries:
   id: 100442
   time: '2026-11-12T10:13:48.0000000+00:00'
   url: https://github.com/VanguardControl/Wolfgate/pull/602
+- author: DriftingSkies
+  changes:
+    - type: Add
+      message: >-
+        Coats and jackets can be adjusted for non-functional use and worn in a
+        neck slot, drawn over your armor. In that mode they give no protection
+        and no slowdown.
+  id: 100443
+  time: '2026-11-12T10:16:24.0000000+00:00'
+  url: https://github.com/VanguardControl/Wolfgate/pull/614
