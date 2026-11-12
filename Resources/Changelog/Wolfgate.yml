@@ -7108,3 +7108,14 @@ Entries:
   id: 100445
   time: '2026-11-12T13:02:01.0000000+00:00'
   url: https://github.com/VanguardControl/Wolfgate/pull/617
+- author: Balls2zawall
+  changes:
+    - type: Add
+      message: Added a new Sunrise detective ship
+    - type: Add
+      message: >-
+        Added a new Bucket janitorial ship, sorry combined service vessel but
+        your days are numbered
+  id: 100446
+  time: '2026-11-12T13:21:25.0000000+00:00'
+  url: https://github.com/VanguardControl/Wolfgate/pull/616
