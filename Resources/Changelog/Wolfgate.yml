@@ -7000,3 +7000,19 @@ Entries:
   id: 100439
   time: '2026-11-12T06:44:39.0000000+00:00'
   url: https://github.com/VanguardControl/Wolfgate/pull/611
+- author: ImogenOC
+  changes:
+    - type: Fix
+      message: Fixed cyborgs causing network lag for everyone who could see them.
+    - type: Fix
+      message: >-
+        Shuttle consoles, gas canisters, holopads, AME controllers and radar
+        consoles no longer send their window data to players who don't have the
+        window open.
+    - type: Tweak
+      message: >-
+        Ship repair data is only sent to players using a repair tool, which cuts
+        network use around ships.
+  id: 100440
+  time: '2026-11-12T06:49:44.0000000+00:00'
+  url: https://github.com/VanguardControl/Wolfgate/pull/609
