@@ -7016,3 +7016,20 @@ Entries:
   id: 100440
   time: '2026-11-12T06:49:44.0000000+00:00'
   url: https://github.com/VanguardControl/Wolfgate/pull/609
+- author: DriftingSkies
+  changes:
+    - type: Fix
+      message: >-
+        Body markings ported from Meridian now come as full sets. Parts that
+        were missing, such as Husky (Right Leg), are back.
+    - type: Tweak
+      message: >-
+        Left and right parts of a body marking set are now offered to the same
+        species, so nobody gets only half a pair.
+    - type: Tweak
+      message: >-
+        Characters now get more marking slots: Arms and Legs go from 8 to 16,
+        and Chest from 4 to 8, on most species.
+  id: 100441
+  time: '2026-11-12T10:09:32.0000000+00:00'
+  url: https://github.com/VanguardControl/Wolfgate/pull/608
