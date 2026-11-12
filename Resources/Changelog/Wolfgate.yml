@@ -6953,3 +6953,12 @@ Entries:
   id: 100434
   time: '2026-11-11T23:23:25.0000000+00:00'
   url: https://github.com/VanguardControl/Wolfgate/pull/604
+- author: Gandalf2k15
+  changes:
+    - type: Fix
+      message: >-
+        Fixed players freezing after big load-ins, like spawning ships or
+        switching to observer.
+  id: 100435
+  time: '2026-11-12T00:25:14.0000000+00:00'
+  url: https://github.com/VanguardControl/Wolfgate/pull/605
