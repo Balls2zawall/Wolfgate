@@ -6975,3 +6975,12 @@ Entries:
   id: 100436
   time: '2026-11-12T00:26:33.0000000+00:00'
   url: https://github.com/VanguardControl/Wolfgate/pull/598
+- author: Gandalf2k15
+  changes:
+    - type: Fix
+      message: >-
+        Fixed players sometimes staying frozen until they reconnect after a big
+        load-in.
+  id: 100437
+  time: '2026-11-12T00:35:23.0000000+00:00'
+  url: https://github.com/VanguardControl/Wolfgate/pull/606
