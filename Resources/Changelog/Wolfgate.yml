@@ -6962,3 +6962,16 @@ Entries:
   id: 100435
   time: '2026-11-12T00:25:14.0000000+00:00'
   url: https://github.com/VanguardControl/Wolfgate/pull/605
+- author: Happyowl93
+  changes:
+    - type: Add
+      message: >-
+        Added scratch tickets in three tiers: Mother Lode, Foundry Gold and
+        Thaler Tycoon. Scratch the foil and redeem winners at any ATM.
+    - type: Add
+      message: >-
+        Scratches-to-Win sells scratch tickets, singly or in packs of 10 and 20,
+        in the Caelestinus Central bar. Tickets also turn up in maintenance.
+  id: 100436
+  time: '2026-11-12T00:26:33.0000000+00:00'
+  url: https://github.com/VanguardControl/Wolfgate/pull/598
