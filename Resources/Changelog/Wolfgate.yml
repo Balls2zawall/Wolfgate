@@ -7065,3 +7065,46 @@ Entries:
   id: 100444
   time: '2026-11-12T10:27:23.0000000+00:00'
   url: https://github.com/VanguardControl/Wolfgate/pull/613
+- author: Gandalf2k15
+  changes:
+    - type: Fix
+      message: The changelog window shows its entries again. [742, 838]
+    - type: Fix
+      message: >-
+        Links in the rules and guidebook open the page in the window you clicked
+        them in. [840]
+    - type: Fix
+      message: The Overseer gets the Bench app and can issue tickets. [849]
+    - type: Fix
+      message: >-
+        A Bench ticket no longer fails when the offender takes a step back.
+        [851]
+    - type: Fix
+      message: >-
+        Building with a stack of parts, like capacitors on a mech, uses one part
+        instead of the whole stack. [815]
+    - type: Fix
+      message: >-
+        Slimes can't feed forever on medibots and other things their acid can't
+        hurt. [800]
+    - type: Fix
+      message: NPC crews no longer fill up the overwatch consoles. [767]
+    - type: Fix
+      message: >-
+        Using a wrench or drill on a reagent grinder no longer says it can't go
+        in. [744]
+    - type: Fix
+      message: >-
+        Borers no longer lose contract standing for fights their host's ship
+        gets into. [809]
+    - type: Fix
+      message: Xenos can't open folding barricade doors. [839]
+    - type: Tweak
+      message: >-
+        Boomboxes follow the jukebox volume setting, now called Jukebox and
+        boombox volume. [796]
+    - type: Fix
+      message: Examining a contract's marked cargo up close inspects it. [806]
+  id: 100445
+  time: '2026-11-12T13:02:01.0000000+00:00'
+  url: https://github.com/VanguardControl/Wolfgate/pull/617
