@@ -7282,3 +7282,12 @@ Entries:
   id: 100459
   time: '2026-11-13T16:12:32.0000000+00:00'
   url: https://github.com/VanguardControl/Wolfgate/pull/637
+- author: Balls2zawall
+  changes:
+    - type: Add
+      message: >-
+        Anvilhold has a new EVA drydock berth, the normal berths are 6 tiles
+        wider, and the cranes should be a little faster.
+  id: 100460
+  time: '2026-11-13T19:02:36.0000000+00:00'
+  url: https://github.com/VanguardControl/Wolfgate/pull/640
