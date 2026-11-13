@@ -7186,3 +7186,12 @@ Entries:
   id: 100453
   time: '2026-11-13T05:13:18.0000000+00:00'
   url: https://github.com/VanguardControl/Wolfgate/pull/620
+- author: Armyguy
+  changes:
+    - type: Add
+      message: >-
+        Added the Vrakritatat, a large Vox scrapper and mining hauler, and its
+        Skipjack runabout.
+  id: 100454
+  time: '2026-11-13T05:27:50.0000000+00:00'
+  url: https://github.com/VanguardControl/Wolfgate/pull/615
