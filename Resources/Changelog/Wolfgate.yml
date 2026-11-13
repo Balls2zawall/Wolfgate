@@ -7291,3 +7291,25 @@ Entries:
   id: 100460
   time: '2026-11-13T19:02:36.0000000+00:00'
   url: https://github.com/VanguardControl/Wolfgate/pull/640
+- author: Happyowl93
+  changes:
+    - type: Tweak
+      message: >-
+        Smuggling crates now cost 15,000 and sell for 20,000, and each sale also
+        pays 2 telecrystals.
+    - type: Tweak
+      message: >-
+        Customs now flags 1 in 4 smuggling sales. Each flag adds 20,000 to the
+        seller's warrant, up to 300,000.
+    - type: Add
+      message: >-
+        Smuggling crates now sell at only one station at a time, and the drop
+        moves every 30 minutes. The Underground sees where in their Market app;
+        security is tipped off 10 minutes after each move.
+    - type: Tweak
+      message: >-
+        Smuggling money reaching the Ashfall Reavers now sends out extra patrols
+        and is announced on the radio.
+  id: 100461
+  time: '2026-11-13T19:41:36.0000000+00:00'
+  url: https://github.com/VanguardControl/Wolfgate/pull/636
