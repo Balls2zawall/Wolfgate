@@ -7320,3 +7320,14 @@ Entries:
   id: 100462
   time: '2026-11-13T20:06:12.0000000+00:00'
   url: https://github.com/VanguardControl/Wolfgate/pull/624
+- author: antanananat
+  changes:
+    - type: Add
+      message: RVR Minerva, the reaver asteroid ship.
+    - type: Add
+      message: >-
+        Reavers have finally figured out how to hack and override TSF turrets
+        and can now put them on their ships. Boarders beware.
+  id: 100463
+  time: '2026-11-13T20:58:47.0000000+00:00'
+  url: https://github.com/VanguardControl/Wolfgate/pull/635
