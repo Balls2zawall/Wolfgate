@@ -7195,3 +7195,12 @@ Entries:
   id: 100454
   time: '2026-11-13T05:27:50.0000000+00:00'
   url: https://github.com/VanguardControl/Wolfgate/pull/615
+- author: ImogenOC
+  changes:
+    - type: Add
+      message: >-
+        Added the Lupercal, an admin station-ship with its own crew, services
+        and player jobs.
+  id: 100455
+  time: '2026-11-13T07:02:57.0000000+00:00'
+  url: https://github.com/VanguardControl/Wolfgate/pull/629
