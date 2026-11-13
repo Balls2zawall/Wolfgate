@@ -7204,3 +7204,10 @@ Entries:
   id: 100455
   time: '2026-11-13T07:02:57.0000000+00:00'
   url: https://github.com/VanguardControl/Wolfgate/pull/629
+- author: Sushiburger
+  changes:
+    - type: Tweak
+      message: Modified Judge loadouts to be more expansive
+  id: 100456
+  time: '2026-11-13T07:07:17.0000000+00:00'
+  url: https://github.com/VanguardControl/Wolfgate/pull/633
