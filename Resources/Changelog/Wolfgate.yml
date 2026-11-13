@@ -7211,3 +7211,14 @@ Entries:
   id: 100456
   time: '2026-11-13T07:07:17.0000000+00:00'
   url: https://github.com/VanguardControl/Wolfgate/pull/633
+- author: Balls2zawall
+  changes:
+    - type: Add
+      message: >-
+        Added a new Solarsail overseer ship, the combined service ship is now
+        kill
+    - type: Add
+      message: Added a new Hermes mail ship
+  id: 100457
+  time: '2026-11-13T15:25:17.0000000+00:00'
+  url: https://github.com/VanguardControl/Wolfgate/pull/623
