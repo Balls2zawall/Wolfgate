@@ -7135,3 +7135,20 @@ Entries:
   id: 100448
   time: '2026-11-13T04:46:04.0000000+00:00'
   url: https://github.com/VanguardControl/Wolfgate/pull/628
+- author: DriftingSkies
+  changes:
+    - type: Tweak
+      message: >-
+        The contract board now holds far more offers, sized for a full server of
+        up to 160 players.
+    - type: Tweak
+      message: >-
+        Supply, mining and hauling contracts show up more often, including
+        orders for steel, glass, plasteel and plastic.
+    - type: Tweak
+      message: Supply and mining contracts pay 75% more.
+    - type: Tweak
+      message: Contractors post new offers sooner after one is taken.
+  id: 100449
+  time: '2026-11-13T04:47:13.0000000+00:00'
+  url: https://github.com/VanguardControl/Wolfgate/pull/630
