@@ -7331,3 +7331,10 @@ Entries:
   id: 100463
   time: '2026-11-13T20:58:47.0000000+00:00'
   url: https://github.com/VanguardControl/Wolfgate/pull/635
+- author: Gandalf2k15
+  changes:
+    - type: Fix
+      message: The Anvilhold drydock's new west berth has a name on its console.
+  id: 100464
+  time: '2026-11-13T22:08:15.0000000+00:00'
+  url: https://github.com/VanguardControl/Wolfgate/pull/641
