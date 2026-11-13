@@ -7152,3 +7152,12 @@ Entries:
   id: 100449
   time: '2026-11-13T04:47:13.0000000+00:00'
   url: https://github.com/VanguardControl/Wolfgate/pull/630
+- author: Gandalf2k15
+  changes:
+    - type: Add
+      message: >-
+        Radar screens have a new toggle to zoom toward your cursor instead of
+        the screen center.
+  id: 100450
+  time: '2026-11-13T05:01:45.0000000+00:00'
+  url: https://github.com/VanguardControl/Wolfgate/pull/584
