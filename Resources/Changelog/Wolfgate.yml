@@ -7179,3 +7179,10 @@ Entries:
   id: 100452
   time: '2026-11-13T05:10:55.0000000+00:00'
   url: https://github.com/VanguardControl/Wolfgate/pull/568
+- author: Nagoll12
+  changes:
+    - type: Add
+      message: The_Scarab a new Large Drydock ship.
+  id: 100453
+  time: '2026-11-13T05:13:18.0000000+00:00'
+  url: https://github.com/VanguardControl/Wolfgate/pull/620
