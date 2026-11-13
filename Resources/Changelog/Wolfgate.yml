@@ -7119,3 +7119,95 @@ Entries:
   id: 100446
   time: '2026-11-12T13:21:25.0000000+00:00'
   url: https://github.com/VanguardControl/Wolfgate/pull/616
+- author: DriftingSkies
+  changes:
+    - type: Remove
+      message: >-
+        Removed the Baeg from all shuttle consoles until its remade/reworked.
+        Yes, I know. No fun allowed.
+  id: 100447
+  time: '2026-11-13T04:44:30.0000000+00:00'
+  url: https://github.com/VanguardControl/Wolfgate/pull/625
+- author: DriftingSkies
+  changes:
+    - type: Add
+      message: Weh.
+  id: 100448
+  time: '2026-11-13T04:46:04.0000000+00:00'
+  url: https://github.com/VanguardControl/Wolfgate/pull/628
+- author: DriftingSkies
+  changes:
+    - type: Tweak
+      message: >-
+        The contract board now holds far more offers, sized for a full server of
+        up to 160 players.
+    - type: Tweak
+      message: >-
+        Supply, mining and hauling contracts show up more often, including
+        orders for steel, glass, plasteel and plastic.
+    - type: Tweak
+      message: Supply and mining contracts pay 75% more.
+    - type: Tweak
+      message: Contractors post new offers sooner after one is taken.
+  id: 100449
+  time: '2026-11-13T04:47:13.0000000+00:00'
+  url: https://github.com/VanguardControl/Wolfgate/pull/630
+- author: Gandalf2k15
+  changes:
+    - type: Add
+      message: >-
+        Radar screens have a new toggle to zoom toward your cursor instead of
+        the screen center.
+  id: 100450
+  time: '2026-11-13T05:01:45.0000000+00:00'
+  url: https://github.com/VanguardControl/Wolfgate/pull/584
+- author: TheSlapper
+  changes:
+    - type: Add
+      message: Clown Plush.
+    - type: Add
+      message: Clown Music to the Jukebox.
+    - type: Add
+      message: Space Glue to trinkets.
+  id: 100451
+  time: '2026-11-13T05:03:16.0000000+00:00'
+  url: https://github.com/VanguardControl/Wolfgate/pull/627
+- author: Kepteyn
+  changes:
+    - type: Add
+      message: New greeblies! Some ported from Bubber, others custom made for Wolfgate.
+  id: 100452
+  time: '2026-11-13T05:10:55.0000000+00:00'
+  url: https://github.com/VanguardControl/Wolfgate/pull/568
+- author: Nagoll12
+  changes:
+    - type: Add
+      message: The_Scarab a new Large Drydock ship.
+  id: 100453
+  time: '2026-11-13T05:13:18.0000000+00:00'
+  url: https://github.com/VanguardControl/Wolfgate/pull/620
+- author: Armyguy
+  changes:
+    - type: Add
+      message: >-
+        Added the Vrakritatat, a large Vox scrapper and mining hauler, and its
+        Skipjack runabout.
+  id: 100454
+  time: '2026-11-13T05:27:50.0000000+00:00'
+  url: https://github.com/VanguardControl/Wolfgate/pull/615
+- author: ImogenOC
+  changes:
+    - type: Add
+      message: >-
+        Added the Lupercal, an admin station-ship with its own crew, services
+        and player jobs.
+  id: 100455
+  time: '2026-11-13T07:02:57.0000000+00:00'
+  url: https://github.com/VanguardControl/Wolfgate/pull/629
+- author: Sushiburger
+  changes:
+    - type: Tweak
+      message: Modified Judge loadouts to be more expansive
+  id: 100456
+  time: '2026-11-13T07:07:17.0000000+00:00'
+  url: https://github.com/VanguardControl/Wolfgate/pull/633
