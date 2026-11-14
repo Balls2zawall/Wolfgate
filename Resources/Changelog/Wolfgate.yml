@@ -7356,3 +7356,10 @@ Entries:
   id: 100465
   time: '2026-11-14T06:48:09.0000000+00:00'
   url: https://github.com/VanguardControl/Wolfgate/pull/632
+- author: Gandalf2k15
+  changes:
+    - type: Tweak
+      message: Ported 25 Monolith changes; their entries are in the Monolith changelog.
+  id: 100466
+  time: '2026-11-14T09:41:17.0000000+00:00'
+  url: https://github.com/VanguardControl/Wolfgate/pull/653
