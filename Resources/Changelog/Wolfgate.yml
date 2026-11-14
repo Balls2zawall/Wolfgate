@@ -7363,3 +7363,22 @@ Entries:
   id: 100466
   time: '2026-11-14T09:41:17.0000000+00:00'
   url: https://github.com/VanguardControl/Wolfgate/pull/653
+- author: ImogenOC
+  changes:
+    - type: Fix
+      message: >-
+        The Lupercal now spawns locked down; its doors can't be pried, its core
+        gates can't jam open, and its cameras, benches, shutters and carpets are
+        fixed.
+    - type: Add
+      message: >-
+        The Lupercal has hard-light barriers on its staff areas, sentry turrets
+        in its core, janitors, a warp point and named fax machines.
+    - type: Tweak
+      message: >-
+        Lupercal crew warn trespassers aloud, react to people dragging their
+        dead, patch their own wounds, avoid fires and repair the ship on their
+        own.
+  id: 100467
+  time: '2026-11-14T14:53:11.0000000+00:00'
+  url: https://github.com/VanguardControl/Wolfgate/pull/638
