@@ -1,0 +1,36 @@
+# Author info
+# punishedbrungus (discord) Balls2zawall (github)
+
+- type: vessel
+  id: WFDespot
+  parent: BaseVessel
+  name: 'RVR Despot'
+  description: 'Describe the ship here.'
+  price: 60793 # appraised at 50661, 20% markup
+  category: Medium # 217 tiles
+  group: Shipyard
+  shuttlePath: /SharedMaps/_WF/Shipyard/Shuttles/Reaver/despot.yml
+  guidebookPage: null
+  class:
+  - Fighter
+  - Brawler
+  engine:
+  - Uranium
+
+- type: gameMap
+  id: WFDespot
+  mapName: 'RVR - Despot'
+  mapPath: /SharedMaps/_WF/Shipyard/Shuttles/Reaver/despot.yml
+  minPlayers: 0
+  stations:
+    WFDespot:
+      stationProto: StandardFrontierVessel
+      components:
+      - type: StationNameSetup
+        mapNameTemplate: 'Despot RVR{1}'
+        nameGenerator:
+          !type:NanotrasenNameGenerator
+          prefixCreator: '14'
+      - type: StationJobs
+        availableJobs:
+          Contractor: [ 0, 0 ]
