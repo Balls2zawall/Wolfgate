@@ -5,7 +5,7 @@
   id: WFPibb
   parent: BaseVessel
   name: 'RVR Pibb'
-  description: 'Describe the ship here.'
+  description: 'A restaraunt turned to a combat galley, the Pibb packs a bit of punch, and so does the food.'
   price: 42521 # appraised at 35434, 20% markup
   category: Small # 156 tiles
   group: Custom

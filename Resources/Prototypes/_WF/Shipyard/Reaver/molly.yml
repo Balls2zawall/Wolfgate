@@ -5,7 +5,7 @@
   id: WFMolly
   parent: BaseVessel
   name: 'RVR Molly'
-  description: 'Describe the ship here.'
+  description: 'An Autumn turned into a broadside brawler, this one is a bit scary with its triple cannons on each side. Woe be the flanker.'
   price: 372688 # appraised at 310573, 20% markup
   category: Large # 947 tiles
   group: Custom

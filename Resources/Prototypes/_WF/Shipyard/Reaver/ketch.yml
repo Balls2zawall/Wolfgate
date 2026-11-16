@@ -4,7 +4,7 @@
   id: WFKetch
   parent: BaseVessel
   name: 'RVR Ketch'
-  description: 'Describe the ship here.'
+  description: 'A traveling pharmacy now giving out doses of high explosives.'
   price: 92906 # appraised at 77422, 20% markup
   category: Medium # 352 tiles
   group: Custom

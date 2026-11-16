@@ -5,7 +5,7 @@
   id: WFRenegade
   parent: BaseVessel
   name: 'RVR Renegade'
-  description: 'Describe the ship here.'
+  description: 'A Hollowed out Zhuangzi with a giant howitzer stuffed in in the former cargo hold. You dont wanna be on the bad end of this thing.'
   price: 129215 # appraised at 107679, 20% markup
   category: Medium # 418 tiles
   group: Custom
