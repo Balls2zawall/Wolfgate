@@ -10,7 +10,9 @@
     icon:
       sprite: _WG/Xenonids/Actions/xeno_actions.rsi
       state: screech
-    useDelay: 50
+  # WOLFGATE START: increased delay from 50 seconds to 270, about 4.5 minutes, warqueen on Wolfgate is kill
+    useDelay: 270
+  # WOLFGATE END
     event: !type:XenoScreechActionEvent
   - type: RMCDazeableAction
 

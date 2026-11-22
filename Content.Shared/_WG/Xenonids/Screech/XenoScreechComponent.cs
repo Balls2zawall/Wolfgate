@@ -16,8 +16,9 @@ public sealed partial class XenoScreechComponent : Component
     public TimeSpan StunTime = TimeSpan.FromSeconds(6);
 
     [DataField, AutoNetworkedField]
-    public TimeSpan ParalyzeTime = TimeSpan.FromSeconds(8);
-
+    // WOLFGATE START: lowered stun from 8 to 5 seconds
+    public TimeSpan ParalyzeTime = TimeSpan.FromSeconds(5);
+    // WOLFGATE END
     [DataField, AutoNetworkedField]
     public TimeSpan CloseDeafTime = TimeSpan.FromSeconds(7);
 
@@ -35,7 +36,9 @@ public sealed partial class XenoScreechComponent : Component
     public float ParasiteStunRange = 11.2838f;
 
     [DataField, AutoNetworkedField]
-    public TimeSpan ParasiteStunTime = TimeSpan.FromSeconds(8);
+    // WOLFGATE START: lowered stun from 8 to 5 seconds
+    public TimeSpan ParasiteStunTime = TimeSpan.FromSeconds(5);
+    // WOLFGATE END
 
     [DataField, AutoNetworkedField]
     public int CloseScreenShakeShakes = 12;
