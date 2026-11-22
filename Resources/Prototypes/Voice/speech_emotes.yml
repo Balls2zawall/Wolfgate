@@ -370,7 +370,7 @@
   blacklist:
     components:
       - BorgChassis
-      - Xeno
+      - Xeno # WOLFGATE(EmoteVoices): xenos need a clean emote wheel for actual quick comms, get this OUTTA here
   # WOLFGATE(EmoteVoices): *weh triggers, ported from Meridian
   chatTriggers:
     - weh

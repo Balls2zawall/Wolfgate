@@ -56,9 +56,7 @@
     maxPlasma: 1000
     plasmaRegenOnWeeds: 2
   - type: CMArmor
-  # WOLFGATE START: lowered armor value by 5
-    xenoArmor: 40
-  # WOLFGATE END
+    xenoArmor: 45
     explosionArmor: 70
   # WOLFGATE: cut InnateCommandSpeech (RMC command speech)
   - type: XenoClaws

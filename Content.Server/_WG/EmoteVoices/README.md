@@ -137,6 +137,8 @@ the species' own when there is none. `MessageSoundTest` fails when a playable sp
 - [`Resources/Prototypes/_Mono/Voice/speech_emote_sounds.yml`](../../../Resources/Prototypes/_Mono/Voice/speech_emote_sounds.yml): Meridian weh
 - [`Resources/Prototypes/Entities/Mobs/Species/moth.yml`](../../../Resources/Prototypes/Entities/Mobs/Species/moth.yml): HardLight's moth chatter as the species' message sound
 - [`Resources/Prototypes/SoundCollections/emotes.yml`](../../../Resources/Prototypes/SoundCollections/emotes.yml): Meridian weh for every species
-- [`Resources/Prototypes/Voice/speech_emotes.yml`](../../../Resources/Prototypes/Voice/speech_emotes.yml): *weh triggers, ported from Meridian
+- [`Resources/Prototypes/Voice/speech_emotes.yml`](../../../Resources/Prototypes/Voice/speech_emotes.yml)
+  - xenos need a clean emote wheel for actual quick comms, get this OUTTA here
+  - *weh triggers, ported from Meridian
 
 <!-- WOLFGATE-GENERATED END -->
