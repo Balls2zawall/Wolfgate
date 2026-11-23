@@ -95,7 +95,7 @@
   - type: MovementSpeedModifier
     baseWalkSpeed: 2.2
     baseSprintSpeed: 4
-    weightlessAcceleration: 1.5 # Slightly more manueverable in space.
+    weightlessAcceleration: 1.5 # Slightly more maneuverable in space.
   - type: Climbing
   - type: Insulated
   - type: Input
@@ -385,9 +385,7 @@
   components:
   - type: CombatMode
     canDisarm: true
-  # WOLFGATE START: a higher disarmfailchance so that one shove doesn't instantly knock
-    disarmFailChance: 0.35
-  # WOLFGATE END
+    disarmFailChance: 0.35 # one shove no longer always lands
   - type: MeleeWeapon
     autoAttack: true
     widePrimary: true
