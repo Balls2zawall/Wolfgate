@@ -1,4 +1,4 @@
-# Carrier consoles of the restored Ledokol, M-Class, Ravager and Tumour, removed upstream by
+# Carrier consoles of the restored Ledokol and M-Class, removed upstream by
 # Monolith#4624. The old IDs are nulled in Resources/mono_migration.yml, so these carry a WG prefix and the restored
 # grids use them.
 
@@ -13,16 +13,6 @@
     - Antlion
 
 - type: entity
-  id: WGTSFCarrierComputer
-  parent: BaseCarrierComputer
-  name: TSF tumour carrier console
-  components:
-  - type: ShipyardListing
-    shuttles:
-    - QJ490
-    - ZephyrEC # the crewed Zephyr stays admin only; its EC variant flies from the Fujian too
-
-- type: entity
   id: WGLedokolAttachmentComputer
   parent: BaseCarrierComputer
   name: ledokol attachment console
@@ -32,14 +22,3 @@
     - Molotok
     - Kopye
     - Kupol
-
-- type: entity
-  id: WGRavagerCarrierComputer
-  parent: BaseCarrierComputer
-  name: ravager shipyard console
-  components:
-  - type: ShipyardListing
-    shuttles:
-    - Rook
-    - Taser
-    - Hound

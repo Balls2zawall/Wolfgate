@@ -212,7 +212,6 @@
   - key: freighter
     navigation: WGCrewNavigationFreight
     vessels:
-    - Olympus
     - Autumn
     - Windreign
     side: freight
@@ -545,7 +544,7 @@
   ships:
   - key: hauler
     navigation: WGCrewNavigationFreight
-    vessels: [ Olympus, Autumn, Windreign ]
+    vessels: [ Autumn, Windreign ]
     side: freight
     profile: WGCrewProfileHauler
     company: TSFCivilian
@@ -1249,7 +1248,7 @@
   ships:
   - key: freighter
     navigation: WGCrewNavigationFreight
-    vessels: [ Olympus, Autumn, Windreign ]
+    vessels: [ Autumn, Windreign ]
     side: freight
     profile: WGCrewProfileHauler
     deckhands: 3
@@ -1324,7 +1323,7 @@
       duration: 300
     - kind: Hold
 
-# The trap again with a larger bait and two ships in wait, for more players. It claims an Olympus; the bait is a Brute or an Argent.
+# The trap again with a larger bait and two ships in wait, for more players. The bait is a Brute or an Argent.
 - type: wgEncounter
   id: WGEncounterFalseMaydayLarge
   name: wg-encounter-name-stranded
@@ -2302,7 +2301,7 @@
   ships:
   - key: smuggler
     navigation: WGCrewNavigationFreight
-    vessels: [ Olympus, Autumn, Windreign ]
+    vessels: [ Autumn, Windreign ]
     side: smugglers
     faction: PirateNF
     company: paycheckbratva

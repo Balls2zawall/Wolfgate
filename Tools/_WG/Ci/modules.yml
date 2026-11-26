@@ -2539,6 +2539,9 @@ unmarked:
   - path: Resources/Maps/_Mono/ShuttleEvent/fracture_chimera.yml
     module: ArmorBalance
     reason: Reverts Monolith#4845, putting the mapped M82b and M82c suit storage back in place of the M86.
+  - path: Resources/Maps/_Mono/ShuttleEvent/olympus_chimera.yml
+    module: OldVessels
+    reason: Removes the Chimera encounter map for the retired Olympus vessel.
   - path: Resources/SharedMaps/_Mono/Shuttles/TSF/calypso.yml
     module: ArmorBalance
     reason: Reverts Monolith#4845, putting the mapped M82b and M82c suit storage back in place of the M86.

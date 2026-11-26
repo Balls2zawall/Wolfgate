@@ -1,32 +1,5 @@
-# Ship LPCs removed upstream by Monolith#4624. The Taser one is mapped on the Ravager, which
-# fails to load without it. It buys any of the Ravager's drones and prints at a security techfab. The single-ship LPCs
-# below cover classic ships at tiers with no general tier voucher;
-# their tier labels follow the scorecard placement, not the old one.
-
-- type: entity
-  parent: BaseShipLPCRenewable
-  id: ShipVoucherTaser
-  name: ravager drone LPC
-  description: A small card that contains the data for the procurement of one of the Ravager's drones.
-  components:
-  - type: Sprite
-    sprite: _Mono/Objects/Misc/lpcnew.rsi
-    layers:
-    - state: icon_fighter
-    - state: screen
-      color: "#eb0023"
-    - state: screen7
-      color: "#eb0023"
-      shader: unshaded
-  - type: ShipyardVoucher
-    destroyOnEmpty: true
-    companyName: Colonial
-    vessels:
-    - Rook
-    - Taser
-    - Hound
-  - type: StaticPrice
-    vendPrice: 15000
+# Ship LPCs removed upstream by Monolith#4624. The single-ship LPCs below cover classic ships at tiers
+# with no general tier voucher; their tier labels follow the scorecard placement, not the old one.
 
 - type: entity
   parent: BaseShipLPCRenewable
