@@ -141,7 +141,6 @@
     navigation: WGCrewNavigationFreight
     vessels:
     - Plutomkii
-    - Twilight
     - Piva
     - Hermes
     side: freight
@@ -391,7 +390,7 @@
       skills: [ Green, Regular ]
       retrofit: WGPirateRetrofitMedium
     - minTier: 3
-      vessels: [ Windreign, Zhuangzi, Rosetta, WGDredger, Kalisto, Metis, Bastion, Garm ]
+      vessels: [ Windreign, Zhuangzi, WGDredger, Kalisto, Metis, Bastion, Garm ]
       skills: [ Regular ]
       retrofit: WGPirateRetrofitHeavy
     - minTier: 4
@@ -450,7 +449,7 @@
       skills: [ Green, Regular ]
       retrofit: WGPirateRetrofitMedium
     - minTier: 3
-      vessels: [ Windreign, Zhuangzi, Rosetta, WGDredger, Kalisto, Metis, Bastion, Garm ]
+      vessels: [ Windreign, Zhuangzi, WGDredger, Kalisto, Metis, Bastion, Garm ]
       skills: [ Regular ]
       retrofit: WGPirateRetrofitHeavy
     - minTier: 4
@@ -490,7 +489,7 @@
       skills: [ Green, Regular ]
       retrofit: WGPirateRetrofitMedium
     - minTier: 3
-      vessels: [ Windreign, Zhuangzi, Rosetta, WGDredger, Kalisto, Metis, Bastion, Garm ]
+      vessels: [ Windreign, Zhuangzi, WGDredger, Kalisto, Metis, Bastion, Garm ]
       skills: [ Regular ]
       retrofit: WGPirateRetrofitHeavy
     - minTier: 4
@@ -571,7 +570,7 @@
       skills: [ Green, Regular ]
       retrofit: WGPirateRetrofitMedium
     - minTier: 3
-      vessels: [ Windreign, Zhuangzi, Rosetta, WGDredger, Kalisto, Metis, Bastion, Garm ]
+      vessels: [ Windreign, Zhuangzi, WGDredger, Kalisto, Metis, Bastion, Garm ]
       skills: [ Regular ]
       retrofit: WGPirateRetrofitHeavy
     - minTier: 4
@@ -662,7 +661,7 @@
       skills: [ Green, Regular ]
       retrofit: WGPirateRetrofitMedium
     - minTier: 3
-      vessels: [ Windreign, Zhuangzi, Rosetta, WGDredger, Kalisto, Metis, Bastion, Garm ]
+      vessels: [ Windreign, Zhuangzi, WGDredger, Kalisto, Metis, Bastion, Garm ]
       skills: [ Regular ]
       retrofit: WGPirateRetrofitHeavy
     - minTier: 4
@@ -793,7 +792,7 @@
   ships:
   - key: trader
     navigation: WGCrewNavigationFreight
-    vessel: Twilight
+    vessel: Piva
     side: trader
     profile: WGCrewProfileHauler
     captain: false
@@ -1015,7 +1014,7 @@
   ships:
   - key: trader
     navigation: WGCrewNavigationFreight
-    vessel: Kestrel
+    vessel: Piva
     side: trader
     profile: WGCrewProfileHauler
     captain: false
@@ -1170,7 +1169,7 @@
   ships:
   - key: freighter
     navigation: WGCrewNavigationFreight
-    vessels: [ Plutomkii, Piva, Twilight ]
+    vessels: [ Plutomkii, Piva ]
     side: freight
     profile: WGCrewProfileHauler
     deckhands: 1
@@ -2216,7 +2215,7 @@
   ships:
   - key: smuggler
     navigation: WGCrewNavigationFreight
-    vessel: Twilight
+    vessel: Piva
     side: smugglers
     faction: PirateNF
     company: paycheckbratva
@@ -2393,7 +2392,7 @@
   stationClearance: 2000
   ships:
   - key: hulk
-    vessels: [ Piva, Plutomkii, Twilight ]
+    vessels: [ Piva, Plutomkii ]
     side: hulk
     distress: false
     derelict:
@@ -3438,7 +3437,7 @@
       target: capital
   - key: wingfive
     navigation: WGCrewNavigationRaider
-    vessels: [ Fenrir, Ganymede, Vulture ]
+    vessels: [ Fenrir, Ganymede ]
     deckhands: 0
     captain: false
     roles: [ WGCrewPilot, WGCrewGunner ]
@@ -3773,7 +3772,7 @@
       target: capital
   - key: fifth
     navigation: WGCrewNavigationRaider
-    vessels: [ Fenrir, Ganymede, Vulture ]
+    vessels: [ Fenrir, Ganymede ]
     deckhands: 2
     offset: 900, 900
     side: pirates

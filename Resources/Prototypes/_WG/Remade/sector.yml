@@ -151,7 +151,7 @@
   stationClearance: 3000
   ships:
   - key: hulk
-    vessels: [ Piva, Plutomkii, Twilight ]
+    vessels: [ Piva, Plutomkii ]
     side: hulk
     distress: false
     stealth: true
@@ -181,7 +181,7 @@
   stationClearance: 3000
   ships:
   - key: hulk
-    vessels: [ Piva, Plutomkii, Twilight ]
+    vessels: [ Piva, Plutomkii ]
     side: choir
     distress: false
     stealth: true
@@ -242,7 +242,7 @@
   ships:
   - key: adrift
     navigation: WGCrewNavigationFreight
-    vessels: [ Plutomkii, Piva, Twilight ]
+    vessels: [ Plutomkii, Piva ]
     side: freight
     profile: WGCrewProfileHauler
     deckhands: 2
