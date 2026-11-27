@@ -193,7 +193,7 @@
       resale: 0.25
   - key: choir
     navigation: WGCrewNavigationRaider
-    vessels: [ Hazel, Metis, Mudskipper ]
+    vessels: [Metis, Mudskipper]
     offset: 350, 250
     side: choir
     faction: WGChoir

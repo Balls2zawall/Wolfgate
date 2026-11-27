@@ -149,7 +149,7 @@
   ships:
   - key: fugitive
     navigation: WGCrewNavigationFugitive
-    vessels: [ Hazel, Mudskipper ]
+    vessels: [Mudskipper]
     side: fugitive
     profile: WGCrewProfileFugitive
     deckhands: 1

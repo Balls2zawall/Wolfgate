@@ -261,26 +261,26 @@
     distress: false
     company: WGAshfallReavers
     profile: WGCrewProfilePirate
-    vessels: [ Carrion, Hazel, Horsefly, Tick, Svinya, Strayk ]
+    vessels: [Horsefly, Tick, Svinya, Strayk]
     tiers:
     - minTier: 0
       vessels: [ Horsefly, Tick ]
       skills: [ Green ]
       retrofit: WGPirateRetrofitLight
     - minTier: 2
-      vessels: [ Horsefly, Tick, Carrion, Strayk ]
+      vessels: [Horsefly, Tick, Strayk]
       skills: [ Green, Regular ]
       retrofit: WGPirateRetrofitMedium
     - minTier: 3
-      vessels: [ Carrion, Hazel, Horsefly, Tick, Svinya, Strayk ]
+      vessels: [Horsefly, Tick, Svinya, Strayk]
       skills: [ Regular ]
       retrofit: WGPirateRetrofitHeavy
     - minTier: 4
-      vessels: [ Carrion, Hazel, Horsefly, Tick, Svinya, Strayk ]
+      vessels: [Horsefly, Tick, Svinya, Strayk]
       skills: [ Regular, Veteran ]
       retrofit: WGPirateRetrofitGrime
     - minTier: 5
-      vessels: [ Carrion, Hazel, Horsefly, Tick, Svinya, Strayk ]
+      vessels: [Horsefly, Tick, Svinya, Strayk]
       skills: [ Veteran ]
       retrofit: WGPirateRetrofitGrime
     deckhands: 0
@@ -350,26 +350,26 @@
     distress: false
     company: WGAshfallReavers
     profile: WGCrewProfilePirate
-    vessels: [ Carrion, Horsefly, Tick, Hazel, Svinya, Strayk ]
+    vessels: [Horsefly, Tick, Svinya, Strayk]
     tiers:
     - minTier: 0
       vessels: [ Horsefly, Tick ]
       skills: [ Green ]
       retrofit: WGPirateRetrofitLight
     - minTier: 2
-      vessels: [ Horsefly, Tick, Carrion, Strayk ]
+      vessels: [Horsefly, Tick, Strayk]
       skills: [ Green, Regular ]
       retrofit: WGPirateRetrofitMedium
     - minTier: 3
-      vessels: [ Carrion, Hazel, Horsefly, Tick, Svinya, Strayk ]
+      vessels: [Horsefly, Tick, Svinya, Strayk]
       skills: [ Regular ]
       retrofit: WGPirateRetrofitHeavy
     - minTier: 4
-      vessels: [ Carrion, Horsefly, Tick, Hazel, Svinya, Strayk ]
+      vessels: [Horsefly, Tick, Svinya, Strayk]
       skills: [ Regular, Veteran ]
       retrofit: WGPirateRetrofitGrime
     - minTier: 5
-      vessels: [ Carrion, Horsefly, Tick, Hazel, Svinya, Strayk ]
+      vessels: [Horsefly, Tick, Svinya, Strayk]
       skills: [ Veteran ]
       retrofit: WGPirateRetrofitGrime
     deckhands: 0
@@ -440,26 +440,26 @@
     distress: false
     company: WGAshfallReavers
     profile: WGCrewProfilePirate
-    vessels: [ Carrion, Horsefly, Tick, Hazel, Svinya, Strayk ]
+    vessels: [Horsefly, Tick, Svinya, Strayk]
     tiers:
     - minTier: 0
       vessels: [ Horsefly, Tick ]
       skills: [ Green ]
       retrofit: WGPirateRetrofitLight
     - minTier: 2
-      vessels: [ Horsefly, Tick, Carrion, Strayk ]
+      vessels: [Horsefly, Tick, Strayk]
       skills: [ Green, Regular ]
       retrofit: WGPirateRetrofitMedium
     - minTier: 3
-      vessels: [ Carrion, Hazel, Horsefly, Tick, Svinya, Strayk ]
+      vessels: [Horsefly, Tick, Svinya, Strayk]
       skills: [ Regular ]
       retrofit: WGPirateRetrofitHeavy
     - minTier: 4
-      vessels: [ Carrion, Horsefly, Tick, Hazel, Svinya, Strayk ]
+      vessels: [Horsefly, Tick, Svinya, Strayk]
       skills: [ Regular, Veteran ]
       retrofit: WGPirateRetrofitGrime
     - minTier: 5
-      vessels: [ Carrion, Horsefly, Tick, Hazel, Svinya, Strayk ]
+      vessels: [Horsefly, Tick, Svinya, Strayk]
       skills: [ Veteran ]
       retrofit: WGPirateRetrofitGrime
     deckhands: 0
@@ -496,7 +496,7 @@
     distress: false
     company: WGAshfallReavers
     profile: WGCrewProfilePirate
-    vessels: [ Hazel, Metis, Mudskipper ]
+    vessels: [Metis, Mudskipper]
     tiers:
     - minTier: 0
       vessels: [ WGPibb, Takeaway, Caracara ]
@@ -507,7 +507,7 @@
       skills: [ Green, Regular ]
       retrofit: WGPirateRetrofitMedium
     - minTier: 4
-      vessels: [ Hazel, Metis, Mudskipper ]
+      vessels: [Metis, Mudskipper]
       skills: [ Regular, Veteran ]
       retrofit: WGPirateRetrofitGrime
     captain: false
@@ -569,26 +569,26 @@
     distress: false
     company: WGAshfallReavers
     profile: WGCrewProfilePirate
-    vessels: [ Carrion, Horsefly, Tick, Hazel, Svinya, Strayk ]
+    vessels: [Horsefly, Tick, Svinya, Strayk]
     tiers:
     - minTier: 0
       vessels: [ Horsefly, Tick ]
       skills: [ Green ]
       retrofit: WGPirateRetrofitLight
     - minTier: 2
-      vessels: [ Horsefly, Tick, Carrion, Strayk ]
+      vessels: [Horsefly, Tick, Strayk]
       skills: [ Green, Regular ]
       retrofit: WGPirateRetrofitMedium
     - minTier: 3
-      vessels: [ Carrion, Hazel, Horsefly, Tick, Svinya, Strayk ]
+      vessels: [Horsefly, Tick, Svinya, Strayk]
       skills: [ Regular ]
       retrofit: WGPirateRetrofitHeavy
     - minTier: 4
-      vessels: [ Carrion, Horsefly, Tick, Hazel, Svinya, Strayk ]
+      vessels: [Horsefly, Tick, Svinya, Strayk]
       skills: [ Regular, Veteran ]
       retrofit: WGPirateRetrofitGrime
     - minTier: 5
-      vessels: [ Carrion, Horsefly, Tick, Hazel, Svinya, Strayk ]
+      vessels: [Horsefly, Tick, Svinya, Strayk]
       skills: [ Veteran ]
       retrofit: WGPirateRetrofitGrime
     deckhands: 0
