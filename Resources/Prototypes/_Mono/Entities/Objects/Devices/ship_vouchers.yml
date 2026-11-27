@@ -142,7 +142,6 @@
     - Cinquedea
     # WOLFGATE(OldVessels) START: classic ships returned at this tier
     - Aldebaran
-    - Sentinel
     - Tarantula
     # WOLFGATE END
 
@@ -254,9 +253,7 @@
     - Kynda
     - Tethys
     # WOLFGATE(OldVessels) START: classic ships returned at this tier
-    - Hazel
     - Metis
-    - Carrion
     - Eris
     - Prowler
     # WOLFGATE END
